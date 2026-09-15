@@ -1,6 +1,6 @@
 # Andrew Liu — Personal Portfolio
 
-A responsive portfolio with native scrolling and restrained, layered parallax. Built with React, TypeScript, Vinext, Tailwind CSS, and the Sites Cloudflare Workers integration.
+A responsive portfolio with native scrolling and restrained, layered parallax. Built with React, TypeScript, Vinext, and Tailwind CSS. The production build exports static HTML, CSS, and JavaScript to `dist/client`.
 
 ## Development
 
@@ -23,7 +23,11 @@ npm run build
 - `public/andrew-liu-resume.pdf`: Andrew's supplied résumé.
 - `.openai/hosting.json`: Sites project identity. No credentials are stored here.
 
-The site is deployed with Sites to Cloudflare Workers. Source changes in this GitHub repository do not automatically deploy; build and publish a new Sites version after changes.
+## Publishing
+
+Pushes to `main` run `.github/workflows/deploy.yml`, build the static site, and deploy it to GitHub Pages. The Pages source must be **GitHub Actions** in repository settings. `public/CNAME` preserves the custom domain `andliu.dev` in the generated output. The domain must point to GitHub Pages through its Cloudflare DNS settings.
+
+The `.openai/hosting.json` manifest also supports a separately published Sites preview using the same static build output.
 
 ## References and assets
 

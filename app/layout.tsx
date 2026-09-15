@@ -13,7 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://andrew-liu-portfolio.dainty-robin-4747.chatgpt.site'),
+  metadataBase: new URL('https://andliu.dev'),
+  alternates: { canonical: '/' },
   title: 'Andrew Liu — Curiosity, put to work',
   description: 'Selected work by Andrew Liu. Thoughtful tools for visual learning, connected knowledge, and everyday systems.',
   icons: { icon: '/favicon.svg' },
