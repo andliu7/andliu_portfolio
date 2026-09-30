@@ -331,7 +331,7 @@ export function start(ctx, api){
       ctx.bus.emit('hunt:berry', { source: 'fishing', x: W.spot.x, z: W.spot.z });
     }
     // Every catch goes in the bag too (inventory has fish and berry icons; the boot falls back to its gift icon).
-    try { ctx.modules.inventory?.add?.(k.fish ? { id: 'fish-' + k.id, name: k.name, icon: 'fish' } : k.berry ? { id: 'berry', name: 'Blueberry', icon: 'berry' } : { id: 'boot', name: 'Old Boot', icon: 'boot' }); }
+    try { ctx.modules.inventory?.add?.(k.fish ? { id: 'fish-' + k.id, name: k.name, icon: 'fish' } : k.berry ? { id: 'blueberry', name: 'Blueberry', icon: 'berry' } : { id: 'boot', name: 'Old Boot', icon: 'boot' }); }
     catch(e){ console.error('[fishing] inventory add failed', e); }
     S.log.push(k.id);
     ctx.bus.emit('fishing:catch', { kind: k.id, name: k.name, fish: k.fish, berry: !!k.berry, tour });

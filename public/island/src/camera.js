@@ -4,13 +4,15 @@
 // ctx.camera and write the look-at point into ctx.state.focus (the sun's shadow box follows it).
 //
 // What it does:
-//  - Three presets, cycled with V (C calls the vehicle since round 5): follow (high chase behind
+//  - Three presets, cycled with P (C calls the vehicle, V is first person): follow (high chase behind
 //    the player), overview (high, fixed 3/4 view of the island), cinematic (low, off the shoulder).
 //    A fourth, god (high, looking down at a fixed slight tilt), is only set by setMode('god'); the
 //    drone uses it. Presets blend, never cut.
+//  - V toggles first person (see firstPerson): the walker's eyes, or a cockpit seat in the car.
+//    Both ways blend over 0.4 s. Rooms keep their own camera; the mode is back on return.
 //  - Drag (mouse left or right button, one finger) orbits around the player, wheel (core) and
 //    pinch (here) zoom through state.zoom. With holdView on (the default) the camera then HOLDS
-//    that world angle, even as the car turns, until V or a preset change recentres it. With it
+//    that world angle, even as the car turns, until P or a preset change recentres it. With it
 //    off, the orbit eases back to the preset after ~1.6 s, sooner once the player moves.
 //  - Buildings never sit between the player and the camera: a ray from the player to the camera
 //    is tested against building meshes (meshes standing on a box collider), and the camera is
@@ -98,6 +100,18 @@ export function init(ctx){
 
   // ---------- island update ----------
   function update(dt){
+    const on = fpActive();
+    if(on !== fp.was){ fp.was = on; startBlend(); if(on) fp.snap = true; else snap = true; }
+    let done = false;
+    if(on){
+      try { firstPerson(dt); done = true; }
+      catch(e){ console.warn('[camera] first person failed; back to follow', e); fp.on = fp.was = false; snap = true; }
+    }
+    if(!done){ hideHead(false); if(locked()) exitLock(); follow(dt); }
+    try { applyBlend(dt); } catch(e){ blend.t = 1; }
+  }
+
+  function follow(dt){
     const T = target || state.player;
     const p = PRESETS[preset], t = now();
     occAge += dt; if(occAge > 5){ occAge = 0; try { collectOccluders(); } catch(e){ occluders = []; } }
@@ -172,6 +186,108 @@ export function init(ctx){
   function aimAt(out, look, yaw, pitch, dist){
     return out.set(look.x + Math.sin(yaw)*Math.cos(pitch)*dist, look.y + Math.sin(pitch)*dist, look.z + Math.cos(yaw)*Math.cos(pitch)*dist);
   }
+
+  // ---------- first person (V) ----------
+  // Walking: the eye sits in the walker's head; mouse (pointer lock) or drag turns and tilts it.
+  // character.js steers WASD by ctx.camera's facing, so W walks where you look with nothing
+  // written to state.player. Driving: the driver's eye over the bonnet, trailing the car's turns a
+  // little; a look around eases back to straight ahead 1.5 s after the last input.
+  const PMAX = 1.22;                                   // pitch clamp, about 70 degrees either way
+  const fp = { on:false, was:false, snap:true, yaw:0, pitch:0, cy:0, ly:0, lp:0, fov:70, bob:0, lastInput:-1e9, hidden:false, near:camera.near };
+  const eye = new THREE.Vector3(), fdir = new THREE.Vector3(), flook = new THREE.Vector3();
+  const blend = { t:1, pos:new THREE.Vector3(), quat:new THREE.Quaternion(), fov:38 };
+  const bv = new THREE.Vector3(), bq = new THREE.Quaternion();
+  const fpActive = () => fp.on && !target;             // a drone (setTarget) takes the camera back
+  const locked = () => document.pointerLockElement === ctx.renderer.domElement;
+  function exitLock(){ try { if(locked()) document.exitPointerLock?.(); } catch(e){} }
+  function requestLock(){
+    try { const p = ctx.renderer.domElement.requestPointerLock?.(); if(p?.catch) p.catch(() => {}); } catch(e){}   // refused: drag still looks
+  }
+  // Hide the walker's head (character.js, if it offers it). Only then may the near plane come in,
+  // so a wall he stands against stays solid; without it the default near plane clips the head.
+  function hideHead(on){
+    if(fp.hidden === on) return;
+    fp.hidden = on;
+    let ok = false;
+    try { const f = ctx.modules.character?.setFirstPerson; if(typeof f === 'function'){ f(on); ok = true; } } catch(e){}
+    const n = on && ok ? 0.3 : fp.near;
+    if(camera.near !== n){ camera.near = n; camera.updateProjectionMatrix(); }
+  }
+  // Eye height in world y: character.headY (number or getter) if offered, else 1.5 m over his feet.
+  function headY(){
+    const c = ctx.modules.character, h = typeof c?.headY === 'function' ? c.headY() : c?.headY;
+    if(Number.isFinite(h)) return h;
+    const g = c?.group;
+    return (g && g.parent === ctx.scene ? g.position.y : 0) + 1.5;
+  }
+  // Yaw of where the camera faces now, in the heading convention: forward is (sin yaw, cos yaw).
+  function camYaw(){ camera.getWorldDirection(fdir); return Math.atan2(fdir.x, fdir.z); }
+  function fpLook(dx, dy, k){
+    // Moving right turns right, and with forward (sin yaw, cos yaw) turning right lowers yaw.
+    if(state.mode === 'drive'){ fp.ly = clamp(fp.ly - dx*k, -2.2, 2.2); fp.lp = clamp(fp.lp - dy*k, -0.9, 0.9); }
+    else { fp.yaw = wrap(fp.yaw - dx*k); fp.pitch = clamp(fp.pitch - dy*k, -PMAX, PMAX); }
+    fp.lastInput = now();
+  }
+  function setFirstPerson(on){
+    on = !!on;
+    if(on === fp.on) return fp.on;
+    fp.on = on; shot = null;
+    if(on){ fp.yaw = state.player.heading || 0; fp.pitch = 0; fp.ly = fp.lp = 0; say('First person  (V to go back)'); }
+    else { exitLock(); say('Camera: ' + PRESETS[preset].label + '  (P to change)'); }
+    return fp.on;
+  }
+  function firstPerson(dt){
+    const P = state.player, t = now();
+    const car = state.mode === 'drive' ? ctx.modules.car?.car : null;
+    hideHead(true);
+    if(locked() && ctx.modules.dialog?.busy?.()) exitLock();   // the dialog box wants its clicks
+    let yaw, pitch, fov;
+    if(car){
+      fp.cy = fp.snap ? car.heading : dampAngle(fp.cy, car.heading, 7, dt);   // trails the car's turn slightly
+      if(!drag.active && t - fp.lastInput > 1.5){ fp.ly = damp(fp.ly, 0, 2.5, dt); fp.lp = damp(fp.lp, 0, 2.5, dt); }
+      yaw = fp.cy + fp.ly; pitch = clamp(-0.1 + fp.lp, -PMAX, PMAX); fov = 64;   // -0.1: a touch down, over the bonnet
+      const seat = ctx.modules.car?.seat;
+      // The driver's head: seat, his root 0.36 below it, head 1.38 above that.
+      if(seat?.parent){ seat.updateWorldMatrix(true, false); seat.localToWorld(eye.set(0, 1.02, 0)); }
+      else eye.set(car.x - Math.sin(car.heading)*0.4, 2.1, car.z - Math.cos(car.heading)*0.4);
+    } else {
+      const speed = Math.abs(P.speed || 0), amt = state.reduced ? 0 : Math.min(1, speed/4.6);
+      if(amt > 0.05) fp.bob += dt*(6 + speed*1.9);                 // the walker's stride clock, so bobs land on steps
+      yaw = fp.yaw; pitch = fp.pitch; fov = speed > 6 ? 78 : 70;    // sprinting widens the view by 8 degrees
+      const s = Math.sin(fp.bob), sway = s*0.03*amt;
+      // Up and down twice a stride, side to side once; screen right at this yaw is (-cos yaw, 0, sin yaw).
+      eye.set(P.x - Math.cos(yaw)*sway, headY() + (Math.abs(s) - 0.5)*0.08*amt, P.z + Math.sin(yaw)*sway);
+    }
+    fp.fov = fp.snap ? fov : damp(fp.fov, fov, 5, dt);
+    if(Math.abs(camera.fov - fp.fov) > 0.01){ camera.fov = fp.fov; camera.updateProjectionMatrix(); }
+    // View direction from yaw and pitch; look at a point one metre down it.
+    fdir.set(Math.sin(yaw)*Math.cos(pitch), Math.sin(pitch), Math.cos(yaw)*Math.cos(pitch));
+    camera.position.copy(eye); camera.lookAt(flook.copy(eye).add(fdir));
+    // The sun's shadow box follows state.focus, so centre it on the ground 10 m ahead.
+    camLook.set(eye.x + Math.sin(yaw)*10, 0, eye.z + Math.cos(yaw)*10);
+    fp.snap = false;
+  }
+  // Blend: ease from the pose held when the camera changed owner to whatever this frame computed.
+  function startBlend(){ blend.t = state.reduced ? 1 : 0; blend.pos.copy(camera.position); blend.quat.copy(camera.quaternion); blend.fov = camera.fov; }
+  function applyBlend(dt){
+    if(blend.t >= 1) return;
+    blend.t = Math.min(1, blend.t + dt/0.4);
+    const k = blend.t*blend.t*(3 - 2*blend.t);                        // smoothstep
+    bv.copy(camera.position); camera.position.lerpVectors(blend.pos, bv, k);
+    bq.copy(camera.quaternion); camera.quaternion.copy(blend.quat).slerp(bq, k);
+    camera.fov = blend.fov + (camera.fov - blend.fov)*k; camera.updateProjectionMatrix();
+  }
+  // Hopping in or out mid first person: blend from the old eye; walking keeps the car's facing.
+  bus.on('mode', ({ from, to }) => {
+    if(!fp.on || from === 'interior' || to === 'interior') return;
+    startBlend(); fp.snap = true; fp.ly = fp.lp = 0;
+    if(to === 'walk'){ fp.yaw = camYaw(); fp.pitch = 0; }
+  });
+  // Rooms own their camera: show his head there and free the mouse. fp.on survives, so the island
+  // comes back in first person, facing out of the door.
+  bus.on('interior:enter', () => { hideHead(false); exitLock(); blend.t = 1; });
+  bus.on('interior:exit', ({ door }) => { if(fp.on){ fp.yaw = door ? door.heading : (state.player.heading || 0); fp.pitch = 0; fp.snap = true; } });
+  bus.on('game:start', exitLock);
 
   // ---------- exit shot: a composed view of the walker, the building front and the car ----------
   // Leaving a room drops the walker just outside the door, facing away from it. A plain chase
@@ -275,12 +391,13 @@ export function init(ctx){
   const canUse = () => state.started && !(ctx.modules.games?.active?.());
   function orbitBy(dx, dy){
     const inside = state.mode === 'interior';
+    if(!inside && fpActive()){ fpLook(dx, dy, 0.0045); return; }
     const o = inside ? iuser : user;
     o.yaw -= dx*0.0055; o.pitch += dy*0.004;
     if(inside){ o.yaw = clamp(o.yaw, -0.55, 0.55); o.pitch = clamp(o.pitch, -0.5, 0.5); }
     else {
       o.yaw = wrap(o.yaw); o.pitch = clamp(o.pitch, -0.62, 0.8);
-      if(holdOn && !held){ held = true; say('View held. V to recentre'); }
+      if(holdOn && !held){ held = true; say('View held. P to recentre'); }
     }
     o.lastInput = now();
   }
@@ -290,12 +407,15 @@ export function init(ctx){
   }
   el.addEventListener('pointerdown', e => {
     if(!canUse() || (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 2)) return;
+    if(e.pointerType === 'mouse' && state.mode !== 'interior' && fpActive() && !locked()) requestLock();
     drag.pts.set(e.pointerId, { x:e.clientX, y:e.clientY });
     try { el.setPointerCapture(e.pointerId); } catch(err){}
     drag.active = true; drag.moved = 0;
     if(drag.pts.size === 2){ const [a, b] = [...drag.pts.values()]; drag.pinch = Math.hypot(a.x - b.x, a.y - b.y); }
   });
   el.addEventListener('pointermove', e => {
+    // Pointer lock: the cursor never moves, so read the raw movement and look with it, button or not.
+    if(locked()){ if(canUse() && state.mode !== 'interior' && fpActive()) fpLook(e.movementX || 0, e.movementY || 0, 0.0025); return; }
     const pt = drag.pts.get(e.pointerId); if(!pt) return;
     const dx = e.clientX - pt.x, dy = e.clientY - pt.y;
     pt.x = e.clientX; pt.y = e.clientY;
@@ -337,22 +457,30 @@ export function init(ctx){
   function setPreset(name, announce = true){
     if(!PRESETS[name]) return false;
     preset = name; user.yaw = 0; user.pitch = 0; held = false;
-    if(announce) say('Camera: ' + PRESETS[name].label + '  (V to change)');
+    if(announce) say('Camera: ' + PRESETS[name].label + '  (P to change)');
     return true;
   }
   function cycle(){
     if(state.mode === 'interior'){ iuser.yaw = iuser.pitch = 0; izoom = 1; say('Camera: room view'); return 'room'; }
-    // A held view recentres first (V again then cycles). God view belongs to the drone: V only recentres it.
-    if(held || preset === 'god'){ held = false; say('Camera: ' + PRESETS[preset].label + '  (V to change)'); return preset; }
+    if(fp.on){ setFirstPerson(false); return preset; }     // P from first person goes back to the preset
+    // A held view recentres first (P again then cycles). God view belongs to the drone: P only recentres it.
+    if(held || preset === 'god'){ held = false; say('Camera: ' + PRESETS[preset].label + '  (P to change)'); return preset; }
     setPreset(ORDER[(ORDER.indexOf(preset) + 1) % ORDER.length]);
     return preset;
   }
-  bus.on('key', ({ code, down, repeat }) => { if(code === 'KeyV' && down && !repeat && !ctx.modules.games?.active?.()) cycle(); });
-  bus.on('teleport', () => { snap = true; shot = null; user.yaw = user.pitch = 0; user.hold = false; held = false; });
+  // P cycles presets, V toggles first person (never while typing or while a dialog box is open).
+  const typing = () => { const a = document.activeElement; return !!a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); };
+  bus.on('key', ({ code, down, repeat }) => {
+    if(!down || repeat) return;
+    if(code === 'KeyP' && !ctx.modules.games?.active?.()) cycle();
+    else if(code === 'KeyV' && state.mode !== 'interior' && !typing() && !ctx.modules.dialog?.busy?.()) setFirstPerson(!fp.on);
+  });
+  bus.on('teleport', () => { snap = true; shot = null; user.yaw = user.pitch = 0; user.hold = false; held = false; fp.yaw = state.player.heading || 0; fp.pitch = 0; fp.snap = true; });
   // Stepping out of a room: the composed exit shot. If no candidate passes, fall back to facing
   // the door and holding that until the player moves off (then ease round behind as usual).
   bus.on('interior:exit', ({ door }) => {
     user.yaw = user.pitch = 0; user.hold = false; held = false; snap = true; shot = null;
+    if(fp.on) return;                              // first person comes back facing out of the door instead
     try { shot = exitShot(door); } catch(e){ console.warn('[camera] exit shot failed', e); shot = null; }
     if(!shot){ user.yaw = Math.PI; user.hold = true; }
   });
@@ -417,6 +545,8 @@ export function init(ctx){
     snap(){ snap = true; shot = null; },
     presets: ORDER.slice(),
     cycle,
+    // firstPerson(bool) turns first person on or off (as V does); no argument reads it.
+    firstPerson(on){ return on === undefined ? fp.on : setFirstPerson(on); },
   };
   try {
     ctx.expose('camera', {
@@ -424,11 +554,15 @@ export function init(ctx){
       holdView: on => api.holdView(on), held: () => held,
       presets: () => ORDER.slice(),
       cycle,
+      firstPerson: on => api.firstPerson(on),
+      // First person look by degrees (+yaw turns left, +pitch looks up). Driving eases back after 1.5 s.
+      look: (yawDeg = 0, pitchDeg = 0) => { fpLook(-yawDeg*Math.PI/180, -pitchDeg*Math.PI/180, 1); return { yaw:fp.yaw, pitch:fp.pitch, ly:fp.ly, lp:fp.lp }; },
       // Orbit by degrees, as a drag would. Held while holdView is on, else eases back after ~1.6 s.
       orbit: (yawDeg = 0, pitchDeg = 0) => { orbitBy(-yawDeg*Math.PI/180/0.0055, pitchDeg*Math.PI/180/0.004); if(state.mode !== 'interior') user.lastInput = now() + 3; else iuser.lastInput = now() + 3; },
       zoom: v => { if(v !== undefined){ if(state.mode === 'interior') izoom = clamp(v, 0.55, 1.35); else state.zoom = clamp(v, 0.6, 1.7); } return state.mode === 'interior' ? izoom : state.zoom; },
       info: () => ({ preset, mode:state.mode, yaw:rig.yaw + user.yaw, pitch:rig.pitch + user.pitch, lift:pitchLift, dist:camDist, want:rig.dist*zoomS,
-        occluders:occluders.length, held, holdView:holdOn, shot: shot ? { yaw:+shot.yaw.toFixed(2), pitch:shot.pitch, dist:shot.dist, score:+shot.score.toFixed(2), ms:shot.ms } : null, user:{ ...user }, interior:{ ...iuser, zoom:izoom }, pos:camera.position.toArray().map(v => +v.toFixed(2)) }),
+        occluders:occluders.length, held, holdView:holdOn,
+        fp:{ on:fp.on, active:fpActive(), yaw:+fp.yaw.toFixed(3), pitch:+fp.pitch.toFixed(3), look:[+fp.ly.toFixed(3), +fp.lp.toFixed(3)], fov:+camera.fov.toFixed(1), near:camera.near, hidden:fp.hidden, locked:locked(), blend:+blend.t.toFixed(2) }, shot: shot ? { yaw:+shot.yaw.toFixed(2), pitch:shot.pitch, dist:shot.dist, score:+shot.score.toFixed(2), ms:shot.ms } : null, user:{ ...user }, interior:{ ...iuser, zoom:izoom }, pos:camera.position.toArray().map(v => +v.toFixed(2)) }),
     });
   } catch(e){ console.warn('[camera] expose failed', e); }
   return api;

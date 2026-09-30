@@ -10,6 +10,12 @@ let W = null;
 
 const ICON = `<svg viewBox="0 0 40 40" width="40" height="40"><circle cx="20" cy="23" r="12" fill="#5b6fd6" stroke="#1f2a44" stroke-width="2"/><path d="M15 13l2.5 3 2.5-4 2.5 4 2.5-3-1 5h-8z" fill="#27306b"/><ellipse cx="15.5" cy="20" rx="3" ry="2" fill="#fff" opacity=".6"/></svg>`;
 
+// Every berry the hunt collects also goes in the bag.
+function bag(ctx){
+  try { ctx.modules.inventory?.add?.({ id: 'blueberry', name: 'Blueberry', icon: 'berry' }); }
+  catch(e){ console.error('[hunt] inventory add failed', e); }
+}
+
 function spokeDist(ctx, x, z){
   let m = 1e9;
   for(const zn of ctx.zones){ const [ex, ez] = ctx.helpers.frameOf(zn).w(0, 10); m = Math.min(m, ctx.helpers.segDist(x, z, ex, ez)); }
@@ -63,7 +69,15 @@ export function setup(ctx, reg){
   const arrow = new THREE.Mesh(new THREE.ShapeGeometry(shape), new THREE.MeshBasicMaterial({ color: '#5b6fd6', transparent: true, opacity: .85, side: THREE.DoubleSide, depthTest: false }));
   arrow.rotation.order = 'YXZ'; arrow.renderOrder = 5; arrow.visible = false; scene.add(arrow);
 
-  W = { berry, sparks, arrow, live: [], station: { x: bx, z: bz } };
+  W = { berry, sparks, arrow, live: [], station: { x: bx, z: bz }, banked: 0, onBerry: null };
+  // bus 'hunt:berry' is a berry found outside the hunt (fishing emits it on a berry catch). Starting
+  // fishing stops any running hunt, so a fished berry is banked and the next hunt starts with it in
+  // the basket; if some other source fires during a run, onBerry counts it straight away.
+  // Fishing puts its own catch in the bag, so only other sources are bagged here.
+  ctx.bus.on('hunt:berry', d => {
+    if(d?.source !== 'fishing') bag(ctx);
+    if(W.onBerry) W.onBerry(); else W.banked++;
+  });
   ctx.hud.minimapLayers.push((g, toMap) => {
     const [sx, sy] = toMap(bx, bz); g.fillStyle = '#3b4f9e'; g.beginPath(); g.arc(sx, sy, 3, 0, 7); g.fill();
     for(const b of W.live){ if(b.got) continue; const [x, y] = toMap(b.x, b.z); g.fillStyle = '#3b4f9e'; g.strokeStyle = '#fff'; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill(); g.stroke(); }
@@ -120,16 +134,23 @@ export function start(ctx, api){
     K.hud.chips([['got', 'Berries', true], ['left', 'Time left'], ['best', 'Best']]);
     const b = best.get('hunt'); K.hud.set('got', `0/${W.live.length}`); K.hud.set('best', b ? `${b.berries}/${COUNT}` : '-'); K.hud.show(true);
     K.big('Go!'); K.sfx.go(); K.hint('Follow the blue arrow · <kbd>Esc</kbd> quit');
+    // Berries fished since the last hunt start in the basket (at most all but one, so a hunt is never won before it starts).
+    const head = Math.min(W.banked, W.live.length - 1); W.banked -= head;
+    for(let i=0; i<head; i++) collect(W.live[i], true);
+    if(head) K.toast(`${head} fished ${head === 1 ? 'berry' : 'berries'} already in the basket`, 'good');
+    W.onBerry = () => { const b = W.live.find(q => !q.got); if(b && S.phase === 'run') collect(b, true); };
   }
-  function collect(b){
-    b.got = true; S.got++; K.sfx.good(S.got);
-    let n = 0; for(const s of W.sparks){ if(s.life > 0 || n >= 9) continue; n++; s.m.position.set(b.x, 1.4, b.z); s.v.set((Math.random() - .5)*7, 4 + Math.random()*4, (Math.random() - .5)*7); s.life = 0.7; s.m.visible = true; }
+  // quiet: a berry that came from elsewhere (fishing), already in the bag, so no bag add and no pop at the spot.
+  function collect(b, quiet = false){
+    b.got = true; S.got++;
+    if(!quiet){ K.sfx.good(S.got); bag(ctx);
+      let n = 0; for(const s of W.sparks){ if(s.life > 0 || n >= 9) continue; n++; s.m.position.set(b.x, 1.4, b.z); s.v.set((Math.random() - .5)*7, 4 + Math.random()*4, (Math.random() - .5)*7); s.life = 0.7; s.m.visible = true; } }
     b.pop = 0.25;
     K.hud.set('got', `${S.got}/${W.live.length}`);
     if(S.got === W.live.length) finish(true); else K.toast(`${W.live.length - S.got} to go`, 'good');
   }
   function finish(all){
-    S.phase = 'done'; K.hint(null); W.arrow.visible = false;
+    S.phase = 'done'; W.onBerry = null; K.hint(null); W.arrow.visible = false;
     const time = (performance.now() - S.t0)/1000;
     const old = best.get('hunt');
     const isBest = !S.test && S.got > 0 && (!old || S.got > old.berries || (S.got === old.berries && all && time < old.time));
@@ -168,7 +189,7 @@ export function start(ctx, api){
       }
       if(S.phase === 'run' && S.left <= 0) finish(false);
     },
-    stop(){ offs.forEach(o => o?.()); clearBerries(); W.arrow.visible = false; for(const s of W.sparks){ s.life = 0; s.m.visible = false; } K.destroy(); },
+    stop(){ offs.forEach(o => o?.()); W.onBerry = null; clearBerries(); W.arrow.visible = false; for(const s of W.sparks){ s.life = 0; s.m.visible = false; } K.destroy(); },
     state: () => ({ phase: S.phase, got: S.got, total: S.total, left: +Math.max(0, S.left).toFixed(1), berries: W.live.map(b => ({ x: +b.x.toFixed(1), z: +b.z.toFixed(1), got: b.got })) }),
     debug(cmd){
       if(cmd !== 'start') S.test = true;

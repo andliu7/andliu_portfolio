@@ -42,15 +42,52 @@ export async function init(ctx){
     const outer = new THREE.Group(); outer.position.y = y; outer.scale.set(w/Math.SQRT2*1.08, h, d/Math.SQRT2*1.08); parent.add(outer);
     const c = mesh(new THREE.ConeGeometry(1, 1, 4), color, 0, 0.5, 0, outer); c.rotation.y = Math.PI/4; return outer;
   }
-  function house(zone, f, g, { w, d, h, color, roofColor, lx=0, lz=0, windows=true, door='#6b4a33' }){
-    box(w, h, d, color, lx, h/2, lz, g);
-    if(roofColor) roof(g, w, d, h*0.55, h, roofColor);
-    box(1.3, 2.1, 0.12, door, lx, 1.05, lz + d/2 + 0.02, g);
-    if(windows) for(const sx of [-w/3, w/3]){ box(1.1, 1.0, 0.1, '#ffe7b0', lx+sx, h*0.58, lz + d/2 + 0.02, g, { emissive:'#ffb85c', emissiveIntensity:1.5 }); box(1.3, 0.14, 0.2, '#ffffff', lx+sx, h*0.58 - 0.6, lz + d/2 + 0.05, g); }
+  // Each zone's building comes from houses.js (one design per zone, previewed in _test/houses.html).
+  // It is loaded softly like art.js: if the import or one design throws, that zone gets the old box
+  // house instead. house() returns true when the houses.js design was used, so a zone can skip the
+  // roof toppers that the design already draws. y lifts the design (the dock stands on its deck).
+  let HOUSES = null;
+  try { HOUSES = await import('./houses.js'); } catch(e){ console.error('[map] houses.js unavailable, using box houses', e); }
+  function house(zone, f, g, { w, d, h, color, roofColor, lx=0, lz=0, y=0, windows=true, door='#6b4a33' }){
+    let hg = null;
+    if(HOUSES) try { hg = HOUSES.buildHouse(ctx, zone, { w, d, h, color, roofColor }); }
+    catch(e){ console.error(`[map] houses.js failed for ${zone.id}, using the box house`, e); hg = null; }
+    if(hg){
+      hg.position.set(lx, y, lz); g.add(hg);
+      spinners.push(...(hg.userData.spin || [])); wavers.push(...(hg.userData.wave || []));
+      dressDoor(zone, f, g, hg, { d, lx, lz, y });
+    } else {
+      box(w, h, d, color, lx, h/2, lz, g);
+      if(roofColor) roof(g, w, d, h*0.55, h, roofColor);
+      box(1.3, 2.1, 0.12, door, lx, 1.05, lz + d/2 + 0.02, g);
+      if(windows) for(const sx of [-w/3, w/3]){ box(1.1, 1.0, 0.1, '#ffe7b0', lx+sx, h*0.58, lz + d/2 + 0.02, g, { emissive:'#ffb85c', emissiveIntensity:1.5 }); box(1.3, 0.14, 0.2, '#ffffff', lx+sx, h*0.58 - 0.6, lz + d/2 + 0.05, g); }
+    }
     const [wx, wz] = f.w(lx, lz); solidBox(wx, wz, f.ang, w, d, h);
-    houses.push({ zone, g, w, d, h, lx, lz, color, roofColor, windows });   // art.js dresses these
+    houses.push({ zone, g, w, d, h, lx, lz, y, color, roofColor, windows, designed:!!hg });   // art.js dresses these
+    return !!hg;
   }
   const houses = [];
+
+  // Make a houses.js door easy to find: a vivid version of its own colours on its own material (so
+  // it can glow as it opens without touching the shared wall material), a welcome mat past the
+  // step, and an entry in swingDoors so the update hook below can swing it.
+  const swingDoors = [];
+  function dressDoor(zone, f, g, hg, { d, lx, lz, y }){
+    const { door } = HOUSES.doorParts(hg); if(!door) return;
+    const c = door.geometry.attributes.color, col = new THREE.Color(), hsl = {};
+    if(c){
+      for(let i=0; i<c.count; i++){
+        col.fromBufferAttribute(c, i).getHSL(hsl, THREE.SRGBColorSpace);
+        col.setHSL(hsl.h, Math.max(hsl.s, 0.7), Math.max(hsl.l, 0.55), THREE.SRGBColorSpace); c.setXYZ(i, col.r, col.g, col.b);
+      }
+      c.needsUpdate = true;
+    }
+    door.material = door.material.clone(); door.material.emissive = new THREE.Color(zone.color); door.material.emissiveIntensity = 0.12;
+    const fz = lz + d/2;
+    const rim = box(2.0, 0.05, 1.05, '#fffaf0', lx, y + 0.075, fz + 1.35, g), mid = box(1.7, 0.05, 0.8, zone.color, lx, y + 0.085, fz + 1.35, g);
+    rim.castShadow = mid.castShadow = false;
+    const [x, z] = f.w(lx, fz); swingDoors.push({ zone:zone.id, door, x, z, p:0 });
+  }
 
   /* ------------------------------------------------------------------ */
   /* Build the island: terrain, water, roads, bridges, scatter          */
@@ -423,9 +460,10 @@ export async function init(ctx){
       const boardAt = (lx, lz, w, h, draw, o={}) => { board(g, lx, lz, w, h, draw, o); const [bx, bz] = W(lx, lz); solidBox(bx, bz, f.ang + (o.rot || 0), w+0.4, 0.5, 3); };
       switch(z.id){
         case 'blueberry': {
-          house(z, f, g, { w:12, d:8, h:6, color:'#6d80e0', roofColor:'#2c3a8f' });
-          ball(2.4, '#3b4f9e', 0, 9.4, 0, g, 28);
-          for(let i=0;i<5;i++){ const a = i/5*Math.PI*2; const c = mesh(new THREE.ConeGeometry(0.35, 0.9, 6), '#23306b', Math.cos(a)*0.55, 11.7, Math.sin(a)*0.55, g); c.rotation.z = Math.cos(a)*0.8; c.rotation.x = -Math.sin(a)*0.8; }
+          if(!house(z, f, g, { w:12, d:8, h:6, color:'#6d80e0', roofColor:'#2c3a8f' })){   // the houses.js design has its own giant berry
+            ball(2.4, '#3b4f9e', 0, 9.4, 0, g, 28);
+            for(let i=0;i<5;i++){ const a = i/5*Math.PI*2; const c = mesh(new THREE.ConeGeometry(0.35, 0.9, 6), '#23306b', Math.cos(a)*0.55, 11.7, Math.sin(a)*0.55, g); c.rotation.z = Math.cos(a)*0.8; c.rotation.x = -Math.sin(a)*0.8; }
+          }
           boardAt(-5.5, 7, 5.4, 3, DRAW.blueberry, { animate:true, rot:0.25 });
           // the team of five
           [-3,-1.5,0,1.5,3].forEach((lx, i) => { const [x, zz] = W(lx + 3, 6.5 + (i%2)*0.8); berry(x, zz); });
@@ -460,15 +498,16 @@ export async function init(ctx){
         case 'dock': {
           const deck = box(16, 0.3, 9, '#c89b6d', 0, 0.15, -1, g); deck.castShadow = false;
           for(let i=-7;i<=7;i+=1.4){ const pl = box(0.06, 0.02, 9, '#a47a4f', i, 0.31, -1, g); pl.castShadow = false; }
-          house(z, f, g, { w:6, d:4, h:3.6, color:'#2f9e8f', roofColor:'#1f6f64', lz:-3.5 });
+          house(z, f, g, { w:6, d:4, h:3.6, color:'#2f9e8f', roofColor:'#1f6f64', lz:-3.5, y:0.3 });
           boardAt(-4.5, 5.5, 5, 3, DRAW.dock, { rot:0.2 });
           for(let i=0;i<3;i++){ const [x, zz] = W(-3 + i*3, 1.5); robot(x, zz, { wander:{ cx:W(0,1)[0], cz:W(0,1)[1], r:5.5 }, speed:9 }); }
           for(const lx of [5.5, 6.6, 6.0]){ const [cx, cz] = W(lx, 3 + (lx===6.0?1.1:0)); crate(cx, cz, '#8fd1c6'); }
           break;
         }
         case 'school': {
-          house(z, f, g, { w:11, d:7, h:5, color:'#d9534f', roofColor:'#7a2e2b' });
-          box(1.8, 2.2, 1.8, '#f3e2b8', 0, 7.2, 0, g); roof(g, 1.8, 1.8, 1.4, 8.3, '#7a2e2b'); ball(0.4, '#ffd166', 0, 7.2, 0.95, g, 12);
+          if(!house(z, f, g, { w:11, d:7, h:5, color:'#d9534f', roofColor:'#7a2e2b' })){   // the design has its own bell tower
+            box(1.8, 2.2, 1.8, '#f3e2b8', 0, 7.2, 0, g); roof(g, 1.8, 1.8, 1.4, 8.3, '#7a2e2b'); ball(0.4, '#ffd166', 0, 7.2, 0.95, g, 12);
+          }
           boardAt(-5.2, 7.2, 5.2, 2.8, DRAW.chalk, { frame:'#5a3d26', rot:0.2 });
           const kids = ['#ffadad','#ffd6a5','#fdffb6','#caffbf','#9bf6ff','#bdb2ff'];
           kids.forEach((c, i) => { const [x, zz] = W(-3.4 + (i%3)*3.4, 11 + Math.floor(i/3)*1.8); const k = blob(c, x, zz, { face:false }); k.g.rotation.y = f.ang + Math.PI; k.yaw = k.g.rotation.y; });
@@ -487,12 +526,13 @@ export async function init(ctx){
           break;
         }
         case 'clinic': {
-          house(z, f, g, { w:12, d:8, h:5, color:'#f7fbfd', roofColor:null, door:'#4fa3c7' });
-          box(12.05, 0.5, 8.05, '#4fa3c7', 0, 4.2, 0, g);
-          // big tooth sign on the roof
-          const sign = new THREE.Group(); sign.position.set(0, 5, 0); sign.scale.setScalar(2.2); g.add(sign);
-          const tb = ball(0.62, '#ffffff', 0, 1.0, 0, sign, 20); tb.scale.set(1, .85, .6); for(const sx of [-.28,.28]){ const r = mesh(new THREE.ConeGeometry(0.2, 0.7, 12), '#ffffff', sx, 0.38, 0, sign); r.rotation.x = Math.PI; }
-          spinners.push(sign);
+          if(!house(z, f, g, { w:12, d:8, h:5, color:'#f7fbfd', roofColor:null, door:'#4fa3c7' })){   // the design has its own band and turning tooth
+            box(12.05, 0.5, 8.05, '#4fa3c7', 0, 4.2, 0, g);
+            // big tooth sign on the roof
+            const sign = new THREE.Group(); sign.position.set(0, 5, 0); sign.scale.setScalar(2.2); g.add(sign);
+            const tb = ball(0.62, '#ffffff', 0, 1.0, 0, sign, 20); tb.scale.set(1, .85, .6); for(const sx of [-.28,.28]){ const r = mesh(new THREE.ConeGeometry(0.2, 0.7, 12), '#ffffff', sx, 0.38, 0, sign); r.rotation.x = Math.PI; }
+            spinners.push(sign);
+          }
           { const [x, zz] = W(3.5, 6.5); tooth(x, zz, 1.2); }
           // the figurine, fixed on a pedestal by the door
           const fig = new THREE.Group(); fig.position.set(-2.4, 0, 4.7); g.add(fig);
@@ -503,9 +543,10 @@ export async function init(ctx){
           break;
         }
         case 'chapel': {
-          house(z, f, g, { w:7, d:9, h:5, color:'#fbf6ea', roofColor:'#8a6440' });
-          box(1.8, 3, 1.8, '#fbf6ea', 0, 6.4, 2.6, g); roof(g, 1.8, 1.8, 2, 7.9, '#8a6440');
-          box(0.22, 1.5, 0.22, '#c9a24a', 0, 10.5, 2.6, g); box(0.9, 0.22, 0.22, '#c9a24a', 0, 10.75, 2.6, g);
+          if(!house(z, f, g, { w:7, d:9, h:5, color:'#fbf6ea', roofColor:'#8a6440' })){   // the design has its own steeple and cross
+            box(1.8, 3, 1.8, '#fbf6ea', 0, 6.4, 2.6, g); roof(g, 1.8, 1.8, 2, 7.9, '#8a6440');
+            box(0.22, 1.5, 0.22, '#c9a24a', 0, 10.5, 2.6, g); box(0.9, 0.22, 0.22, '#c9a24a', 0, 10.75, 2.6, g);
+          }
           boardAt(5.5, 7, 4.8, 2.8, DRAW.chapel, { rot:-0.25 });
           const ring = ['#ffadad','#ffd6a5','#fdffb6','#caffbf','#9bf6ff','#a0c4ff','#bdb2ff','#ffc6ff','#ffb4a2','#e5989b','#b5e48c','#99d98c'];
           const [rcx, rcz] = W(-5, 9.5);
@@ -590,6 +631,20 @@ export async function init(ctx){
     for(const b of bobbers){ b.o.position.y = b.base + Math.sin(t*1.6 + b.ph)*0.06; b.o.rotation.z = Math.sin(t*1.1 + b.ph)*0.05; }
   }, 70);
 
+  // Doors swing open while the player is within DOOR_NEAR metres of them and close when they leave.
+  // p walks 0..1 at a steady rate and the angle is smoothstep(p), so each swing eases in and out.
+  // A negative rotation.y turns the free edge out toward the player (see _test/houses.html).
+  const DOOR_NEAR = 6, DOOR_SWING = 1.35;
+  ctx.onUpdate((dt, t, mode) => {
+    const P = ctx.state.player; if(mode === 'interior' || !P) return;
+    for(const s of swingDoors){
+      const want = Math.hypot(P.x - s.x, P.z - s.z) < DOOR_NEAR ? 1 : 0; if(s.p === want) continue;
+      s.p = ctx.state.reduced ? want : want > s.p ? Math.min(1, s.p + dt/0.7) : Math.max(0, s.p - dt/0.9);
+      const e = s.p*s.p*(3 - 2*s.p);
+      s.door.rotation.y = -DOOR_SWING*e; s.door.material.emissiveIntensity = 0.12 + 0.3*e;
+    }
+  }, 70);
+
   // Door exits in each zone's local frame (+z faces the plaza). The player is put here, facing
   // away from the building, when leaving that zone's interior. Chosen to clear every collider.
   const DOORS = {
@@ -634,7 +689,7 @@ export async function init(ctx){
     if(ctx.state.mode === 'interior') ctx.modes.exitInterior();
     ctx.modes.placePlayer(s.x, s.z, s.heading); ctx.bus.emit('teleport', { zoneId:null, spot:name, x:s.x, z:s.z }); return true;
   }
-  try { ctx.expose('map', { overview:setOverview, goto, spots:() => Object.keys(SPOTS), stats:() => ({ ...stats, radius:Lay.radius, bridges:Lay.bridges.length, roads:Lay.roads.length, colliders:ctx.colliders.length }) }); }
+  try { ctx.expose('map', { overview:setOverview, goto, spots:() => Object.keys(SPOTS), doors:() => swingDoors.map(s => ({ zone:s.zone, open:+s.p.toFixed(2), x:+s.x.toFixed(1), z:+s.z.toFixed(1) })), stats:() => ({ ...stats, radius:Lay.radius, bridges:Lay.bridges.length, roads:Lay.roads.length, colliders:ctx.colliders.length }) }); }
   catch(e){ console.warn('[map] expose failed', e); }
 
   // Art pass: bank and zone vegetation, lamps, leaves and clutter, wind, the start-screen diorama.

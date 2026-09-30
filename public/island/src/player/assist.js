@@ -1,18 +1,17 @@
-// Driving assist, three parts that only touch the active vehicle's x, z, heading and speed:
+// Driving assist: the road guide and soft barriers. It only touches the active vehicle's x, z, heading and speed.
 // 1. Road guide (G, on by default): eases the heading toward the lane ahead while you drive
 //    forward on or near a road. Strongest on bridges, weak on the verge, off on open ground.
 //    Any steering input scales it down to nothing, and it lets go once you point off the road.
-// 2. Wall sliding (always on): pressing into any collider at an angle turns the car along the
-//    wall and keeps the along-wall speed, with a scrape, instead of bouncing back.
+// 2. Wall sliding moved to car.js (resolveCar), so there is one implementation and nothing here
+//    fights it.
 // 3. Soft barriers: striped kerb walls with tyre stacks on the corners along a path, used by the
 //    race (barriers() below) and by the tour through api.corridor(points).
 const KEY = 'island.assist.guide';
 const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
 
 export function init(ctx){
-  const { THREE, state, input, sound } = ctx;
+  const { THREE, state, input } = ctx;
   const car = () => { const c = ctx.modules.car?.car; return c && Number.isFinite(c.x) && Number.isFinite(c.heading) ? c : null; };
-  const radius = () => ctx.modules.car?.radius ?? 1.45;
   const lay = () => ctx.modules.map?.layout;
 
   let on = true;
@@ -107,62 +106,11 @@ export function init(ctx){
     return { r, k, dir, lat: target };
   }
 
-  /* ---------- 2. wall sliding ---------- */
-  // Push-out direction at (x, z) for a disc of radius R, summed over every collider it overlaps,
-  // weighted by depth. A chain of rail posts averages into one smooth wall normal.
-  function contact(x, z, R){
-    let sx = 0, sz = 0, hit = false;
-    for(const c of ctx.colliders){
-      const dx = x - c.x, dz = z - c.z;
-      if(c.kind === 'circle'){
-        const m = R + c.r; if(Math.abs(dx) > m || Math.abs(dz) > m) continue;
-        const d = Math.hypot(dx, dz); if(d >= m || d < 1e-5) continue;
-        const w = m - d + 0.02; sx += dx/d*w; sz += dz/d*w; hit = true;
-      } else {
-        const reach = R + c.hw + c.hd; if(Math.abs(dx) > reach || Math.abs(dz) > reach) continue;
-        const co = Math.cos(c.ang), si = Math.sin(c.ang), lx = dx*co - dz*si, lz = dx*si + dz*co;
-        const ex = lx - Math.max(-c.hw, Math.min(c.hw, lx)), ez = lz - Math.max(-c.hd, Math.min(c.hd, lz)), d = Math.hypot(ex, ez);
-        if(d >= R || d < 1e-5) continue;
-        const w = R - d + 0.02, ux = ex/d, uz = ez/d; sx += (ux*co + uz*si)*w; sz += (-ux*si + uz*co)*w; hit = true;
-      }
-    }
-    const lim = (ctx.island?.radius ?? 96) - 2.5, rr = Math.hypot(x, z);
-    if(rr > lim - 0.06){ sx -= x/rr*0.1; sz -= z/rr*0.1; hit = true; }
-    if(!hit) return null;
-    const l = Math.hypot(sx, sz); return l < 1e-6 ? null : { x: sx/l, z: sz/l };
-  }
-  let scrapeT = 0, sliding = 0, slides = 0;
-  // Turn the velocity into its along-wall part. A near head-on hit (over ~70 degrees) is left to
-  // the vehicle's own bump, like Bruno's car stopping when it meets a wall square on.
-  function slide(c, n, dt){
-    const fx = Math.sin(c.heading), fz = Math.cos(c.heading), vx = fx*c.speed, vz = fz*c.speed;
-    const vn = vx*n.x + vz*n.z; if(vn > -0.05) return false;
-    const tx = vx - vn*n.x, tz = vz - vn*n.z, vt = Math.hypot(tx, tz);
-    if(vt < Math.abs(c.speed)*0.34) return false;
-    const sg = Math.sign(c.speed);
-    c.heading = Math.atan2(sg*tx, sg*tz); c.speed = sg*vt*Math.exp(-0.35*dt);
-    if(!sliding) ctx.modules.car?.bump?.(0.25);
-    sliding = 0.15; slides++;
-    if((scrapeT -= dt) <= 0){ scrapeT = 0.06; sound.tone(210 + Math.random()*120, 0.08, 'sawtooth', Math.min(0.045, 0.012 + Math.abs(c.speed)*0.0015), 120); }
-    return true;
-  }
-  let pre = 0;
-  // Order 9, just before the vehicle moves: if this frame's step would run into something, slide now.
-  ctx.onUpdate((dt, t, mode) => {
-    const c = car(); pre = c ? c.speed : 0;
-    if(mode !== 'drive' || !state.started || !c || Math.abs(c.speed) < 1.5) return;
-    const s = c.speed*dt, n = contact(c.x + Math.sin(c.heading)*s, c.z + Math.cos(c.heading)*s, radius() + 0.06);
-    if(n) slide(c, n, dt);
-  }, 9);
-
   /* ---------- per frame, order 11 ---------- */
   ctx.onUpdate((dt, t, mode) => {
-    sliding = Math.max(0, sliding - dt);
     const c = mode === 'drive' && state.started ? car() : null;
     let lane = null;
     if(c){
-      // Safety net: if the vehicle still bounced off something (speed flipped), redo it as a slide.
-      if(pre > 3 && c.speed < 0){ const n = contact(c.x, c.z, radius() + 0.12); if(n){ const bounced = c.speed; c.speed = pre; if(!slide(c, n, dt)) c.speed = bounced; } }
       lane = guide(dt, c);
       const P = state.player; P.heading = c.heading; P.speed = c.speed;
       if(c.group) c.group.rotation.y = c.heading;
@@ -229,7 +177,7 @@ export function init(ctx){
 
   const api = {
     on: () => on, set, corridor, clear,
-    state: () => ({ on, ...G, sliding: sliding > 0, slides, corridor: cor ? cor.walls.count : 0 }),
+    state: () => ({ on, ...G, corridor: cor ? cor.walls.count : 0 }),
   };
   ctx.expose('assist', api);
   return api;

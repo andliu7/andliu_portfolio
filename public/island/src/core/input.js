@@ -2,7 +2,8 @@
 // presses become bus events "action:<name>". Works with real keys and with CDP
 // Input.dispatchKeyEvent (rawKeyDown / keyUp), including events that carry only a keyCode or key.
 const MOVE = { ArrowUp:'up', KeyW:'up', ArrowDown:'down', KeyS:'down', ArrowLeft:'left', KeyA:'left', ArrowRight:'right', KeyD:'right', Space:'brake', ShiftLeft:'boost', ShiftRight:'boost' };
-const ACTIONS = { KeyH:'honk', KeyR:'reset', KeyE:'interact', KeyF:'interact', Enter:'interact', Escape:'exit' };   // F is the interact key the hints name; E stays until the key contract lands
+// Round 5 keys: F (and Enter) interact, Q / E turn signals, C calls the vehicle.
+const ACTIONS = { KeyH:'honk', KeyR:'reset', KeyF:'interact', Enter:'interact', Escape:'exit', KeyQ:'signalLeft', KeyE:'signalRight', KeyC:'call' };
 const KEYCODES = { 8:'Backspace', 9:'Tab', 13:'Enter', 16:'ShiftLeft', 17:'ControlLeft', 18:'AltLeft', 27:'Escape', 32:'Space', 37:'ArrowLeft', 38:'ArrowUp', 39:'ArrowRight', 40:'ArrowDown' };
 const KEYNAMES = { ' ':'Space', Shift:'ShiftLeft', Enter:'Enter', Escape:'Escape', Esc:'Escape', ArrowUp:'ArrowUp', ArrowDown:'ArrowDown', ArrowLeft:'ArrowLeft', ArrowRight:'ArrowRight', Tab:'Tab' };
 
@@ -50,7 +51,7 @@ export function createInput({ state, bus }){
   return {
     keys,                                   // movement intent, read every frame
     isDown: code => held.has(code),         // any key by KeyboardEvent.code
-    on: (action, fn) => bus.on('action:' + action, fn),   // 'honk' | 'reset' | 'interact' | 'exit' | anything you emit
+    on: (action, fn) => bus.on('action:' + action, fn),   // 'honk' | 'reset' | 'interact' | 'exit' | 'signalLeft' | 'signalRight' | 'call' | anything you emit
     trigger: action => bus.emit('action:' + action, { code:'synthetic' }),
     press: (code, down) => press(code, down),             // synthetic key, bypasses the started gate
     clear,

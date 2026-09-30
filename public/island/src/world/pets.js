@@ -200,11 +200,8 @@ export function init(ctx){
     else poke(h.c);
     return true;
   }
-  // Listen to both the interact action and raw KeyF until input.js maps F; the debounce stops a double fire.
-  let lastF = 0;
-  const onF = () => { const n = performance.now(); if(n - lastF < 150) return; lastF = n; interact(); };
-  bus.on('action:interact', onF);
-  bus.on('key', ({ code, down, repeat }) => { if(code === 'KeyF' && down && !repeat) onF(); });
+  // F itself is resolved by character.js (one priority rule for every interact), which calls
+  // api.interactNearest() when a pet, berry or robot is the best thing in reach.
 
   /* ---------- prompt pill over whoever F would reach ---------- */
   const style = document.createElement('style'); style.textContent = CSS; document.head.append(style);
@@ -331,6 +328,7 @@ export function init(ctx){
     // For character.js F priority: what F would do here, or null ({ kind:'pet'|'berry'|'robot', dist }).
     nearest: () => { const h = blocked() ? null : target(); return h ? { kind: h.kind, dist: +h.dist.toFixed(2) } : null; },
     interact,
+    interactNearest: interact,
     release(){ for(const p of pets){ p.c.g.remove(p.tag); p.c.g.remove(p.zzz); p.c.static = false; p.c.y = 0; } pets.length = 0; save(); },
   };
   ctx.expose('pets', Object.assign({}, api, {

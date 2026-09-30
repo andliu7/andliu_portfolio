@@ -1,7 +1,8 @@
 // Inventory. Owned by the round 5 inventory builder. See CONTRACT.md, ROUND 5, "Inventory".
 // Small things lie around the island (shells on the beaches, a wrench, a lost stamp, a flower, a
 // flask). Walk within 1.6 m and the nearest one glows with an "F pick up" prompt; F (or tapping
-// the prompt) arcs it into the player. The bag opens with I or Tab, or the bag pill on the HUD.
+// the prompt) arcs it into the player. The hotbar at the bottom centre shows the first slots; the
+// full bag opens with I or Tab, the Bag button, or a click on a slot.
 // On the tour every building has one souvenir: at its door while the tour is on that stop, and
 // inside the room at the first tour stop. Finding all 12 fills the souvenir page.
 // State lives in localStorage 'island.inventory'. Never calls ctx.helpers.rng().
@@ -29,6 +30,7 @@ const DESC = {
   shell: 'Washed up on the beach. Still smells of salt.', wrench: 'Someone was fixing the car and wandered off.',
   stamp: 'A postage stamp that never made it to the Mailbox.', flower: 'Picked from the edge of the garden beds.',
   flask: 'Left outside Blueberry Lab. Probably organic chemistry.', fish: 'Caught off the island.', berry: 'A giant blueberry from the hunt.',
+  floss: 'A gift from an islander.', bolt: 'A gift from an islander.', testudo: 'A gift from an islander.', page: 'A gift from an islander.',
 };
 
 // A small deterministic stream, so the scatter never touches the island's seeded rng.
@@ -75,6 +77,12 @@ function icon(g, key){
     envelope(){ sh('#fffaf0', rr(12, 26, 76, 52, 6)); line(5, 14, 30, 50, 58, 86, 30); sh('#d9534f', c(50, 58, 8)); },
     fish(){ sh('#ff9f5a', () => { g.moveTo(74, 50); g.lineTo(92, 32); g.lineTo(92, 68); g.closePath(); }); sh('#ffb86b', () => g.ellipse(46, 50, 32, 20, 0, 0, 7)); sh(INK, c(30, 46, 4)); line(4, 54, 36, 54, 64); },
     berry(){ sh('#3b4f9e', c(50, 54, 34)); sh('#2c3a8f', () => { for(let i = 0; i < 5; i++){ const a = i/5*Math.PI*2 - Math.PI/2; g.lineTo(50 + Math.cos(a)*12, 28 + Math.sin(a)*12); g.lineTo(50 + Math.cos(a + 0.63)*5, 28 + Math.sin(a + 0.63)*5); } g.closePath(); }); sh('#ffffff66', () => g.ellipse(34, 44, 6, 10, 0.5, 0, 7)); },
+    // NPC gifts (voices.js)
+    floss(){ sh('#fffaf0', rr(18, 42, 46, 44, 10)); sh('#7fd6c2', () => g.roundRect(18, 42, 46, 14, [10, 10, 0, 0])); g.beginPath(); g.moveTo(56, 46); g.bezierCurveTo(78, 20, 94, 44, 78, 62); g.bezierCurveTo(68, 74, 84, 86, 90, 80);
+      g.lineCap = 'round'; g.lineWidth = 11; g.strokeStyle = INK; g.stroke(); g.lineWidth = 5; g.strokeStyle = '#7fd6c2'; g.stroke(); },
+    bolt(){ rot(-0.6, () => { sh('#b7c0d4', rr(42, 34, 16, 58, 4)); for(const y of [46, 56, 66, 76]) line(3, 42, y, 58, y + 4); sh('#9aa3b8', () => { for(let i = 0; i < 6; i++){ const a = i/6*Math.PI*2; g.lineTo(50 + Math.cos(a)*22, 26 + Math.sin(a)*15); } g.closePath(); }); }); },
+    testudo(){ sh('#6f7d2e', () => { g.moveTo(12, 72); g.bezierCurveTo(14, 16, 86, 16, 88, 72); g.closePath(); }); sh('#e3c77a', rr(8, 66, 84, 12, 6)); for(const [x, y] of [[32, 54], [50, 38], [68, 54], [50, 58]]) sh('#58651f', () => g.ellipse(x, y, 9, 6, 0, 0, 7)); },
+    page(){ sh('#fffaf0', () => { g.moveTo(24, 12); g.lineTo(64, 12); g.lineTo(78, 26); g.lineTo(78, 88); g.lineTo(24, 88); g.closePath(); }); sh('#e6dcc8', () => { g.moveTo(64, 12); g.lineTo(64, 26); g.lineTo(78, 26); g.closePath(); }); for(const y of [38, 48, 58]) line(4, 32, y, 70, y); sh('#c9a24a', c(36, 74, 6)); },
     gift(){ sh('#e98a5a', rr(18, 38, 64, 50, 6)); sh('#ffd166', rr(44, 38, 12, 50, 2)); sh('#ffd166', () => g.ellipse(38, 30, 12, 8, 0.4, 0, 7)); sh('#ffd166', () => g.ellipse(62, 30, 12, 8, -0.4, 0, 7)); },
   };
   (D[key] || D.gift)();
@@ -86,11 +94,34 @@ function iconCanvas(key, px, silhouette){
   return cv;
 }
 
+// The hotbar. Where it sits (layoutBar() below does the measuring):
+// - Bottom centre, as asked. On a desktop the controls hint is a centred pill at the very bottom,
+//   so the bar sits 8 px above the hint rather than beside it: the hint text changes per mode and
+//   can be wide, and stacking never collides however long it gets.
+// - On touch screens the hint is hidden and the touch pad owns the bottom right, so the bar drops
+//   to the bottom edge and keeps left of the pad, showing fewer slots if a phone is narrow.
+// - The zone card owns the bottom left: when it is up the bar slides right to clear it, and if
+//   there is no room it hides until the card goes.
+// - While the talk box is open the bar hides (see dialog.js for why).
 const CSS = `
-#inv-pill b{font:700 14px/1 Fredoka,system-ui,sans-serif;background:var(--berry);color:#fff;border-radius:999px;min-width:20px;padding:3px 6px;text-align:center}
-#inv-pill svg{width:18px;height:18px;flex:none}
-#inv-pill.bump{animation:inv-bump .45s cubic-bezier(.2,1.8,.4,1)}
+#hotbar{left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:6px;padding:6px;background:#fffaf0e0;border-radius:22px;box-shadow:0 4px 0 #0000001f;
+  transform:translateX(-50%);transition:opacity .2s ease,transform .25s cubic-bezier(.3,1.4,.5,1)}
+#hotbar.off{opacity:0;transform:translate(-50%,18px)}
+#hotbar.off,#hotbar.off *{pointer-events:none}
+#hotbar .slots{display:flex;gap:6px}
+#hotbar .hs{appearance:none;position:relative;flex:none;width:48px;height:48px;border:0;border-radius:14px;background:#f1e9d8;box-shadow:inset 0 2px 0 #0000000f;padding:6px;cursor:pointer;touch-action:manipulation;color:#1f2a44}
+#hotbar .hs canvas{width:100%;height:100%;display:block}
+#hotbar .hs.empty{background:#efe7d6;box-shadow:inset 0 0 0 2px #e6dcc8;cursor:default}
+#hotbar .hs .n{position:absolute;right:-5px;bottom:-5px;background:var(--berry);color:#fff;border:2px solid #fffaf0;border-radius:999px;font:700 11px/1 Fredoka,system-ui,sans-serif;padding:3px 6px}
+#hotbar .hs .more{font:700 15px/1 Fredoka,system-ui,sans-serif}
+#hotbar .hs:hover:not(.empty){transform:translateY(-2px)}
+#hotbar .hs:focus-visible{outline:3px solid var(--berry-2);outline-offset:2px}
+#hotbar .bag{width:auto;display:flex;align-items:center;gap:6px;padding:0 12px;background:var(--ink);color:var(--paper);font:600 13px/1 Fredoka,system-ui,sans-serif;box-shadow:0 3px 0 #0000002a}
+#hotbar .bag svg{width:20px;height:20px;flex:none}
+#hotbar .bag b{font:700 12px/1 Fredoka,system-ui,sans-serif;background:var(--berry);color:#fff;border-radius:999px;min-width:20px;padding:3px 6px;text-align:center}
+#hotbar .bump{animation:inv-bump .45s cubic-bezier(.2,1.8,.4,1)}
 @keyframes inv-bump{30%{transform:scale(1.18) rotate(-4deg)}}
+@media (pointer:coarse){#hotbar .hs{width:44px;height:44px}#hotbar .bag span{display:none}}
 #inv-prompt{position:fixed;left:0;top:0;z-index:6;display:flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border:0;border-radius:999px;background:#1f2a44;color:#fffaf0;
   font:600 13px/1 Fredoka,system-ui,sans-serif;letter-spacing:.04em;white-space:nowrap;box-shadow:0 4px 0 #00000026;cursor:pointer;touch-action:manipulation;
   opacity:0;pointer-events:none;transform:translate(-50%,-100%) scale(.6);transition:opacity .16s ease,transform .22s cubic-bezier(.3,1.6,.5,1)}
@@ -143,7 +174,7 @@ const CSS = `
 #inv .keys{font:500 12px/1.6 Fredoka,system-ui,sans-serif;color:#4b5675;padding:0 18px 12px}
 @media (pointer:coarse){#inv .keys,#inv .tab kbd,#inv .drop kbd{display:none}}
 @media (max-width:600px){#inv{padding:10px;align-items:end}#inv .box{border-radius:24px}#inv .grid{grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}#inv .slot{border-radius:16px;padding:6px}#inv h2{font-size:19px}}
-@media (prefers-reduced-motion:reduce){#inv,#inv .box,#inv-prompt{transition:none}.inv-toast{animation-duration:.01s}}
+@media (prefers-reduced-motion:reduce){#inv,#inv .box,#inv-prompt,#hotbar{transition:none}.inv-toast{animation-duration:.01s}#hotbar .bump{animation:none}}
 `;
 const BAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14l-1.2 10.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 9V7a3 3 0 0 1 6 0v2"/></svg>';
 
@@ -156,7 +187,7 @@ export function init(ctx){
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
   const found = new Set(S.found), picked = new Set(S.picked);
   const total = () => S.items.reduce((n, it) => n + it.count, 0);
-  const changed = () => { S.found = [...found]; S.picked = [...picked]; save(); paintPill(); if(open) render(); bus.emit('inventory', { items: api.items() }); };
+  const changed = () => { S.found = [...found]; S.picked = [...picked]; save(); paintBar(); if(open) render(); bus.emit('inventory', { items: api.items() }); };
 
   /* ---------- 3D models: primitives merged into one vertex-coloured mesh each (one draw call) ---------- */
   const mat = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.6 });
@@ -193,6 +224,10 @@ export function init(ctx){
     envelope: () => [P(B(0.5, 0.34, 0.05), '#fffaf0', 0, 0, 0), P(B(0.37, 0.03, 0.02), '#e6dcc8', -0.09, 0.05, 0.03, 0, 0, -0.55), P(B(0.37, 0.03, 0.02), '#e6dcc8', 0.09, 0.05, 0.03, 0, 0, 0.55), P(C(0.05, 0.05, 0.03, 12), '#d9534f', 0, -0.03, 0.04, H)],
     fish: () => [P(O(0.14, 12), '#ffb86b', 0, 0, 0, 0, 0, 0, 1.8, 1, 0.6), P(C(0, 0.13, 0.16, 4), '#ff9f5a', -0.3, 0, 0, 0, 0, H), P(O(0.03, 8), '#1f2a44', 0.17, 0.04, 0.07)],
     berry: () => [P(O(0.22, 16), '#3b4f9e', 0, 0, 0), P(C(0.07, 0.02, 0.06, 5), '#2c3a8f', 0, 0.22, 0)],
+    floss: () => [P(B(0.3, 0.3, 0.14), '#fffaf0', 0, 0, 0), P(B(0.31, 0.08, 0.15), '#7fd6c2', 0, 0.12, 0), P(T(0.1, 0.022), '#7fd6c2', 0.18, 0.2, 0, H)],
+    bolt: () => [P(C(0.15, 0.15, 0.08, 6), '#9aa3b8', 0, 0.2, 0), P(C(0.06, 0.06, 0.36, 10), '#b7c0d4', 0, 0, 0)],
+    testudo: () => [P(new THREE.SphereGeometry(0.28, 16, 8, 0, Math.PI*2, 0, H), '#6f7d2e', 0, 0, 0), P(C(0.3, 0.3, 0.04, 18), '#e3c77a', 0, 0, 0), P(O(0.08), '#58651f', 0, 0.26, 0, 0, 0, 0, 1, 0.4, 1)],
+    page: () => [P(B(0.36, 0.46, 0.02), '#fffaf0', 0, 0, 0), P(B(0.26, 0.02, 0.025), '#c9a24a', 0, 0.12, 0.005)],
     gift: () => [P(B(0.36, 0.3, 0.36), '#e98a5a', 0, 0, 0), P(B(0.08, 0.31, 0.37), '#ffd166', 0, 0, 0), P(B(0.37, 0.31, 0.08), '#ffd166', 0, 0, 0), P(T(0.06, 0.025), '#ffd166', 0, 0.18, 0)],
   };
   const geos = new Map();
@@ -203,7 +238,7 @@ export function init(ctx){
     return m;
   }
   // Items that stand up (souvenirs) bob and spin; flat things lie still.
-  const STANDING = new Set(['molecule', 'seeds', 'reel', 'guide', 'apple', 'terrapin', 'toothbrush', 'digest', 'trowel', 'hardhat', 'pin', 'envelope', 'berry', 'gift', 'fish']);
+  const STANDING = new Set(['molecule', 'seeds', 'reel', 'guide', 'apple', 'terrapin', 'toothbrush', 'digest', 'trowel', 'hardhat', 'pin', 'envelope', 'berry', 'gift', 'fish', 'floss', 'bolt', 'testudo', 'page']);
 
   /* ---------- pickables ---------- */
   // entry: { obj, id, name, icon, spot?, drop?, souvenir?, inst?, i?, base, spin, gone }
@@ -250,10 +285,10 @@ export function init(ctx){
     if(!item.id) return false;
     const n = Math.max(1, item.count | 0 || 1);
     let it = S.items.find(q => q.id === item.id);
-    if(it) it.count += n; else S.items.push(it = { id: item.id, name: item.name || item.id, icon: item.icon || item.id, count: n });
+    if(it) it.count += n; else S.items.push(it = { id: item.id, name: item.name || item.id, icon: item.icon || item.id, count: n, ...(item.desc ? { desc: String(item.desc) } : {}) });
     if(item.id.startsWith('souvenir-')) found.add(item.id.slice(9));
     changed();
-    if(!quiet){ toast(`+${n} ${it.name}`, it.icon, item.id.startsWith('souvenir-')); popSound(); bumpPill(); }
+    if(!quiet){ toast(`+${n} ${it.name}`, it.icon, item.id.startsWith('souvenir-')); popSound(); bumpBar(S.items.indexOf(it)); }
     if(found.size >= TOUR.length && !S.done) celebrate();
     return true;
   }
@@ -311,22 +346,74 @@ export function init(ctx){
   function hidePrompt(){ promptFor = null; prompt.classList.remove('on'); glow.visible = false; }
   const reach = () => (!state.started || open || ctx.modules.dialog?.busy?.()) ? null : nearestEntry(REACH);
 
-  /* ---------- F: the interact action, or KeyF straight off the bus until input.js maps it ---------- */
-  let lastF = 0;
-  function onF(){
-    const now = performance.now(); if(now - lastF < 120) return; lastF = now;
-    const h = reach(); if(h) pickUp(h);
-  }
-  bus.on('action:interact', onF);
-  bus.on('key', ({ code, down, repeat }) => { if(code === 'KeyF' && down && !repeat) onF(); });
+  /* ---------- F: no key listener here. The one F resolver in character.js asks nearest() and calls
+     pickupNearest(), so F never fires two things at once (CONTRACT: pickup beats NPC, pet, door, car). */
+  function pickupNearest(){ const h = reach(); if(!h) return false; pickUp(h); return true; }
 
-  /* ---------- HUD pill and toasts ---------- */
-  const pill = document.createElement('button'); pill.type = 'button'; pill.className = 'pill'; pill.id = 'inv-pill'; pill.setAttribute('aria-label', 'Open the bag (I)');
-  pill.innerHTML = `${BAG}<span>Bag</span><b>0</b>`;
-  (document.getElementById('topright') || document.body).append(pill);
-  pill.addEventListener('click', () => { if(state.started) toggle(); });
-  function paintPill(){ pill.querySelector('b').textContent = total(); }
-  function bumpPill(){ pill.classList.remove('bump'); void pill.offsetWidth; pill.classList.add('bump'); }
+  /* ---------- the hotbar (bottom centre) and toasts ---------- */
+  const SLOTS = 8;
+  const bar = document.createElement('div'); bar.className = 'hud off'; bar.id = 'hotbar'; bar.setAttribute('role', 'toolbar'); bar.setAttribute('aria-label', 'Inventory');
+  const slotRow = document.createElement('div'); slotRow.className = 'slots'; bar.append(slotRow);
+  const slots = [];
+  for(let k = 0; k < SLOTS; k++){
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'hs empty';
+    b.addEventListener('click', () => { if(state.started && b.dataset.key) openAt(k); });
+    slotRow.append(b); slots.push(b);
+  }
+  const bagBtn = document.createElement('button'); bagBtn.type = 'button'; bagBtn.className = 'hs bag'; bagBtn.setAttribute('aria-label', 'Open the bag (I)');
+  bagBtn.innerHTML = `${BAG}<span>Bag</span><b>0</b>`;
+  bagBtn.addEventListener('click', () => { if(state.started) toggle(); });
+  bar.append(bagBtn); document.body.append(bar);
+  let fit = SLOTS;   // how many slots fit on this screen right now (layoutBar)
+  function paintBar(){
+    const L = S.items;
+    slots.forEach((b, k) => {
+      b.hidden = k >= fit;
+      const more = L.length > fit && k === fit - 1, it = more ? null : L[k];
+      const key = it ? `${it.icon}:${it.count}:${it.name}` : more ? `+${L.length - k}` : '';
+      if(b.dataset.key === key) return;   // repaint a slot only when what it shows changed
+      b.dataset.key = key; b.innerHTML = ''; b.className = 'hs' + (key ? '' : ' empty');
+      if(it){
+        b.append(iconCanvas(it.icon, 96));
+        if(it.count > 1){ const s = document.createElement('span'); s.className = 'n'; s.textContent = it.count; b.append(s); }
+        b.setAttribute('aria-label', it.name + (it.count > 1 ? ` x${it.count}` : ''));
+      } else if(more){ const s = document.createElement('span'); s.className = 'more'; s.textContent = key; b.append(s); b.setAttribute('aria-label', `${L.length - k} more in the bag`); }
+      else b.setAttribute('aria-label', 'Empty slot');
+      b.tabIndex = key ? 0 : -1;
+    });
+    bagBtn.querySelector('b').textContent = total();
+  }
+  function bump(el){ el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }   // reading offsetWidth restarts the CSS animation
+  function bumpBar(k){ bump(bagBtn); if(k >= 0 && k < fit && !slots[k].hidden) bump(slots[k]); }
+  function openAt(k){ tab = 'items'; sel = k; if(open) render(); else show(); }
+
+  // Placement, measured a few times a second (the hint text, the zone card and the touch pad all
+  // come and go). See the note above CSS for the rules.
+  const GAP = 6, PAD = 6;
+  let dialogUp = false, shy = false, layClock = 1;
+  const rectOf = el => { if(!el) return null; const r = el.getBoundingClientRect(); if(r.width < 2 || r.height < 2) return null; const cs = getComputedStyle(el); return cs.display === 'none' || cs.visibility === 'hidden' ? null : r; };
+  function layoutBar(){
+    const W = innerWidth, H = innerHeight;
+    const hint = rectOf(ctx.hud?.hint || document.getElementById('hint')), touch = rectOf(document.getElementById('touch'));
+    const cardEl = ctx.hud?.card || document.getElementById('card'), card = cardEl?.classList.contains('on') ? rectOf(cardEl) : null;
+    bar.style.bottom = hint ? `${Math.round(H - hint.top + 8)}px` : '';
+    const bottom = parseFloat(getComputedStyle(bar).bottom) || 14, top = H - bottom - (bar.offsetHeight || 60);
+    const over = r => !!r && r.top < H - bottom && r.bottom > top;
+    const s = (slots[0].offsetWidth || 48) + GAP, fixed = 2*PAD + bagBtn.offsetWidth;
+    const fitIn = (a, b) => Math.max(0, Math.min(SLOTS, Math.floor((b - a - fixed)/s)));
+    let lo = 8, hi = W - 8;
+    if(over(touch)) hi = Math.min(hi, touch.left - 8);
+    let n = fitIn(lo, hi); shy = false;
+    if(over(card)){ const lo2 = Math.max(lo, card.right + 8), n2 = fitIn(lo2, hi); if(n2 >= Math.min(3, n)){ lo = lo2; n = n2; } else shy = true; }
+    n = Math.max(1, n);
+    const w = fixed + n*s;
+    bar.style.left = `${Math.round(Math.max(lo + w/2, Math.min(hi - w/2, W/2)))}px`;
+    if(n !== fit){ fit = n; paintBar(); }
+    bar.classList.toggle('off', !state.started || dialogUp || shy);
+  }
+  bus.on('dialog', ({ open: o }) => { dialogUp = !!o; bar.classList.toggle('off', !state.started || dialogUp || shy); if(!o) layClock = 1; });
+  bus.on('resize', () => { layClock = 1; });
+
   function toast(text, key, gold){
     document.querySelectorAll('.inv-toast').forEach(t => t.remove());
     const t = document.createElement('div'); t.className = 'inv-toast' + (gold ? ' gold' : ''); t.append(iconCanvas(key, 60)); t.append(text);
@@ -541,6 +628,7 @@ export function init(ctx){
   /* ---------- per frame: idle motion, glow, prompt, flights ---------- */
   const cam = () => state.mode === 'interior' ? (state.interior?.camera || ctx.interiorCamera) : ctx.camera;
   ctx.onUpdate((dt, t, mode) => {
+    if((layClock += dt) > 0.25){ layClock = 0; layoutBar(); }
     if(mode !== 'interior') tourDoor(dt);
     const sc = curScene();
     for(const e of entries) if(e.spin && e.obj && !e.flying){ e.obj.rotation.y += dt*1.2; e.obj.position.y = e.base + Math.sin(t*2 + e.base*9)*0.08; }
@@ -556,7 +644,7 @@ export function init(ctx){
     prompt.style.left = `${(wp.x*0.5 + 0.5)*innerWidth}px`; prompt.style.top = `${(-wp.y*0.5 + 0.5)*innerHeight}px`;
   }, 96);
 
-  paintPill();
+  paintBar();
   const api = {
     add: item => add(item),
     has: id => S.items.find(q => q.id === id)?.count || 0,
@@ -564,13 +652,15 @@ export function init(ctx){
     items: () => S.items.map(({ id, name, count, icon }) => ({ id, name, count, icon })),
     pickable: (obj, info) => pickable(obj, info),
     nearest: () => { const h = reach(); return h ? { id: h.e.id, dist: +h.dist.toFixed(2) } : null; },
+    pickupNearest,   // F resolver in character.js: picks up whatever nearest() named; false if nothing is in reach
     open: show, close, isOpen: () => open,
     souvenirs: () => ({ found: TOUR.filter(id => found.has(id)), of: TOUR.length }),
   };
   // Test hooks: the API plus a few probes for the critic scripts.
   ctx.expose('inventory', Object.assign({}, api, {
     world: () => [...entries].map(e => { posOf(e, wp); return { id: e.id, spot: e.spot || null, souvenir: e.souvenir || null, x: +wp.x.toFixed(2), z: +wp.z.toFixed(2), scene: rootOf(e.obj || e.inst) === scene ? 'island' : 'room' }; }),
-    pick: () => { const h = reach(); if(!h) return false; pickUp(h); return true; },
+    pick: pickupNearest,
+    hotbar: () => ({ shown: !bar.classList.contains('off'), fit, slots: slots.filter(b => !b.hidden).map(b => b.dataset.key || null), rect: bar.getBoundingClientRect().toJSON() }),
     reset: () => { try { localStorage.removeItem(KEY); } catch {} },
   }));
   return api;

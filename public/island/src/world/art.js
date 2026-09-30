@@ -14,7 +14,9 @@
 //    the zone pads, bushes shaded dark underneath and light on top (all in the shaders, no textures)
 //  - short grass carpets in patches, which the ground shader darkens underneath
 //  - facades: plinths, corner trim, framed windows with shutters, door frames, awnings and door
-//    lamps on every house, plus one prop that says what each house is
+//    lamps on every box house map.js falls back to, plus one prop that says what each house is.
+//    A houses.js building draws its own facade and gets only a door lamp (where it lacks one)
+//    and its light pool
 //  - light pools under the lamps and at the doors, and drifting petals and pollen round the car
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
@@ -303,11 +305,22 @@ export function dress(ctx, kit){
       },
     };
   }
-  const shade = (c, k, to = '#3a2440') => '#' + col.set(c).lerp(new THREE.Color(to), k).getHexString();
+  // Door lamps for houses.js designs with no light by the door: [x from the door centre, bulb
+  // height]. Studio (marquee), clinic (canopy downlights) and chapel (lanterns) bring their own.
+  const DOOR_LAMP = { blueberry:[1.3, 2.2], school:[1.3, 2.2], dock:[0, 2.95] };
+  const shade = (c, k, to = '#3a2440') =>'#' + col.set(c).lerp(new THREE.Color(to), k).getHexString();
   let facades = 0;
   for(const hs of kit.houses || []){
     const { zone, g, w, d, h, lx, lz, color, roofColor, windows } = hs;
     const K = kitOf(), fz = lz + d/2;
+    if(hs.designed){
+      // houses.js already drew this facade (trim, windows, door frame, awnings), so add only a lamp
+      // by the door where the design has no light there, and the light pool on the ground.
+      const L = DOOR_LAMP[zone.id], y = hs.y || 0;
+      if(L){ K.box(0.06, 0.34, 0.06, '#3d3550', lx + L[0], y + L[1] + 0.21, fz + 0.12); K.ball(0.17, '#ffe2a8', lx + L[0], y + L[1], fz + 0.18, 'glow', 8); }
+      doors.push({ g, x:lx, z:fz + 1.6 });
+      K.build(g); continue;
+    }
     const whiteWall = col.set(color).getHSL({}).l > 0.85;
     const trim = whiteWall ? zone.color : '#fff1dc';
     const accent = roofColor || shade(zone.color, 0.25);

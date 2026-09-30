@@ -251,8 +251,12 @@ export function setup(ctx){
   function paintDist(){ if(distEl) distEl.textContent = G.dist > 0 ? `${Math.max(1, Math.round(G.dist))} m to go` : ''; }
 
   /* ---------- steps ---------- */
+  // Soft walls along the trail come from assist.js while driving in the travel phase; any other
+  // phase, a pause, closing or hopping out drops them. ?. keeps the guide working without assist.
+  const dropWalls = () => ctx.modules.assist?.clear?.();
   function go(phase){
     G.phase = phase; G.path = null; G.planAt = null;
+    if(phase !== 'travel') dropWalls();
     if(phase === 'inside') showStop(false);
     else hideRoomMark();
     save(); render();
@@ -354,8 +358,8 @@ export function setup(ctx){
       hideRoomMark(); G.room = null;
       if(G.on && !G.leaving && G.phase === 'inside' && zoneId === route[G.k]){ G.i = G.stops.length - 1; advance(); }
     }));
-    offs.push(ctx.bus.on('mode', () => { if(G.on && G.phase === 'arrive') render(); }));
-    offs.push(ctx.bus.on('game:start', ({ id }) => { if(id !== 'tour'){ G.paused = true; render(); } }));
+    offs.push(ctx.bus.on('mode', () => { if(state.mode !== 'drive') dropWalls(); if(G.on && G.phase === 'arrive') render(); }));
+    offs.push(ctx.bus.on('game:start', ({ id }) => { if(id !== 'tour'){ G.paused = true; dropWalls(); render(); } }));
     offs.push(ctx.bus.on('fishing:catch', () => { if(G.on && G.phase === 'fish') G.fishDone = true; }));
     offs.push(ctx.bus.on('game:stop', ({ id }) => {
       if(id === 'tour' || !G.paused) return;
@@ -379,7 +383,7 @@ export function setup(ctx){
   function close(){
     if(!G.K) return;
     if(G.on) save();
-    G.on = false; G.paused = false; offs.forEach(f => { try { f(); } catch {} }); offs = [];
+    G.on = false; G.paused = false; offs.forEach(f => { try { f(); } catch {} }); offs = []; dropWalls();
     hideRoomMark(); trail.count = 0; arrow.visible = doorMark.g.visible = false;
     restoreLook();
     G.K.destroy(); G.K = null; card = null; distEl = null;
@@ -430,6 +434,10 @@ export function setup(ctx){
       const trailOn = G.phase === 'travel' || fish;
       if(trailOn && (!G.path || !G.planAt || G.planT <= 0 || Math.hypot(P.x - G.planAt.x, P.z - G.planAt.z) > 4)){
         G.path = plan(P.x, P.z, door.x, door.z); G.planAt = { x: P.x, z: P.z }; G.planT = 2;
+        // Refresh the walls on every replan (assist drops them after 5 s without one). Not inside
+        // assist's own 12 m arrival radius, or they would be rebuilt there and dropped next frame.
+        if(G.phase === 'travel' && mode === 'drive' && dd > 14) ctx.modules.assist?.corridor?.(G.path.pts);
+        else dropWalls();
       }
       if(trailOn && G.path){
         const pts = G.path.pts; G.dist = G.path.len;

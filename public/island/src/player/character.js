@@ -8,6 +8,8 @@
 //    and walking back out through room.exit (or F beside it) returns to the island
 //  - water: he wades into the shallows and swims (breaststroke, shoulders at the waterline) in
 //    lakes, rivers and the sea, and walks on the pier and bridge planks instead of through them
+//  - F runs one priority rule (interact() below): dialog, pickup, talk, pet, door, car.
+//    C calls the car (car.js drives it to his right side)
 // One mesh is reparented between the car seat, the island scene and the room scene, so there is
 // never a second copy to keep in sync.
 export function init(ctx){
@@ -18,7 +20,7 @@ export function init(ctx){
 
   const BLUE = '#4a5fd0', BLUE_D = '#35479f', SKIN = '#f6d4b4', HAIR = '#2b2330', INK = '#1b1b24';
   const R = 0.42;                         // walker collision radius
-  const WALK = 4.6, RUN = 8.2, GRAV = 24;
+  const WALK = 6.4, RUN = 11.5, GRAV = 24;   // was 4.6 and 8.2 (round 5: about 40% faster)
   const DOOR_R = 3.2;                     // how close to island.doorOf(id) the Enter pill shows
 
   /* ---------- the mascot ---------- */
@@ -73,7 +75,7 @@ export function init(ctx){
   let where = 'none';        // 'seat' | 'island' | 'room'
   let exitArmed = false, braked = false, notice = null, stopped = 0;
   let busy = false;          // true while the curtain is up for a door, so he holds still
-  const v3 = new THREE.Vector3(), v3b = new THREE.Vector3();
+  const v3 = new THREE.Vector3(), v3b = new THREE.Vector3(), headV = new THREE.Vector3();
 
   function attach(to){
     if(to === 'seat'){
@@ -184,6 +186,16 @@ export function init(ctx){
     }
     return colList;
   }
+  // The floor under him on the island: a deck (pier, bridge), the seabed while wading, or the swim
+  // line once the water is deeper than his shoulders. Sets swim.deck and swim.depth as it goes.
+  // A bridge only counts from above (he swims under it); the pier can be climbed from the water.
+  function floorAt(x, z){
+    const d = deckAt(x, z);
+    if(d && (d.climb || ch.y > d.y - 0.6)){ swim.deck = d; swim.depth = 0; return d.y; }
+    swim.deck = null;
+    const g = groundY(x, z); swim.depth = Math.max(0, WATER_Y - g);
+    return swim.depth > SWIM_SINK ? WATER_Y - SWIM_SINK : g;
+  }
 
   /* ---------- ripples and splashes ---------- */
   // Rings: a small pool, each with its own material so it can fade on its own; hidden when idle.
@@ -238,6 +250,18 @@ export function init(ctx){
   function splashSound(big){
     sound.tone(520 + Math.random()*120, big ? 0.22 : 0.1, 'sine', big ? 0.07 : 0.035, 140);
     if(big) setTimeout(() => sound.tone(880 + Math.random()*200, 0.09, 'triangle', 0.03, 300), 60);
+  }
+  // Per island frame after locomotion: swimming starts when he is standing on the swim line.
+  function stepSwim(dt, moving, stepped){
+    const was = swim.on;
+    swim.on = ch.grounded && !swim.deck && swim.depth > SWIM_SINK;
+    if(swim.on && !was){ splash(ch.x, ch.z, 8, 0.7); ripple(ch.x, ch.z, 0.5, 2.4, 1.1); splashSound(false); }
+    if(swim.on){
+      if((swim.ring -= dt) <= 0){ swim.ring = moving ? 0.45 : 1.3; ripple(ch.x, ch.z, 0.5, moving ? 1.9 : 1.4, 1.1); }
+    } else if(stepped && ch.grounded && !swim.deck && swim.depth > 0.08){
+      // wading: every footstep rings and flicks a few drops
+      ripple(ch.x, ch.z, 0.35, 1.4, 0.8); splash(ch.x, ch.z, 3, 0.45); splashSound(false);
+    }
   }
 
   /* ---------- doors ---------- */
@@ -342,11 +366,13 @@ export function init(ctx){
     a?.openDoor?.(); hopSound();
     ch.x = from.x; ch.z = from.z; ch.y = from.y - 0.36; ch.vx = ch.vz = ch.speed = 0;
     const yaw0 = a?.car ? a.car.heading : ch.yaw;
-    anim = { type:'out', t:0, dur:0.62, fx:from.x, fz:from.z, fy:ch.y, tx:spot.x, tz:spot.z, yaw0, yaw1:Math.atan2(spot.x - from.x, spot.z - from.z) };
+    body.rotation.set(0, 0, 0); head.rotation.x = 0;
+    anim = { type:'out', t:0, dur:0.62, fx:from.x, fz:from.z, fy:ch.y, tx:spot.x, tz:spot.z, ty:floorAt(spot.x, spot.z), yaw0, yaw1:Math.atan2(spot.x - from.x, spot.z - from.z) };
   }
   function enterCar(){
     if(state.mode !== 'walk' || anim || carDist() > 3.4) return false;
     const a = carApi(); if(!a?.seat) return false;
+    a.stopCall?.();                  // a called car stops where it is, so the seat he hops at stays put
     a.car.group.updateMatrixWorld(true);
     const to = a.seat.getWorldPosition(v3b).clone();
     a.openDoor?.(); hopSound();
@@ -368,26 +394,42 @@ export function init(ctx){
     fadeTo(1, () => { busy = false; modes.exitInterior(); fadeTo(0); });
   }
 
-  input.on('interact', () => {
-    if(!state.started) return;
-    if(state.mode === 'drive'){ exitCar(); return; }
-    if(state.mode === 'walk'){
-      if(anim) return;
-      const d = nearestDoor(DOOR_R), cd = carDist();
-      if(d && (cd > 3.4 || Math.hypot(ch.x - d.x, ch.z - d.z) < cd)) enterDoor(d);
-      else if(cd <= 3.4) enterCar();
-      return;
-    }
+  /* ---------- F: the one priority rule for interact ---------- */
+  // dialog open > pickup within 1.6 m > someone to talk to within 3 m > pet > door > car
+  // (CONTRACT, round 5). inventory.js, voices.js and pets.js have no F listeners of their own;
+  // this calls them, so one F press does exactly one thing.
+  const PICK_R = 1.6, TALK_R = 3;
+  function pickNear(){ const n = ctx.modules.inventory?.nearest?.(); return n && !(n.dist > PICK_R) ? n : null; }
+  function talkNear(){ const v = ctx.modules.voices?.nearest?.(); return v && !(v.dist > TALK_R) ? v : null; }
+  function interact(){
+    if(!state.started) return 'none';
+    if(ctx.modules.dialog?.busy?.()) return 'dialog';    // the dialog handles its own keys
+    if(state.mode === 'drive'){ exitCar(); return 'vehicle'; }
     if(state.mode === 'interior'){
       const room = state.interior, P = room?.player;
-      if(room?.exit && P && Math.hypot(P.x - room.exit.x, P.z - room.exit.z) < (room.exit.r || 1.5) + 1.4) leaveRoom();
+      if(room?.exit && P && Math.hypot(P.x - room.exit.x, P.z - room.exit.z) < (room.exit.r || 1.5) + 1.4){ leaveRoom(); return 'door'; }
+      return 'none';
     }
-  });
+    if(state.mode !== 'walk' || anim || busy) return 'none';
+    if(pickNear()){ ctx.modules.inventory?.pickupNearest?.(); return 'pickup'; }
+    if(talkNear()){ ctx.modules.voices?.talkNearest?.(); return 'talk'; }
+    if(ctx.modules.pets?.nearest?.()){ ctx.modules.pets.interactNearest?.(); return 'pet'; }
+    // door against car: whichever is closer, the same rule the prompt uses (the parked car often
+    // sits right in a door approach, and a strict door-first rule would lock you out of it)
+    const d = nearestDoor(DOOR_R), cd = carDist();
+    if(d && (cd > 3.4 || Math.hypot(ch.x - d.x, ch.z - d.z) < cd)){ enterDoor(d); return 'door'; }
+    if(cd <= 3.4){ enterCar(); return 'vehicle'; }
+    return 'none';
+  }
+  input.on('interact', interact);
+  bus.on('car:call', ({ ok }) => { if(!ok) flash('No room for the car here'); });
 
   /* ---------- per-frame ---------- */
   const f2 = new THREE.Vector3();
+  // First person on foot (camera.js, V): A / D turn him and the view instead of strafing.
+  const firstPerson = () => state.mode === 'walk' && !!ctx.modules.camera?.firstPerson?.();
   function moveIntent(cam){
-    const up = (keys.up ? 1 : 0) - (keys.down ? 1 : 0), rt = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+    const up = (keys.up ? 1 : 0) - (keys.down ? 1 : 0), rt = firstPerson() ? 0 : (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
     if(!up && !rt) return null;
     let fx = 0, fz = -1;
     if(cam){ cam.getWorldDirection(f2); const l = Math.hypot(f2.x, f2.z); if(l > 1e-3){ fx = f2.x/l; fz = f2.z/l; } }
@@ -395,33 +437,95 @@ export function init(ctx){
     return { mx, mz };
   }
 
+  // Run-start dust: a tiny pool of puffs kicked back from his heels, never allocated per frame.
+  const dustGeo = new THREE.SphereGeometry(0.12, 7, 5), dustMat = new THREE.MeshStandardMaterial({ color:'#efe4cc', roughness:1 });
+  const dust = [];
+  for(let i = 0; i < 6; i++){ const m = new THREE.Mesh(dustGeo, dustMat); m.visible = false; m.castShadow = false; scene.add(m); dust.push({ m, life:0, vx:0, vy:0, vz:0 }); }
+  let dustNext = 0, wasRun = false;
+  function kickDust(){
+    if(state.reduced) return;
+    const bx = -Math.sin(ch.yaw), bz = -Math.cos(ch.yaw);
+    for(let i = 0; i < 3; i++){
+      const d = dust[dustNext], sx = (i - 1)*0.22; dustNext = (dustNext + 1) % dust.length;
+      d.life = 1; d.vx = bx*1.8 + (Math.random() - 0.5)*0.8; d.vz = bz*1.8 + (Math.random() - 0.5)*0.8; d.vy = 0.5 + Math.random()*0.5;
+      d.m.position.set(ch.x + bx*0.3 + bz*sx, ch.y + 0.12, ch.z + bz*0.3 - bx*sx); d.m.visible = true;
+    }
+  }
+  function stepDust(dt){
+    for(const d of dust){
+      if(d.life <= 0) continue;
+      d.life -= dt*2.4; if(d.life <= 0){ d.m.visible = false; continue; }
+      d.m.position.x += d.vx*dt; d.m.position.y += d.vy*dt; d.m.position.z += d.vz*dt; d.vx *= 0.92; d.vz *= 0.92;
+      d.m.scale.setScalar(Math.sin(d.life*Math.PI)*1.1 + 0.2);
+    }
+  }
+
   // Locomotion shared by island and room. Returns true when a foot landed this frame.
-  function locomote(dt, cam, colliders, bounds){
+  // island: follow the floor (decks, seabed, the swim line) instead of flat y = 0.
+  function locomote(dt, cam, colliders, bounds, island = false){
     const it = state.started ? moveIntent(cam) : null;
-    const top = keys.boost ? RUN : WALK;
+    const wading = island && !swim.on && !swim.deck && swim.depth > 0.25;
+    const top = swim.on ? (keys.boost ? SWIM_FAST : SWIM) : (keys.boost ? RUN : WALK)*(wading ? 0.65 : 1);
     const tx = it ? it.mx*top : 0, tz = it ? it.mz*top : 0;
-    const k = Math.min(1, dt*(it ? 10 : 14));
+    const k = Math.min(1, dt*(it ? 15 : 14));           // rate 15: about 95% of top speed in 0.2 s
     ch.vx += (tx - ch.vx)*k; ch.vz += (tz - ch.vz)*k;
     ch.x += ch.vx*dt; ch.z += ch.vz*dt;
     resolve(colliders, R);
     if(bounds){ ch.x = Math.max(bounds.minX + R, Math.min(bounds.maxX - R, ch.x)); ch.z = Math.max(bounds.minZ + R, Math.min(bounds.maxZ - R, ch.z)); }
     ch.speed = Math.hypot(ch.vx, ch.vz);
-    if(it) ch.yaw = H.lerpAngle(ch.yaw, Math.atan2(it.mx, it.mz), Math.min(1, dt*14));
-    // hop on Space (an edge, so holding it does not bunny-hop forever)
-    if(keys.brake && !braked && ch.grounded && state.started){ ch.vy = 7.2; ch.grounded = false; ch.squashV -= 5; hopSound(); }
+    if(firstPerson()){ if(state.started) ch.yaw += ((keys.left ? 1 : 0) - (keys.right ? 1 : 0))*2.4*dt; }   // no turn toward the move, so S backs up
+    else if(it) ch.yaw = H.lerpAngle(ch.yaw, Math.atan2(it.mx, it.mz), Math.min(1, dt*14));
+    // hop on Space (an edge, so holding it does not bunny-hop forever); no hopping while swimming
+    if(keys.brake && !braked && ch.grounded && state.started && !swim.on){ ch.vy = 7.2; ch.grounded = false; ch.squashV -= 5; hopSound(); }
     braked = keys.brake;
+    const floor = island ? floorAt(ch.x, ch.z) : 0;
+    if(ch.grounded){
+      if(floor < ch.y - 0.3){ ch.grounded = false; ch.vy = 0; }                    // stepped off the pier: fall
+      else if(floor > ch.y + 0.45){ ch.vy = Math.sqrt(2*GRAV*(floor - ch.y + 0.3)); ch.grounded = false; ch.squashV -= 4; hopSound(); }   // climb out onto the pier
+      else ch.y += (floor - ch.y)*Math.min(1, dt*18);
+    }
     if(!ch.grounded){
       ch.vy -= GRAV*dt; ch.y += ch.vy*dt;
-      if(ch.y <= 0){ ch.y = 0; ch.grounded = true; ch.squashV += Math.min(9, -ch.vy*0.9); ch.vy = 0; landSound(); }
+      if(ch.vy <= 0 && ch.y <= floor){
+        const hard = -ch.vy; ch.y = floor; ch.grounded = true; ch.vy = 0;
+        if(island && !swim.deck && swim.depth > SWIM_SINK){ splash(ch.x, ch.z, 18, 1.1); ripple(ch.x, ch.z, 0.6, 3, 1.3); splashSound(true); swim.on = true; }   // a jump into deep water
+        else { ch.squashV += Math.min(9, hard*0.9); landSound(); }
+      }
     }
-    return animateWalk(dt);
+    // a little dust as he breaks into a run on dry ground
+    const running = ch.speed > WALK + 0.8;
+    if(island && running && !wasRun && ch.grounded && !swim.on && !wading) kickDust();
+    wasRun = running;
+    const stepped = swim.on ? animateSwim(dt) : animateWalk(dt);
+    if(island) stepSwim(dt, !!it, stepped);
+    return stepped;
+  }
+
+  // Breaststroke: tipped forward, arms reach and sweep out, legs frog-kick, head up out of the water.
+  function animateSwim(dt){
+    const reduced = state.reduced, amt = Math.min(1, ch.speed/SWIM);
+    const prev = Math.cos(ch.phase);
+    ch.phase += dt*(2.2 + ch.speed*1.6);
+    const s = Math.sin(ch.phase), c = Math.cos(ch.phase);
+    const sweep = reduced ? 0.4 : 0.3 + 0.6*Math.max(0, s)*(0.4 + 0.6*amt);
+    arms[0].rotation.x = arms[1].rotation.x = -1.35 + (reduced ? 0 : 0.25*c);
+    arms[0].rotation.z = -sweep; arms[1].rotation.z = sweep;
+    legs[0].rotation.x = legs[1].rotation.x = 0.7 + (reduced ? 0 : 0.35*s*(0.3 + 0.7*amt));
+    body.rotation.x += ((reduced ? 0.2 : 0.35) - body.rotation.x)*Math.min(1, dt*6); body.rotation.z *= 0.8;
+    head.rotation.x = -0.3; head.rotation.y *= 0.9; head.rotation.z = 0;
+    body.scale.set(1, 1, 1); body.position.y = reduced ? 0 : Math.sin(performance.now()*0.004)*0.035;
+    ch.blink -= dt; if(ch.blink < 0) ch.blink = 2.4 + Math.random()*2.8; eyeG.scale.y = ch.blink < 0.12 ? 0.12 : 1;
+    // a few drops at the end of each pull while he is going somewhere
+    if(amt > 0.3 && prev > 0 && c <= 0){ splash(ch.x + Math.sin(ch.yaw)*0.4, ch.z + Math.cos(ch.yaw)*0.4, 3, 0.5); sound.tone(430 + Math.random()*80, 0.08, 'sine', 0.02, 180); }
+    root.position.set(ch.x, ch.y, ch.z); root.rotation.y = ch.yaw;
+    return false;
   }
 
   function animateWalk(dt){
     const reduced = state.reduced;
     const amt = Math.min(1, ch.speed/WALK), run = ch.speed > WALK + 0.8;
     const prev = Math.sin(ch.phase);
-    ch.phase += dt*(6 + ch.speed*1.9)*(amt > 0.05 ? 1 : 0);
+    ch.phase += dt*(3 + ch.speed*2.6)*(amt > 0.05 ? 1 : 0);   // cadence tracks speed, about 1 m a step, so feet do not skate
     const s = Math.sin(ch.phase);
     let stepped = false;
     if(amt > 0.25 && ch.grounded && Math.sign(s) !== Math.sign(prev)){ stepped = true; footstep(run); ch.squashV += run ? 1.6 : 1.0; }
@@ -437,7 +541,7 @@ export function init(ctx){
     eyeG.scale.y = ch.blink < 0.12 ? 0.12 : 1;
     const breath = reduced ? 0 : Math.sin(performance.now()*0.003)*0.018*(1 - amt);
     head.rotation.y = ch.idle > 2.5 && !reduced ? Math.sin((ch.idle - 2.5)*0.9)*0.45 : head.rotation.y*0.85;
-    head.rotation.z = reduced ? 0 : -s*0.06*amt;
+    head.rotation.z = reduced ? 0 : -s*0.06*amt; head.rotation.x *= 0.8;
     const bob = reduced ? 0 : Math.abs(s)*0.09*amt;
     ch.lean += ((reduced ? 0 : amt*(run ? 0.22 : 0.12)) - ch.lean)*Math.min(1, dt*8);
     const sq = reduced ? 0 : Math.max(-0.25, Math.min(0.25, ch.squash*0.05)) + breath;
@@ -468,7 +572,7 @@ export function init(ctx){
       legs[0].rotation.x = Math.sin(t*18)*0.6; legs[1].rotation.x = -legs[0].rotation.x;
       root.position.set(ch.x, 0, ch.z); root.rotation.y = ch.yaw;
     } else {
-      const ty = anim.type === 'in' ? anim.ty : 0;
+      const ty = anim.ty ?? 0;
       ch.x = anim.fx + (anim.tx - anim.fx)*e; ch.z = anim.fz + (anim.tz - anim.fz)*e;
       ch.y = anim.fy + (ty - anim.fy)*t + Math.sin(t*Math.PI)*1.1;
       const tuck = Math.sin(t*Math.PI);
@@ -484,7 +588,7 @@ export function init(ctx){
       ch.y = 0; ch.grounded = true; ch.squashV += 5; landSound();
       for(const l of legs) l.rotation.x = 0; arms[0].rotation.x = arms[1].rotation.x = 0;
     } else if(done.type === 'out'){
-      ch.y = 0; ch.vy = 0; ch.grounded = true; ch.squashV += 7; landSound();
+      ch.y = done.ty ?? 0; ch.vy = 0; ch.grounded = true; ch.squashV += 7; landSound();
       body.scale.set(1, 1, 1); arms[0].rotation.z = -0.18; arms[1].rotation.z = 0.18;
     } else if(done.type === 'in'){
       modes.setMode('drive');
@@ -529,6 +633,7 @@ export function init(ctx){
   ctx.onUpdate((dt, t, mode) => {
     stepFade(dt);
     if(notice){ notice.t -= dt; if(notice.t <= 0) notice = null; }
+    if(mode !== 'interior'){ stepWaterFx(dt); stepDust(dt); }
 
     if(mode === 'drive'){
       parkTwin();
@@ -553,7 +658,11 @@ export function init(ctx){
     if(mode === 'walk'){
       if(where !== 'island') attach('island');
       if(anim) stepAnim(dt);
-      else if(!busy) locomote(dt, ctx.camera, ctx.colliders, null);
+      else if(!busy) locomote(dt, ctx.camera, walkColliders(), null, true);
+      // Hopping in ends inside stepAnim with setMode('drive'), which has already seated him
+      // (attach('seat')). Stop here: the code below would push him out of the car box and write
+      // that island position into his seat-local transform, which was the sideways glitch.
+      if(state.mode !== 'walk') return;
       if(!anim){
         // The parked car sits right in the door approach (teleport and a natural stop both leave
         // it on the approach line, nose to the door). Walking straight at its flat back pushed
@@ -572,7 +681,7 @@ export function init(ctx){
               if(side < 0){ tx = -tx; tz = -tz; }
             } else if(along < 0){ tx = -tx; tz = -tz; }
             const step = (keys.boost ? RUN : WALK)*dt*0.9;
-            ch.x += tx*step; ch.z += tz*step; resolve([cb], R); resolve(ctx.colliders, R);
+            ch.x += tx*step; ch.z += tz*step; resolve([cb], R); resolve(walkColliders(), R);
           }
         }
         const lim = ctx.island.radius - 2, r = Math.hypot(ch.x, ch.z); if(r > lim){ ch.x *= lim/r; ch.z *= lim/r; }
@@ -583,7 +692,8 @@ export function init(ctx){
       // prompt: door beats car when it is the closer of the two
       let text = '', info = false, at = null;
       if(notice){ text = notice.text; info = true; }
-      else if(!anim && state.started){
+      else if(!anim && state.started && !pickNear() && !talkNear() && !ctx.modules.pets?.nearest?.()){
+        // a pickup, a talker or a pet in reach wins F, and brings its own prompt
         const d = nearestDoor(DOOR_R), cd = carDist();
         if(d && (cd > 3.4 || Math.hypot(ch.x - d.x, ch.z - d.z) < cd)){
           // pinned over the doorway, not over his head, so it reads as a sign on the building
@@ -636,7 +746,11 @@ export function init(ctx){
       if(spot) startHopOut(spot);
       else { const a = carApi()?.car; attach('island'); if(a){ ch.x = a.x + 2.2; ch.z = a.z; } for(const l of legs) l.rotation.x = 0; }
     }
-    if(to === 'drive'){ anim = null; busy = false; fadeTo(0); attach('seat'); showPrompt('', 0, 0, 0, null); }
+    if(to === 'drive'){
+      anim = null; busy = false; fadeTo(0); attach('seat'); showPrompt('', 0, 0, 0, null);
+      swim.on = false; swim.deck = null; swim.depth = 0; head.rotation.x = 0;
+      const c = carApi()?.car; if(c){ ch.x = c.x; ch.z = c.z; ch.yaw = c.heading; ch.y = 0; ch.vy = 0; ch.grounded = true; }
+    }
     if(from === 'interior' && to === 'walk'){
       // Out the door: a couple of steps onto the approach, still facing away from the building.
       attach('island');
@@ -654,6 +768,7 @@ export function init(ctx){
     busy = false; fadeTo(0);
     anim = null; body.scale.set(1, 1, 1); for(const l of legs) l.rotation.x = 0;
     ch.vx = ch.vz = ch.speed = 0; ch.y = 0; ch.vy = 0; ch.grounded = true;
+    swim.on = false; swim.deck = null; swim.depth = 0; head.rotation.x = 0; body.rotation.x = 0;
     const P = room?.player; if(P){ ch.x = P.x; ch.z = P.z; ch.yaw = P.heading ?? Math.PI; }
     const ex = room?.exit;
     exitArmed = !ex || Math.hypot(ch.x - ex.x, ch.z - ex.z) > (ex.r || 1.5) + 0.4;
@@ -666,8 +781,8 @@ export function init(ctx){
   // Hints for each mode.
   try {
     const driveHint = ctx.hud?.hint?.innerHTML || '';
-    if(driveHint && !/hop out/i.test(driveHint)) ctx.hud.setHint('drive', driveHint + ' · <kbd>F</kbd> hop out');
-    ctx.hud?.setHint('walk', '<kbd>WASD</kbd> walk · <kbd>Shift</kbd> run · <kbd>Space</kbd> hop · <kbd>F</kbd> door or car · <kbd>R</kbd> reset');
+    if(driveHint && !/hop out/i.test(driveHint)) ctx.hud.setHint('drive', driveHint + ' · <kbd>F</kbd> hop out · <kbd>V</kbd> first person');
+    ctx.hud?.setHint('walk', '<kbd>WASD</kbd> walk · <kbd>Shift</kbd> run · <kbd>Space</kbd> hop · <kbd>F</kbd> interact · <kbd>C</kbd> call car · <kbd>R</kbd> reset · <kbd>V</kbd> first person');
     ctx.hud?.setHint('interior', '<kbd>WASD</kbd> walk · walk out the door or <kbd>Esc</kbd> to leave');
   } catch(e){ /* the hint line is optional */ }
 
@@ -692,15 +807,22 @@ export function init(ctx){
     },
     exitCar,
     enterCar,
+    interact,                          // the F resolver; returns what it did
+    swimming: () => swim.on,
+    onDock: () => !!swim.deck && swim.deck.kind !== 'bridge' && state.mode === 'walk',
     get position(){ return { x:ch.x, z:ch.z, heading:ch.yaw, speed:ch.speed }; },
+    // For a first-person camera: world height of his head centre (seated, swimming or walking).
+    get headY(){ head.updateWorldMatrix(true, false); return head.getWorldPosition(headV).y; },
+    setFirstPerson(on){ head.visible = !on; hood.visible = !on; },   // hides the head (hair and tuft ride on it) and the hood
   };
   attach('seat');
   modes.registerPlayer('walk', api);
 
   // Critic hooks: window.__island.character
   ctx.expose('character', {
-    info: () => ({ where, anim: anim?.type || null, x:+ch.x.toFixed(2), z:+ch.z.toFixed(2), y:+ch.y.toFixed(2), speed:+ch.speed.toFixed(2), prompt: promptShown, carDist:+carDist().toFixed(2) }),
-    exitCar, enterCar,
+    info: () => ({ where, anim: anim?.type || null, x:+ch.x.toFixed(2), z:+ch.z.toFixed(2), y:+ch.y.toFixed(2), speed:+ch.speed.toFixed(2), prompt: promptShown, carDist:+carDist().toFixed(2),
+      swimming: swim.on, deck: swim.deck?.kind || null, depth:+swim.depth.toFixed(2), rootLocal: [+root.position.x.toFixed(2), +root.position.y.toFixed(2), +root.position.z.toFixed(2)] }),
+    exitCar, enterCar, interact,
     doors: () => doorList().map(d => ({ id:d.id, x:+d.x.toFixed(2), z:+d.z.toFixed(2) })),
     // Stand just in front of a building's door, facing it, so the Enter prompt shows.
     toDoor(id){

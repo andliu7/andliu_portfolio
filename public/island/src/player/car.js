@@ -3,6 +3,8 @@
 // It is an open-top toy buggy so the driver (character.js parents itself to api.seat) is visible
 // from the high follow camera. The body sits on a fake spring: it pitches when you accelerate or
 // brake, rolls into turns, and squashes on a honk. Rear wheels kick up pooled dust puffs.
+// Walls guide it along instead of bouncing it back (resolveCar). C while walking calls it: it
+// drives itself round obstacles to your right side, honks and parks facing your way.
 export function init(ctx){
   const { THREE, CANNON, scene, world, state, input, sound, helpers:H } = ctx;
   const { mesh, box, cyl, ball, eyes } = H;
@@ -76,7 +78,18 @@ export function init(ctx){
   }
 
   const R_CAR = 1.45;
-  function resolveCar(){
+  // Walls guide instead of bouncing. After the push-out, the push direction is the wall normal
+  // (summed over every collider touched, so a chain of rail posts reads as one smooth wall).
+  // Within 25 degrees of square on, the car just stops with a soft bump. Otherwise the part of
+  // the velocity going into the wall is dropped, the along-wall part is kept, and the nose eases
+  // round to the along-wall direction you were already going. This is the only wall slide:
+  // assist.js does the road guide and nothing else.
+  const HEAD_ON = Math.cos(25*Math.PI/180);
+  let touching = false, scrapeT = 0;
+  const wall = { hits:0, slides:0, stops:0 };          // critic counters, see api.wall()
+  function softBump(v){ sound.tone(95, 0.14, 'sine', 0.05 + 0.05*v, 60); spring.pv += car.speed*0.02; spring.bv -= 0.5 + 0.5*v; }
+  function resolveCar(dt){
+    const x0 = car.x, z0 = car.z;
     let hit = false;
     for(const c of ctx.colliders){
       if(c.kind === 'circle'){
@@ -96,8 +109,29 @@ export function init(ctx){
       }
     }
     const lim = ctx.island.radius - 2.5, r = Math.hypot(car.x, car.z); if(r > lim){ car.x *= lim/r; car.z *= lim/r; hit = true; }
-    if(hit && Math.abs(car.speed) > 3){ sound.sfx.bump(); spring.pv += car.speed*0.05; spring.bv -= 1.2; car.speed *= -0.3; }
-    else if(hit) car.speed *= 0.6;
+    if(!hit){ touching = false; return; }
+    let nx = car.x - x0, nz = car.z - z0; const nl = Math.hypot(nx, nz), sp = Math.abs(car.speed);
+    if(nl < 1e-6 || sp < 0.05){ touching = true; return; }
+    nx /= nl; nz /= nl;
+    const sg = Math.sign(car.speed), vx = Math.sin(car.heading)*car.speed, vz = Math.cos(car.heading)*car.speed;
+    const vn = vx*nx + vz*nz;
+    if(vn >= 0){ touching = true; return; }             // already moving away from it
+    const first = !touching; touching = true;
+    if(first) wall.hits++;
+    const into = -vn/sp;                                // 1 = square on, 0 = grazing
+    if(into > HEAD_ON){
+      if(first && sp > 3) softBump(Math.min(1, sp/20));
+      car.speed = 0; wall.stops++;
+      return;
+    }
+    const tx = vx - vn*nx, tz = vz - vn*nz, vt = Math.hypot(tx, tz);
+    // The speed into the wall goes on the first touch only; later frames of the same scrape keep
+    // the speed while the nose turns, so a long slide does not bleed it away frame after frame.
+    if(first){ car.speed = sg*vt*(1 - 0.1*into); if(sp > 5) softBump(0.3*into); }
+    else car.speed *= Math.exp(-0.4*dt);
+    car.heading = H.lerpAngle(car.heading, Math.atan2(sg*tx, sg*tz), Math.min(1, dt*12));
+    wall.slides++;
+    if(sp > 4 && (scrapeT -= dt) <= 0){ scrapeT = 0.07; sound.tone(210 + Math.random()*120, 0.08, 'sawtooth', Math.min(0.04, 0.012 + sp*0.0015), 120); }
   }
 
   // Fake suspension: pitch (p), roll (r) and bounce (b) are damped springs driven by the motion.
@@ -118,20 +152,22 @@ export function init(ctx){
     c.scale.set(1 + s, 1 - s*1.4, 1 + s);
   }
 
-  function stepCar(dt){
+  // ai: { thr, steer } from the call autopilot instead of the keys (thr and steer in -1..1).
+  function stepCar(dt, ai = null){
     const v0 = car.speed;
-    const thr = (keys.up ? 1 : 0) - (keys.down ? 1 : 0);
-    const max = keys.boost ? 30 : 20;
+    const boost = !ai && keys.boost;
+    const thr = ai ? ai.thr : (keys.up ? 1 : 0) - (keys.down ? 1 : 0);
+    const max = boost ? 30 : 20;
     if(thr !== 0){ const opposing = thr * car.speed < 0; car.speed += thr * (opposing ? 42 : 24) * dt; }
     else car.speed *= Math.exp(-1.6*dt);
-    if(keys.brake) car.speed *= Math.exp(-7*dt);
+    if(!ai && keys.brake) car.speed *= Math.exp(-7*dt);
     car.speed = Math.max(-9, Math.min(max, car.speed));
-    const steerIn = (keys.left ? 1 : 0) - (keys.right ? 1 : 0);
+    const steerIn = ai ? ai.steer : (keys.left ? 1 : 0) - (keys.right ? 1 : 0);
     car.steer += (steerIn - car.steer) * Math.min(1, dt*10);
     car.heading += car.steer * 2.3 * dt * Math.max(-1, Math.min(1, car.speed/6));
     const fx = Math.sin(car.heading), fz = Math.cos(car.heading);
     car.x += fx*car.speed*dt; car.z += fz*car.speed*dt;
-    resolveCar();
+    resolveCar(dt);
     // physics twin
     car.body.position.set(car.x, 0.75, car.z);
     car.body.velocity.set(fx*car.speed, 0, fz*car.speed);
@@ -146,7 +182,7 @@ export function init(ctx){
     stepSpring(dt, accel, lateral);
     // dust from the rear wheels when launching, boosting, braking hard or carving a turn
     puffClock -= dt;
-    const kick = Math.abs(accel) > 14 || (keys.boost && Math.abs(car.speed) > 12) || Math.abs(lateral) > 14;
+    const kick = Math.abs(accel) > 14 || (boost && Math.abs(car.speed) > 12) || Math.abs(lateral) > 14;
     if(kick && Math.abs(car.speed) > 1.5 && puffClock <= 0 && !state.reduced){
       puffClock = 0.05;
       const bx = -fx*1.2, bz = -fz*1.2, sx = Math.cos(car.heading)*0.95, sz = -Math.sin(car.heading)*0.95;
@@ -171,17 +207,110 @@ export function init(ctx){
   }
   function syncPlayer(){ const P = state.player; P.x = car.x; P.z = car.z; P.heading = car.heading; P.speed = car.speed; P.pushRadius = 2.4; }
 
+  /* ---------- call: C while walking, the car drives itself to your right side ---------- */
+  const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
+  const call = { on:false, t:0, stuck:0, best:1e9, side:1, near:[], nearT:0, spot:null, spotT:0, settle:0, from:null };
+  // True when a disc of radius r at (x, z) is clear of every collider in list and inside the edge.
+  function fits(x, z, r, list){
+    if(Math.hypot(x, z) > ctx.island.radius - 3) return false;
+    for(const c of list){
+      const dx = x - c.x, dz = z - c.z;
+      if(c.kind === 'circle'){ if(dx*dx + dz*dz < (r + c.r)*(r + c.r)) return false; continue; }
+      const reach = r + c.hw + c.hd; if(Math.abs(dx) > reach || Math.abs(dz) > reach) continue;
+      const co = Math.cos(c.ang), si = Math.sin(c.ang), lx = dx*co - dz*si, lz = dx*si + dz*co;
+      if(Math.hypot(Math.max(0, Math.abs(lx) - c.hw), Math.max(0, Math.abs(lz) - c.hd)) < r) return false;
+    }
+    return true;
+  }
+  // Dry ground or a road (bridges count), so the car is never sent into a lake after a swimmer.
+  function dryAt(x, z){ const L = ctx.modules.map?.layout; if(!L?.landAt) return true; return L.landAt(x, z) || (L.roadDistAt?.(x, z) ?? 9) < 4.5; }
+  // Where to park: the walker's right side first. Heading h faces (sin h, cos h), so his right is
+  // (-cos h, sin h). If that is blocked, the first clear spot round him.
+  function callSpot(){
+    const P = state.player, h = P.heading, rx = -Math.cos(h), rz = Math.sin(h), fx = Math.sin(h), fz = Math.cos(h);
+    for(const [a, b] of [[2.6, 0], [3.3, 0], [2.6, -1.6], [2.6, 1.6], [-2.6, 0], [-3.3, 0], [0, -3.6], [0, 3.6]]){
+      const x = P.x + rx*a + fx*b, z = P.z + rz*a + fz*b;
+      if(fits(x, z, R_CAR, ctx.colliders) && dryAt(x, z)) return { x, z, h };
+    }
+    return null;
+  }
+  const WHISKERS = [0, 0.35, 0.7, 1.05, 1.5, 2.0];
+  // A heading is open when two probes along it (half way and at the look distance) fit the car
+  // and stay dry and clear of the walker.
+  function openAlong(a, look){
+    const P = state.player;
+    for(const d of [look*0.5, look]){
+      const x = car.x + Math.sin(a)*d, z = car.z + Math.cos(a)*d;
+      if(!fits(x, z, R_CAR*0.85, call.near) || !dryAt(x, z) || Math.hypot(x - P.x, z - P.z) < R_CAR*0.85 + 0.6) return false;
+    }
+    return true;
+  }
+  function honkShort(){ sound.tone(415, 0.12, 'square', 0.06); sound.tone(523, 0.12, 'square', 0.05); setTimeout(() => { sound.tone(415, 0.1, 'square', 0.05); sound.tone(523, 0.1, 'square', 0.04); }, 150); }
+  function arrive(){ call.on = false; honkShort(); H.jolt(car.x, car.z, 8); spring.squash = 1; spring.bv += 1.2; sound.engine(null); }
+  function poof(x, z){
+    const n = state.reduced ? 4 : 8;
+    for(let i = 0; i < n; i++){ const a = i/n*Math.PI*2; puff(x + Math.cos(a)*0.9, z + Math.sin(a)*0.9, Math.cos(a)*2.6, Math.sin(a)*2.6); }
+  }
+  function startCall(){
+    if(state.mode !== 'walk' || !state.started) return false;
+    const s = callSpot();
+    if(!s){ ctx.bus.emit('car:call', { ok:false }); return false; }
+    Object.assign(call, { on:true, t:0, stuck:0, best:1e9, spot:s, spotT:0, nearT:0, settle:0, from:null });
+    ctx.bus.emit('car:call', { ok:true });
+    return true;
+  }
+  function stopCall(){ call.on = false; call.settle = 0; }
+  function stepCall(dt){
+    call.t += dt;
+    if(call.settle === 0 && (call.spotT -= dt) <= 0){
+      call.spotT = 0.25; const was = call.spot; call.spot = callSpot() || call.spot;
+      if(Math.hypot(call.spot.x - was.x, call.spot.z - was.z) > 2) call.best = 1e9;   // he walked on: progress counts from here
+    }   // the spot is frozen once it is parking
+    if((call.nearT -= dt) <= 0){ call.nearT = 0.25; call.near = ctx.colliders.filter(c => Math.abs(c.x - car.x) < 26 && Math.abs(c.z - car.z) < 26); }
+    const s = call.spot, dx = s.x - car.x, dz = s.z - car.z, dist = Math.hypot(dx, dz);
+    // Last metre: ease onto the spot and turn to face the walker's way, then honk.
+    if(call.settle > 0 || dist < 1.2){
+      if(!call.from) call.from = { x:car.x, z:car.z, h:car.heading };
+      call.settle = Math.min(1, call.settle + dt/0.4);
+      const e = 1 - Math.pow(1 - call.settle, 3), f = call.from;
+      car.x = f.x + (s.x - f.x)*e; car.z = f.z + (s.z - f.z)*e; car.heading = H.lerpAngle(f.h, s.h, e);
+      car.speed = 0; car.steer *= 0.8; park(); stepSpring(dt, 0, 0); sound.engine(null);
+      if(call.settle >= 1) arrive();
+      return;
+    }
+    // Stuck = no metre of progress toward the spot for 4 s (or 15 s in all): pop over in a puff of dust.
+    if(dist < call.best - 1){ call.best = dist; call.stuck = 0; } else call.stuck += dt;
+    if(call.stuck > 4 || call.t > 15){ poof(car.x, car.z); api.placeAt(s.x, s.z, s.h); poof(s.x, s.z); sound.tone(660, 0.16, 'sine', 0.06, 1320); arrive(); return; }
+    // Whiskers: the open heading nearest the straight line. The side that worked last is tried
+    // first, so the car commits to going round an obstacle one way instead of dithering.
+    const direct = Math.atan2(dx, dz), look = Math.min(dist, 3 + Math.abs(car.speed)*0.35);
+    let want = direct;
+    for(const w of WHISKERS){
+      const opts = w ? [w*call.side, -w*call.side] : [0];
+      const hit = opts.find(o => openAlong(direct + o, look));
+      if(hit !== undefined){ want = direct + hit; if(hit) call.side = Math.sign(hit); break; }
+    }
+    const err = wrap(want - car.heading);
+    const cap = Math.max(4, Math.min(16, 2 + dist*2.2)*Math.max(0.35, Math.cos(err)));   // slow into tight turns and on arrival
+    stepCar(dt, { thr: car.speed < cap - 0.5 ? 1 : car.speed > cap + 0.5 ? -1 : 0, steer: Math.max(-1, Math.min(1, err*3)) });
+  }
+
   buildCar();
   park();
 
   ctx.onUpdate((dt, t, mode) => {
     if(mode === 'interior') return;
     if(mode === 'drive' && state.started) stepCar(dt);
+    else if(mode === 'walk' && call.on) stepCall(dt);
     else { park(); stepSpring(dt, 0, 0); if(mode !== 'drive') sound.engine(null); }
     stepDoor(dt); stepPuffs(dt);
     if(mode === 'drive') syncPlayer();
   }, 10);
-  ctx.bus.on('mode', ({ to }) => { if(to !== 'drive'){ car.speed = 0; car.steer = 0; sound.engine(null); } });
+  // Into the car: write state.player from the car at once, so nothing reads the walker's last
+  // spot for a frame (the camera would swing to it and back).
+  ctx.bus.on('mode', ({ to }) => { stopCall(); if(to !== 'drive'){ car.speed = 0; car.steer = 0; sound.engine(null); } else syncPlayer(); });
+  ctx.bus.on('teleport', stopCall);
+  input.on('call', () => { if(state.mode === 'walk') startCall(); });
 
   input.on('honk', () => {
     if(state.mode !== 'drive') return;
@@ -191,13 +320,20 @@ export function init(ctx){
   const api = {
     car,
     seat,                              // Group in the cockpit; the driver parents itself here
-    placeAt(x, z, heading){ car.x = x; car.z = z; car.heading = heading; car.speed = 0; car.steer = 0; park(); if(state.mode === 'drive') syncPlayer(); },
+    placeAt(x, z, heading){ stopCall(); car.x = x; car.z = z; car.heading = heading; car.speed = 0; car.steer = 0; park(); if(state.mode === 'drive') syncPlayer(); },
     get position(){ return { x:car.x, z:car.z, heading:car.heading }; },
     radius: R_CAR,
     halfWidth: 0.98, halfLength: 1.62, // footprint for walkers to collide against
     openDoor(){ doorT = 1; },
     bump(v = 1){ spring.bv -= 1.4*v; spring.squash = Math.max(spring.squash, 0.6*v); },
+    call: startCall,                   // C while walking; false when there is no room beside you
+    stopCall,
+    calling: () => call.on,
+    wall: () => ({ ...wall, touching }),
   };
   ctx.modes.registerPlayer('drive', api);
+  // Critic hooks: window.__island.car
+  ctx.expose('car', { call: startCall, stopCall, calling: api.calling, wall: api.wall,
+    info: () => ({ x:+car.x.toFixed(2), z:+car.z.toFixed(2), heading:+car.heading.toFixed(3), speed:+car.speed.toFixed(2), calling:call.on, stuck:+call.stuck.toFixed(2), spot:call.spot && { x:+call.spot.x.toFixed(2), z:+call.spot.z.toFixed(2) } }) });
   return api;
 }
