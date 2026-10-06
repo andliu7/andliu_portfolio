@@ -50,7 +50,8 @@ html[data-motion="reduced"] .experience .xp-sticker { transition:none; }
 @media (max-width:900px) {
   .experience .xp-list { grid-template-columns:minmax(0,1fr); gap:24px; }
   .experience .xp-sticker { right:-4px; width:56px; }
-  .experience .xp-card { grid-template-columns:minmax(0,1fr); padding:18px 18px 20px; }
+  .experience .xp-line { max-inline-size:none; }
+  .experience .xp-card { grid-template-columns:minmax(0,1fr); padding:18px 18px 48px; }
   .experience .xp-when { grid-column:1; grid-row:1; justify-self:start; }
   .experience .xp-role { grid-row:2; }
 }

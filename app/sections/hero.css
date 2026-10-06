@@ -59,7 +59,9 @@
 /* Wide: the name is one line, ANDREW LIU */
 @container hero (min-width:760px) {
   .hero .hero-nl { display:inline; }
-  .hero .hero-nl:first-of-type { margin-right:.2em; }
+  /* the word gap: a margin on ANDREW (not the first span, which is the sr-only name). HeroFit
+     measures the name with it, so the fitted size includes the gap. */
+  .hero .hero-nl:not(.hero-nl-kw) { margin-right:.34em; }
 }
 
 /* Sticker slots. hero.client.tsx pins each one's centre to a point on a letter (inline left and

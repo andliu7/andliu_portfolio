@@ -18,7 +18,7 @@ import { useEffect } from 'react';
 
 // sticker key: [letter index in ANDREWLIU, x and y as fractions of that letter's box]
 const ANCHORS: Record<string, [number, number, number]> = {
-  berry: [5, 0.78, 0.04], // over W's top right
+  berry: [3, 0.55, 0.02], // over R's top, well clear of the gap between the two words
   mol: [3, 0.86, 0.88], // R's foot
   card: [1, 0.5, 0.96], // under N, bridging to the line below on a phone
   pan: [8, 0.62, 0.86], // U's lower right, inside the band
@@ -82,11 +82,12 @@ export function HeroFit() {
       pending = requestAnimationFrame(fit);
     });
     observer.observe(stage);
-    window.addEventListener('resize', fit);
+    const onResize = () => { cancelAnimationFrame(pending); pending = requestAnimationFrame(fit); };
+    window.addEventListener('resize', onResize);
     return () => {
       alive = false;
       observer.disconnect(); cancelAnimationFrame(pending);
-      window.removeEventListener('resize', fit);
+      window.removeEventListener('resize', onResize);
       cancelAnimationFrame(frame);
     };
   }, []);

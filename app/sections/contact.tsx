@@ -7,9 +7,10 @@ import CopyEmail from '../copy-email';
 import './contact.css';
 
 // The footer card (SITE-PLAN.md 4.9) in the Slush look: one flat apricot card (no gradient),
-// the headline crushed giant, the links and the sitemap as outlined pills, the résumé as the one
-// berry button so it is the first thing a recruiter finds. Under the card, the STACK marquee runs
-// as a full-bleed sky band with display-size words.
+// the headline crushed giant, GitHub and LinkedIn as big outlined pills, the email address itself
+// in display type as the mailto link, the Pages sitemap as small pills on the right, and the
+// résumé as the one berry button so it is the first thing a recruiter finds. Each link appears
+// once in the card. Under the card, the STACK marquee runs as a full-bleed sky band.
 //
 // FooterCard is exported for About; its signature is fixed:
 //   variant 'home'   the card, then the marquee band. The NOTCH_TO_ISLAND tab is gone (round 2:
@@ -20,7 +21,9 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
   // On About the in-page targets live on the home page.
   const at = (href: string) => (variant === 'about' && href.startsWith('#') ? `/${href}` : href);
   const resume = CONTACT.links.find(link => link.href === RESUME);
-  const links = CONTACT.links.filter(link => link !== resume);
+  const mail = CONTACT.links.find(link => link.href.startsWith('mailto:'));
+  const links = CONTACT.links.filter(link => link !== resume && link !== mail);
+  const pages = FOOTER.columns[0]; // Pages; Elsewhere repeated GitHub, LinkedIn and the résumé
   return (
     // A fragment (<>...</>): the card and the band are two siblings in the section, no wrapper.
     <>
@@ -45,21 +48,17 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
               ))}
             </ul>
             <p className="ct-email">
-              <span>{CONTACT.email}</span>
+              <a className="display ct-mail" href={mail?.href ?? `mailto:${CONTACT.email}`}>{CONTACT.email}</a>
               <CopyEmail email={CONTACT.email} />
             </p>
             <p className="ct-note">{CONTACT.emailNote}</p>
           </div>
-          <div className="ct-cols">
-            {FOOTER.columns.map(column => (
-              <nav key={column.title} aria-label={column.title}>
-                <span className="eyebrow">{column.title}</span>
-                <ul>
-                  {column.links.map(link => <li key={link.label}><a className="ct-site" href={at(link.href)}>{link.label}</a></li>)}
-                </ul>
-              </nav>
-            ))}
-          </div>
+          <nav className="ct-cols" aria-label={pages.title}>
+            <span className="eyebrow">{pages.title}</span>
+            <ul>
+              {pages.links.map(link => <li key={link.label}><a className="ct-site" href={at(link.href)}>{link.label}</a></li>)}
+            </ul>
+          </nav>
         </div>
       </div>
       {variant === 'about' && (
