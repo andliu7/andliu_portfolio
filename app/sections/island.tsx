@@ -1,5 +1,6 @@
 import { Play } from 'lucide-react';
 import { IMAGES, ISLAND, MICROCOPY, sectionAttrs } from '@/lib/site';
+import { IslandDoor } from './island.client';
 import './island.css';
 
 // The island finale (SITE-PLAN.md 4.10), the static version. One wide berry window standing on
@@ -12,6 +13,7 @@ import './island.css';
 // browser's Back brings them home, and nothing on this page loads the game until they click.
 // The scroll-scrubbed window and the live preview in the plan are not built here; the game in
 // island/ and public/island is untouched.
+// The poster is a link too: island.client.tsx asks "Head to the island?" in a popup first.
 // section#island is deliberately not a size container (app/globals.css, plan 2.3).
 
 const poster = IMAGES[ISLAND.poster];
@@ -32,13 +34,15 @@ export default function Island() {
           </a>
         </div>
         <figure className="il-shot">
-          <img
-            src={poster.srcset[0].src}
-            srcSet={poster.srcset.map(s => `${s.src} ${s.w}w`).join(', ')}
-            sizes="(min-width: 900px) 56vw, 92vw"
-            width={poster.w} height={poster.h} alt={poster.alt}
-            loading="lazy" decoding="async"
-          />
+          <IslandDoor>
+            <img
+              src={poster.srcset[0].src}
+              srcSet={poster.srcset.map(s => `${s.src} ${s.w}w`).join(', ')}
+              sizes="(min-width: 900px) 56vw, 92vw"
+              width={poster.w} height={poster.h} alt={poster.alt}
+              loading="lazy" decoding="async"
+            />
+          </IslandDoor>
         </figure>
       </div>
     </section>

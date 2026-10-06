@@ -4,8 +4,8 @@ import './clock-switch.css';
 
 // The ON / OFF switch for "THE CLOCK", moved here from the manifesto's ForkSwitch
 // (app/sections/manifesto.client.tsx) when Off the clock became the evening strip. Just the
-// switch now: the caller owns the state and decides what a flip does (Off the clock scrolls the
-// strip between the work line and the evening).
+// switch now: the caller owns the state and decides what a flip does (Off the clock jumps the
+// strip to its start on ON and to its end on OFF).
 //
 // It follows components/site/switch.tsx: role="switch", aria-checked, a real <button>, so Space
 // and Enter click it. The arrow keys also set it (left is on, right is off, where each word sits).

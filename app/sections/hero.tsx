@@ -11,7 +11,7 @@ import './hero.css';
 // The hero (SITE-PLAN.md 4.1) in the Slush poster language: a band outlined in ink with
 // Andrew's Cloudscape sky drifting behind it, the title chip, the name crushed onto one line as
 // wide as the band allows, four cartoon objects of his projects around it (each a link), the
-// identity line and the résumé button, then a tilted cream marquee of short true facts.
+// résumé button, then a tilted cream marquee of short true facts.
 //
 // Layout (hero.css): the band's inner stage is a size container. HeroFit (hero.client.tsx) sizes
 // the name to fill the stage once the fonts have loaded and keeps the band and the bar above
@@ -25,7 +25,7 @@ import './hero.css';
 // "Andrew Liu" once: the letter spans are aria-hidden.
 //
 // There is no photo of Andrew yet. When PORTRAITS.hero.src is set the Portrait print joins the
-// foot beside the identity line; until then the objects are the picture.
+// foot beside the résumé button; until then the objects are the picture.
 
 const NAME_CHARS = HERO.first.length + HERO.last.length;
 
@@ -61,7 +61,6 @@ export default function Hero() {
 
           <div className="hero-foot">
             <div className="hero-about hero-rise" style={{ '--d': 1 } as CSSProperties}>
-              <p className="hero-lead">{HERO.identity}</p>
               <div className="row-actions">
                 <a className="pill pill-berry press" href={RESUME} target="_blank" rel="noreferrer">
                   {MICROCOPY.resume} <ArrowUpRight size={16} aria-hidden="true" />

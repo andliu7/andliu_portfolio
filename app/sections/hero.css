@@ -2,8 +2,8 @@
    Ground: the section is flat paper; on it a band outlined in 1px ink at the panel radius, with
    Andrew's Cloudscape (components/ui/cloudscape.tsx) behind it at his own colours: sky
    #87ceeb, cloud #f8f8f8 and #ffffff. Text sits straight on the clouds, so it is measured
-   against the darkest of them, the sky: ink 10.4:1, --ink-2 (the identity line) 6.3:1, berry
-   (LIU, display size) 4.3:1. On white cloud the same three read 18.1, 11.0 and 7.5:1. The chip
+   against the darkest of them, the sky: ink 10.4:1, berry
+   (LIU, display size) 4.3:1. On white cloud the same two read 18.1 and 7.5:1. The chip
    and the object labels are ink on --card (17.1:1). The bar is ink on --card (17.1:1).
    --fs is the name's font size. hero.client.tsx measures the name in the display face once the
    fonts are loaded and sets --fs-js so the name fills the stage on one line, capped so the band
@@ -51,7 +51,7 @@
 
 /* ---------- The name and its objects ----------
    --pt is the room above the letters for the top two objects; the bottom two hang beside the
-   identity line on a wide stage, and get their own room under the name on a narrow one. */
+   résumé button on a wide stage, and get their own room under the name on a narrow one. */
 .hero .hero-namewrap { --pt:calc(var(--fs) * .42); position:relative; z-index:1; padding-top:var(--pt); }
 @container hero (max-width:759px) {
   .hero .hero-namewrap { --pt:max(64px, calc(var(--fs) * .42)); padding-bottom:max(68px, calc(var(--fs) * .6)); }
@@ -64,7 +64,7 @@
    measures the name with it, so the fitted size includes the gap. */
 .hero .hero-nl:not(.hero-nl-kw) { margin-right:.34em; }
 
-/* ---------- Under the name: who, and the résumé ---------- */
+/* ---------- Under the name: the résumé ---------- */
 /* The foot spans the stage but only its contents take the pointer, so the objects beside it stay clickable */
 .hero .hero-foot { position:relative; z-index:3; display:grid; gap:16px; align-items:end; pointer-events:none; }
 .hero .hero-foot > * { pointer-events:auto; }
@@ -73,7 +73,6 @@
   .hero .hero-foot { grid-template-columns:minmax(0,1fr) minmax(0,1.4fr); column-gap:24px; min-height:calc(var(--fs) * .62 + 40px); }
 }
 .hero .hero-about { display:grid; gap:14px; justify-items:start; }
-.hero .hero-lead { max-width:34ch; font-size:clamp(18px,1.6vw,21px); line-height:1.45; color:var(--ink-2); }
 .hero .hero-portrait { width:min(100%,220px); rotate:-3deg; }
 
 /* ---------- The bar: full bleed, cream, tilted a degree and a half, short true facts ----------

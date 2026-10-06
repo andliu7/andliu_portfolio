@@ -5,15 +5,16 @@ import { FlipHeading } from '@/components/site/flip-heading';
 import { RollingRow } from '@/components/ui/rolling-list';
 import { TiltFrame } from '@/components/site/tilt-frame';
 import { CheckSticker, PROJECT_ART } from '@/components/site/work/art';
-import { BlueberrySticker, FlashcardSticker } from '@/components/site/stickers/stickers';
+import { FlashcardSticker } from '@/components/site/stickers/stickers';
 import { Shot } from '@/components/site/work/shot';
 import './projects.css';
 
 // Projects (SITE-PLAN.md 4.5), style pass 2026-10-06.
-//   - the index: one rolling row per project (01 to 08). Row 01 goes to the Blueberry chapter,
-//     08 to #island, the rest to their spread. Hover or focus rolls the title and shows a small
+//   - the index: one rolling row per project (01 to 07). Row 01 goes to the Blueberry chapter,
+//     07 to #island, the rest to their spread. Hover or focus rolls the title and shows a small
 //     picture of the project where the kind label was.
-//   - three feature spreads (the game, Flashcards, Second Brain: the ones Andrew most wants seen),
+//   - two feature spreads (Flashcards, Second Brain: the ones Andrew most wants seen; the game
+//     left the list 2026-10-06, the Blueberry chapter covers it),
 //     picture and text side by side on a pastel panel, alternating sides
 //   - the other three as sticker cards, two up, the odd one full width
 // Text columns stop at 60ch. Pictures are the real captures in a small browser window that tilts
@@ -23,16 +24,16 @@ import './projects.css';
 
 type Project = (typeof PROJECTS)[number];
 
-const FEATURED = ['game', 'flashcards', 'brain'];
+const FEATURED = ['flashcards', 'brain'];
 const SPREADS = PROJECTS.filter(p => p.id !== 'blueberry' && p.id !== 'island');
 const FEATURES = SPREADS.filter(p => FEATURED.includes(p.id));
 const CARDS = SPREADS.filter(p => !FEATURED.includes(p.id));
 
 // One sticker fill per project, so neighbours never share one (ink text is AA on all of them).
-const FILL: Record<string, string> = { game: 'tile-teal', flashcards: 'tile-gold', brain: 'tile-pink', trainer: 'tile-leaf', studio: 'tile-apricot', guide: 'tile-teal' };
+const FILL: Record<string, string> = { flashcards: 'tile-gold', brain: 'tile-pink', trainer: 'tile-leaf', studio: 'tile-apricot', guide: 'tile-teal' };
 // The mechanism trainer and the animation pipeline have no sticker: theirs was the molecule,
 // removed 2026-10-06 (Andrew: no chemistry art). Visual already skips a missing one.
-const STICKER: Partial<Record<string, (props: { className?: string }) => JSX.Element>> = { game: BlueberrySticker, flashcards: FlashcardSticker, brain: CheckSticker, guide: FlashcardSticker };
+const STICKER: Partial<Record<string, (props: { className?: string }) => JSX.Element>> = { flashcards: FlashcardSticker, brain: CheckSticker, guide: FlashcardSticker };
 
 const rowHref = (id: string) => (id === 'blueberry' ? '#blueberry' : id === 'island' ? '#island' : `#work-${id}`);
 
@@ -121,7 +122,9 @@ export default function Projects() {
     <section {...sectionAttrs('work')} className="work curve-top" aria-labelledby="work-title">
       <div className="wk-head">
         <span className="eyebrow">{WORK_HEAD.eyebrow}</span>
-        <FlipHeading id="work-title" text={WORK_HEAD.headline} max={180} />
+        {/* The display title was removed (Andrew, 2026-10-06); the heading stays for screen
+            readers, so the section landmark keeps its name (aria-labelledby). */}
+        <h2 id="work-title" className="sr-only">{WORK_HEAD.label}</h2>
       </div>
 
       <ol className="wk-index">

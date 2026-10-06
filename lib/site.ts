@@ -88,7 +88,6 @@ export const HERO = {
   chip: 'Computer Science Major, Pre-Dental Track. Expected May 2027.', // [R] Andrew's wording 2026-10-06
   first: 'ANDREW', // [P]
   last: 'LIU', // [P]
-  identity: IDENTITY.short, // [P][R] derived from BLUEBERRY_TITLE
   // The four cartoon objects around the name, each a link to its project (labels are PROJECTS titles)
   objects: {
     pencil: { label: 'Focus Family Guide', href: '#work-guide' }, // [P] PROJECTS guide
@@ -218,7 +217,7 @@ export const STACK = [
 export type LinkKind = 'live' | 'source';
 export type ProjectLink = { kind: LinkKind; href: string };
 
-// `num` is the display number: 01 is the Blueberry chapter, 02 to 07 the spreads, 08 the one
+// `num` is the display number: 01 is the Blueberry chapter, 02 to 06 the spreads, 07 the one
 // island teaser line. `image` is an IMAGES key, or null where the spread draws an illustration
 // (Second Brain until approved, the Chemistry pipeline) or has none (the island teaser).
 // `imageApproved` is the image used once APPROVALS.secondBrainShot is true.
@@ -237,21 +236,7 @@ export const PROJECTS = [
     image: 'bbHome', imageApproved: null,
   },
   {
-    id: 'game', num: '02', title: 'The Blueberry game', year: '2026', // [S] the game at #/app
-    kind: 'A learning game, Duolingo-inspired', // [S] CLAUDE-blueberry-game.md: "A Duolingo shaped progress track"
-    lines: [
-      'A pathway of short lessons grouped by topic, with unlock gates along the way: the shape Duolingo uses, pointed at organic chemistry.', // [S]
-      'Lessons are built from small beats: multiple choice, match, sort, trace the mechanism, and plan a synthesis.', // [S] src/game/beats
-      'Reagents are drawn as real skeletal structures with RDKit, not spelled out as formulas.', // [S] STATUS.md 2026-09-28
-    ],
-    note: 'The mechanism trainer lives inside it now.', // [S]
-    tags: ['React 19', 'TypeScript', 'RDKit', 'Vite'], // [R][S]
-    links: [{ kind: 'live', href: `${BB_LIVE}#/app` }], // [S] TRAINER_URL
-    url: 'andliu7.github.io/blueberry/#/app', // [S]
-    image: 'bbPath', imageApproved: null,
-  },
-  {
-    id: 'flashcards', num: '03', title: 'Flashcards', year: null, // [R] "a flashcard tool built for classmates" (no date on disk, so none shown)
+    id: 'flashcards', num: '02', title: 'Flashcards', year: null, // [R] "a flashcard tool built for classmates" (no date on disk, so none shown)
     kind: 'Where Blueberry started', // [R]
     lines: [
       'It started as a Grignard reaction deck for my classmates, and turned into a study engine for any question deck.', // [R][S] flashcard-template README
@@ -264,7 +249,7 @@ export const PROJECTS = [
     image: null, imageApproved: null,
   },
   {
-    id: 'brain', num: '04', title: 'Second Brain', year: '2026', // [R][Z brain]
+    id: 'brain', num: '03', title: 'Second Brain', year: '2026', // [R][Z brain]
     kind: 'Personal operating system', // [P][Z brain]
     lines: [
       'Five tools in one app: notes, AI chat, nutrition and workout logging, goals, and a project dashboard.', // [P][Z brain]
@@ -278,7 +263,7 @@ export const PROJECTS = [
     image: null, imageApproved: 'secondBrain', // "memories as dots" illustration until approved (plan 2.7)
   },
   {
-    id: 'trainer', num: '05', title: 'Mechanism Trainer', year: null, // [P]
+    id: 'trainer', num: '04', title: 'Mechanism Trainer', year: null, // [P]
     kind: 'Interactive chemistry', // [P]
     lines: [
       'Draw the molecule. Push the electrons. Understand the reaction.', // [P]
@@ -291,7 +276,7 @@ export const PROJECTS = [
     image: 'mechanismTrainer', imageApproved: null,
   },
   {
-    id: 'studio', num: '06', title: 'Chemistry Explainer Animation Pipeline', year: '2026', // [R][Z studio]
+    id: 'studio', num: '05', title: 'Chemistry Explainer Animation Pipeline', year: '2026', // [R][Z studio]
     kind: 'Python, cairosvg, ffmpeg', // [Z studio]
     lines: [
       'Renders reaction frames as SVG in code and composites them into narrated explainer videos, replacing hand-animated slides.', // [Z studio][P]
@@ -304,7 +289,7 @@ export const PROJECTS = [
     image: null, imageApproved: null, // drawn reaction frames (plan 2.6)
   },
   {
-    id: 'guide', num: '07', title: 'Focus Family Guide', year: null, // [P]
+    id: 'guide', num: '06', title: 'Focus Family Guide', year: null, // [P]
     kind: 'Design for community', // [P]
     lines: [
       'A practical publishing guide for the next Focus Family leaders.', // [P]
@@ -317,7 +302,7 @@ export const PROJECTS = [
     image: 'focusFamilyGuide', imageApproved: null,
   },
   {
-    id: 'island', num: '08', title: 'The résumé island', year: '2026', // [inventory 2.4][Z]
+    id: 'island', num: '07', title: 'The résumé island', year: '2026', // [inventory 2.4][Z]
     kind: 'three.js', // [inventory 2.4]
     lines: ['Every place on the island is one line of the résumé.'], // [Z]
     note: null,
@@ -355,6 +340,7 @@ export const JOBS = [
 export const WORK_HEAD = {
   eyebrow: '02 / Selected work', // [P]
   headline: 'SELECTED *work.*', // [P]
+  label: 'Selected work', // [P] as headline, plain, for the Projects section's visually hidden heading
 } as const;
 
 export const EXPERIENCE_HEAD = {
@@ -465,6 +451,8 @@ export const OFF_CLOCK = {
 export const EVENING = {
   intro: 'Mornings are for *work*. Here is the *evening*.', // [Andrew 2026-10-06 via lead brief] (needs sign-off)
   hint: 'Scroll through the evening', // [UI] (needs sign-off)
+  skip: 'Skip the evening', // [UI] Andrew 2026-10-06 asked for a way out of the strip (needs sign-off)
+  slider: 'Time of evening', // [UI] the sun and moon handle's accessible name (needs sign-off)
   clock: 'THE CLOCK', // [Z yard] as FORK.on.head
   scenes: [
     { id: 'after', when: 'After work or classes', big: 'CLOCK OUT', voice: 'Work or *classes* at UMD come first.', sub: null }, // [Andrew 2026-10-06][R] (needs sign-off)
@@ -554,6 +542,7 @@ export const ISLAND = {
   gameTitle: "Andrew Liu's island, a small driving game", // [P] app/island-section.tsx iframe title
   src: '/island/index.html', // [plan 4.10]
   poster: 'islandS3', // IMAGES key
+  confirm: { question: 'Head to the island?', enter: 'Enter the island', stay: 'Stay here' }, // [UI] the poster's confirm popup, Andrew 2026-10-06 (needs sign-off)
 } as const;
 
 // ---------------------------------------------------------------------------------------------
@@ -667,6 +656,9 @@ export const CONTENTS = {
   note: 'You do not have to read this front to back. Pick the part you came for.', // [UI] from the approved design (needs sign-off)
   label: 'Contents', // [UI] the list's accessible name (needs sign-off)
   rows: [
+    // The Blueberry chapter first (Andrew, 2026-10-06: "Where to?" should go into "From flashcards
+    // to a platform", numbered 01 as the start of the list).
+    { href: '#blueberry', title: 'From flashcards to a platform', sub: BLUEBERRY_CHAPTER.headlinePlain, meta: BLUEBERRY_TITLE }, // [P] as BB_HEAD.headline; sub and meta derived from BLUEBERRY_CHAPTER and BLUEBERRY_TITLE
     { href: '#work', title: FOOTER_SKIP.links[0].a, sub: PROJECTS.slice(0, 4).map(p => p.title).join(', '), meta: `${PROJECTS.length} projects` }, // [UI] derived from FOOTER_SKIP and PROJECTS
     { href: '#impact', title: FOOTER_SKIP.links[1].a, sub: IMPACT.map(p => p.title).join(', '), meta: `${IMPACT.length} panels` }, // [UI] derived from FOOTER_SKIP and IMPACT
     { href: '#experience', title: FOOTER_SKIP.links[2].a, sub: JOBS.map(j => j.org).join(', '), meta: `${JOBS.length} roles` }, // [UI] derived from FOOTER_SKIP and JOBS
@@ -766,7 +758,6 @@ export const IMAGES = {
   // copied from grignard-app-source/public/reactions/grignard-addition-ketone-start-light.svg
   // @ 4a07a3c. Real product art, so it stands in wherever the site shows "what he builds".
   bbHome: { src: '/images/work/blueberry-home.webp', w: 1600, h: 1000, sm: '/images/work/blueberry-home-800.webp', smW: 800, alt: 'The Blueberry home page', owner: 'capture', sections: ['top', 'blueberry', 'work'] },
-  bbPath: { src: '/images/work/blueberry-path.webp', w: 1600, h: 1000, sm: '/images/work/blueberry-path-800.webp', smW: 800, alt: 'The Blueberry pathway', owner: 'capture', sections: ['blueberry'] },
   bbLesson: { src: '/images/work/blueberry-lesson.webp', w: 1600, h: 1000, sm: '/images/work/blueberry-lesson-800.webp', smW: 800, alt: "The twelve sections of Blueberry's CHEM241 course", owner: 'capture', sections: ['blueberry'] },
   // Captured 2026-10-06 from the live site in headless Chrome (SwiftShader), 2x, each mid-use: a
   // card flipped to its rating buttons (800x600 viewport, the review run is full width), the

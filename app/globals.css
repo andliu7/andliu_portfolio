@@ -303,6 +303,24 @@ section[data-texture] { isolation:isolate; }
 .hdr-label-track[data-roll] { animation:hdr-roll 400ms cubic-bezier(.76,0,.24,1) both; }
 @keyframes hdr-roll { from { transform:translateY(0); } to { transform:translateY(-50%); } }
 @media (max-width:1199px) { .hdr-centre { display:none; } }
+/* Scrolling down sends the bar away, but the section's name stays: the label, compact (85%),
+   alone and centred at the top, at every width (below 1200px the bar has no room for it, but the
+   bar is gone). Positioned absolutely across the whole header (grid-column 1 / -1: an absolute
+   grid child is placed in its grid area, so it must span every column), so it centres the same at every
+   width and never pushes the groups. A section with no label (the berry mark) leaves with the bar.
+   Reduced motion keeps the bar in place, so it keeps its normal label. */
+.site-header > .hdr-centre { transition-property:translate,scale; }
+html:not([data-motion="reduced"]):not([data-hscroll="on"]) .site-header[data-hidden]:not([data-menu-open]):not(:focus-within) > .hdr-centre:not([data-empty]) { display:grid; position:absolute; grid-column:1 / -1; inset:0; width:max-content; margin:auto; translate:0 -10px; scale:.85; }
+html:not([data-motion="reduced"]):not([data-hscroll="on"]) .site-header[data-hidden]:not([data-menu-open]):not(:focus-within) > .hdr-centre .hdr-label { max-width:min(320px,calc(100vw - 96px)); }
+/* While a pinned horizontal strip runs (use-horizontal-scroll.ts sets html[data-hscroll="on"]),
+   the bar goes (wordmark, label, Résumé, Visit Blueberry and the band) but Ask and the menu
+   button stay floating, so there is always a way out. They pop back in on the spring if the bar
+   had left on scroll. Keyboard focus inside the header, or an open menu, still shows all of it. */
+.site-header .header-right > :is(.header-resume,.header-visit) { transition:transform var(--dur-release) var(--ease-spring),box-shadow var(--dur-release) var(--ease-spring),color var(--dur-ui) var(--ease-ui),translate var(--dur-roll) var(--ease-elastic); }
+html[data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within) > :is(.wordmark-host,.hdr-centre),
+html[data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within) > .header-right > :is(.header-resume,.header-visit) { translate:0 -300%; }
+html[data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within)::before { translate:0 -110%; }
+html[data-hscroll="on"] .site-header:not([data-menu-open]) > .header-right { translate:none; }
 /* Right group: Résumé (720px and up; the menu has it on phones), Visit Blueberry (the one
    primary), Ask (the chat launcher, which chat-dock.tsx portals into #hdr-ask after hydration;
    the slot holds the launcher's width from first paint, so nothing shifts when it lands), the
@@ -580,6 +598,11 @@ html[data-motion="reduced"] :is(.pill,.square-btn,.menu-btn,.chat-launcher)::bef
 html[data-motion="reduced"] :is(.pill-face,.pill-back) { translate:none !important; rotate:none !important; transition:opacity .15s linear; }
 /* The header does not travel at all: it stays, on its band. */
 html[data-motion="reduced"] .site-header > *, html[data-motion="reduced"] .site-header::before { transition:none; translate:none !important; }
+/* A pinned strip still clears the bar (the same rule as above), by hiding it in place. */
+html[data-motion="reduced"] .site-header .header-right > :is(.header-resume,.header-visit) { transition:none; }
+html[data-motion="reduced"][data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within) > :is(.wordmark-host,.hdr-centre),
+html[data-motion="reduced"][data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within) > .header-right > :is(.header-resume,.header-visit) { visibility:hidden; }
+html[data-motion="reduced"][data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within)::before { opacity:0; }
 html[data-motion="reduced"] :is(.menu,.menu-print) { animation:none; }
 html[data-motion="reduced"] .hdr-mark { transition:none; }
 html[data-motion="reduced"] .site-header > .wordmark-host { animation:none; }

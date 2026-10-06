@@ -1,5 +1,5 @@
 import { ArrowUpRight } from 'lucide-react';
-import { BB_ENGINEERING, BB_FACTS, BB_HEAD, BB_SCREENS, BLUEBERRY_CHAPTER, sectionAttrs } from '@/lib/site';
+import { BB_ENGINEERING, BB_FACTS, BB_HEAD, BB_SCREENS, BLUEBERRY_CHAPTER, PROJECTS, sectionAttrs } from '@/lib/site';
 import { FlipHeading } from '@/components/site/flip-heading';
 import { Marquee } from '@/components/site/marquee';
 import { TiltFrame } from '@/components/site/tilt-frame';
@@ -24,6 +24,9 @@ import './blueberry.css';
 //
 // A server component; TiltFrame, CountUp and the marquee are the only client parts.
 
+// The chapter is project 01 of the numbered list (Projects carries on from 02), so its headline
+// wears the same outlined index number as the project spreads.
+const NUM = PROJECTS.find(p => p.id === 'blueberry')?.num;
 const FACTS = BB_FACTS.filter(fact => fact.value !== undefined);
 const SHOT_FILLS = ['apricot', 'card', 'berry-soft', 'apricot'] as const;
 const FACT_FILLS = ['apricot', 'sky', 'berry-soft'] as const;
@@ -35,6 +38,7 @@ export default function Blueberry() {
   return (
     <section {...sectionAttrs('blueberry')} className="bb" aria-labelledby="blueberry-title">
       <div className="bb-head">
+        {NUM && <span className="bb-num" aria-hidden="true">{NUM}</span>}
         <div className="bb-title">
           <FlipHeading id="blueberry-title" text={BB_HEAD.headline} max={168} />
           <span className="bb-st bb-st-card" data-reveal><FlashcardSticker /></span>

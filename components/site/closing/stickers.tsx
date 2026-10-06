@@ -112,3 +112,27 @@ export function MoonSticker({ className = '' }: Props) {
     </svg>
   );
 }
+
+// One of the island's round people standing on their own (the same capsule body and two dot eyes
+// as the pair at TableSticker), for the evening strip's small crowds. `tall` stretches the body;
+// `extra` adds one prop: a gym headband, a chef's hat, or a small book held in front. The body and
+// the eyes are separate groups so offclock.css can bob one and blink the other.
+export type PersonTone = 'pink' | 'sky' | 'leaf' | 'gold' | 'apricot' | 'teal' | 'violet';
+type PersonProps = Props & { tone: PersonTone; tall?: boolean; extra?: 'band' | 'chef' | 'book' };
+
+export function BlobPerson({ tone, tall = false, extra, className = '' }: PersonProps) {
+  const top = tall ? 22 : 38; // the body's top edge; every body ends at y 104 so they share a floor
+  return (
+    <svg className={`st cl-person cl-tone-${tone} ${className}`} viewBox="0 0 56 108" aria-hidden="true" focusable="false">
+      <g className="cl-person-body">
+        {extra === 'chef' && <path className="cl-chef" vectorEffect={NS} d={`M16 ${top + 4}c-8 0-10-12-2-14 0-8 12-10 14-4 2-6 14-4 14 4 8 2 6 14-2 14z`} />}
+        <rect className="cl-blob-body" vectorEffect={NS} x="6" y={top} width="44" height={104 - top} rx="22" />
+        {extra === 'band' && <rect className="cl-band" vectorEffect={NS} x="10" y={top + 7} width="36" height="7" rx="3" />}
+        <g className="cl-eyes">
+          <circle className="cl-eye" cx="21" cy={top + 24} r="3.2" /><circle className="cl-eye" cx="35" cy={top + 24} r="3.2" />
+        </g>
+        {extra === 'book' && <rect className="cl-held-book" vectorEffect={NS} x="14" y={top + 38} width="28" height="18" rx="3" />}
+      </g>
+    </svg>
+  );
+}

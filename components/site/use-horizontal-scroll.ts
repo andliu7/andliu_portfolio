@@ -27,10 +27,21 @@ import { useReducedMotion } from './use-reduced-motion';
 // (from the right while pinned, from below in the stack), which the section CSS uses to pop them.
 // The track must be position:relative so each item's offsetLeft is measured from the track.
 //
+// html[data-hscroll="on"]: set while any pinned strip holds the screen (the header styles itself
+// from it). Each strip adds itself to one shared Set and the attribute follows the Set's size, so
+// two strips handing over in the same frame can never clear each other's flag.
+//
 // Pattern: a custom hook. It returns refs for the caller to attach (ref={runwayRef}); a ref is a
 // box React fills with the real DOM element after render, which the effect then reads.
 
 const WIDE = '(min-width: 700px)';
+
+const activeStrips = new Set<HTMLElement>();
+function markActive(runway: HTMLElement, active: boolean) {
+  if (active) activeStrips.add(runway); else activeStrips.delete(runway);
+  if (activeStrips.size) document.documentElement.dataset.hscroll = 'on';
+  else delete document.documentElement.dataset.hscroll;
+}
 
 export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>(onProgress?: (p: number) => void) {
   const runwayRef = useRef<HTMLElement>(null);
@@ -71,7 +82,10 @@ export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>(onPr
     let raf = 0;
     const update = () => {
       raf = 0;
-      const p = run ? Math.min(1, Math.max(0, -runway.getBoundingClientRect().top / run)) : 0;
+      const box = runway.getBoundingClientRect();
+      const p = run ? Math.min(1, Math.max(0, -box.top / run)) : 0;
+      // Pinned means the frame is stuck to the screen: the runway's top is above it, its foot below.
+      markActive(runway, box.top <= 0.5 && box.bottom >= window.innerHeight - 0.5);
       const x = p * run;
       track.style.transform = `translate3d(${-x}px,0,0)`;
       runway.style.setProperty('--p', p.toFixed(4));
@@ -110,6 +124,7 @@ export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>(onPr
       ro.disconnect();
       window.removeEventListener('scroll', schedule);
       track.removeEventListener('focusin', onFocus);
+      markActive(runway, false);
       runway.removeAttribute('data-pin');
       runway.style.removeProperty('--run');
       runway.style.removeProperty('--p');
@@ -118,20 +133,35 @@ export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>(onPr
     };
   }, [pinned]);
 
-  // Scroll the page so item `index` is in view: centred in the pinned strip, or at the top of
-  // the stack. For buttons that jump along the strip (Off the clock's switch).
-  const scrollToItem = useCallback((index: number) => {
-    const runway = runwayRef.current;
+  // Where item `index` sits centred, as strip progress 0..1 (Off the clock's slider steps by these).
+  const progressOf = useCallback((index: number) => {
     const track = trackRef.current;
     const item = track?.querySelectorAll<HTMLElement>('[data-hs-item]')[index];
-    if (!runway || !track || !item) return;
-    const top = runway.getBoundingClientRect().top + window.scrollY;
-    if (!pinned) { scrollToY(item.getBoundingClientRect().top + window.scrollY - 80); return; }
-    const frame = track.parentElement!;
-    const run = Math.max(0, track.scrollWidth - frame.clientWidth);
-    const want = item.offsetLeft - (frame.clientWidth - item.offsetWidth) / 2;
-    scrollToY(top + Math.min(run, Math.max(0, want)));
-  }, [pinned]);
+    const frame = track?.parentElement;
+    if (!track || !item || !frame) return 0;
+    const run = track.scrollWidth - frame.clientWidth;
+    return run > 0 ? Math.min(1, Math.max(0, (item.offsetLeft - (frame.clientWidth - item.offsetWidth) / 2) / run)) : 0;
+  }, []);
 
-  return { runwayRef, trackRef, pinned, scrollToItem };
+  // Scroll the page to strip progress p (0..1). `immediate` skips the smooth glide, for a drag
+  // that must follow the pointer exactly; otherwise it glides for `duration` seconds.
+  const scrollToProgress = useCallback((p: number, immediate = false, duration = 1.6) => {
+    const runway = runwayRef.current;
+    const track = trackRef.current;
+    const frame = track?.parentElement;
+    if (!runway || !track || !frame) return;
+    const run = Math.max(0, track.scrollWidth - frame.clientWidth);
+    const y = runway.getBoundingClientRect().top + window.scrollY + Math.min(1, Math.max(0, p)) * run;
+    const lenis = getLenis();
+    if (lenis) lenis.scrollTo(y, immediate ? { immediate: true } : { duration });
+    else window.scrollTo({ top: y });
+  }, []);
+
+  // Scroll to just past the section: the way out of a pinned strip.
+  const scrollPast = useCallback(() => {
+    const runway = runwayRef.current;
+    if (runway) scrollToY(runway.getBoundingClientRect().bottom + window.scrollY);
+  }, []);
+
+  return { runwayRef, trackRef, pinned, progressOf, scrollToProgress, scrollPast };
 }

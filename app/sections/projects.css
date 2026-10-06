@@ -31,7 +31,11 @@
 .work :is(.wk-spread, .wk-card) { --on: var(--ink); --on-2: var(--ink); --kw: var(--ink); --ring: var(--ink); }
 
 .work .wk-head { display: grid; gap: 10px; }
-.work .wk-head .flip-head { min-height: var(--hit); }
+/* With the display title gone the head is one eyebrow, so it sits close over the index instead of a
+   whole section gap away (no bare ground). */
+.work .wk-head + .wk-index { margin-top: calc(20px - clamp(56px, 7cqi, 112px)); }
+/* The section's height floor (SECTIONS budget) would otherwise stretch every row, the head too. */
+.work { align-content: start; }
 
 /* ---------- the index ---------- */
 .work .wk-index { display: grid; padding: 0; margin: 0; list-style: none; }
@@ -66,6 +70,14 @@
 .work .wk-chrome i:nth-child(3) { background: var(--berry-soft); }
 .work .wk-url { min-width: 0; margin-left: 8px; padding: 4px 12px; overflow: hidden; border-radius: var(--r-pill); background: var(--paper); font: 500 11px/1.2 var(--mono); letter-spacing: .02em; color: var(--ink-2); white-space: nowrap; text-overflow: ellipsis; font-variant-ligatures: none; }
 .work .wk-media :is(img, svg, video) { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; }
+/* Every picture grows a little inside its window on hover, on the spring (transform only; the
+   window's overflow clips it, so the frame never moves). Reduced motion: it stays put. */
+.work .wk-media { overflow: hidden; }
+.work .wk-media > * { transition: transform .6s var(--ease-elastic); }
+@media (hover: hover) and (pointer: fine) {
+  .work .wk-visual:hover .wk-media > * { transform: scale(1.05); }
+}
+html[data-motion="reduced"] .work .wk-media > * { transition: none; transform: none; }
 /* The sticker rides the front layer, overlapping the window's lower right corner. Its overhang
    (14px) is less than the panel's padding, so it is never clipped. */
 .work .wk-visual .tilt-layer:last-child { position: relative; pointer-events: none; }

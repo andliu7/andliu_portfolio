@@ -20,7 +20,10 @@ import { getSection, subscribeSection } from './section-state';
 //           "Visit Blueberry" pill (the live site, a new tab), Ask (an empty slot that the chat
 //           dock fills with its launcher through a portal) and the menu button
 // Scrolling down sends the pills up out of the way (so they never sit on the heading you are
-// reading); scrolling up, or reaching the top, brings them back. See useHideOnScroll.
+// reading); scrolling up, or reaching the top, brings them back. See useHideOnScroll. While they
+// are away the section label stays, compact, at the top centre. While a pinned horizontal strip
+// runs (html[data-hscroll="on"], set by use-horizontal-scroll.ts) only Ask and the menu button
+// stay. Both are CSS only (the header rules in app/globals.css).
 // It only renders hrefs: far in-page targets are routed by the director's link delegate
 // (app/motion.tsx), #island by the island's own delegate. On About the in-page targets do not
 // exist, so the hrefs point at the home page instead.

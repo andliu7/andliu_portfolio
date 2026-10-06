@@ -38,3 +38,16 @@
 .cl-book-ribbon { fill:var(--tile-pink); }
 
 .cl-moon path { fill:var(--card); }
+
+/* BlobPerson: the island's round people, one tone each. */
+.cl-tone-pink .cl-blob-body { fill:var(--tile-pink); }
+.cl-tone-sky .cl-blob-body { fill:var(--sky); }
+.cl-tone-leaf .cl-blob-body { fill:var(--tile-leaf); }
+.cl-tone-gold .cl-blob-body { fill:var(--tile-gold); }
+.cl-tone-apricot .cl-blob-body { fill:var(--apricot); }
+.cl-tone-teal .cl-blob-body { fill:var(--tile-teal); }
+.cl-tone-violet .cl-blob-body { fill:var(--tile-violet); }
+.cl-band { fill:var(--tile-pink); }
+.cl-tone-pink .cl-band { fill:var(--card); }
+.cl-chef { fill:var(--card); }
+.cl-held-book { fill:var(--tile-violet); }

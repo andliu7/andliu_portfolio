@@ -53,6 +53,13 @@
   .hob:hover { translate:0 -10px; rotate:0deg; }
 }
 .hob:focus-visible { translate:0 -10px; rotate:0deg; }
+/* The label swells with its object: a quick spring up to 1.08 and a heavier weight on hover and
+   keyboard focus. scale is its own property, so it never fights the label's centring translate. */
+.hob-label { transition:scale .4s var(--ease-elastic),font-weight .2s ease-out; }
+@media (hover:hover) and (pointer:fine) {
+  .hob:hover .hob-label { scale:1.08; font-weight:800; }
+}
+.hob:focus-visible .hob-label { scale:1.08; font-weight:800; }
 
 /* Entrance and idle (Slush stickers): each pops in from small and turned on the spring, then
    bobs on its own period and delay so no two move together. The bob uses the translate and
@@ -65,5 +72,5 @@ html.js.is-loaded:not([data-motion="reduced"]) .hob-art {
     hob-pop 1s var(--ease-elastic) calc(.8s + var(--k) * 120ms) backwards,
     hob-bob calc(5.2s + var(--k) * .7s) ease-in-out calc(1.8s + var(--k) * 370ms) infinite alternate;
 }
-html[data-motion="reduced"] .hob { transition:none; }
+html[data-motion="reduced"] :is(.hob,.hob-label) { transition:none; }
 html[data-motion="reduced"] .hob-art { animation:none; }

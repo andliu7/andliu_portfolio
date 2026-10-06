@@ -45,8 +45,12 @@
 /* Sized here rather than by .fit's character count, which undercounts the word gap. On a phone
    the lines are FROM / FLASHCARDS / TO A platform., sized so the keyword's hover face (PLATFORM.
    in caps, 7.84 font-sizes from the line start) still fits the column. Wider, two lines. */
-.bb .bb-title { --f: calc(100cqi / 8); }
-@container (min-width: 760px) { .bb .bb-title { --f: min(140px, calc(100cqi / 10.4)); } }
+/* 15% under the first pass (Andrew, 2026-10-06: a touch smaller, now that it opens the list). */
+.bb .bb-title { --f: calc(100cqi / 9.4); }
+@container (min-width: 760px) { .bb .bb-title { --f: min(119px, calc(100cqi / 12.2)); } }
+/* The "01" index marker over the headline, the outlined numeral of the Projects spreads
+   (.wk-num). The head's gap is room for the card sticker's overhang, so the number stays clear of it. */
+.bb .bb-num { font: 700 clamp(56px, 6cqi, 104px)/.8 var(--display); letter-spacing: -.05em; color: transparent; -webkit-text-stroke: 1.5px var(--on); font-variant-ligatures: none; }
 .bb .bb-title .fit { font-size: var(--f); }
 .bb .bb-st { position: absolute; z-index: 2; display: block; pointer-events: none; }
 .bb .bb-st svg { width: 100%; height: auto; }

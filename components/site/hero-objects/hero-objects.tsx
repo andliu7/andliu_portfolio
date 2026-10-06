@@ -29,19 +29,26 @@ function Pencil() {
   );
 }
 
+// The lid is drawn first and runs down behind the keyboard deck, so the deck overlaps its lower
+// edge: the screen reads as tilted back with the base in front of it, like a real laptop.
 function Laptop() {
   return (
     <svg viewBox="0 0 132 96" aria-hidden="true" focusable="false">
-      <rect x="16" y="6" width="100" height="66" rx="8" fill="#1d2654" stroke={INK} strokeWidth="2" vectorEffect={NS} />
-      <circle cx="66" cy="39" r="22" fill="none" stroke="#916BBF" strokeWidth="1.5" vectorEffect={NS} />
-      <path d="M56 31 L72 28 L78 42 L62 45 Z" fill="none" stroke="#C9BEE3" strokeWidth="1" opacity=".8" vectorEffect={NS} />
-      <circle cx="56" cy="31" r="2.5" fill="#6FCFAE" />
-      <circle cx="72" cy="28" r="2" fill="#F4A7B9" />
-      <circle cx="62" cy="45" r="2.5" fill="#6FCFAE" />
-      <circle cx="78" cy="42" r="2" fill="#FFD98A" />
-      <circle cx="68" cy="52" r="2" fill="#F4A7B9" />
-      <path d="M4 74 H128 L120 88 H12 Z" fill="#C9BEE3" stroke={INK} strokeWidth="2" strokeLinejoin="round" vectorEffect={NS} />
-      <rect x="54" y="74" width="24" height="4" rx="2" fill={INK} opacity=".35" />
+      <rect x="20" y="4" width="92" height="74" rx="8" fill="#1d2654" stroke={INK} strokeWidth="2" vectorEffect={NS} />
+      <circle cx="66" cy="34" r="20" fill="none" stroke="#916BBF" strokeWidth="1.5" vectorEffect={NS} />
+      <path d="M56 27 L72 24 L78 38 L62 41 Z" fill="none" stroke="#C9BEE3" strokeWidth="1" opacity=".8" vectorEffect={NS} />
+      <circle cx="56" cy="27" r="2.5" fill="#6FCFAE" />
+      <circle cx="72" cy="24" r="2" fill="#F4A7B9" />
+      <circle cx="62" cy="41" r="2.5" fill="#6FCFAE" />
+      <circle cx="78" cy="38" r="2" fill="#FFD98A" />
+      <circle cx="68" cy="48" r="2" fill="#F4A7B9" />
+      <path d="M14 62 H118 L130 85 H2 Z" fill="#C9BEE3" stroke={INK} strokeWidth="2" strokeLinejoin="round" vectorEffect={NS} />
+      <path d="M2 85 H130 V88 Q130 92 126 92 H6 Q2 92 2 88 Z" fill="#A99DD3" stroke={INK} strokeWidth="2" strokeLinejoin="round" vectorEffect={NS} />
+      <g stroke={INK} strokeWidth="2" strokeLinecap="round" strokeDasharray="6 4" opacity=".35">
+        <line x1="22" y1="67" x2="110" y2="67" vectorEffect={NS} />
+        <line x1="18" y1="72" x2="114" y2="72" vectorEffect={NS} />
+      </g>
+      <rect x="54" y="76" width="24" height="6" rx="2" fill={INK} opacity=".25" />
     </svg>
   );
 }

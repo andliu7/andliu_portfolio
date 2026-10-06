@@ -21,3 +21,17 @@ html[data-motion="reduced"] .island .il-shot img { transition:none; }
   .island .il-window { grid-template-columns:minmax(0,1fr); }
   .island .il-shot img { rotate:0deg; }
 }
+
+/* The poster as a door (island.client.tsx): a link around the image, with the site's focus ring. */
+.island .il-door { display:block; border-radius:20px; }
+.island .il-door:focus-visible { outline:3px solid var(--ring,var(--apricot)); outline-offset:4px; }
+
+/* The confirm popup: portalled to <body>, so these selectors cannot start at .island. It carries
+   data-ground="ink", the section's own ground, so the button and text tokens match it. The
+   unlayered rules here win over the Tailwind utilities in alert-dialog.tsx. */
+.il-dialog { width:min(480px, calc(100vw - 32px)); max-width:none; display:grid; gap:14px; padding:28px; border:2px solid var(--ink); border-radius:var(--r-card);
+  background:var(--ink); color:var(--paper); box-shadow:0 6px 0 var(--apricot); outline:none; }
+.il-dialog .il-dialog-q { margin:0; font:700 clamp(28px,3vw,36px)/1 var(--display); letter-spacing:-.02em; color:var(--paper); }
+.il-dialog .il-dialog-note { margin:0; font:500 18px/1.5 var(--body); color:var(--berry-soft); }
+.il-dialog .il-dialog-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:8px; }
+html[data-motion="reduced"] :is(.il-dialog, [data-slot="alert-dialog-overlay"]) { animation:none; }

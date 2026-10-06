@@ -45,17 +45,18 @@
 /* The sticker stands on the ground strip at the panel's right. */
 .offclock .oc-art { position:absolute; right:clamp(24px,4vw,56px); bottom:calc(var(--ground-h) - 14px); width:var(--art-w,150px); pointer-events:none; }
 .offclock .oc-art .st { width:100%; }
-.offclock .oc-intro .oc-art { --art-w:120px; }
+.offclock .oc-intro { --art-w:120px; }
 .offclock .oc-art .oc-spark { position:absolute; left:-30%; top:-30%; width:34%; rotate:10deg; }
-.offclock .oc-gym .oc-art { --art-w:190px; }
-.offclock .oc-eat .oc-art { --art-w:200px; }
-.offclock .oc-someday .oc-art { --art-w:110px; }
+/* --art-w sits on the panel so the round people (.oc-crowd) can stand clear of the sticker. */
+.offclock .oc-gym { --art-w:190px; }
+.offclock .oc-eat { --art-w:200px; }
+.offclock .oc-someday { --art-w:110px; }
 
 /* ---------- Stack (default) ---------- */
 .offclock .oc-track { position:relative; }
 .offclock .oc-panel { --ground-h:72px; padding:44px var(--gutter) calc(var(--ground-h) + 120px); border-left:0; border-top:1px solid var(--ink); }
 .offclock .oc-intro { padding-top:calc(var(--header-h) + 24px); border-top:0; }
-.offclock .oc-sky, .offclock .oc-foot, .offclock .oc-hint { display:none; }
+.offclock .oc-foot, .offclock .oc-hint, .offclock .oc-pin-title { display:none; }
 
 /* ---------- Pinned ---------- */
 .offclock[data-pin] { height:calc(100svh + var(--run,0px)); }
@@ -67,29 +68,51 @@
 .offclock[data-pin] .oc-study { width:clamp(820px,66vw,1040px); grid-template-columns:minmax(0,1fr) auto; align-items:center; }
 .offclock[data-pin] .oc-hint { display:block; }
 
-/* The sky: the orb rides a shallow arc across the top of the frame, highest in the middle, a
-   sun until past halfway, then the moon. Only transform and opacity read --p. */
-.offclock[data-pin] .oc-sky { display:block; position:absolute; left:var(--gutter); right:var(--gutter); top:calc(var(--header-h) + 8px); height:110px; pointer-events:none; container-type:inline-size; }
-.offclock .oc-orb { position:absolute; left:0; top:0; width:52px; height:52px;
-  transform:translate(calc(var(--p,0) * (100cqi - 52px)), calc((var(--p,0) - .5) * (var(--p,0) - .5) * 200px)) rotate(calc(var(--p,0) * 200deg)); }
-.offclock .oc-orb .st { position:absolute; inset:0; width:100%; }
-.offclock .oc-sun { opacity:clamp(0, (.5 - var(--p,0)) * 60, 1); }
-.offclock .oc-moon { opacity:clamp(0, (var(--p,0) - .5) * 60, 1); }
+/* The name tag: once the intro's big title has slid off, OFF THE CLOCK stays at the top left. */
+.offclock[data-pin] .oc-pin-title { display:block; position:absolute; z-index:2; left:var(--gutter); top:calc(var(--header-h) + 14px); margin:0; padding:8px 16px;
+  border:1px solid var(--ink); border-radius:var(--r-pill); background:var(--card); color:var(--ink); box-shadow:0 3px 0 var(--ink);
+  font:700 clamp(18px,1.6vw,24px)/1 var(--display); letter-spacing:-.01em; font-variant-ligatures:none; pointer-events:none;
+  opacity:clamp(0, (var(--p,0) - .04) * 40, 1); }
 
-/* The foot bar: a card pill across the bottom with the clock switch and the progress line. */
-.offclock[data-pin] .oc-foot { display:flex; position:absolute; left:var(--gutter); right:var(--gutter); bottom:18px; align-items:center; gap:clamp(16px,3vw,40px);
-  padding:8px 28px 8px 16px; border:1px solid var(--ink); border-radius:var(--r-pill); background:var(--card); box-shadow:0 4px 0 var(--ink);
+/* The foot bar: a card pill across the bottom with the clock switch, the evening's line with the
+   sun on it, and the skip pill. */
+.offclock[data-pin] .oc-foot { display:flex; position:absolute; left:var(--gutter); right:var(--gutter); bottom:18px; align-items:center; gap:clamp(16px,2.4vw,36px);
+  padding:8px 10px 8px 16px; border:1px solid var(--ink); border-radius:var(--r-pill); background:var(--card); box-shadow:0 4px 0 var(--ink);
   --on:var(--ink); --ring:var(--berry); }
-.offclock .oc-steps { position:relative; flex:1; min-width:0; padding-bottom:14px; }
-.offclock .oc-steps::before, .offclock .oc-steps-fill { content:''; position:absolute; left:0; right:0; bottom:0; height:4px; border-radius:2px; background:var(--berry-soft); }
+.offclock .oc-skip { flex:none; }
+
+/* The line: the arc band on top (where the sun rides), the line at --line-y, the names under it.
+   The whole bar is the drag surface; container-type lets the sun measure the bar's width (cqi). */
+.offclock .oc-steps { --line-y:38px; position:relative; flex:1; min-width:0; align-self:stretch; padding-top:calc(var(--line-y) + 14px); padding-bottom:4px;
+  container-type:inline-size; touch-action:none; cursor:pointer; user-select:none; -webkit-user-select:none; }
+.offclock .oc-steps::before, .offclock .oc-steps-fill { content:''; position:absolute; left:0; right:0; top:var(--line-y); height:4px; border-radius:2px; background:var(--berry-soft); }
 .offclock .oc-steps-fill { background:var(--berry); transform-origin:0 50%; transform:scaleX(var(--p,0)); }
 .offclock .oc-steps ol { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); margin:0; padding:0; list-style:none; }
 .offclock .oc-steps li { position:relative; text-align:end; font:500 12px/1.2 var(--mono); letter-spacing:.08em; color:var(--ink); white-space:nowrap; font-variant-ligatures:none; }
-/* A dot on the line under each scene's name; it fills and grows once the strip reaches it. */
-.offclock .oc-steps li::after { content:''; position:absolute; right:-5px; bottom:-18px; width:12px; height:12px; border:1px solid var(--ink); border-radius:50%; background:var(--card);
+/* A dot on the line over each scene's name; it fills and grows once the strip reaches it. */
+.offclock .oc-steps li::after { content:''; position:absolute; right:-5px; top:-22px; width:12px; height:12px; border:1px solid var(--ink); border-radius:50%; background:var(--card);
   transform:scale(clamp(1, (var(--p,0) - var(--at) + .04) * 30 + 1, 1.35)); }
-.offclock .oc-steps li::before { content:''; position:absolute; z-index:1; right:-2px; bottom:-15px; width:6px; height:6px; border-radius:50%; background:var(--berry);
+.offclock .oc-steps li::before { content:''; position:absolute; z-index:1; right:-2px; top:-19px; width:6px; height:6px; border-radius:50%; background:var(--berry);
   opacity:clamp(0, (var(--p,0) - var(--at) + .04) * 30, 1); }
+
+/* The sun (the slider handle): a 44px target centred on the line at either end, lifted up to
+   26px in the middle, so it travels an arc. A sun until past halfway, then the moon. Only
+   transform and opacity read --p, so dragging never triggers layout. */
+.offclock .oc-orb { position:absolute; z-index:2; left:0; top:calc(var(--line-y) + 2px - 22px); width:44px; height:44px; border-radius:50%; cursor:grab; touch-action:none;
+  transform:translate(calc(var(--p,0) * 100cqi - 22px), calc((1 - (var(--p,0) - .5) * (var(--p,0) - .5) * 4) * -26px)); }
+.offclock .oc-orb:active { cursor:grabbing; }
+.offclock .oc-orb:focus-visible { outline:3px solid var(--berry); outline-offset:2px; }
+.offclock .oc-orb .st { position:absolute; inset:2px; width:40px; rotate:calc(var(--p,0) * 200deg); }
+/* They crossfade around halfway, so the handle is never empty. */
+.offclock .oc-sun { opacity:clamp(0, (.53 - var(--p,0)) * 30, 1); }
+.offclock .oc-moon { opacity:clamp(0, (var(--p,0) - .47) * 30, 1); }
+/* Narrow pinned screens: the names would collide, so only the dots stay. */
+@media (max-width:1100px) { .offclock .oc-steps li { font-size:0; } }
+
+/* The round people stand on the ground strip, left of the scene's sticker. */
+.offclock .oc-crowd { position:absolute; right:calc(clamp(24px,4vw,56px) + var(--art-w,150px) + 10px); bottom:calc(var(--ground-h) - 12px); display:flex; align-items:flex-end; gap:4px; pointer-events:none; }
+.offclock .oc-who { display:block; width:var(--who-w,50px); }
+.offclock .oc-who .st { display:block; width:100%; }
 
 /* ---------- Motion ----------
    As a panel comes on screen (.hs-in from the hook) its copy slides in a little and its sticker
@@ -101,11 +124,17 @@ html.js:not([data-motion="reduced"]) .offclock .oc-copy { translate:36px 0; tran
 html.js:not([data-motion="reduced"]) .offclock .hs-in .oc-copy { translate:0 0; }
 @keyframes oc-bob { from { translate:0 0; } to { translate:0 -10px; } }
 html:not([data-motion="reduced"]) .offclock .hs-in .oc-st { animation:oc-bob 1.6s ease-in-out calc(var(--i,0) * -.3s) infinite alternate; }
-html[data-motion="reduced"] .offclock :is(.oc-art,.oc-copy,.oc-st) { animation:none; transition:none; }
+/* The round people: a small out-of-step bob, and a blink every few seconds. */
+@keyframes oc-idle { from { translate:0 0; scale:1 1; } to { translate:0 -4px; scale:.97 1.03; } }
+@keyframes oc-blink { 0%, 92%, 100% { scale:1 1; } 96% { scale:1 .1; } }
+html:not([data-motion="reduced"]) .offclock .oc-who { transform-origin:50% 100%; animation:oc-idle calc(1.1s + var(--k,0) * .25s) ease-in-out calc(var(--k,0) * -.4s) infinite alternate; }
+html:not([data-motion="reduced"]) .offclock .oc-who .cl-eyes { transform-box:fill-box; transform-origin:50% 50%; animation:oc-blink calc(3.4s + var(--k,0) * .9s) linear infinite; }
+html[data-motion="reduced"] .offclock :is(.oc-art,.oc-copy,.oc-st,.oc-who,.cl-eyes) { animation:none; transition:none; }
 
 /* Phones: the stack, smaller stickers. */
 @media (max-width:700px) {
-  .offclock .oc-art { --art-w:110px; }
-  .offclock .oc-gym .oc-art, .offclock .oc-eat .oc-art { --art-w:150px; }
+  .offclock .oc-panel:not(.oc-intro) { --art-w:110px; }
+  .offclock .oc-panel:is(.oc-gym,.oc-eat) { --art-w:150px; }
   .offclock .oc-shot { width:min(320px,100%); }
+  .offclock .oc-who { --who-w:38px; }
 }
