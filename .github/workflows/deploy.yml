@@ -26,6 +26,9 @@ jobs:
       - run: npm ci
       - uses: actions/configure-pages@v5
       - run: npm run build
+        env:
+          # The Worker's URL (worker/CONTACT.md): turns on live chat and the contact form. Unset = both off.
+          NEXT_PUBLIC_CHAT_URL: ${{ vars.NEXT_PUBLIC_CHAT_URL }}
       - name: Verify static entry point
         run: test -s dist/client/index.html
       - uses: actions/upload-pages-artifact@v4

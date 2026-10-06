@@ -1,8 +1,9 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import {
-  A11Y, ABOUT, CONTACT, EXPERIENCE_HEAD, GITHUB, IMAGES, IMPACT, IMPACT_HEAD, ISLAND, JOBS, LINKEDIN,
-  MICROCOPY, NAV, PROJECTS, RESUME, TICKET, WORK_HEAD,
+  A11Y, ABOUT, CONTACT, EXPERIENCE_HEAD, GITHUB, IMPACT, IMPACT_HEAD, ISLAND, JOBS, LINKEDIN,
+  MICROCOPY, NAV, PROJECTS, RESUME, WORK_HEAD,
 } from '@/lib/site';
 import { FlipLink } from '@/components/ui/flip-links';
 import { freezeScroll } from '@/app/smooth';
@@ -13,6 +14,8 @@ import { TwoVoice } from './type';
 import { EVENTS, PREFS, emit, readPref, writePref } from './handoffs';
 import { useReducedMotion } from './use-reduced-motion';
 import { useFinePointer } from './use-fine-pointer';
+import { SocialButton } from './social-button';
+import { FlashcardSticker } from './stickers/stickers';
 
 // The full-screen menu (SITE-PLAN.md 6.1). Rendered by the header only while open, so on open it
 // mounts fresh and on close it is gone. While open: focus is trapped inside, Esc closes and
@@ -23,6 +26,27 @@ import { useFinePointer } from './use-fine-pointer';
 // menu only has to get out of the way first, which it does in a window capture listener: the
 // window sees a click before the document does, so the page is unfrozen before either delegate
 // scrolls.
+//
+// Opening and closing are a clip-path circle reveal (Andrew, 2026-10-06: "expand from the button to
+// the full screen"): the panel is clipped to a circle centred on the menu button, grown from 0 to
+// the distance to the farthest screen corner, so it covers every pixel at the end. Closing plays
+// the circle back down into the button, and only then tells the header to unmount the menu.
+// Reduced motion: no circle, the menu appears and goes at once.
+
+const REVEAL_MS = 600;
+const CONCEAL_MS = 420;
+const WIPE_EASE = 'cubic-bezier(.76,0,.24,1)'; // --ease-wipe in app/globals.css
+
+/** The circle's two ends, from the header's menu button (which stays put while the menu is open). */
+function circleFromButton(): [string, string] {
+  const box = document.querySelector<HTMLElement>('[aria-controls="site-menu"]')?.getBoundingClientRect();
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const x = box ? box.left + box.width / 2 : w - 40;
+  const y = box ? box.top + box.height / 2 : 40;
+  const r = Math.ceil(Math.hypot(Math.max(x, w - x), Math.max(y, h - y)));
+  return [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`];
+}
 
 type Props = { onClose: (returnFocus: boolean) => void; home: boolean };
 
@@ -36,6 +60,45 @@ export function Menu({ onClose, home }: Props) {
   // Which link the preview shows (an index into NAV); the pointer or focus on a link sets it.
   const [active, setActive] = useState(0);
   const at =(href: string) => (home || !href.startsWith('#') ? href : `/${href}`);
+  // Refs, not state: the running animation and the closing flag must not re-render anything.
+  const animRef = useRef<Animation | null>(null);
+  const closingRef = useRef(false);
+
+  // The reveal. useLayoutEffect runs after the DOM exists but before the browser paints, so the
+  // first frame is already the 0px circle and the full menu never flashes.
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    if (!panel || reduced || !panel.animate) return;
+    const [from, to] = circleFromButton();
+    const anim = panel.animate([{ clipPath: from }, { clipPath: to }], { duration: REVEAL_MS, easing: WIPE_EASE });
+    animRef.current = anim;
+    return () => anim.cancel();
+    // Only on mount: the reveal plays once per opening.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Every way out comes through here. It plays the circle back into the button (reversing the
+  // reveal if that is still running), then lets the header unmount the menu.
+  // useCallback keeps it stable, so the key listener effect below does not re-subscribe.
+  const requestClose = useCallback((returnFocus: boolean) => {
+    if (closingRef.current) return;
+    closingRef.current = true;
+    const panel = panelRef.current;
+    if (!panel || reduced || !panel.animate) { onClose(returnFocus); return; }
+    let anim = animRef.current;
+    if (anim && anim.playState === 'running') {
+      anim.effect?.updateTiming({ fill: 'both' }); // hold the 0px circle at the end, no flash
+      anim.reverse();
+    } else {
+      const [from, to] = circleFromButton();
+      anim = panel.animate([{ clipPath: to }, { clipPath: from }], { duration: CONCEAL_MS, easing: WIPE_EASE, fill: 'forwards' });
+      animRef.current = anim;
+    }
+    // flushSync: an animation's finish event is not a React event, so React would commit the
+    // unmount later, after the header's next-frame focus call, while the menu button is still
+    // hidden behind the open menu and cannot take focus. This commits the close right here.
+    anim.onfinish = () => flushSync(() => onClose(returnFocus));
+  }, [onClose, reduced]);
 
   // Freeze the page and move focus in on open; the cleanup undoes both when the menu unmounts.
   useEffect(() => {
@@ -48,7 +111,7 @@ export function Menu({ onClose, home }: Props) {
     const panel = panelRef.current;
     if (!panel) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { event.preventDefault(); onClose(true); return; }
+      if (event.key === 'Escape') { event.preventDefault(); requestClose(true); return; }
       if (event.key !== 'Tab') return;
       // The focus trap: Tab past the last control wraps to the first, Shift+Tab the other way.
       const items = Array.from(panel.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'));
@@ -63,7 +126,7 @@ export function Menu({ onClose, home }: Props) {
       const link = (event.target as Element | null)?.closest('a');
       if (!link || !(panel.contains(link) || link.closest('.site-header'))) return;
       freezeScroll(false); // now, synchronously, before the delegates scroll
-      onClose(false);
+      requestClose(false);
     };
     document.addEventListener('keydown', onKey);
     window.addEventListener('click', onLinkClick, true);
@@ -71,7 +134,7 @@ export function Menu({ onClose, home }: Props) {
       document.removeEventListener('keydown', onKey);
       window.removeEventListener('click', onLinkClick, true);
     };
-  }, [onClose]);
+  }, [requestClose]);
 
   const setMotion = (on: boolean) => {
     const root = document.documentElement;
@@ -95,14 +158,17 @@ export function Menu({ onClose, home }: Props) {
     writePref(PREFS.mascot, on ? 'on' : 'off');
   };
 
+  // Straight to the chat, no circle: the chat panel opens at once and takes focus, and a menu
+  // still shrinking over it would hold its focus trap a moment longer.
   const ask = () => {
+    closingRef.current = true;
     onClose(false);
     emit(EVENTS.chatRequest);
   };
 
   return (
     <div ref={panelRef} id="site-menu" className="menu" role="dialog" aria-modal="true" aria-label={A11Y.menuDialog} data-ground="berry-deep">
-      <button type="button" className="menu-btn menu-close" onClick={() => onClose(true)} aria-label={MICROCOPY.close}>
+      <button type="button" className="menu-btn menu-close" onClick={() => requestClose(true)} aria-label={MICROCOPY.close}>
         <span aria-hidden="true" /><span aria-hidden="true" />
       </button>
       <div className="menu-main">
@@ -119,8 +185,8 @@ export function Menu({ onClose, home }: Props) {
         <div className="menu-small">
           <a className="pill pill-berry" href={RESUME} target="_blank" rel="noreferrer"><PillFaces>{MICROCOPY.resume}</PillFaces></a>
           <button type="button" className="pill pill-light" onClick={ask}><PillFaces>{MICROCOPY.ask}</PillFaces></button>
-          <a className="pill pill-light" href={GITHUB} target="_blank" rel="noreferrer"><PillFaces>GitHub</PillFaces></a>
-          <a className="pill pill-light" href={LINKEDIN} target="_blank" rel="noreferrer"><PillFaces>LinkedIn</PillFaces></a>
+          <SocialButton className="pill pill-light" href={GITHUB} label="GitHub" kind="github" />
+          <SocialButton className="pill pill-light" href={LINKEDIN} label="LinkedIn" kind="linkedin" />
         </div>
         <div className="menu-switches">
           <Switch on={!reduced} onChange={setMotion} label={MICROCOPY.motion} />
@@ -144,12 +210,12 @@ const pad = (n: number) => String(n).padStart(2, '0');
 // Pattern: `key={index}` on the two front cards. A new key makes React mount fresh elements, which
 // replays their CSS entrance animation each time the preview changes, with no timers or state.
 type Row = { k?: string; v: string };
-type Preview = { eyebrow: string; headline: string; rows: readonly Row[]; art?: 'reaction' | 'portrait' };
+type Preview = { eyebrow: string; headline: string; rows: readonly Row[]; art?: 'card' | 'portrait' };
 
 function previewFor(href: string): Preview {
   switch (href) {
     case '#work':
-      return { eyebrow: WORK_HEAD.eyebrow, headline: WORK_HEAD.headline, rows: PROJECTS.map(p => ({ k: p.num, v: p.title })), art: 'reaction' };
+      return { eyebrow: WORK_HEAD.eyebrow, headline: WORK_HEAD.headline, rows: PROJECTS.map(p => ({ k: p.num, v: p.title })), art: 'card' };
     case '#impact':
       return { eyebrow: IMPACT_HEAD.eyebrow, headline: IMPACT_HEAD.headline, rows: IMPACT.map((p, i) => ({ k: pad(i + 1), v: p.title })) };
     case '#experience':
@@ -165,17 +231,11 @@ function previewFor(href: string): Preview {
 
 function MenuPreview({ index }: { index: number }) {
   const preview = previewFor(NAV[index].href);
-  const art = IMAGES.bbGrignard;
   return (
     <div className="menu-preview" aria-hidden="true">
       <div className="menu-print menu-print-slab" />
       <div className="menu-print menu-print-art" key={`art-${index}`}>
-        {preview.art === 'reaction' && (
-          <figure className="menu-art-sheet">
-            <img src={art.src} alt="" width={art.w} height={art.h} decoding="async" />
-            <figcaption className="caption">{TICKET.title}</figcaption>
-          </figure>
-        )}
+        {preview.art === 'card' && <FlashcardSticker className="menu-art-sticker" />}
         {preview.art === 'portrait' && <Portrait id="about" sizes="24vw" />}
         {!preview.art && <span className="menu-art-num">{pad(index + 1)}</span>}
       </div>

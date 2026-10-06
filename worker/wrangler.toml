@@ -8,6 +8,7 @@
 #   3. npx wrangler deploy
 #   4. Build the site with NEXT_PUBLIC_CHAT_URL set to the Worker's URL (empty = offline answers only).
 # Before step 3, decide whether to keep http://localhost:3000 in ALLOWED_ORIGINS (worker/handler.js).
+# The contact form (POST /contact) also needs RESEND_API_KEY: worker/CONTACT.md.
 
 name = "andliu-chat"
 main = "chat.js"
@@ -17,12 +18,21 @@ compatibility_date = "2026-05-01"
 # The current Haiku id, confirmed 2026-10-01 with the claude-api skill (its model table is
 # dated 2026-09-25). Change the model here, not in code.
 MODEL = "claude-haiku-4-5"
+# The contact form's sender (worker/contact.js). Empty means Resend's shared test sender,
+# onboarding@resend.dev; set it to an address on a verified domain later (CONTACT.md).
+CONTACT_FROM = ""
 
 # Per-IP rate limit, read as env.CHAT_LIMIT in handler.js: 10 requests per 60 seconds.
 [[ratelimits]]
 name = "CHAT_LIMIT"
 namespace_id = "1001"
 simple = { limit = 10, period = 60 }
+
+# Per-IP rate limit for POST /contact, read as env.CONTACT_LIMIT in contact.js: 3 per 60 seconds.
+[[ratelimits]]
+name = "CONTACT_LIMIT"
+namespace_id = "1002"
+simple = { limit = 3, period = 60 }
 
 # Bundle system-prompt.txt as a string module (import SYSTEM_PROMPT from './system-prompt.txt').
 [[rules]]

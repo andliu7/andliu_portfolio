@@ -36,8 +36,9 @@
 /* Keyword 2: a hand-drawn swash behind it */
 .manifesto .mf-swash { position:absolute; z-index:-1; left:-4%; bottom:.02em; width:108%; height:.42em; overflow:visible; }
 .manifesto .mf-swash path { fill:none; stroke:var(--card); stroke-width:22; stroke-linecap:round; }
-/* Keyword 3: the accent voice, the reading face in berry, lowercase */
-.manifesto .mf-kw-voice { font-family:var(--body); font-weight:500; font-style:italic; text-transform:none; color:var(--berry); letter-spacing:-.02em; }
+/* Keyword 3: once a lowercase berry accent; titles are one voice since 2026-10-06, so it reads as the
+   rest of the sentence. */
+.manifesto .mf-kw-voice { color:inherit; }
 /* Small stickers tucked between words, overlapping the letters a little */
 .manifesto .mf-ist { display:inline-block; width:.8em; margin:0 -.1em 0 -.06em; vertical-align:-.08em; rotate:var(--r,0deg); position:relative; z-index:1; }
 .manifesto .mf-ist .st { width:100%; }

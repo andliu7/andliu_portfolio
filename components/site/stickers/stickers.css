@@ -20,9 +20,7 @@
 @keyframes st-blink { 0%, 92%, 100% { transform:scaleY(1); } 95% { transform:scaleY(.1); } }
 
 /* The molecule: a skeletal formula on a round badge */
-.st-mol-badge { fill:var(--apricot); }
 .st-bonds { stroke-width:2.5; }
-.st-oxygen { fill:var(--berry); stroke:none; font:700 12px/1 var(--body); }
 
 /* The flashcard pair */
 .st-card-back { fill:var(--berry-soft); }

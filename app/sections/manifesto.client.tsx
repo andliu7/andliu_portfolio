@@ -2,7 +2,7 @@
 import { useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { FORK, MICROCOPY } from '@/lib/site';
-import { BarbellSticker, BlueberrySticker, FlashcardSticker, MoleculeSticker, PanSticker, SprigSticker } from '@/components/site/stickers/stickers';
+import { BarbellSticker, BlueberrySticker, FlashcardSticker, PanSticker, SprigSticker } from '@/components/site/stickers/stickers';
 
 // The ON / OFF fork (SITE-PLAN.md 4.2) as one big switch: "THE CLOCK", on or off. Flipping it
 // swaps the card beside it between the work (on) and the rest of the week (off).
@@ -16,7 +16,7 @@ import { BarbellSticker, BlueberrySticker, FlashcardSticker, MoleculeSticker, Pa
 // pop-in animation (a remount is the simplest way to restart a CSS animation).
 
 const SIDES = {
-  on: { line: MICROCOPY.forkCounts, cta: FORK.on.cta, href: FORK.on.href, art: [BlueberrySticker, MoleculeSticker, FlashcardSticker] },
+  on: { line: MICROCOPY.forkCounts, cta: FORK.on.cta, href: FORK.on.href, art: [BlueberrySticker, FlashcardSticker] },
   off: { line: FORK.off.line, cta: FORK.off.cta, href: FORK.off.href, art: [PanSticker, BarbellSticker, SprigSticker] },
 } as const;
 

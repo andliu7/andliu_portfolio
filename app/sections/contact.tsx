@@ -2,7 +2,9 @@ import { ArrowLeft, ArrowUpRight } from 'lucide-react';
 import { CONTACT, MICROCOPY, RESUME, STACK, sectionAttrs } from '@/lib/site';
 import { FlipHeading } from '@/components/site/flip-heading';
 import { FlipLink } from '@/components/ui/flip-links';
+import { SocialButton, socialKind } from '@/components/site/social-button';
 import { Marquee } from '@/components/site/marquee';
+import { ContactForm } from '@/components/site/contact-form';
 import CopyEmail from '../copy-email';
 import './contact.css';
 
@@ -39,17 +41,24 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
         <div className="ct-row">
           <div className="ct-reach">
             <ul className="ct-links">
-              {links.map(link => (
-                <li key={link.label} className="ct-pill">
-                  <FlipLink href={link.href} external={link.external}>{link.label}</FlipLink>
-                </li>
-              ))}
+              {links.map(link => {
+                const kind = socialKind(link.href);
+                return (
+                  <li key={link.label} className="ct-pill">
+                    {kind
+                      ? <SocialButton className="ct-social" href={link.href} label={link.label} kind={kind} />
+                      : <FlipLink href={link.href} external={link.external}>{link.label}</FlipLink>}
+                  </li>
+                );
+              })}
             </ul>
             <p className="ct-email">
               <a className="display ct-mail" href={mail?.href ?? `mailto:${CONTACT.email}`}>{CONTACT.email}</a>
               <CopyEmail email={CONTACT.email} />
             </p>
             <p className="ct-note">{CONTACT.emailNote}</p>
+            {/* Renders nothing unless the Worker URL is set at build time (worker/CONTACT.md). */}
+            <ContactForm />
           </div>
         </div>
       </div>

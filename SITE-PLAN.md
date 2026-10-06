@@ -1,5 +1,16 @@
 # andliu.dev: the site plan (revision 3)
 
+## A3. Amendments from Andrew, 2026-10-06 (override A2, A and everything below)
+
+- Island imagery may appear outside the finale: Off the clock now shows a capture of the island's
+  Focus Family Circle (public/images/work/island-focus-family.webp), at Andrew's request. A1's
+  "island in the finale only" rule no longer applies to that image.
+- "UMD Barbell Club" is a fact Andrew stated in conversation on 2026-10-06; it is not on the
+  résumé PDF yet.
+- Experience and Off the clock are pinned horizontal strips now, so the page has more than the
+  three pins of 1.3; the SECTIONS budgets for those two are out of date and no script enforces them.
+- Changes go in small steps on what is live. No drastic rebuilds; Andrew reviews each piece.
+
 ## A2. Late amendments from Andrew, 2026-10-01 (override everything below)
 
 17. **Feedback popup with the slider** (`components/ui/slider.tsx`, base-ui, single thumb). A small

@@ -1,4 +1,5 @@
 import { IMAGES, type ImageEntry, type ImageKey } from '@/lib/site';
+import { LoopVideo } from './loop-video';
 
 // A screenshot from IMAGES as a plain <img> with its 800 / full-size srcset (the site is a static
 // export, so no next/image). width and height reserve the 16:10 box before the file arrives.
@@ -14,6 +15,7 @@ export function Shot({ image, sizes, className = '', eager = false }: {
   const entry: ImageEntry = IMAGES[image];
   // Two ways an entry names its smaller file: `sm` (the captures) or a `srcset` list.
   const set = entry.srcset ?? (entry.sm ? [{ src: entry.sm, w: entry.smW ?? 800 }, { src: entry.src, w: entry.w }] : null);
+  if (entry.video) return <LoopVideo src={entry.video} poster={entry.src} label={entry.alt} className={className} />;
   return (
     <img
       className={`shot ${className}`}

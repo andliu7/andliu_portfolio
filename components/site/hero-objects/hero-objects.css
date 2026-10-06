@@ -1,0 +1,69 @@
+/* The hero's four objects (hero-objects.tsx). The layer covers the name's wrapper; the hero's CSS
+   gives it --fs (the name's font size) and --pt (the wrapper's top padding, the room above the
+   letters). Positions are fractions of the name's width across and multiples of --fs down, so
+   the objects stay on the same letters at every size.
+   Fira Code at line-height .84: the cap tops sit .07em under the line box's top, the baseline
+   .76em under it. A top object's lower edge lands at .17em (a tenth of an em into the caps); a
+   bottom object's upper edge at .7em (just above the baseline; .82em on a phone, where the
+   floor size makes the objects big next to the letters). Only the letters' edges are covered.
+   Labels are ink on --card (17:1). */
+
+.hob-layer { position:absolute; inset:0; z-index:2; pointer-events:none; }
+
+.hob {
+  --h:calc(var(--fs) * .7);
+  position:absolute; left:var(--x); width:calc(var(--h) * var(--ar)); height:var(--h);
+  transform:translate(-50%,-50%); rotate:var(--r); pointer-events:auto;
+  display:block; color:var(--ink); text-decoration:none; border-radius:16px;
+  transition:translate .45s var(--ease-elastic),rotate .45s var(--ease-elastic);
+}
+.hob-pencil, .hob-laptop { top:calc(var(--pt) + var(--fs) * .17 - var(--h) / 2); }
+.hob-phone, .hob-card { top:calc(var(--pt) + var(--fs) * var(--low, .7) + var(--h) / 2); }
+
+.hob-pencil { --ar:.4167; --h:calc(var(--fs) * .8);  --x:62%; --r:-14deg; }
+.hob-laptop { --ar:1.375; --h:calc(var(--fs) * .68); --x:86%; --r:6deg; }
+.hob-phone  { --ar:.5833; --h:calc(var(--fs) * .74); --x:49%; --r:-8deg; }
+.hob-card   { --ar:1.0833; --h:calc(var(--fs) * .64); --x:73%; --r:8deg; }
+
+/* A narrow stage (a phone): the name is small, so the objects keep a floor size, sit a little
+   further from the letters' middles, and their labels show only on keyboard focus */
+@container hero (max-width:759px) {
+  .hob-pencil { --h:max(72px, calc(var(--fs) * .8));  --x:14%; }
+  .hob-laptop { --h:max(60px, calc(var(--fs) * .68)); --x:78%; }
+  .hob-phone  { --h:max(70px, calc(var(--fs) * .74)); --x:30%; }
+  .hob-card   { --h:max(60px, calc(var(--fs) * .64)); --x:74%; }
+  .hob-phone, .hob-card { --low:.82; }
+  .hob-label { opacity:0; pointer-events:none; }
+  .hob:focus-visible .hob-label { opacity:1; }
+}
+
+.hob-art { display:block; width:100%; height:100%; }
+.hob-art svg { display:block; width:100%; height:100%; overflow:visible; }
+
+/* The label: a small pill above a top object and below a bottom one, away from the letters */
+.hob-label {
+  position:absolute; left:50%; top:calc(100% + 8px); translate:-50% 0;
+  white-space:nowrap; padding:3px 10px; border:1px solid var(--ink); border-radius:var(--r-pill);
+  background:var(--card); color:var(--ink); font:600 13px/1.3 var(--body);
+}
+.hob-pencil .hob-label, .hob-laptop .hob-label { top:auto; bottom:calc(100% + 8px); }
+
+.hob:focus-visible { outline:3px solid var(--berry); outline-offset:4px; }
+@media (hover:hover) and (pointer:fine) {
+  .hob:hover { translate:0 -10px; rotate:0deg; }
+}
+.hob:focus-visible { translate:0 -10px; rotate:0deg; }
+
+/* Entrance and idle (Slush stickers): each pops in from small and turned on the spring, then
+   bobs on its own period and delay so no two move together. The bob uses the translate and
+   rotate properties, the pop uses transform, so the two never fight over one property. */
+@keyframes hob-pop { from { opacity:0; transform:scale(.2) rotate(-90deg); } }
+@keyframes hob-bob { from { translate:0 0; rotate:-2deg; } to { translate:0 -7px; rotate:2deg; } }
+html.js:not(.is-loaded):not([data-motion="reduced"]) .hob-art { opacity:0; }
+html.js.is-loaded:not([data-motion="reduced"]) .hob-art {
+  animation:
+    hob-pop 1s var(--ease-elastic) calc(.8s + var(--k) * 120ms) backwards,
+    hob-bob calc(5.2s + var(--k) * .7s) ease-in-out calc(1.8s + var(--k) * 370ms) infinite alternate;
+}
+html[data-motion="reduced"] .hob { transition:none; }
+html[data-motion="reduced"] .hob-art { animation:none; }

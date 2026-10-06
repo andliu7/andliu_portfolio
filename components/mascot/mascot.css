@@ -43,9 +43,10 @@ html[data-cursor="berry"] select { cursor:default !important; }
      the berry   centred on the hotspot; lean (spring) > crossfade shape > hop and press squash
                  (element.animate) > travel stretch (spring) > breathing (CSS) > the svg
      the arrow   an arrowhead whose tip is the hotspot
+     the I-beam  a text cursor centred on the hotspot, over reading text
    The morph between them is a crossfade-and-scale: the leaving shape squashes and shrinks into
    the hotspot while the arriving one springs out of it with an overshoot (Duolingo's squash then
-   overshoot), both in about 260ms. Switched by data-shape on .mascot. */
+   overshoot), both in about 260ms. Switched by data-shape (and data-prev) on .mascot. */
 .mascot { position:fixed; z-index:1000; left:0; top:0; width:0; height:0; pointer-events:none; }
 .mascot-pos { position:absolute; left:0; top:0; width:0; height:0; will-change:transform; }
 .mascot-berry { position:absolute; left:-16px; top:-17px; width:32px; height:32px; transform-origin:50% 53%; }
@@ -59,18 +60,34 @@ html[data-cursor="berry"] select { cursor:default !important; }
 .mascot-arrow { position:absolute; left:0; top:0; width:0; height:0; overflow:visible; transform-origin:0 0; opacity:0; transform:scale(.2); }
 .mascot-arrow svg { display:block; overflow:visible; max-width:none; } /* globals caps svg at 100% of a 0px box */
 
-/* Berry to arrow */
-.mascot[data-shape="arrow"] .mascot-shape { animation:mascot-berry-out 200ms ease-in forwards; }
-.mascot[data-shape="arrow"] .mascot-arrow { animation:mascot-arrow-in 280ms var(--ease-spring) forwards; }
-/* Arrow to berry */
+/* The I-beam: its box's top-left corner is the hotspot, and the bar is centred on it. */
+.mascot-ibeam { position:absolute; left:0; top:0; width:0; height:0; overflow:visible; opacity:0; transform:scale(.2); }
+.mascot-ibeam svg { position:absolute; left:-6px; top:-13px; display:block; overflow:visible; max-width:none; }
+
+/* The morph, for any pair of shapes: data-shape names the arriving shape, which springs out of
+   the hotspot and holds; data-prev names the leaving one, which squashes into it. A shape that is
+   neither stays hidden at rest, so nothing flashes on a three-way change. */
+.mascot:not([data-shape="berry"]) .mascot-shape { opacity:0; }
 .mascot[data-shape="berry"] .mascot-shape { animation:mascot-berry-in 300ms var(--ease-spring) both; }
-.mascot[data-shape="berry"] .mascot-arrow { animation:mascot-arrow-out 160ms ease-in both; }
+.mascot[data-shape="arrow"] .mascot-arrow { opacity:1; transform:none; animation:mascot-arrow-in 280ms var(--ease-spring) both; }
+.mascot[data-shape="text"] .mascot-ibeam { opacity:1; transform:none; animation:mascot-ibeam-in 240ms var(--ease-spring) both; }
+.mascot[data-prev="berry"]:not([data-shape="berry"]) .mascot-shape { animation:mascot-berry-out 200ms ease-in forwards; }
+.mascot[data-prev="arrow"]:not([data-shape="arrow"]) .mascot-arrow { animation:mascot-arrow-out 160ms ease-in forwards; }
+.mascot[data-prev="text"]:not([data-shape="text"]) .mascot-ibeam { animation:mascot-ibeam-out 140ms ease-in forwards; }
 @keyframes mascot-berry-out { 0% { transform:none; opacity:1; } 35% { transform:scale(1.18, .78); opacity:1; } 100% { transform:scale(.15); opacity:0; } }
 @keyframes mascot-berry-in { 0% { transform:scale(.2); opacity:0; } 60% { transform:scale(1.12, .9); opacity:1; } 100% { transform:none; opacity:1; } }
 @keyframes mascot-arrow-in { 0% { transform:scale(.2); opacity:0; } 100% { transform:none; opacity:1; } }
 @keyframes mascot-arrow-out { 0% { transform:none; opacity:1; } 100% { transform:scale(.3); opacity:0; } }
-/* Until the berry has left once, it just shows (no arrive pop on the first paint). */
-.mascot[data-fresh] .mascot-shape, .mascot[data-fresh] .mascot-arrow { animation:none; }
+/* The I-beam grows tall out of the hotspot (a vertical spring) and shrinks back into it. */
+@keyframes mascot-ibeam-in { 0% { transform:scale(.6, .1); opacity:0; } 60% { transform:scale(1, 1.12); opacity:1; } 100% { transform:none; opacity:1; } }
+@keyframes mascot-ibeam-out { 0% { transform:none; opacity:1; } 100% { transform:scale(.6, .1); opacity:0; } }
+/* Until the berry has left once, it just shows (no arrive pop on the first paint). Reduced
+   motion: no morph, the shapes swap in one frame (the slot also unmounts the berry under
+   html[data-motion="reduced"]; this covers the OS setting on its own). */
+.mascot[data-fresh] :is(.mascot-shape, .mascot-arrow, .mascot-ibeam) { animation:none; }
+@media (prefers-reduced-motion:reduce) {
+  .mascot :is(.mascot-shape, .mascot-arrow, .mascot-ibeam) { animation:none !important; }
+}
 
 /* The sleep "z": drifts up from the calyx while asleep. */
 .mascot-z { position:absolute; left:26px; top:-8px; opacity:0; }

@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from 'react';
 import { MANIFESTO, sectionAttrs } from '@/lib/site';
 import { parseTwoVoice } from '@/components/site/type';
-import { BarbellSticker, BlueberrySticker, FlashcardSticker, MoleculeSticker, PanSticker, SprigSticker } from '@/components/site/stickers/stickers';
+import { BarbellSticker, BlueberrySticker, FlashcardSticker, PanSticker, SprigSticker } from '@/components/site/stickers/stickers';
 import { ForkSwitch } from './manifesto.client';
 import './manifesto.css';
 
@@ -17,7 +17,6 @@ import './manifesto.css';
 // Which sticker sits after which word (word index in the sentence, counting from 0; the comma
 // and the full stop count as words)
 const TUCKED: Record<number, { Art: (props: { className?: string }) => ReactNode; r: number }> = {
-  2: { Art: MoleculeSticker, r: -12 }, // after TOOLS
   7: { Art: FlashcardSticker, r: 8 }, // after EASIER
   14: { Art: BlueberrySticker, r: -6 }, // after ACTUALLY
 };
@@ -64,7 +63,7 @@ function Word({ token, i }: { token: Token; i: number }) {
   );
 }
 
-const RIBBON = [BlueberrySticker, MoleculeSticker, FlashcardSticker, PanSticker, BarbellSticker, SprigSticker];
+const RIBBON = [BlueberrySticker, FlashcardSticker, PanSticker, BarbellSticker, SprigSticker];
 
 export default function Manifesto() {
   const words = tokens(MANIFESTO.text);

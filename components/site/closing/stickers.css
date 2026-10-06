@@ -17,4 +17,24 @@
 
 .cl-rays { fill:none; stroke-width:4; }
 .cl-sun { fill:var(--apricot); }
-.cl-hill { fill:var(--tile-leaf); }
+
+.cl-pack-body { fill:var(--tile-teal); }
+.cl-pack-flap { fill:var(--sky); }
+.cl-pack-pocket { fill:var(--apricot); }
+.cl-pack-strap { fill:none; stroke-width:4; }
+.cl-pack-tab { fill:var(--tile-gold); }
+
+.cl-blob-a .cl-blob-body { fill:var(--tile-pink); }
+.cl-blob-b .cl-blob-body { fill:var(--sky); }
+.cl-eye { fill:var(--ink); stroke:none; }
+.cl-table-top { fill:var(--tile-gold); }
+.cl-table-leg { fill:none; stroke-width:4; }
+.cl-plate { fill:var(--card); }
+.cl-plate-food { fill:var(--tile-leaf); }
+
+.cl-book-cover { fill:var(--tile-violet); }
+.cl-book-page { fill:var(--card); }
+.cl-book-lines { fill:none; stroke:var(--muted); }
+.cl-book-ribbon { fill:var(--tile-pink); }
+
+.cl-moon path { fill:var(--card); }

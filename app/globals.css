@@ -111,7 +111,8 @@
 html { scroll-padding-top:var(--header-h); -webkit-text-size-adjust:100%; overflow-x:clip; font-synthesis:none; }
 body { margin:0; background:var(--ground,var(--paper)); color:var(--on,var(--ink)); font:500 18px/1.55 var(--body); -webkit-font-smoothing:antialiased; overflow-x:clip; transition:background-color .6s var(--ease-out); }
 html[data-motion="reduced"] body { transition:none; }
-::selection { background:var(--apricot); color:var(--ink); }
+/* Selection: berry-soft under ink, 11.98 on every ground (apricot vanished on the apricot cards). */
+::selection { background:var(--berry-soft); color:var(--ink); }
 a { color:inherit; text-decoration:none; }
 img, svg, video, canvas { max-width:100%; display:block; }
 h1, h2, h3, h4, p, figure, ol, ul { margin:0; }
@@ -142,7 +143,9 @@ section[data-budget="floor"] { min-height:calc(var(--budget) * 100svh); }
 .caption { display:block; font:500 11px/1.5 var(--mono); letter-spacing:.12em; text-transform:uppercase; }
 .lead { font:400 clamp(20px,1.9cqi,26px)/1.45 var(--body); color:var(--on-2); }
 .two-voice { font-family:var(--display); font-weight:700; text-transform:uppercase; line-height:.9; letter-spacing:-.04em; }
-.two-voice .kw { font-family:var(--accent); font-weight:400; text-transform:none; color:var(--kw); font-size:1.08em; line-height:1; letter-spacing:-.01em; }
+/* Keywords used to switch to the Antic accent in lowercase berry; Andrew asked 2026-10-06 for titles
+   in one voice, so a keyword now reads as the rest of its title. The .kw span stays for word lighting. */
+.two-voice .kw { color:inherit; }
 @media (max-width:760px) { body { font-size:17px; } }
 
 /* Reveals (plan 2.2; the director in app/motion.tsx adds .is-in once, on enter). The hidden start
@@ -248,7 +251,7 @@ section[data-texture] { isolation:isolate; }
 .site-header { position:fixed; z-index:60; top:16px; left:var(--gutter); right:var(--gutter); display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px; pointer-events:none; }
 /* Explicit columns: below 1200px the label is display:none, and without these the right group
    would fall into the middle column instead of the right edge. */
-.site-header > .wordmark { grid-column:1; --hdr-i:0; }
+.site-header > .wordmark-host { grid-column:1; --hdr-i:0; }
 .site-header > .hdr-centre { grid-column:2; --hdr-i:1; }
 .site-header > .header-right { grid-column:3; --hdr-i:2; }
 .site-header > * { pointer-events:auto; transition:translate var(--dur-roll) var(--ease-elastic) calc(var(--hdr-i,0) * 30ms); }
@@ -267,10 +270,19 @@ section[data-texture] { isolation:isolate; }
 .site-header .wordmark { --on:var(--ink); --kw:var(--berry); justify-self:start; display:inline-grid; place-items:center; min-width:var(--hit); min-height:var(--hit); padding:4px 8px 5px; border:var(--bw) solid var(--ink); border-radius:var(--r-control); background:var(--card); color:var(--ink); box-shadow:0 var(--lip) 0 var(--ink); transition:transform var(--dur-release) var(--ease-spring),box-shadow var(--dur-release) var(--ease-spring),translate var(--dur-roll) var(--ease-elastic); }
 @media (hover:hover) { .site-header .wordmark:hover { transform:translateY(-2px); box-shadow:0 calc(var(--lip) + 2px) 0 var(--ink); } }
 .site-header .wordmark:active { transform:translateY(var(--lip)); box-shadow:0 0 0 var(--ink); transition-duration:var(--dur-press); }
-/* The AND/LIU mark (components/site/mark.tsx), here and in the footer: two three-letter lines of
-   Fira Code 700 at one size, so (monospaced, .84em line advance from .fh-cell) they make a
-   near-square block. LIU is berry; on the flip AND turns berry (.fh-b is --kw) and LIU ink. */
-.mark { display:block; font:700 var(--mark-size,22px)/1 var(--display); letter-spacing:-.03em; color:var(--ink); text-transform:uppercase; }
+/* The flame's host (components/site/flame/) wraps the wordmark and is the header's grid item.
+   The dance: on hover, keyboard focus, a tap and once on load (header.tsx's useHello, all via
+   data-flipped), the card hops 2px and wobbles 3deg, fire and all. Reduced motion: none. */
+.site-header > .wordmark-host { justify-self:start; display:grid; transform-origin:50% 100%; }
+@media (hover:hover) and (pointer:fine) { .site-header > .wordmark-host:hover { animation:mark-dance 640ms var(--ease-ui) both; } }
+.site-header > .wordmark-host:has(:focus-visible,[data-flipped]) { animation:mark-dance 640ms var(--ease-ui) both; }
+@keyframes mark-dance { 0%,100% { transform:none; } 20% { transform:translateY(-2px) rotate(-3deg); } 45% { transform:translateY(0) rotate(2.5deg); } 70% { transform:translateY(-1px) rotate(-1.5deg); } }
+/* The AND/LIU mark (components/site/mark.tsx), here and in the footer: two short lines at one
+   size, centred, in the mark's own display face. --mark-font is the one line to change to try
+   another face (load it in mark.tsx first). LIU is berry; on the flip AND turns berry (.fh-b is
+   --kw) and LIU ink. In the header each letter rolls on the site's spring, 40ms apart. */
+.mark { --mark-font:var(--font-fredoka); display:block; font:700 var(--mark-size,23px)/1 var(--mark-font),var(--display); letter-spacing:.01em; color:var(--ink); text-transform:uppercase; text-align:center; }
+.mark .fh-roll { transition:transform 620ms var(--ease-spring) calc(var(--i) * 40ms); }
 .mark .fh-line:last-child .fh-a { color:var(--berry); }
 .mark .fh-line:last-child .fh-b { color:var(--ink); }
 /* The centre (plan 6.1): the section label, an opaque pill that rolls on change; where a section
@@ -310,7 +322,7 @@ section[data-texture] { isolation:isolate; }
    menu has Résumé and Ask), so the menu's close button, drawn where the menu button was, shows
    through and takes the clicks. */
 .site-header[data-menu-open] { z-index:210; }
-.site-header[data-menu-open] > :is(.wordmark,.header-right) { position:relative; z-index:201; }
+.site-header[data-menu-open] > :is(.wordmark-host,.header-right) { position:relative; z-index:201; }
 .site-header[data-menu-open] > .header-right { pointer-events:none; }
 .site-header[data-menu-open] > .header-right > .header-visit { pointer-events:auto; }
 .site-header[data-menu-open] > .header-right > :not(.header-visit), .site-header[data-menu-open] > .hdr-centre { visibility:hidden; }
@@ -332,7 +344,7 @@ section[data-texture] { isolation:isolate; }
 /* ---------- Menu overlay ---------- */
 /* Left: the numbered links, the small links and the switches. Right, 1000px and up: the preview,
    three prints stacked on a table that change with the link under the pointer or focus. */
-.menu { position:fixed; inset:0; z-index:200; display:grid; grid-template-columns:minmax(0,1fr); align-content:start; gap:28px; overflow-y:auto; padding:96px var(--gutter) 40px; background:var(--berry-deep); color:var(--paper); --on:var(--paper); --on-2:var(--berry-soft); --kw:var(--apricot); --ring:var(--apricot); animation:menu-in var(--dur-enter) var(--ease-out); }
+.menu { position:fixed; inset:0; z-index:200; display:grid; grid-template-columns:minmax(0,1fr); align-content:start; gap:28px; overflow-y:auto; padding:96px var(--gutter) 40px; background:var(--berry-deep); color:var(--paper); --on:var(--paper); --on-2:var(--berry-soft); --kw:var(--apricot); --ring:var(--apricot); }
 .menu-close { position:fixed; top:16px; right:var(--gutter); }
 .menu-close span:first-child, .menu-close span:last-child { top:18px; left:9px; width:22px; }
 .menu-close span:first-child { transform:rotate(45deg); }
@@ -353,8 +365,7 @@ section[data-texture] { isolation:isolate; }
 .menu-print-art { --rot:-4deg; left:2%; top:0; width:56%; aspect-ratio:4 / 5; display:grid; place-items:center; padding:18px; background:var(--berry); box-shadow:0 8px 0 #00000040; animation:print-in 560ms var(--ease-spring) both; }
 .menu-print-front { --rot:1.5deg; right:2%; bottom:4%; width:64%; display:grid; gap:14px; padding:24px 26px 26px; background:var(--card); color:var(--ink); box-shadow:0 10px 0 var(--ledge),0 30px 60px -30px #000000a0; animation:print-in 560ms var(--ease-spring) 70ms both; }
 @keyframes print-in { from { opacity:0; transform:translateY(28px) rotate(calc(var(--rot,0deg) + 4deg)) scale(.96); } }
-.menu-art-sheet { width:100%; display:grid; gap:10px; padding:14px 14px 12px; border-radius:16px; background:#fff; color:var(--ink); }
-.menu-art-sheet img { width:100%; height:auto; }
+.menu-art-sticker { width:72%; height:auto; rotate:-8deg; }
 .menu-art-num { font:700 clamp(120px,13vw,220px)/.8 var(--display); letter-spacing:-.06em; color:var(--apricot); font-variant-ligatures:none; }
 .menu-print-art .portrait { width:100%; }
 .menu-preview-head { font-size:clamp(30px,3.1vw,46px); }
@@ -364,7 +375,6 @@ section[data-texture] { isolation:isolate; }
 .menu-small { display:flex; flex-wrap:wrap; gap:14px 12px; align-items:center; }
 .menu-switches { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
 .menu-note { flex-basis:100%; font-size:15px; color:var(--on-2); }
-@keyframes menu-in { from { clip-path:inset(0 0 100% 0); } to { clip-path:inset(0); } }
 @media (max-width:760px) { .menu-close { top:12px; } }
 
 /* ---------- FlipLink (components/ui/flip-links.tsx) ---------- */
@@ -389,15 +399,22 @@ section[data-texture] { isolation:isolate; }
 
 /* ---------- Loader (plan 4.0). Inserted by the loader script only, so with JS off there is none,
    and it is never in the server HTML. 900ms at most. ---------- */
-.loader { position:fixed; inset:0; z-index:450; display:grid; place-items:center; background:var(--berry-deep); color:var(--paper); clip-path:inset(0 0 0 0); }
-.loader.is-wiping { clip-path:inset(0 0 100% 0); transition:clip-path .3s var(--ease-wipe); }
+/* The pan (a wipe transition): two full-screen sheets slide off to the right, the berry-deep front
+   one first and the berry back one 70ms behind it, so a berry edge sweeps the page into view. */
+.loader { position:fixed; inset:0; z-index:450; overflow:hidden; pointer-events:none; }
+.loader-sheet { position:absolute; inset:0; will-change:transform; }
+.loader-sheet-back { background:var(--berry); }
+.loader-sheet-front { display:grid; place-items:center; background:var(--berry-deep); color:var(--paper); }
+.loader.is-wiping .loader-sheet { transform:translateX(101%); transition:transform 720ms var(--ease-wipe); }
+.loader.is-wiping .loader-sheet-back { transition-delay:70ms; }
 .loader-berry { width:clamp(80px,11vw,128px); opacity:0; }
 .loader.is-running .loader-berry { opacity:1; animation:berry-drop .3s cubic-bezier(.3,1.4,.6,1) both; }
-.loader-count { position:absolute; right:var(--gutter); bottom:calc(var(--gutter) - 10px); font:700 clamp(88px,16vw,220px)/.84 var(--display); letter-spacing:-.04em; color:var(--apricot); font-variant-numeric:tabular-nums; }
 .loader-word { position:absolute; left:var(--gutter); bottom:var(--gutter); font:500 12px/1 var(--mono); letter-spacing:.14em; text-transform:uppercase; color:var(--berry-soft); }
 @keyframes berry-drop { from { transform:translateY(-40vh) rotate(-24deg); } 70% { transform:translateY(0) scale(1.08,.92); } to { transform:none; } }
-html[data-motion="reduced"] .loader { clip-path:none; transition:opacity .12s linear; }
-html[data-motion="reduced"] .loader.is-wiping { opacity:0; clip-path:none; }
+/* Reduced motion: no pan, the sheets fade out in 120ms where they stand. */
+html[data-motion="reduced"] .loader { transition:opacity .12s linear; }
+html[data-motion="reduced"] .loader.is-wiping { opacity:0; }
+html[data-motion="reduced"] .loader.is-wiping .loader-sheet { transform:none; transition:none; }
 html[data-motion="reduced"] .loader-berry { opacity:1; animation:none; }
 
 /* ---------- The long-jump veil (components/site/jump.ts) ---------- */
@@ -446,7 +463,7 @@ html[data-island="active"] .chat-launcher { display:none; }
 .fh-roll { position:relative; display:block; transition:transform 500ms cubic-bezier(.76,0,.24,1) calc(var(--i) * 18ms); }
 .fh-a { display:block; }
 .fh-b { position:absolute; left:0; top:100%; white-space:nowrap; color:var(--kw); }
-.fh-kw-text { font-family:var(--accent); font-weight:400; text-transform:none; letter-spacing:-.01em; font-size:1.08em; color:var(--kw); }
+.fh-kw-text { color:inherit; } /* one voice in titles, as .two-voice .kw above */
 .fh-kw .fh-b { font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:-.04em; color:var(--on); }
 .flip-head:is(:focus-visible,[data-flipped]) .fh-roll { transform:translateY(-100%); }
 @media (hover:hover) and (pointer:fine) { .flip-head:hover .fh-roll { transform:translateY(-100%); } }
@@ -565,6 +582,7 @@ html[data-motion="reduced"] :is(.pill-face,.pill-back) { translate:none !importa
 html[data-motion="reduced"] .site-header > *, html[data-motion="reduced"] .site-header::before { transition:none; translate:none !important; }
 html[data-motion="reduced"] :is(.menu,.menu-print) { animation:none; }
 html[data-motion="reduced"] .hdr-mark { transition:none; }
+html[data-motion="reduced"] .site-header > .wordmark-host { animation:none; }
 html[data-motion="reduced"] .hdr-label-track[data-roll] { animation:none; transform:translateY(-50%); }
 html[data-motion="reduced"] .hdr-label { transition:none; }
 /* FlipHeading: no roll; the colours swap instantly on hover and focus instead. */

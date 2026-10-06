@@ -1,0 +1,84 @@
+/* College Park (app/sections/umd.tsx). Every selector starts at .umd. Prefix umd-.
+
+   Colour, measured (WCAG 2.x relative luminance):
+     black #000 on UMD red #E21833  4.41:1  AA for LARGE text only (24px+, or 18.66px+ bold).
+                                             So on red, black is used only for the display title
+                                             and the degree line, which is 19px+ at weight 700.
+     white #fff on UMD red          4.76:1  passes AA even at body size (used in the shirt art only)
+     black on gold #FFD200         14.47:1  the gold title line, the chip, the Contents pill
+     black on white                21:1     the tags
+     white on Lava under the scrim  6.83:1  worst case, Lava's #FF9F21 under 50% black
+     focus ring black on red        4.41:1  over the 3:1 non-text minimum (berry would be 1.58)
+
+   The pin: the section is one viewport plus --runway, and .umd-stage is position: sticky at the
+   top, so the stage holds the frame while the runway scrolls past, then releases into
+   #contents. Plain CSS, no scroll library. Reduced motion sets the runway to 0. */
+
+section.umd {
+  --umd-red:#E21833; --umd-gold:#FFD200; --umd-black:#000000;
+  --on:var(--umd-black); --on-2:var(--umd-black); --kw:var(--umd-black); --ring:var(--umd-black);
+  --runway:70svh;
+  min-height:calc(100svh + var(--runway));
+  background:var(--umd-red);
+  color:var(--umd-black);
+}
+html[data-motion="reduced"] section.umd { --runway:0px; }
+
+.umd .umd-stage {
+  --cue-pad:clamp(104px,15svh,124px);
+  position:sticky; top:0; height:100svh; box-sizing:border-box;
+  padding:calc(var(--header-h) + 4px) var(--gutter) var(--cue-pad);
+}
+/* the design's faint diagonal stripes and the black and gold checker band along the top */
+.umd .umd-stage::before { content:''; position:absolute; inset:0; background-image:repeating-linear-gradient(-45deg, rgba(0,0,0,.06) 0 18px, transparent 18px 36px); pointer-events:none; }
+.umd .umd-stage::after { content:''; position:absolute; left:0; right:0; top:0; height:18px; background:repeating-linear-gradient(90deg, var(--umd-black) 0 36px, var(--umd-gold) 36px 72px); pointer-events:none; }
+
+/* Text column on the left, the terrapin on the right. The text blocks are direct grid items so
+   the phone layout can put the terrapin beside the tags. */
+.umd .umd-grid {
+  position:relative; z-index:1; height:100%; max-width:1280px; margin-inline:auto;
+  display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);
+  grid-template-areas:"chip art" "title art" "degree art" "tags art" "card art";
+  align-content:center; column-gap:clamp(24px,3vw,48px); row-gap:clamp(10px,2svh,20px);
+}
+
+.umd .umd-chip { grid-area:chip; justify-self:start; padding:6px 12px; border-radius:var(--r-pill); background:var(--umd-black); color:var(--umd-gold); font:700 12px/1.4 var(--mono); letter-spacing:.14em; text-transform:uppercase; font-variant-ligatures:none; }
+
+.umd .umd-title { grid-area:title; margin:0; color:var(--umd-black); font-size:clamp(44px,min(7.2cqi,10.5svh),104px); line-height:1; letter-spacing:-.03em; }
+.umd .umd-gold { background:var(--umd-gold); padding:0 .12em; -webkit-box-decoration-break:clone; box-decoration-break:clone; }
+
+/* 19px+ at weight 700 is large text, where black on red (4.41:1) meets AA */
+.umd .umd-degree { grid-area:degree; margin:0; max-inline-size:40ch; font:700 clamp(19px,calc(1.1vw + 5px),22px)/1.45 var(--body); color:var(--umd-black); }
+
+.umd .umd-tags { grid-area:tags; list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:10px; }
+.umd .umd-tags li { padding:9px 16px; border:2px solid var(--umd-black); border-radius:var(--r-pill); background:#FFFFFF; color:var(--umd-black); box-shadow:0 3px 0 var(--umd-black); font:700 15px/1.2 var(--body); }
+
+/* The Lava card (components/site/umd/lava-card.tsx): dark red under the gradient for no-WebGL,
+   the canvas at z-index -1 inside this isolated box, a 50% black scrim, then the text. */
+.umd .umd-card { grid-area:card; max-inline-size:36rem; }
+.umd .umd-lava { position:relative; isolation:isolate; overflow:hidden; padding:clamp(14px,2.4svh,24px) clamp(18px,2vw,28px); border:2px solid var(--umd-black); border-radius:var(--r-card); background:#5A0A0F; color:#FFFFFF; box-shadow:0 4px 0 var(--umd-black); }
+.umd .umd-lava-bg { position:absolute; inset:0; }
+.umd .umd-lava-scrim { position:absolute; inset:0; background:rgba(0,0,0,.5); }
+.umd .umd-lava-body { position:relative; display:flex; flex-direction:column; gap:6px; }
+.umd .umd-card-label { font:700 12px/1.4 var(--mono); letter-spacing:.14em; text-transform:uppercase; font-variant-ligatures:none; }
+.umd .umd-card-text { margin:0; font:600 clamp(17px,1.3vw,20px)/1.45 var(--body); }
+
+.umd .umd-art { grid-area:art; align-self:center; justify-self:center; width:min(100%,440px,58svh); }
+
+/* "Contents below": a gold pill (the site's .pill with PillFaces) and a bouncing arrow */
+.umd .umd-cue { position:absolute; z-index:2; left:50%; bottom:clamp(8px,2svh,24px); translate:-50% 0; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.umd .umd-down { --face:var(--umd-gold); --face-on:var(--umd-black); --roll:#FFFFFF; --roll-on:var(--umd-black); }
+.umd .umd-arrow { display:block; animation:umd-nudge 1.4s var(--ease-spring) infinite; }
+@keyframes umd-nudge { 0%, 100% { transform:translateY(0); } 50% { transform:translateY(10px); } }
+html[data-motion="reduced"] .umd .umd-arrow { animation:none; }
+
+/* Phone: one column; the terrapin stands beside the tags, which stack. */
+@media (max-width:760px) {
+  .umd .umd-stage { --cue-pad:96px; }
+  .umd .umd-grid { grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"chip chip" "title title" "degree degree" "tags art" "card card"; row-gap:12px; column-gap:12px; }
+  .umd .umd-title { font-size:clamp(40px,13.5cqi,60px); }
+  .umd .umd-tags { flex-direction:column; align-items:flex-start; gap:8px; }
+  .umd .umd-tags li { padding:8px 14px; font-size:14px; }
+  .umd .umd-art { width:clamp(110px,36vw,160px); align-self:center; }
+  .umd .umd-arrow { width:28px; height:34px; }
+}

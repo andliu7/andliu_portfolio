@@ -1,0 +1,6 @@
+/* Flame wrap (flame.tsx). The host wraps the burning card so the canvas can hang off it; isolation
+   keeps the canvas's z-index:-1 inside the host, so the fire sits behind the card and never over
+   its letters. The canvas never takes the pointer. */
+.flame-host { position:relative; isolation:isolate; }
+.flame { position:absolute; z-index:-1; max-width:none; pointer-events:none; } /* max-width:none: the global canvas reset would squeeze it to the host */
+@media print { .flame { display:none; } }

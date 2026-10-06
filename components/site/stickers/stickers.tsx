@@ -1,7 +1,7 @@
 import './stickers.css';
 
-// Flat stickers of Andrew's things (the hero and dive collages): a blueberry, a molecule drawn
-// as a skeletal structure, a flashcard, a barbell and a pan. Original art, flat fills from the
+// Flat stickers of Andrew's things: a blueberry, a flashcard, a barbell and a pan (the molecule
+// was removed 2026-10-06 at Andrew's request). Original art, flat fills from the
 // site's :root tokens (the colours live in stickers.css, because an SVG fill attribute cannot
 // read a CSS variable), every shape outlined in ink at 2px whatever the sticker's size
 // (vector-effect="non-scaling-stroke").
@@ -41,25 +41,6 @@ export function BlueberrySticker({ className = '' }: Props) {
         <ellipse className="st-glint" cx="39.4" cy="30.4" rx="1" ry="1.5" />
       </g>
       <path className="st-smile" d="M26.5 42.4 Q32 46.2 37.5 42.4" />
-    </svg>
-  );
-}
-
-// Acetophenone in skeletal form: a benzene ring (alternate inner bonds), the carbonyl carbon off
-// one vertex with its C=O, and a methyl stub. The badge is centred on the whole molecule's
-// bounding box (x -12.1 to 36.4, y -36 to 14, centre 12.1,-11), not on the ring, with 8 units of
-// even padding, so the substituent sits inside the frame.
-export function MoleculeSticker({ className = '' }: Props) {
-  return (
-    <svg className={`st st-mol ${className}`} viewBox="-28 -51 80 80" aria-hidden="true" focusable="false">
-      <circle className="st-mol-badge" vectorEffect={NS} cx="12.1" cy="-11" r="38" />
-      <g className="st-bonds" fill="none">
-        <path vectorEffect={NS} d="M0 -14 L12.1 -7 L12.1 7 L0 14 L-12.1 7 L-12.1 -7 Z" />
-        <path vectorEffect={NS} d="M8.7 -3 L8.7 3 M-1.7 9.1 L-7 6 M-7 -6 L-1.7 -9.1" />
-        <path vectorEffect={NS} d="M12.1 -7 L24.2 -14 L36.4 -7" />
-        <path vectorEffect={NS} d="M24.2 -14 V-24.5 M27.4 -16 V-24" />
-      </g>
-      <text className="st-oxygen" x="24.2" y="-30" textAnchor="middle" dominantBaseline="central">O</text>
     </svg>
   );
 }

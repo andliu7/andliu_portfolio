@@ -85,11 +85,29 @@ export const META = {
 
 // 4.1 Hero
 export const HERO = {
-  eyebrow: 'Future dentist, current builder.', // [Z clinic]
+  chip: 'Computer Science Major, Pre-Dental Track. Expected May 2027.', // [R] Andrew's wording 2026-10-06
   first: 'ANDREW', // [P]
   last: 'LIU', // [P]
   identity: IDENTITY.short, // [P][R] derived from BLUEBERRY_TITLE
+  // The four cartoon objects around the name, each a link to its project (labels are PROJECTS titles)
+  objects: {
+    pencil: { label: 'Focus Family Guide', href: '#work-guide' }, // [P] PROJECTS guide
+    laptop: { label: 'Second Brain', href: '#work-brain' }, // [R] PROJECTS brain
+    phone: { label: 'Blueberry', href: '#blueberry' }, // [P] PROJECTS blueberry, the game lives inside it
+    card: { label: 'Flashcards', href: '#work-flashcards' }, // [R] PROJECTS flashcards
+  },
 } as const;
+
+// 4.1 The hero's tilted marquee bar: short true facts, one line each (needs Andrew's sign-off)
+export const HERO_BAR = [
+  `${IDENTITY.degree}, ${IDENTITY.schoolShort}. ${IDENTITY.expected}.`, // [R] derived from IDENTITY
+  IDENTITY.line, // [P]
+  `${BLUEBERRY_ROLE} of Blueberry, a team of four`, // [R] four per Andrew 2026-10-06
+  'Browser Use docs used by 200+ contributors', // [R] Minnodi line
+  'SAT students up 100 to 300 points', // [R] Education One line
+  'Mentoring 25+ students at Kharis', // [R] Kharis line
+  'RDKit.js grading in the browser', // [R] Blueberry highlights
+] as const;
 
 // 4.1 The rotating "currently:" line (prefix MICROCOPY.currently). Assembled from inventory
 // phrases; needs Andrew's sign-off (plan 2.4).
@@ -111,7 +129,6 @@ export const TICKET = {
   line: `${BLUEBERRY_TITLE}, ${TICKET_WHEN}`, // [P] derived from BLUEBERRY_TITLE
   href: BB_LIVE, // [P]
   thumb: 'bbHome', // IMAGES key (its 800px variant), once capture has produced it
-  art: 'bbGrignard', // IMAGES key: Blueberry's own reaction drawing, on disk today
 } as const;
 
 // 4.2 Manifesto. Words in *asterisks* are the Antic keywords (components/site/type.tsx TwoVoice).
@@ -133,14 +150,12 @@ export const FORK = {
   },
 } as const;
 
-// 4.3 and 4.4 The Blueberry chapter (the dive's children are its head)
+// 4.4 The Blueberry chapter (the dive section before it was removed 2026-10-06 at Andrew's request)
 export const BLUEBERRY_CHAPTER = {
   eyebrow: `01 / ${BLUEBERRY_TITLE} / Aug 2026 to now`, // [P] derived from BLUEBERRY_TITLE
   headline: 'ORGANIC CHEMISTRY THAT *actually sticks.*', // [S] HERO.headline
   headlinePlain: 'Organic chemistry that actually sticks.', // [S] HERO.headline
-  headlineLines: 'ORGANIC\nCHEMISTRY\nTHAT *actually sticks.*', // [S] HERO.headline, the same words stacked for the dive's poster heading
   sell: 'Lessons that explain it properly, mechanisms you draw yourself, and flashcards that hunt down the one thing you keep getting wrong.', // [S] HERO.sell
-  ctaNote: 'Free to start. No card. About two minutes.', // [S] HERO.ctaNote
   story: 'What began as flashcards for classmates is becoming an organic chemistry learning platform. I lead product direction and learning design for a team of four, connecting study decks, visual pathways, and mechanism practice.', // [P]
   cardHeading: 'Organic chemistry that actually sticks.', // [S] the phone's heading
   // The phone's three tabs along the frame. Labels are the saved cinematic-landing-hero's own;
@@ -162,11 +177,13 @@ export const BB_FACTS: readonly { id: string; value?: number; label: string }[] 
   { id: 'deckCards', label: 'cards in his first deck' }, // [B] value = lib/bb-deck.json count
 ] as const;
 
-// 4.4 Three real screens. Captions are the literal routes.
+// 4.4 Four real screens, each a feature mid-use (Andrew, 2026-10-06: "the functional ones").
+// Captions are the literal routes the captures were taken on.
 export const BB_SCREENS = [
-  { image: 'bbHome', caption: 'ANDLIU7.GITHUB.IO/BLUEBERRY', href: BB_LIVE }, // [P][S]
-  { image: 'bbPath', caption: '#/APP/PATHWAY', href: `${BB_LIVE}#/app/pathway` }, // [S]
-  { image: 'bbLesson', caption: '#/LESSONS', href: `${BB_LIVE}#/lessons` }, // [P]
+  { image: 'bbFlashcards', caption: '#/APP/CARDS', href: `${BB_LIVE}#/app/cards` }, // [S] game routes.ts tab "cards"
+  { image: 'bbPathway', caption: '#/APP/PATHWAY', href: `${BB_LIVE}#/app/pathway` }, // [S]
+  { image: 'bbArrows', caption: '#/APP/TRAINER', href: `${BB_LIVE}#/app/trainer` }, // [S] game routes.ts tab "trainer"
+  { image: 'bbMolecules', caption: '#/DRAW/GRIGNARD-ADDITION-KETONE', href: `${BB_LIVE}#/draw/grignard-addition-ketone` }, // [S] App.tsx route draw/<reaction id>
 ] as const;
 
 // 4.4 The engineering claims, one sentence each, and the stack as tags.
@@ -181,10 +198,10 @@ export const BB_ENGINEERING = {
 } as const;
 
 // 4.4 The chapter's own head and its small section labels (the blueberry piece, style pass
-// 2026-10-06). The dive above carries the product headline, so this one tells the story's arc.
+// 2026-10-06). This headline tells the story's arc; the product slogan's own section was removed.
 export const BB_HEAD = {
   headline: 'FROM FLASHCARDS\nTO A *platform.*', // [P] BLUEBERRY_CHAPTER.story, "What began as flashcards ... learning platform"
-  screens: 'Three real screens', // [plan 4.4] (needs sign-off)
+  screens: 'Four real screens', // [plan 4.4] count follows BB_SCREENS (four since 2026-10-06; needs sign-off)
   stack: 'The stack', // [UI] label over BB_ENGINEERING.stack (needs sign-off)
 } as const;
 
@@ -295,8 +312,8 @@ export const PROJECTS = [
     ],
     note: null,
     tags: ['Technical writing', 'HTML / CSS', 'Print design'], // [P]
-    links: [{ kind: 'source', href: 'https://github.com/andliu7/ff_technical_instructions' }], // [P]
-    url: 'github.com/andliu7/ff_technical_instructions', // [P]
+    links: [{ kind: 'live', href: 'https://andliu7.github.io/ff_technical_instructions/' }, { kind: 'source', href: 'https://github.com/andliu7/ff_technical_instructions' }], // [P] live page added at Andrew's request 2026-10-06 (returns 200)
+    url: 'andliu7.github.io/ff_technical_instructions', // [P]
     image: 'focusFamilyGuide', imageApproved: null,
   },
   {
@@ -343,6 +360,7 @@ export const WORK_HEAD = {
 export const EXPERIENCE_HEAD = {
   eyebrow: '04 / Along the way', // [P] renumbered after Impact
   headline: 'ALONG THE *way*', // [P]
+  hint: 'Scroll to move through time', // [UI] from the approved timeline design (needs sign-off)
 } as const;
 
 // ---------------------------------------------------------------------------------------------
@@ -438,6 +456,28 @@ export const OFF_CLOCK = {
   sky: 'skyCloudSea', // IMAGES key
 } as const;
 
+// The evening strip (app/sections/offclock.tsx, rebuilt 2026-10-06): Andrew's evening in the
+// order he gave it ("usually I like to get work done in the morning ... after work or classes gym
+// and then cook and then eat and then I lead bible studies"). No clock times on purpose: he gave
+// an order, not times. `big` is the scene's display word, `voice` its line with keywords in
+// *asterisks*, `sub` a smaller line or null. The last scene keeps landscape design and the UMD
+// garden line (an interest, never a hobby). All of it needs Andrew's sign-off.
+export const EVENING = {
+  intro: 'Mornings are for *work*. Here is the *evening*.', // [Andrew 2026-10-06 via lead brief] (needs sign-off)
+  hint: 'Scroll through the evening', // [UI] (needs sign-off)
+  clock: 'THE CLOCK', // [Z yard] as FORK.on.head
+  scenes: [
+    { id: 'after', when: 'After work or classes', big: 'CLOCK OUT', voice: 'Work or *classes* at UMD come first.', sub: null }, // [Andrew 2026-10-06][R] (needs sign-off)
+    { id: 'gym', when: 'Then the gym', big: 'GYM', voice: 'Lifting with the *UMD Barbell Club*.', sub: null }, // [Andrew 2026-10-06 via lead brief] (needs sign-off)
+    { id: 'cook', when: 'Then I cook', big: 'COOK', voice: 'A *pan* on the stove.', sub: null }, // [Andrew 2026-10-06] (needs sign-off)
+    { id: 'eat', when: 'Then we eat', big: 'EAT', voice: 'A *kitchen*, and people at the *table*.', sub: null }, // [P] OFF_CLOCK.notes[0].voice
+    { id: 'study', when: 'Then Bible study', big: 'BIBLE STUDY', voice: 'I lead *Focus Family* at Kharis Campus Ministry.', sub: FAITH_LINE }, // [R][P] (needs sign-off)
+    { id: 'someday', when: 'Someday', big: 'SOMEDAY', voice: 'Landscape design: the interest that keeps *growing*.', sub: GARDEN_LINE }, // [P][Z yard]
+  ],
+  shotCaption: 'Focus Family Circle, inside the chapel on my island.', // [Z chapel] the room's own name (needs sign-off)
+  shot: 'islandFocusFamily', // IMAGES key
+} as const;
+
 // ---------------------------------------------------------------------------------------------
 // The footer card (4.9) and the island finale (4.10)
 // ---------------------------------------------------------------------------------------------
@@ -453,6 +493,29 @@ export const CONTACT = {
   ],
   email: EMAIL, // [P]
   emailNote: 'Email is the fastest way to reach me.', // [Z contact]
+} as const;
+
+// The contact form in the footer card (components/site/contact-form.tsx). It only renders when
+// the Worker URL is set at build time (worker/CONTACT.md). All new [UI] wording: NEEDS ANDREW'S
+// SIGN-OFF. Limits match worker/contact.js.
+export const CONTACT_FORM = {
+  heading: 'Or write it here', // [UI] (needs sign-off)
+  name: 'Your name', // [UI] (needs sign-off)
+  email: 'Your email', // [UI] (needs sign-off)
+  message: 'Message', // [UI] (needs sign-off)
+  botcheck: 'Leave this empty', // [UI] the honeypot's label, read by bots only (needs sign-off)
+  send: 'Send', // [UI] (needs sign-off)
+  sending: 'Sending', // [UI] (needs sign-off)
+  sent: 'Sent. It is in my inbox now.', // [UI] (needs sign-off)
+  errors: {
+    name: 'Add your name, up to 100 characters.', // [UI] (needs sign-off)
+    email: 'That email address does not look right.', // [UI] (needs sign-off)
+    messageShort: 'A few more words, please: 10 characters at least.', // [UI] (needs sign-off)
+    messageLong: 'Keep it under 5000 characters.', // [UI] (needs sign-off)
+    fix: 'Fix the highlighted fields, then send again.', // [UI] (needs sign-off)
+    rate: 'Too many messages from here. Try again in a minute.', // [UI] (needs sign-off)
+    failed: 'That did not send. Email me at the address above instead.', // [UI] (needs sign-off)
+  },
 } as const;
 
 // The site footer (components/site/footer.tsx), after the footer of Andrew's Focus Family guide:
@@ -580,6 +643,40 @@ export const CHAT_FALLBACK = {
 } as const;
 
 // ---------------------------------------------------------------------------------------------
+// College Park and the contents (app/sections/umd.tsx, contents.tsx), added 2026-10-06 from the
+// approved Umd and Contents designs. New [UI] wording: NEEDS ANDREW'S SIGN-OFF.
+// ---------------------------------------------------------------------------------------------
+
+export const UMD = {
+  chip: '01 / College Park', // [UI] from the approved design (needs sign-off)
+  titleTop: 'COLLEGE', // [R] College Park, MD
+  titleBottom: 'PARK, MD.', // [R]
+  degree: 'B.S. Computer Science on the pre-dental track at the University of Maryland, College Park. Expected May 2027.', // [R] as CHAT_FALLBACK education
+  tags: ['UMD Barbell Club', 'Focus Family at Kharis', 'The UMD garden'], // [Andrew 2026-10-06 via lead brief, as EVENING gym][R][Z yard] (needs sign-off)
+  courseworkLabel: EDUCATION.courseworkLabel, // [R]
+  coursework: EDUCATION.coursework.join(', '), // [R][Z umd]
+  art: 'A cartoon terrapin in a UMD shirt deadlifting a barbell', // [UI] the drawing's alt (needs sign-off)
+  down: 'Contents below', // [UI] from the approved design (needs sign-off)
+} as const;
+
+// The contents rows: each points at a section that exists on the page. Titles are the footer's
+// skip-ahead answers and the section names; the lines under them are derived from the data.
+export const CONTENTS = {
+  eyebrow: '00 / Contents', // [UI] from the approved design (needs sign-off)
+  title: 'WHERE TO?', // [UI] from the approved design (needs sign-off)
+  note: 'You do not have to read this front to back. Pick the part you came for.', // [UI] from the approved design (needs sign-off)
+  label: 'Contents', // [UI] the list's accessible name (needs sign-off)
+  rows: [
+    { href: '#work', title: FOOTER_SKIP.links[0].a, sub: PROJECTS.slice(0, 4).map(p => p.title).join(', '), meta: `${PROJECTS.length} projects` }, // [UI] derived from FOOTER_SKIP and PROJECTS
+    { href: '#impact', title: FOOTER_SKIP.links[1].a, sub: IMPACT.map(p => p.title).join(', '), meta: `${IMPACT.length} panels` }, // [UI] derived from FOOTER_SKIP and IMPACT
+    { href: '#experience', title: FOOTER_SKIP.links[2].a, sub: JOBS.map(j => j.org).join(', '), meta: `${JOBS.length} roles` }, // [UI] derived from FOOTER_SKIP and JOBS
+    { href: '#offclock', title: FOOTER_SKIP.links[5].a, sub: OFF_CLOCK.headline, meta: null }, // [P] derived
+    { href: '#contact', title: 'Say hi', sub: CONTACT.links.map(l => l.label).join(', '), meta: null }, // [P][Z contact] as CONTACT.eyebrow, links derived
+    { href: '#island', title: 'The island', sub: ISLAND.tagline, meta: null }, // [P] as ISLAND.eyebrow, [Z] tagline
+  ],
+} as const;
+
+// ---------------------------------------------------------------------------------------------
 // Structure: the ten sections (plan 1.1 and 1.2), the budget, the grounds and gradients
 // ---------------------------------------------------------------------------------------------
 
@@ -598,10 +695,13 @@ export const GROUND_LUMINANCE: Record<Ground, number> = {
 // or the game's full-screen overlay inside it could not rise above the header.
 export const SECTIONS = [
   { id: 'top', ground: 'paper', gradient: 'paper-apricot', label: null, budget: 1.0, kind: 'cap', project: false, pinned: false, texture: true },
+  // umd paints its own UMD red (umd.css); 'apricot' only sets ink text and a light-ground header.
+  // budget 1.7 = one sticky viewport plus a 0.7 viewport runway (0 under reduced motion).
+  { id: 'umd', ground: 'apricot', gradient: null, label: null, budget: 1.7, kind: 'cap', project: false, pinned: true, texture: true },
+  { id: 'contents', ground: 'berry-deep', gradient: null, label: null, budget: 1.0, kind: 'cap', project: false, pinned: false, texture: true },
   { id: 'manifesto', ground: 'apricot', gradient: null, label: null, budget: 0.9, kind: 'cap', project: false, pinned: false, texture: true },
-  { id: 'dive', ground: 'berry', gradient: null, label: 'Blueberry', budget: 2.0, kind: 'cap', project: false, pinned: true, texture: true },
   { id: 'blueberry', ground: 'berry', gradient: 'berry-deep', label: 'Blueberry', budget: 3.6, kind: 'floor', project: true, pinned: true, texture: true },
-  { id: 'work', ground: 'berry-deep', gradient: null, label: 'Work', budget: 4.2, kind: 'floor', project: true, pinned: false, texture: true },
+  { id: 'work', ground: 'berry-deep', gradient: null, label: 'Projects', budget: 4.2, kind: 'floor', project: true, pinned: false, texture: true },
   { id: 'impact', ground: 'berry-deep', gradient: null, label: 'Impact', budget: 1.3, kind: 'cap', project: true, pinned: false, texture: true },
   { id: 'experience', ground: 'berry-deep', gradient: null, label: 'Experience', budget: 1.0, kind: 'cap', project: false, pinned: false, texture: true },
   { id: 'offclock', ground: 'ink', gradient: null, label: 'Off the clock', budget: 1.15, kind: 'cap', project: false, pinned: false, texture: true },
@@ -656,6 +756,8 @@ export type ImageEntry = {
   src: string; w: number; h: number; sm?: string; smW?: number;
   alt: string; owner: 'exists' | 'foundation' | 'capture'; sections: readonly string[];
   gated?: 'secondBrainShot'; srcset?: readonly { src: string; w: number }[];
+  /** A looping, silent video of the same picture; the image is its poster and the reduced-motion still. */
+  video?: string;
 };
 
 export const IMAGES = {
@@ -663,13 +765,29 @@ export const IMAGES = {
   // Blueberry's own drawing of a Grignard reagent and a ketone (its lessons render it with RDKit),
   // copied from grignard-app-source/public/reactions/grignard-addition-ketone-start-light.svg
   // @ 4a07a3c. Real product art, so it stands in wherever the site shows "what he builds".
-  bbGrignard: { src: '/images/photo/bb-grignard-start.svg', w: 340, h: 210, alt: 'A Grignard reagent and a ketone, drawn by Blueberry', owner: 'foundation', sections: ['top', 'menu'] }, // [S] alt assembled (sign-off)
   bbHome: { src: '/images/work/blueberry-home.webp', w: 1600, h: 1000, sm: '/images/work/blueberry-home-800.webp', smW: 800, alt: 'The Blueberry home page', owner: 'capture', sections: ['top', 'blueberry', 'work'] },
   bbPath: { src: '/images/work/blueberry-path.webp', w: 1600, h: 1000, sm: '/images/work/blueberry-path-800.webp', smW: 800, alt: 'The Blueberry pathway', owner: 'capture', sections: ['blueberry'] },
   bbLesson: { src: '/images/work/blueberry-lesson.webp', w: 1600, h: 1000, sm: '/images/work/blueberry-lesson-800.webp', smW: 800, alt: "The twelve sections of Blueberry's CHEM241 course", owner: 'capture', sections: ['blueberry'] },
+  // Captured 2026-10-06 from the live site in headless Chrome (SwiftShader), 2x, each mid-use: a
+  // card flipped to its rating buttons (800x600 viewport, the review run is full width), the
+  // pathway, a curved arrow held mid-drag in the trainer, and the draw page with its starting
+  // material loaded into Ketcher. Cropped 4:3 to the readable region.
+  bbFlashcards: { src: '/images/work/bb-flashcards.webp', w: 1600, h: 1200, sm: '/images/work/bb-flashcards-800.webp', smW: 800, alt: 'A Blueberry flashcard flipped to its answer: acetophenone and methylamine give an N-methyl imine, with Again, Hard, Good and Easy buttons below', owner: 'capture', sections: ['blueberry'] },
+  bbPathway: { src: '/images/work/bb-pathway.webp', w: 1600, h: 1200, sm: '/images/work/bb-pathway-800.webp', smW: 800, alt: "The Blueberry pathway for Organic Chemistry II, Unit 1: a column of lesson nodes starting at allylic and resonance delocalization", owner: 'capture', sections: ['blueberry'] },
+  bbArrows: { src: '/images/work/bb-arrows.webp', w: 1600, h: 1200, sm: '/images/work/bb-arrows-800.webp', smW: 800, alt: "A curved arrow being drawn in Blueberry's trainer, pushing the allyl cation's pi bond toward the empty carbon", owner: 'capture', sections: ['blueberry'] },
+  bbMolecules: { src: '/images/work/bb-molecules.webp', w: 1600, h: 1200, sm: '/images/work/bb-molecules-800.webp', smW: 800, alt: "Blueberry's draw-the-product page for a Grignard addition: the starting material and conditions beside a molecule editor holding acetophenone", owner: 'capture', sections: ['blueberry'] },
   mechanismTrainer: { src: '/images/work/mechanism-trainer.webp', w: 1600, h: 1000, sm: '/images/work/mechanism-trainer-800.webp', smW: 800, alt: 'The Mechanism Trainer', owner: 'capture', sections: ['work'] },
   focusFamilyGuide: { src: '/images/work/focus-family-guide.webp', w: 1600, h: 1000, sm: '/images/work/focus-family-guide-800.webp', smW: 800, alt: 'The Focus Family Guide', owner: 'capture', sections: ['work'] },
-  secondBrain: { src: '/images/work/second-brain.webp', w: 1440, h: 900, alt: 'The Second Brain globe: every file on my machine as one node per folder and kind, linked by the references between them', owner: 'capture', sections: ['work'], gated: 'secondBrainShot', srcset: [{ src: '/images/work/second-brain-800.webp', w: 800 }, { src: '/images/work/second-brain.webp', w: 1440 }] }, // captured 2026-10-06 from the local app's 3D globe, Files panel closed
+  // Re-captured 2026-10-06 at Andrew's request ("make the second brain animated, like the actual
+  // site ... not include the file names, but keep the look"): one full 90s turn of the local app's
+  // globe, every label and panel hidden, stepped to 300 frames and played as a 15s seamless loop
+  // (scratchpad brain-video.mjs). The still is the loop's own frame, shown under reduced motion.
+  secondBrain: { src: '/images/work/second-brain-globe.webp', w: 1200, h: 750, alt: 'The Second Brain globe turning: every file on my machine as one node per folder and kind, linked by the references between them', owner: 'capture', sections: ['work'], gated: 'secondBrainShot', srcset: [{ src: '/images/work/second-brain-globe-800.webp', w: 800 }, { src: '/images/work/second-brain-globe.webp', w: 1200 }], video: '/media/work/second-brain-globe.webm' },
+  // Captured 2026-10-06 from the island game (island/src/interiors/chapel.js, room "circle") in
+  // headless SwiftShader Chrome via window.__island.enterInterior('chapel') and room.go('circle').
+  // Re-captured 2026-10-06 with the gold leader in the middle hidden (Andrew: it read as a cult).
+  // Shown small in #offclock's Bible study scene (Andrew asked for it there, 2026-10-06).
+  islandFocusFamily: { src: '/images/work/island-focus-family.webp', w: 1600, h: 1000, sm: '/images/work/island-focus-family-800.webp', smW: 800, alt: 'The Focus Family Circle room from my island game: advisors, officers and leaders seated in a ring, and two rows of students behind them', owner: 'capture', sections: ['offclock'] }, // [Z chapel] alt (needs sign-off)
   islandS3: {
     src: '/media/island/s3-3840.webp', w: 3840, h: 2160,
     srcset: [
@@ -716,8 +834,7 @@ export const MICROCOPY = {
   skip: 'Skip to content', // existing site
   menu: 'Menu', // UI
   close: 'Close', // UI
-  nav: ['Work', 'Impact', 'Experience', 'About', 'Contact', 'Island'], // section names [P] plus Impact (A8)
-  nowBuilding: 'NOW BUILDING', // zone name "Now Building" [Z now]
+  nav: ['Projects', 'Impact', 'Experience', 'About', 'Contact', 'Island'], // section names [P] plus Impact (A8)
   currently: 'currently:', // A2 (needs sign-off)
   visitBlueberry: 'Visit Blueberry', // existing [P] link "Visit site", renamed to name the target
   source: 'Source', // [P]

@@ -8,11 +8,11 @@ import { CountUp } from '@/components/site/work/count-up';
 import { Shot } from '@/components/site/work/shot';
 import './blueberry.css';
 
-// The Blueberry chapter (SITE-PLAN.md 4.4), style pass 2026-10-06. The dive above carries the
-// product headline; this chapter tells how it got here and what it is made of:
+// The Blueberry chapter (SITE-PLAN.md 4.4), style pass 2026-10-06. The product's slogan section
+// that used to sit above it was removed; this chapter tells how it got here and what it is made of:
 //   1. head:    a crushed two-line headline with stickers on it, the story at reading width,
 //               and the facts as count-up stickers beside it
-//   2. screens: a sky band; the three real captures, each zoomed to one readable region
+//   2. screens: a sky band; four real captures, each a feature mid-use, in a 2x2 grid
 //   3. stack:   the stack as pills in an ink marquee strip
 // The exploded phone and its "layer by layer" list were removed 2026-10-06 (Andrew: the layers
 // did not make sense); what replaces them is not decided yet.
@@ -25,7 +25,7 @@ import './blueberry.css';
 // A server component; TiltFrame, CountUp and the marquee are the only client parts.
 
 const FACTS = BB_FACTS.filter(fact => fact.value !== undefined);
-const SHOT_FILLS = ['apricot', 'card', 'berry-soft'] as const;
+const SHOT_FILLS = ['apricot', 'card', 'berry-soft', 'apricot'] as const;
 const FACT_FILLS = ['apricot', 'sky', 'berry-soft'] as const;
 // The band repeats the stack twice so one copy is wider than the screen and the loop never
 // shows a gap; screen readers get the list once, from the marquee's label.
@@ -59,7 +59,7 @@ export default function Blueberry() {
           {BB_SCREENS.map((screen, i) => (
             <li key={screen.caption} className="bb-shot" data-reveal>
               <div className="bb-shot-tile" data-fill={SHOT_FILLS[i]}>
-                <TiltFrame max={7} shift={10} layers={[{ depth: 0.6, node: <span className="bb-crop" data-screen={i}><Shot image={screen.image} sizes="(min-width: 760px) 60vw, 200vw" /></span> }]} />
+                <TiltFrame max={7} shift={10} layers={[{ depth: 0.6, node: <span className="bb-crop"><Shot image={screen.image} sizes="(min-width: 760px) 45vw, 90vw" /></span> }]} />
               </div>
               <a className="bb-route" href={screen.href} target="_blank" rel="noreferrer">
                 {screen.caption} <ArrowUpRight size={14} aria-hidden="true" />

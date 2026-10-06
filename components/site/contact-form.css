@@ -1,0 +1,26 @@
+/* The contact form (contact-form.tsx), inside the apricot footer card. Every selector starts
+   with .cf. Fields are card-coloured with the Slush 2px ink outline; labels speak in the small
+   mono voice of the eyebrows. Contrast on apricot: ink 12.61, berry-deep 10.04, error red
+   #8a1c2b 6.41. */
+.cf { --cf-bad:#8a1c2b; display:grid; gap:16px; max-inline-size:62ch; margin-top:16px; }
+.cf-title { font:700 clamp(20px,2.4cqi,28px)/1.15 var(--display); text-transform:uppercase; font-variant-ligatures:none; }
+.cf-pair { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:16px; }
+.cf-field { display:grid; gap:6px; align-content:start; }
+.cf-label { font:600 13px/1.4 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--on-2); }
+.cf :is(input, textarea) {
+  inline-size:100%; min-block-size:var(--hit); padding:10px 14px; border:var(--bw) solid var(--ink); border-radius:var(--r-control);
+  background:var(--card); color:var(--ink); font:500 18px/1.5 var(--body); box-shadow:0 3px 0 var(--ink);
+}
+.cf textarea { resize:vertical; min-block-size:140px; }
+.cf :is(input, textarea):disabled { opacity:.7; }
+.cf [data-invalid] :is(input, textarea) { border-color:var(--cf-bad); box-shadow:0 3px 0 var(--cf-bad); }
+.cf-error { min-block-size:1.5em; font:500 15px/1.5 var(--body); color:var(--cf-bad); }
+
+/* The honeypot: present for bots, never seen or reached by people. */
+.cf-bot { position:absolute; left:-10000px; inline-size:1px; block-size:1px; overflow:hidden; }
+
+.cf-foot { display:flex; flex-wrap:wrap; align-items:center; gap:12px 20px; }
+.cf-send:disabled { cursor:progress; opacity:.75; }
+.cf-status { display:inline-flex; align-items:center; gap:8px; min-block-size:1.5em; font:600 17px/1.5 var(--body); color:var(--on); }
+.cf-status[data-kind="error"] { color:var(--cf-bad); }
+.cf-status[data-kind="sent"] { color:var(--berry-deep); }

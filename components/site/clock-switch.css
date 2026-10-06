@@ -1,0 +1,27 @@
+/* The clock switch (components/site/clock-switch.tsx), after the manifesto's .mf-sw, drawn
+   smaller: a pill track with ON and OFF, an apricot knob with the Duolingo ink ledge that slides
+   under the current word. Colours come from the ground it sits on (--on, --ring). */
+
+.clock-switch { display:inline-flex; align-items:center; gap:12px; }
+.clock-switch .cs-label { font:700 15px/1 var(--display); letter-spacing:.02em; text-transform:uppercase; font-variant-ligatures:none; color:var(--on,var(--ink)); }
+.clock-switch .cs-sw {
+  --w:116px; --h:48px;
+  position:relative; display:grid; grid-template-columns:1fr 1fr; align-items:center;
+  width:var(--w); height:var(--h); padding:0; cursor:pointer;
+  border:2px solid var(--ink); border-radius:var(--r-pill); background:var(--card); color:var(--ink);
+  transition:background-color var(--dur-ui) var(--ease-ui);
+}
+.clock-switch .cs-sw[aria-checked="true"] { background:var(--berry-soft); }
+.clock-switch .cs-sw:focus-visible { outline:3px solid var(--ring,var(--berry)); outline-offset:3px; border-radius:var(--r-pill); }
+/* The words sit over the knob, so the current one reads on its apricot face (ink 12.6:1). */
+.clock-switch .cs-word { position:relative; z-index:3; font:700 15px/1 var(--body); text-transform:uppercase; text-align:center; translate:0 -1px; }
+.clock-switch .cs-knob {
+  position:absolute; z-index:2; top:3px; left:3px; width:calc(var(--w) / 2 - 5px); height:calc(var(--h) - 13px);
+  border:2px solid var(--ink); border-radius:var(--r-pill); background:var(--apricot);
+  box-shadow:0 3px 0 var(--ink);
+  translate:calc(var(--w) / 2 - 5px) 0;
+  transition:translate .6s var(--ease-spring),box-shadow var(--dur-press) ease-out,top var(--dur-press) ease-out;
+}
+.clock-switch .cs-sw[aria-checked="true"] .cs-knob { translate:0 0; }
+.clock-switch .cs-sw:active .cs-knob { box-shadow:0 0 0 var(--ink); top:6px; }
+html[data-motion="reduced"] .clock-switch :is(.cs-sw,.cs-knob) { transition:none; }

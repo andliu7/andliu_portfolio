@@ -16,6 +16,7 @@ export const ALLOWED_ORIGINS = [
   'https://andliu.dev',
   'https://www.andliu.dev',
   'http://localhost:3000', // dev only: remove before the first deploy if you never run it locally
+  'http://localhost:3001', // dev only: vinext falls back to 3001 when 3000 is taken
 ];
 
 export const LIMITS = {

@@ -66,3 +66,6 @@ html:not([data-motion="reduced"]) .ft[data-fits] { position:sticky; bottom:0; }
 .ft :is(a):focus-visible { outline:2px solid var(--berry-soft); outline-offset:2px; }
 html[data-motion="reduced"] .ft :is(.ft-links a,.ft-ico,.ft-btn) { transition:none; }
 html[data-motion="reduced"] .ft .ft-links a:is(:hover,:focus-visible,:active) { transform:none; }
+/* The social buttons expand from icon to word (components/site/social-button.tsx); their own
+   label margin spaces the word, so the button's gap would leave the collapsed icon off centre. */
+.ft-btn.sbtn { gap:0; padding-inline:13px; }

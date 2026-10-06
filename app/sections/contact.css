@@ -48,3 +48,8 @@ section.contact { padding-top:24px; overflow-x:clip; }
   .contact .ct-pill { font-size:26px; }
   .contact .ct-mq { margin-top:28px; }
 }
+/* GitHub and LinkedIn are expanding icon buttons (components/site/social-button.tsx) inside the
+   big outlined pills: the icon scales with the pill's type, the word slides out on hover. */
+.contact .ct-pill:has(.ct-social) { padding:0; }
+.contact .ct-social { min-height:var(--hit); padding:.16em .42em; color:inherit; font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:-.03em; }
+.contact .ct-social .sbtn-icon { width:.8em; height:.8em; }

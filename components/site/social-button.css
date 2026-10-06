@@ -1,0 +1,13 @@
+/* Expanding social buttons (components/site/social-button.tsx). An icon-only square at rest; the
+   word grows out of zero width beside the icon on hover and keyboard focus, as in the Focus Family
+   guide (.xlbl: max-width 0 to 9rem, opacity, margin). Touch screens have no hover, so the word
+   always shows there. The look (fill, outline, ledge) comes from the class the caller adds. */
+.sbtn { display:inline-flex; align-items:center; justify-content:center; gap:0; min-width:44px; min-height:44px; padding-inline:13px; text-decoration:none; }
+.sbtn .sbtn-icon { flex:none; }
+.sbtn .sbtn-label { max-width:0; opacity:0; overflow:hidden; white-space:nowrap; margin-left:0;
+  transition:max-width .35s var(--ease-out, ease), opacity .2s ease, margin-left .35s var(--ease-out, ease); }
+@media (hover:hover) { .sbtn:hover .sbtn-label { max-width:9rem; opacity:1; margin-left:8px; } }
+.sbtn:focus-visible .sbtn-label { max-width:9rem; opacity:1; margin-left:8px; }
+@media (hover:none) { .sbtn .sbtn-label { max-width:9rem; opacity:1; margin-left:8px; } }
+@media (prefers-reduced-motion:reduce) { .sbtn .sbtn-label { transition:none; } }
+html[data-motion="reduced"] .sbtn .sbtn-label { transition:none; }

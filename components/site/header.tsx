@@ -1,8 +1,9 @@
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { usePathname } from 'next/navigation';
 import { ArrowUpRight } from 'lucide-react';
 import { A11Y, BLUEBERRY, MICROCOPY, RESUME, SECTIONS } from '@/lib/site';
+import { Flame } from './flame/flame';
 import { Mark } from './mark';
 import { Menu } from './menu';
 import { PillFaces } from './pill-faces';
@@ -10,8 +11,9 @@ import { getSection, subscribeSection } from './section-state';
 
 // The fixed header (SITE-PLAN.md 6.1). Every control sits on an opaque surface with the ledge,
 // so it is never text on text.
-//   left    the AND/LIU mark (components/site/mark.tsx, his handle andliu), which flips on hover
-//           like a small FlipHeading and goes home
+//   left    the AND/LIU mark (components/site/mark.tsx, his handle andliu), which flips and
+//           dances on hover, focus and once on load, goes home, and burns in a small berry and
+//           apricot flame (components/site/flame/)
 //   centre  the current section's label in a pill (1200px and up), rolling when it changes; where
 //           a section has no label, the centre mark (Blueberry's flat berry) instead
 //   right   Résumé (the PDF, a new tab; 720px and up, the menu has it on phones), the berry
@@ -38,14 +40,19 @@ export function Header() {
   }, []);
 
   const { hidden, band } = useHideOnScroll();
+  const markRef = useRef<HTMLAnchorElement>(null);
+  useHello(markRef);
 
   return (
     // data-menu-open lifts the wordmark and the Visit Blueberry pill above the open menu, so the
     // header stays put while the menu covers the page (plan 6.1).
     <header className="site-header" data-menu-open={open ? '' : undefined} data-hidden={hidden ? '' : undefined} data-band={band ? '' : undefined}>
-      <a className="wordmark flip-head" href={home ? '#top' : '/'} aria-label={A11Y.home}>
-        <Mark />
-      </a>
+      {/* The flame's host span is the header's grid item now (.wordmark-host in globals.css). */}
+      <Flame className="wordmark-host" height={16} spread={7} radius={12}>
+        <a ref={markRef} className="wordmark flip-head" href={home ? '#top' : '/'} aria-label={A11Y.home}>
+          <Mark />
+        </a>
+      </Flame>
       <SectionLabel />
       <div className="header-right">
         <a className="pill pill-light header-resume" href={RESUME} target="_blank" rel="noreferrer">
@@ -72,6 +79,32 @@ export function Header() {
       {open && <Menu onClose={close} home={home} />}
     </header>
   );
+}
+
+// The mark says hello once: when the loader lifts (html.is-loaded), it borrows the director's tap
+// state, data-flipped, for 900ms, so the letters roll over and back and the card dances (CSS in
+// globals.css). Skipped under reduced motion.
+function useHello(ref: RefObject<HTMLAnchorElement | null>) {
+  useEffect(() => {
+    const d = document.documentElement;
+    let timer = 0;
+    const play = () => {
+      const el = ref.current;
+      if (!el || d.getAttribute('data-motion') === 'reduced') return;
+      el.setAttribute('data-flipped', '');
+      timer = window.setTimeout(() => el.removeAttribute('data-flipped'), 900);
+    };
+    const start = () => { timer = window.setTimeout(play, 350); };
+    if (d.classList.contains('is-loaded')) { start(); return () => window.clearTimeout(timer); }
+    // Not loaded yet: watch <html>'s class list until is-loaded lands, then play once.
+    const mo = new MutationObserver(() => {
+      if (!d.classList.contains('is-loaded')) return;
+      mo.disconnect();
+      start();
+    });
+    mo.observe(d, { attributes: true, attributeFilter: ['class'] });
+    return () => { mo.disconnect(); window.clearTimeout(timer); };
+  }, [ref]);
 }
 
 // hidden: the header should be out of the way, after scrolling down past the first 120px and

@@ -1,0 +1,11 @@
+/* The terrapin's lift rep (components/site/umd/terrapin.tsx). Prefix tp-.
+   Up 7px on the site's spring, a short hold at the top, then down on the same spring, which
+   overshoots a little below rest: the bar settling. One rep every 3.6s. */
+.tp { display:block; width:100%; height:auto; overflow:visible; }
+.tp .tp-lift { animation:tp-rep 3.6s var(--ease-spring) infinite; }
+@keyframes tp-rep {
+  0%, 18% { transform:translateY(0); }
+  42%, 58% { transform:translateY(-7px); }
+  84%, 100% { transform:translateY(0); }
+}
+html[data-motion="reduced"] .tp .tp-lift { animation:none; }

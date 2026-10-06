@@ -65,7 +65,7 @@
 .work .wk-chrome i:nth-child(2) { background: var(--sky); }
 .work .wk-chrome i:nth-child(3) { background: var(--berry-soft); }
 .work .wk-url { min-width: 0; margin-left: 8px; padding: 4px 12px; overflow: hidden; border-radius: var(--r-pill); background: var(--paper); font: 500 11px/1.2 var(--mono); letter-spacing: .02em; color: var(--ink-2); white-space: nowrap; text-overflow: ellipsis; font-variant-ligatures: none; }
-.work .wk-media :is(img, svg) { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; }
+.work .wk-media :is(img, svg, video) { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; }
 /* The sticker rides the front layer, overlapping the window's lower right corner. Its overhang
    (14px) is less than the panel's padding, so it is never clipped. */
 .work .wk-visual .tilt-layer:last-child { position: relative; pointer-events: none; }

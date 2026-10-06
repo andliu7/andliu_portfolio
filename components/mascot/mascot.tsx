@@ -16,6 +16,9 @@ import './mascot.css';
 //    to never feel late, loose enough to overshoot a hair and settle.
 //  - Over anything you can press it becomes an arrowhead, tip on the hotspot, tilted up and to
 //    the left like a classic cursor (a crossfade-and-scale morph, mascot.css).
+//  - Over reading text it becomes a slim berry I-beam centred on the hotspot (Andrew, 2026-10-06:
+//    a text cursor so highlighting makes sense), the same morph. It stays an I-beam while you
+//    drag out a selection, wherever the pointer wanders.
 //  - As a berry it leans into its travel, stretches when it moves fast, swings its calyx a beat
 //    late (follow-through), breathes, blinks, squashes when you press, gets sleepy after 8s and
 //    falls asleep after 20s; moving wakes it with a hop.
@@ -33,8 +36,16 @@ const PRESSABLE = [
   '.pill', '.square-btn', 'input[type="checkbox"]', 'input[type="radio"]', 'input[type="submit"]', 'input[type="button"]', 'input[type="range"]',
 ].join(', ');
 const TEXT_FIELD = 'input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="range"]), textarea, [contenteditable="true"]';
+// Reading text: the I-beam shows inside these, and over any element with words of its own.
+// (Reading the computed cursor is no help here: the berry sets cursor:none on everything.)
+const TEXT_BLOCK = ['p', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'figcaption', 'td'].join(', ');
 
-type Shape = 'berry' | 'arrow' | 'none';
+type Shape = 'berry' | 'arrow' | 'text' | 'none';
+
+const ownText = (el: Element) => Array.from(el.childNodes).some(n => n.nodeType === Node.TEXT_NODE && Boolean(n.textContent?.trim()));
+/** Text you could select: inside a reading block or holding words itself, and not user-select:none. */
+const readable = (el: Element) => (el.closest(TEXT_BLOCK) !== null || ownText(el)) && getComputedStyle(el).userSelect !== 'none';
+const selecting = () => { const sel = window.getSelection(); return Boolean(sel && !sel.isCollapsed); };
 
 /** A damped spring: value chases target. Stiffness k, damping c, mass m (per-second units). */
 class Spring {
@@ -58,6 +69,7 @@ export default function Mascot() {
   const [mood, setMood] = useState<BerryMood>('rest');
   const [blink, setBlink] = useState(false);
   const [shape, setShape] = useState<Shape>('berry');
+  const [prev, setPrev] = useState<Shape | null>(null); // the shape leaving, which plays its out-morph
   const [fresh, setFresh] = useState(true); // no morph animation until the first real change
   const posRef = useRef<HTMLDivElement>(null);
   const leanRef = useRef<HTMLDivElement>(null);
@@ -151,10 +163,12 @@ export default function Mascot() {
 
     const setTo = (next: Shape) => {
       if (next === current) return;
+      setPrev(current);
       current = next;
       setFresh(false);
       setShape(next);
     };
+    let dragging = false; // a mouse button is down: a selection may be being dragged out
 
     const onMove = (event: PointerEvent) => {
       if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
@@ -169,19 +183,27 @@ export default function Mascot() {
       }
       if (base === 'sleepy' || base === 'asleep') { base = 'rest'; playFlash('happy', 600); hop(8); }
       lastMove = performance.now();
+      // Dragging a selection out of a gap between words: become the I-beam as soon as text is caught.
+      if (dragging && current === 'berry' && selecting()) setTo('text');
       visible(current !== 'none');
     };
 
     // One delegated listener decides the shape for whatever is under the pointer.
     const onOver = (event: PointerEvent) => {
       const el = event.target as Element | null;
-      const next: Shape = !el ? 'berry' : el.closest(TEXT_FIELD) ? 'none' : el.closest(PRESSABLE) ? 'arrow' : 'berry';
+      let next: Shape = !el ? 'berry' : el.closest(TEXT_FIELD) ? 'none' : el.closest(PRESSABLE) ? 'arrow' : readable(el) ? 'text' : 'berry';
+      if (dragging && next !== 'none' && selecting()) next = 'text'; // mid-selection: keep the I-beam
       setTo(next);
       visible(next !== 'none');
     };
     // Leaving the window (or into an iframe, which has its own cursor): fade out.
     const onOut = (event: PointerEvent) => { if (!event.relatedTarget) visible(false); };
-    const onDown = (event: PointerEvent) => { if (event.pointerType === 'mouse' || event.pointerType === 'pen') press(); };
+    const onDown = (event: PointerEvent) => {
+      if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
+      dragging = true;
+      press();
+    };
+    const onUp = () => { dragging = false; };
 
     // Idle: sleepy after 8s, asleep after 20s (checked once a second, paused in a hidden tab).
     const idle = window.setInterval(() => {
@@ -210,6 +232,8 @@ export default function Mascot() {
     document.addEventListener('pointerover', onOver, { passive: true });
     document.addEventListener('pointerout', onOut, { passive: true });
     window.addEventListener('pointerdown', onDown, { passive: true });
+    window.addEventListener('pointerup', onUp, { passive: true });
+    window.addEventListener('pointercancel', onUp, { passive: true });
     return () => {
       cancelAnimationFrame(frame);
       window.clearInterval(idle);
@@ -218,13 +242,15 @@ export default function Mascot() {
       document.removeEventListener('pointerover', onOver);
       document.removeEventListener('pointerout', onOut);
       window.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
       offPeek(); offMood(); offIsland();
       root.removeAttribute('data-cursor'); // the native cursor comes back
     };
   }, []);
 
   return (
-    <div className="mascot" aria-hidden="true" data-mood={mood} data-shape={shape} data-fresh={fresh ? '' : undefined}>
+    <div className="mascot" aria-hidden="true" data-mood={mood} data-shape={shape} data-prev={prev ?? undefined} data-fresh={fresh ? '' : undefined}>
       <div className="mascot-pos" ref={posRef} style={{ opacity: 0 }}>
         <div className="mascot-berry" ref={leanRef}>
           <div className="mascot-shape">
@@ -251,6 +277,15 @@ export default function Mascot() {
               <path d="M0 0 L10.5 23 L0 16.5 Z" fill="var(--berry)" />
               <path d="M0 0 L10.5 23 L0 16.5 L-10.5 23 Z" fill="none" stroke="var(--ink)" strokeWidth="1.6" strokeLinejoin="miter" strokeMiterlimit="10" />
             </g>
+          </svg>
+        </div>
+        <div className="mascot-ibeam">
+          {/* The I-beam: a 22px bar with short serifs, centred on the hotspot (0,0) so a click
+              lands where the selection starts. Paper halo, ink edge, berry core, like the arrow. */}
+          <svg width="12" height="26" viewBox="-6 -13 12 26" aria-hidden="true">
+            <path d="M-3.5 -11 H3.5 M0 -11 V11 M-3.5 11 H3.5" fill="none" stroke="var(--paper)" strokeWidth="5" strokeLinecap="square" />
+            <path d="M-3.5 -11 H3.5 M0 -11 V11 M-3.5 11 H3.5" fill="none" stroke="var(--ink)" strokeWidth="3.4" strokeLinecap="square" />
+            <path d="M-3.5 -11 H3.5 M0 -11 V11 M-3.5 11 H3.5" fill="none" stroke="var(--berry)" strokeWidth="1.8" strokeLinecap="square" />
           </svg>
         </div>
       </div>
