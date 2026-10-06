@@ -1,0 +1,481 @@
+{
+ "generated": "2026-10-01T20:52:22.846Z",
+ "panels": [
+  {
+   "id": "brain",
+   "series": [
+    {
+     "id": "brain.memories",
+     "kind": "line",
+     "unit": "memories",
+     "dim": "date",
+     "points": [
+      {
+       "x": "2026-09-15",
+       "y": 3
+      },
+      {
+       "x": "2026-09-17",
+       "y": 4
+      },
+      {
+       "x": "2026-09-22",
+       "y": 7
+      },
+      {
+       "x": "2026-09-23",
+       "y": 10
+      },
+      {
+       "x": "2026-09-24",
+       "y": 15
+      },
+      {
+       "x": "2026-09-25",
+       "y": 17
+      },
+      {
+       "x": "2026-09-27",
+       "y": 19
+      },
+      {
+       "x": "2026-09-28",
+       "y": 27
+      },
+      {
+       "x": "2026-09-29",
+       "y": 32
+      },
+      {
+       "x": "2026-09-30",
+       "y": 40
+      },
+      {
+       "x": "2026-10-01",
+       "y": 51
+      }
+     ],
+     "source": "second-brain/second-brain/memories/*.md: every \"## [date] kind |\" heading; dates only, running total by day"
+    },
+    {
+     "id": "brain.kinds",
+     "kind": "bar",
+     "unit": "memories",
+     "dim": "kind",
+     "points": [
+      {
+       "x": "decision",
+       "y": 30
+      },
+      {
+       "x": "pref",
+       "y": 7
+      },
+      {
+       "x": "gotcha",
+       "y": 10
+      },
+      {
+       "x": "fact",
+       "y": 4
+      }
+     ],
+     "source": "second-brain/second-brain/memories/*.md: the same headings, counted by their kind field"
+    },
+    {
+     "id": "brain.retrieval",
+     "kind": "bar",
+     "unit": "tokens",
+     "dim": "arm",
+     "fields": {
+      "y": "tokens",
+      "y2": "correct"
+     },
+     "points": [
+      {
+       "x": "BRAIN",
+       "y": 12145,
+       "y2": 26,
+       "n": 27
+      },
+      {
+       "x": "fresh default session",
+       "y": 44634,
+       "y2": 20,
+       "n": 27
+      },
+      {
+       "x": "Claude Code auto memory",
+       "y": 170118,
+       "y2": 22,
+       "n": 27
+      },
+      {
+       "x": "qmd (BM25)",
+       "y": 12550,
+       "y2": 17,
+       "n": 27
+      }
+     ],
+     "source": "second-brain/second-brain/bench/results-history-summary.json, study \"bench.py hard suite\": tokens, correct and n per arm"
+    },
+    {
+     "id": "brain.latency",
+     "kind": "bar",
+     "unit": "ms",
+     "dim": "arm",
+     "fields": {
+      "y": "median",
+      "y2": "p90"
+     },
+     "points": [
+      {
+       "x": "BRAIN",
+       "y": 649.9,
+       "y2": 772.6
+      },
+      {
+       "x": "GREP",
+       "y": 531.1,
+       "y2": 607.7
+      },
+      {
+       "x": "GLOB",
+       "y": 193.3,
+       "y2": 280.8
+      }
+     ],
+     "source": "second-brain/second-brain/bench/results-speed-summary.json, arms BRAIN, GREP, GLOB: median_ms and p90_ms"
+    },
+    {
+     "id": "brain.toRead",
+     "kind": "bar",
+     "unit": "tokens",
+     "dim": "arm",
+     "scale": "log",
+     "points": [
+      {
+       "x": "BRAIN",
+       "y": 754
+      },
+      {
+       "x": "GREP",
+       "y": 48335
+      },
+      {
+       "x": "GLOB",
+       "y": 64852
+      }
+     ],
+     "source": "second-brain/second-brain/bench/results-speed-summary.json, arms BRAIN, GREP, GLOB: median_tokens_to_read"
+    },
+    {
+     "id": "brain.rows",
+     "kind": "stat",
+     "unit": "rows",
+     "value": 62102,
+     "source": "second-brain/second-brain/index.tsv: data rows after the header, streamed"
+    },
+    {
+     "id": "brain.files",
+     "kind": "stat",
+     "unit": "files",
+     "value": 5442,
+     "source": "second-brain/second-brain/index.tsv: distinct values in the first (path) column"
+    },
+    {
+     "id": "brain.wiki",
+     "kind": "stat",
+     "unit": "pages",
+     "value": 4,
+     "source": "second-brain/second-brain/wiki/pages/*.md: file count"
+    },
+    {
+     "id": "brain.commits",
+     "kind": "bar",
+     "unit": "commits",
+     "dim": "week",
+     "points": [
+      {
+       "x": "2026-08-17",
+       "y": 1
+      },
+      {
+       "x": "2026-08-24",
+       "y": 0
+      },
+      {
+       "x": "2026-08-31",
+       "y": 0
+      },
+      {
+       "x": "2026-09-07",
+       "y": 4
+      },
+      {
+       "x": "2026-09-14",
+       "y": 6
+      },
+      {
+       "x": "2026-09-21",
+       "y": 9
+      },
+      {
+       "x": "2026-09-28",
+       "y": 7
+      }
+     ],
+     "source": "git -C second-brain log --format=%ad --date=short, counted per week starting Monday"
+    }
+   ]
+  },
+  {
+   "id": "blueberry",
+   "series": [
+    {
+     "id": "bb.commits",
+     "kind": "line",
+     "unit": "commits",
+     "dim": "date",
+     "points": [
+      {
+       "x": "2026-07-31",
+       "y": 2
+      },
+      {
+       "x": "2026-08-01",
+       "y": 15
+      },
+      {
+       "x": "2026-08-02",
+       "y": 42
+      },
+      {
+       "x": "2026-08-03",
+       "y": 58
+      },
+      {
+       "x": "2026-08-04",
+       "y": 83
+      },
+      {
+       "x": "2026-08-05",
+       "y": 98
+      },
+      {
+       "x": "2026-08-06",
+       "y": 121
+      },
+      {
+       "x": "2026-08-07",
+       "y": 124
+      },
+      {
+       "x": "2026-08-08",
+       "y": 129
+      },
+      {
+       "x": "2026-08-10",
+       "y": 131
+      },
+      {
+       "x": "2026-08-11",
+       "y": 144
+      },
+      {
+       "x": "2026-08-12",
+       "y": 152
+      },
+      {
+       "x": "2026-08-13",
+       "y": 166
+      },
+      {
+       "x": "2026-08-14",
+       "y": 175
+      },
+      {
+       "x": "2026-08-15",
+       "y": 184
+      },
+      {
+       "x": "2026-08-16",
+       "y": 186
+      },
+      {
+       "x": "2026-08-18",
+       "y": 188
+      },
+      {
+       "x": "2026-08-19",
+       "y": 205
+      },
+      {
+       "x": "2026-08-20",
+       "y": 206
+      },
+      {
+       "x": "2026-08-21",
+       "y": 210
+      },
+      {
+       "x": "2026-09-07",
+       "y": 220
+      },
+      {
+       "x": "2026-09-08",
+       "y": 230
+      },
+      {
+       "x": "2026-09-09",
+       "y": 233
+      },
+      {
+       "x": "2026-09-10",
+       "y": 236
+      },
+      {
+       "x": "2026-09-11",
+       "y": 237
+      },
+      {
+       "x": "2026-09-12",
+       "y": 238
+      },
+      {
+       "x": "2026-09-17",
+       "y": 246
+      },
+      {
+       "x": "2026-09-18",
+       "y": 248
+      },
+      {
+       "x": "2026-09-22",
+       "y": 256
+      },
+      {
+       "x": "2026-09-23",
+       "y": 262
+      },
+      {
+       "x": "2026-09-24",
+       "y": 268
+      },
+      {
+       "x": "2026-09-25",
+       "y": 273
+      },
+      {
+       "x": "2026-09-27",
+       "y": 276
+      },
+      {
+       "x": "2026-09-28",
+       "y": 286
+      },
+      {
+       "x": "2026-09-29",
+       "y": 288
+      },
+      {
+       "x": "2026-09-30",
+       "y": 298
+      },
+      {
+       "x": "2026-10-01",
+       "y": 311
+      }
+     ],
+     "source": "git -C grignard/grignard-app-source log --format=%ad --date=short, running total by day"
+    },
+    {
+     "id": "bb.content",
+     "kind": "bar",
+     "unit": "items",
+     "dim": "item",
+     "points": [
+      {
+       "x": "decks",
+       "y": 18
+      },
+      {
+       "x": "questions",
+       "y": 415
+      },
+      {
+       "x": "lessons",
+       "y": 12
+      },
+      {
+       "x": "reactions",
+       "y": 43
+      }
+     ],
+     "source": "grignard/grignard-app-source/src/data: decks = DECKS in decks/index.ts, carbonyls expanded; questions = distinct q text across them; lessons = LESSON_TOPICS; reactions = REACTIONS in reactions.ts"
+    },
+    {
+     "id": "bb.packages",
+     "kind": "stat",
+     "unit": "packages",
+     "value": 6,
+     "source": "grignard/grignard-app-source/packages/*/package.json: count"
+    },
+    {
+     "id": "bb.tests",
+     "kind": "stat",
+     "unit": "files",
+     "value": 180,
+     "source": "grignard/grignard-app-source: *.test.* files under src/ and packages/, node_modules excluded"
+    },
+    {
+     "id": "bb.commitsTotal",
+     "kind": "stat",
+     "unit": "commits",
+     "value": 311,
+     "source": "git -C grignard/grignard-app-source log: commit count"
+    }
+   ]
+  },
+  {
+   "id": "trainer",
+   "series": [
+    {
+     "id": "trainer.commits",
+     "kind": "line",
+     "unit": "commits",
+     "dim": "date",
+     "points": [
+      {
+       "x": "2026-08-06",
+       "y": 2
+      },
+      {
+       "x": "2026-08-07",
+       "y": 25
+      },
+      {
+       "x": "2026-08-08",
+       "y": 28
+      }
+     ],
+     "source": "git -C mechanism_trainer log --format=%ad --date=short, running total by day"
+    },
+    {
+     "id": "trainer.commitsTotal",
+     "kind": "stat",
+     "unit": "commits",
+     "value": 28,
+     "source": "git -C mechanism_trainer log: commit count"
+    },
+    {
+     "id": "trainer.span",
+     "kind": "stat",
+     "unit": "days",
+     "value": 2,
+     "source": "git -C mechanism_trainer log: days from the first commit (2026-08-06) to the last (2026-08-08)"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,20 @@
+/* Fills for the closing stickers (components/site/closing/stickers.tsx). The .st base (2px ink
+   outline, rounded joins) comes from components/site/stickers/stickers.css. Decoration only. */
+
+.cl-stem { fill:none; }
+.cl-leaf { fill:var(--tile-leaf); }
+.cl-leaf-2 { fill:var(--tile-teal); }
+.cl-pot { fill:var(--tile-apricot); }
+.cl-pot-rim { fill:var(--apricot); }
+
+.cl-clock-rim { fill:var(--apricot); }
+.cl-clock-face { fill:var(--card); }
+.cl-tick { fill:var(--ink); stroke:none; }
+.cl-hands { fill:none; stroke-width:5; }
+.cl-pin { fill:var(--berry); }
+
+.cl-sparkle path { fill:var(--tile-gold); }
+
+.cl-rays { fill:none; stroke-width:4; }
+.cl-sun { fill:var(--apricot); }
+.cl-hill { fill:var(--tile-leaf); }

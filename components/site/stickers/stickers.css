@@ -1,0 +1,55 @@
+/* Sticker art (components/site/stickers/stickers.tsx). Flat fills from the :root tokens, every
+   outline ink at 2px. Decoration only: no fill here carries text, so no contrast pair applies
+   beyond the outline itself (ink on any token fill is 3:1 or better as non-text contrast). */
+
+.st { display:block; height:auto; overflow:visible; stroke:var(--ink); stroke-width:2; stroke-linejoin:round; stroke-linecap:round; }
+
+/* The blueberry, after Blueberry's own mark. The body is the Play dialect's berry-2 (#5b6fd6,
+   andliu skill: berry lifted for fills), so the dark eyes read on it (4.1:1) as they do on the
+   mark's bright blue; the calyx is --berry-deep, the eyes --ink with --card catchlights. */
+.st-berry { --berry-2:#5b6fd6; }
+.st-berry-body { fill:var(--berry-2); }
+.st-berry-shine { fill:var(--card); stroke:none; opacity:.35; }
+.st-crown path { fill:var(--berry-deep); stroke:none; }
+.st-crown-eye { fill:var(--ink); stroke:none; }
+.st-blush ellipse { fill:var(--tile-pink); stroke:none; opacity:.55; }
+.st-pupil { fill:var(--ink); stroke:none; }
+.st-glint { fill:var(--card); stroke:none; opacity:.9; }
+.st-smile { fill:none; stroke:var(--ink); stroke-width:2.2; vector-effect:none; }
+.st-eyes { transform-box:fill-box; transform-origin:center; animation:st-blink 4.6s var(--ease-ui) infinite; }
+@keyframes st-blink { 0%, 92%, 100% { transform:scaleY(1); } 95% { transform:scaleY(.1); } }
+
+/* The molecule: a skeletal formula on a round badge */
+.st-mol-badge { fill:var(--apricot); }
+.st-bonds { stroke-width:2.5; }
+.st-oxygen { fill:var(--berry); stroke:none; font:700 12px/1 var(--body); }
+
+/* The flashcard pair */
+.st-card-back { fill:var(--berry-soft); }
+.st-card-front { fill:var(--card); }
+.st-card-bar { fill:var(--ink); stroke:none; }
+.st-card-bar-2 { fill:var(--muted); }
+.st-arrow { stroke:var(--berry); stroke-width:3; }
+.st-arrow-head { fill:var(--berry); stroke:var(--berry); }
+
+/* The barbell */
+.st-bar-rod { fill:var(--muted); }
+.st-plate { fill:var(--berry); }
+.st-plate-2 { fill:var(--tile-gold); }
+
+/* The pan and its egg */
+.st-pan-body, .st-pan-handle { fill:var(--ink); }
+.st-pan-inner { fill:var(--ink-2); stroke:none; }
+.st-egg { fill:var(--card); }
+.st-yolk { fill:var(--tile-gold); }
+
+html[data-motion="reduced"] :is(.st-eyes, .st-kind, .st-brows, .st-blush-pair, .st-smile) { animation:none; }
+
+/* The motif behind the hero type: berry-soft under ink (13:1) and berry (4.9:1, display size) */
+.st-motif-body { fill:var(--berry-soft); }
+.st-motif-shine { stroke:var(--card); stroke-width:10; }
+.st-motif-crown path { fill:var(--berry); stroke:none; }
+
+/* The sprig */
+.st-sprig-stem { stroke-width:3; }
+.st-sprig-leaf { fill:var(--tile-leaf); }

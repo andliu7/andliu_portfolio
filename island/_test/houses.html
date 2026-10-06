@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Island Houses</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700&display=swap">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+  "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js"
+} }
+</script>
+<style>
+html,body{height:100%;margin:0}
+body{background:#f5cdb4;overflow:hidden;font:600 13px/1 Fredoka,system-ui,sans-serif;color:#1f2a44}
+#stage{position:fixed;inset:0}
+#stage canvas{display:block;width:100%;height:100%}
+#ui{position:fixed;top:12px;left:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;max-width:calc(100% - 24px)}
+#ui button,#ui select{appearance:none;border:0;background:#fffaf0;color:#1f2a44;font:inherit;padding:9px 13px;border-radius:999px;box-shadow:0 4px 0 #0000001f;cursor:pointer}
+#ui button[aria-pressed="true"]{background:#1f2a44;color:#fffaf0}
+#info{background:#fffaf0cc;padding:8px 12px;border-radius:999px}
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<div id="ui">
+  <button id="night" aria-pressed="false">Night</button>
+  <button id="feet" aria-pressed="false">Footprints</button>
+  <button id="doors" aria-pressed="false">Open doors</button>
+  <select id="view" aria-label="View"><option value="lineup">Lineup</option></select>
+  <span id="info"></span>
+</div>
+<script type="module">
+// Preview of src/world/houses.js: all 12 buildings in a 4 x 3 lineup under the island's own
+// renderer, lights and post chain (src/core/renderer.js), with orbit controls and a night toggle.
+// Test hooks on window.__houses: view(id | 'lineup', 'follow' | 'close'), night(bool),
+// footprints(bool), doors(angle), stats().
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { createRenderer } from '../src/core/renderer.js';
+import { createHelpers } from '../src/core/helpers.js';
+import { ZONES } from '../src/data/zones.js';
+import { buildHouse, doorParts, WINDOW_GLOW } from '../src/world/houses.js';
+
+const { renderer, scene, camera, sun } = createRenderer(THREE, document.getElementById('stage'));
+const H = createHelpers(THREE, scene);
+const ctx = { THREE, helpers:{ mat:H.mat } };   // all houses.js needs
+
+// The footprints map.js gives each building (see the map.js patch in the report).
+const FOOT = {
+  blueberry:{ w:12, d:8, h:6 }, brain:{ w:10, d:7, h:5 }, studio:{ w:10, d:7, h:5 }, dock:{ w:6, d:4, h:3.6 },
+  school:{ w:11, d:7, h:5 }, umd:{ w:11, d:6, h:5.2 }, clinic:{ w:12, d:8, h:5 }, chapel:{ w:7, d:9, h:5 },
+  skills:{ w:9, d:7, h:4.2 }, yard:{ w:11.4, d:5.5, h:3.4 }, now:{ w:9, d:6, h:4.5 }, contact:{ w:9.6, d:5.5, h:4.2 },
+};
+
+// ground: grass, and a paved pad under each building like the island's zone pads
+const grass = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshStandardMaterial({ color:'#96c655', roughness:.95 }));
+grass.rotation.x = -Math.PI/2; grass.receiveShadow = true; scene.add(grass);
+const pave = new THREE.MeshStandardMaterial({ color:'#f0c48e', roughness:.85 });
+
+const SX = 21, SZ = 23, spots = {}, houses = {};
+const hemi = scene.children.find(o => o.isHemisphereLight);
+ZONES.forEach((z, i) => {
+  const col = i % 4, row = Math.floor(i/4), x = (col - 1.5)*SX, zz = (row - 1)*SZ;
+  spots[z.id] = { x, z:zz };
+  const pad = new THREE.Mesh(new THREE.CylinderGeometry(9, 9, 0.06, 40), pave); pad.position.set(x, 0.03, zz); pad.receiveShadow = true; scene.add(pad);
+  const g = buildHouse(ctx, z, FOOT[z.id]); g.position.set(x, 0, zz); scene.add(g); houses[z.id] = g; g.userData.spot = z.id;
+  const lab = H.label(z.name, z.color, '#ffffff'); lab.scale.set(5, 1.45, 1); lab.position.set(x, 12.5, zz); lab.userData.spot = z.id; scene.add(lab);
+  // footprint outline: the collider box map.js adds
+  const f = FOOT[z.id], box = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(f.w, 0.1, f.d)), new THREE.LineBasicMaterial({ color:'#e5484d' }));
+  box.position.set(x, 0.1, zz); box.visible = false; box.userData.foot = true; scene.add(box);
+  const o = document.createElement('option'); o.value = z.id; o.textContent = z.name; document.getElementById('view').append(o);
+});
+
+// sun: the same offset art.js uses from the camera focus
+const focus = new THREE.Vector3();
+function aimSun(){ sun.position.set(focus.x + 32, 31, focus.z + 9); sun.target.position.copy(focus); }
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.maxPolarAngle = Math.PI*0.48;
+function view(id = 'lineup', mode = 'follow'){
+  // a close-up shows only its own building: the lineup is tighter than the island, so neighbours would block the follow camera
+  for(const o of scene.children) if(o.userData.spot) o.visible = id === 'lineup' || o.userData.spot === id;
+  if(id === 'lineup'){
+    focus.set(0, 0, 2); camera.fov = 38; camera.position.set(0, 70, 88); scene.fog.near = 150; scene.fog.far = 400;
+  } else {
+    const s = spots[id]; if(!s) return false;
+    // the island follow camera (camera.js 'follow': 24 m, pitch .72, fov 38) behind a player
+    // standing 4 m out from the door; 'close' is a lower, nearer look at the facade
+    const dist = mode === 'close' ? 15 : 24, pitch = mode === 'close' ? 0.45 : 0.72;
+    focus.set(s.x, mode === 'close' ? 2.5 : 0.8, s.z + (mode === 'close' ? 2 : 4)); camera.fov = 38;
+    camera.position.set(focus.x, focus.y + Math.sin(pitch)*dist, focus.z + Math.cos(pitch)*dist);
+    scene.fog.near = 52; scene.fog.far = 185;
+  }
+  camera.updateProjectionMatrix(); controls.target.copy(focus); controls.update(); aimSun(); return true;
+}
+document.getElementById('view').onchange = e => view(e.target.value);
+
+// night: dusk-blue sky, dim moonlight, windows glowing (and blooming)
+let isNight = false;
+const DAY = { bg:'#f5cdb4', hemi:['#a79cff', '#e0a27a', 1.02], sun:['#ffcf98', 2.75], grass:'#96c655' };
+const NIGHT = { bg:'#23234a', hemi:['#5a5fb0', '#3a2a50', 0.5], sun:['#9fb0ff', 0.55], grass:'#4f7a4a' };
+function night(on){
+  isNight = !!on; const P = isNight ? NIGHT : DAY;
+  scene.background.set(P.bg); scene.fog.color.set(P.bg);
+  hemi.color.set(P.hemi[0]); hemi.groundColor.set(P.hemi[1]); hemi.intensity = P.hemi[2];
+  sun.color.set(P.sun[0]); sun.intensity = P.sun[1]; grass.material.color.set(P.grass);
+  scene.traverse(o => { if(o.userData.nightGlow) Object.assign(o.material, (o.userData.glow || WINDOW_GLOW)[isNight ? 'night' : 'day']); });
+  document.getElementById('night').setAttribute('aria-pressed', isNight);
+  return isNight;
+}
+document.getElementById('night').onclick = () => night(!isNight);
+function footprints(on){ scene.traverse(o => { if(o.userData.foot) o.visible = !!on; }); document.getElementById('feet').setAttribute('aria-pressed', !!on); return !!on; }
+let feetOn = false; document.getElementById('feet').onclick = () => footprints(feetOn = !feetOn);
+// doors swing about their hinge edge; negative y turns the free edge outward and left
+function doors(angle){ for(const g of Object.values(houses)){ const { door } = doorParts(g); if(door) door.rotation.y = -angle; } document.getElementById('doors').setAttribute('aria-pressed', angle !== 0); return angle; }
+let doorsOn = false; document.getElementById('doors').onclick = () => doors((doorsOn = !doorsOn) ? 1.3 : 0);
+
+function stats(){
+  const out = {};
+  for(const [id, g] of Object.entries(houses)){
+    let draws = 0, tris = 0;
+    g.traverse(o => { if(o.isMesh){ draws++; const gg = o.geometry; tris += (gg.index ? gg.index.count : gg.attributes.position.count)/3; } });
+    out[id] = { draws, tris:Math.round(tris), spin:(g.userData.spin || []).length, wave:(g.userData.wave || []).length, door:!!doorParts(g).door };
+  }
+  return out;
+}
+
+// the same ambient motion map.js gives spinners and wavers
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(0.05, clock.getDelta()), t = clock.elapsedTime;
+  for(const g of Object.values(houses)){ for(const s of g.userData.spin || []) s.rotation.y += dt*0.6; for(const w of g.userData.wave || []) w.rotation.x = Math.sin(t*3)*0.3; }
+  controls.update(); focus.copy(controls.target); aimSun();
+  renderer.render(scene, camera);
+  document.getElementById('info').textContent = `${renderer.info.render.calls} draw calls`;
+});
+addEventListener('resize', () => { camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+
+view('lineup');
+window.__houses = { ready:true, view, night, footprints, doors, stats, houses, post:o => scene.userData.post.set(o) };
+</script>
+</body>
+</html>

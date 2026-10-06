@@ -1,0 +1,115 @@
+/* Projects (SITE-PLAN.md 4.5), style pass 2026-10-06. Every selector starts with .work, the
+   section root. Ground berry-deep: --on paper (12.58:1), --on-2 berry-soft (9.54:1), --kw apricot.
+   Spreads and cards are saturated sticker-fill panels (the Stage tile tokens) with a 1.5px ink
+   outline (Slush: outlines, no shadows). Each carries data-ground="paper" (berry buttons) and
+   then every text role inside is re-pointed to ink, because berry and paper both fail on these
+   fills: ink on tile-teal 5.52, tile-pink 5.43, tile-gold 7.54, tile-leaf 6.75, tile-apricot
+   7.11:1 (all AA). Body text stops at 48ch (Karla runs about 1.3 characters per ch: 60 to 64 per line, measured). Display type is Fira Code 700
+   (--display), small labels --mono.
+   Reduced motion is html[data-motion="reduced"] (see app/globals.css). */
+
+.work {
+  --ease-elastic: cubic-bezier(.34,1.56,.64,1);
+  --tile-line: 1.5px solid var(--ink);
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(56px, 7cqi, 112px);
+  padding: clamp(48px, 6cqi, 96px) var(--gutter) clamp(72px, 8cqi, 128px);
+  color: var(--on);
+  overflow-x: clip;
+}
+@supports (transition-timing-function: linear(0, 1)) {
+  .work { --ease-elastic: linear(0, .5737 7.6%, .8382 11.87%, .9463 14.19%, 1.0292 16.54%, 1.0886 18.97%, 1.1258 21.53%, 1.137 22.97%, 1.1424 24.48%, 1.1423 26.1%, 1.1366 27.86%, 1.1165 31.01%, 1.0507 38.62%, 1.0219 42.57%, .9995 46.99%, .9872 51.63%, .9842 58.77%, 1.0011 81.26%, 1); }
+}
+.work [data-fill="sky"] { background: var(--sky); }
+.work [data-fill="apricot"] { background: var(--apricot); }
+.work [data-fill="berry-soft"] { background: var(--berry-soft); }
+.work [data-fill="card"] { background: var(--card); }
+.work [data-fill="tile-teal"] { background: var(--tile-teal); }
+.work [data-fill="tile-gold"] { background: var(--tile-gold); }
+.work [data-fill="tile-pink"] { background: var(--tile-pink); }
+.work [data-fill="tile-leaf"] { background: var(--tile-leaf); }
+.work [data-fill="tile-apricot"] { background: var(--tile-apricot); }
+.work :is(.wk-spread, .wk-card) { --on: var(--ink); --on-2: var(--ink); --kw: var(--ink); --ring: var(--ink); }
+
+.work .wk-head { display: grid; gap: 10px; }
+.work .wk-head .flip-head { min-height: var(--hit); }
+
+/* ---------- the index ---------- */
+.work .wk-index { display: grid; padding: 0; margin: 0; list-style: none; }
+.work .wk-index > li { border-top: 1px solid color-mix(in srgb, var(--on) 20%, transparent); }
+.work .wk-index > li:last-child { border-bottom: 1px solid color-mix(in srgb, var(--on) 20%, transparent); }
+.work .wk-index .roll-row { align-items: center; gap: clamp(12px, 2cqi, 28px); min-height: 56px; padding: 12px 0; font: 700 clamp(24px, 3.3cqi, 48px)/.95 var(--display); letter-spacing: -.03em; text-transform: uppercase; font-variant-ligatures: none; }
+.work .wk-index .roll-a, .work .wk-index .roll-b { text-wrap: balance; }
+.work .wk-index .roll-row:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; border-radius: var(--r-control); }
+.work .wk-index-num { flex: 0 0 auto; min-width: 2.4ch; font: 500 14px/1 var(--mono); letter-spacing: .04em; color: var(--on-2); }
+/* Room above each copy for accents (RÉSUMÉ): the hidden copy's accent sits in its own padding,
+   below the visible copy's box, so it never peeks into the mask. */
+.work .wk-index .roll-a, .work .wk-index .roll-b { line-height: 1; padding-top: .2em; }
+.work .wk-index .roll-meta { flex: 0 0 clamp(180px, 20cqi, 240px); font: 500 12px/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--on-2); text-align: right; }
+/* The hover picture takes the kind label's place (it fades as the picture arrives), so it never
+   covers the title. */
+.work .wk-index .roll-aside { right: 0; top: 50%; margin-top: -58px; }
+.work .wk-thumb { display: block; width: 186px; aspect-ratio: 16 / 10; overflow: hidden; border: var(--tile-line); border-radius: 14px; background: var(--card); }
+.work .wk-thumb :is(img, svg) { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+@container (max-width: 759px) {
+  .work .wk-index .roll-row { flex-wrap: wrap; row-gap: 6px; align-items: baseline; font-size: clamp(24px, 7.4cqi, 34px); }
+  .work .wk-index .roll-mask { flex-basis: calc(100% - 4ch); }
+  .work .wk-index .roll-meta { flex: 1 0 100%; padding-left: calc(2.4ch + 12px); text-align: left; }
+  .work .wk-index .roll-aside { display: none; }
+}
+
+/* ---------- shared: the window, the sticker, the words ---------- */
+.work .wk-visual { min-width: 0; }
+.work .wk-window { overflow: hidden; border: var(--tile-line); border-radius: 20px; background: var(--card); }
+.work .wk-chrome { display: flex; align-items: center; gap: 7px; min-width: 0; padding: 10px 14px; border-bottom: var(--tile-line); }
+.work .wk-chrome i { flex: 0 0 auto; width: 11px; height: 11px; border: var(--tile-line); border-radius: 50%; background: var(--apricot); }
+.work .wk-chrome i:nth-child(2) { background: var(--sky); }
+.work .wk-chrome i:nth-child(3) { background: var(--berry-soft); }
+.work .wk-url { min-width: 0; margin-left: 8px; padding: 4px 12px; overflow: hidden; border-radius: var(--r-pill); background: var(--paper); font: 500 11px/1.2 var(--mono); letter-spacing: .02em; color: var(--ink-2); white-space: nowrap; text-overflow: ellipsis; font-variant-ligatures: none; }
+.work .wk-media :is(img, svg) { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; }
+/* The sticker rides the front layer, overlapping the window's lower right corner. Its overhang
+   (14px) is less than the panel's padding, so it is never clipped. */
+.work .wk-visual .tilt-layer:last-child { position: relative; pointer-events: none; }
+.work .wk-sticker { position: absolute; right: -14px; bottom: -14px; width: clamp(60px, 8cqi, 104px); rotate: 9deg; }
+.work .wk-sticker svg { width: 100%; height: auto; }
+
+.work .wk-text { display: grid; gap: 14px; justify-items: start; max-inline-size: 48ch; color: var(--ink); }
+.work .wk-num { font: 700 clamp(56px, 6cqi, 104px)/.8 var(--display); letter-spacing: -.05em; color: transparent; -webkit-text-stroke: 1.5px var(--ink); font-variant-ligatures: none; }
+.work .wk-title { font: 700 clamp(30px, 3.4cqi, 52px)/.95 var(--display); letter-spacing: -.035em; text-transform: uppercase; font-variant-ligatures: none; }
+/* The title is a link to itself (FlipHeading): at least a 44px target even on one short line. */
+.work .wk-title .flip-head { min-height: var(--hit); }
+.work .wk-kind { color: var(--ink); }
+.work .wk-lines { display: grid; gap: 12px; }
+.work .wk-lines p { font: 400 clamp(18px, 1.35cqi, 20px)/1.55 var(--body); color: var(--ink); }
+.work .wk-note { display: inline-block; padding: 8px 16px; border: var(--tile-line); border-radius: 18px; background: var(--paper); font: 400 17px/1.35 var(--body); rotate: -1.5deg; }
+.work .wk-tags { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0; list-style: none; }
+.work .wk-tag { display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border: var(--tile-line); border-radius: var(--r-pill); background: color-mix(in srgb, var(--paper) 70%, transparent); font: 500 12px/1 var(--mono); letter-spacing: .04em; text-transform: uppercase; font-variant-ligatures: none; }
+.work .wk-actions { margin-top: 6px; }
+
+/* ---------- the feature spreads ---------- */
+.work .wk-spreads, .work .wk-cards { padding: 0; margin: 0; list-style: none; }
+.work .wk-spreads { display: grid; gap: clamp(28px, 4cqi, 56px); }
+.work .wk-spread { display: grid; gap: clamp(24px, 3cqi, 40px); align-items: center; padding: clamp(20px, 3.4cqi, 52px); border: var(--tile-line); border-radius: 40px; scroll-margin-top: calc(var(--header-h) + 16px); }
+@container (max-width: 599px) { .work .wk-spread { border-radius: var(--r-tile); } }
+@container (min-width: 900px) {
+  .work .wk-spread { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); column-gap: clamp(32px, 4.5cqi, 72px); }
+  .work .wk-spread:nth-child(even) .wk-visual { order: 2; }
+}
+
+/* ---------- the other three, as sticker cards: two up, the odd one out runs full width with
+   its picture beside the words. Title is the hero; each card is as tall as its own content. ---------- */
+.work .wk-cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(20px, 2.6cqi, 36px); align-items: start; }
+.work .wk-card { display: grid; align-content: start; gap: clamp(20px, 2.4cqi, 32px); padding: clamp(20px, 2.6cqi, 40px); border: var(--tile-line); border-radius: clamp(28px, 3cqi, 40px); scroll-margin-top: calc(var(--header-h) + 16px); }
+.work .wk-card .wk-num { font-size: clamp(44px, 4cqi, 64px); }
+.work .wk-card .wk-title { font-size: clamp(30px, 3.6cqi, 56px); }
+.work .wk-card .wk-lines p { font-size: clamp(18px, 1.35cqi, 20px); }
+@container (min-width: 900px) {
+  .work .wk-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .work .wk-card:last-child:nth-child(odd) { grid-column: 1 / -1; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: clamp(32px, 4.5cqi, 72px); align-items: center; }
+}
+
+/* ---------- Entrances (Slush motion on the director's .is-in): panels spring in from behind ---------- */
+@keyframes wk-card { from { opacity: 0; transform: perspective(1200px) translate3d(2.5em, 0, 10em) rotateY(-16deg) scale(.86); } }
+.work :is(.wk-spread, .wk-card).is-in { animation: wk-card .85s var(--ease-elastic) both; }
+.work .wk-card:nth-child(2).is-in { animation-delay: 90ms; }
+.work .wk-card:nth-child(3).is-in { animation-delay: 180ms; }
+html[data-motion="reduced"] .work :is(.wk-spread, .wk-card) { animation: none !important; }

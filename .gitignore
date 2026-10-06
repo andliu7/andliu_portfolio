@@ -36,3 +36,9 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+/island/_shots/
+/public/island/
+/_ref/
+
+# TypeScript incremental build state
+*.tsbuildinfo

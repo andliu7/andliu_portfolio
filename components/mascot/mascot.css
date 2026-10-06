@@ -1,0 +1,80 @@
+/* The berry cursor (SITE-PLAN.md 7, A9, and Andrew's 2026-10-06 ask: the berry IS the cursor and
+   becomes an arrowhead over anything you can press). Every selector starts with .berry, .mascot
+   or html[data-cursor]. Only mounted with a fine pointer and full motion (mascot-slot.tsx). */
+
+/* ---------- The system cursor ----------
+   mascot.tsx sets html[data-cursor="berry"] while it is mounted and removes it when it unmounts
+   (the menu switch, Motion off, a touch screen), so the native cursor always comes back. Text
+   fields keep the native I-beam so the caret is easy to place. */
+html[data-cursor="berry"], html[data-cursor="berry"] * { cursor:none !important; }
+html[data-cursor="berry"] :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="button"]):not([type="submit"]), textarea, [contenteditable="true"]) { cursor:text !important; }
+html[data-cursor="berry"] select { cursor:default !important; }
+
+/* ---------- Faces ---------- */
+.berry { display:block; overflow:visible; }
+.berry :is(.berry-eyes, .berry-kind, .berry-closed, .berry-smile, .berry-o, .berry-cheer, .berry-flat, .berry-blush) {
+  transform-box:fill-box; transform-origin:center;
+  transition:opacity 120ms ease-out, transform 260ms var(--ease-spring);
+}
+.berry .berry-blush { opacity:.4; }
+.berry :is(.berry-kind, .berry-closed, .berry-o, .berry-cheer, .berry-flat) { opacity:0; }
+/* Blink: the open eyes squeeze to a line for one beat (mascot.tsx holds data-blink 120ms). */
+.berry[data-blink] .berry-eyes { transform:scaleY(.1); transition-duration:60ms; }
+/* happy, cheer, shy: kind arcs and more blush */
+.berry:is([data-mood="happy"], [data-mood="cheer"], [data-mood="shy"]) .berry-eyes { opacity:0; }
+.berry:is([data-mood="happy"], [data-mood="cheer"], [data-mood="shy"]) .berry-kind { opacity:1; }
+.berry:is([data-mood="happy"], [data-mood="cheer"]) .berry-blush { opacity:.7; }
+.berry[data-mood="shy"] .berry-blush { opacity:.95; transform:scale(1.2); }
+.berry[data-mood="cheer"] .berry-smile { opacity:0; }
+.berry[data-mood="cheer"] .berry-cheer { opacity:1; }
+/* curious: a small "o" */
+.berry[data-mood="curious"] .berry-smile { opacity:0; }
+.berry[data-mood="curious"] .berry-o { opacity:1; }
+/* sleepy: heavy lids and a flat mouth; asleep: closed arcs */
+.berry[data-mood="sleepy"] .berry-eyes { transform:scaleY(.4); }
+.berry:is([data-mood="sleepy"], [data-mood="asleep"]) .berry-smile { opacity:0; }
+.berry:is([data-mood="sleepy"], [data-mood="asleep"]) .berry-flat { opacity:1; }
+.berry[data-mood="asleep"] .berry-eyes { opacity:0; }
+.berry[data-mood="asleep"] .berry-closed { opacity:1; }
+
+/* ---------- The cursor (mascot.tsx) ----------
+   .mascot-pos sits exactly on the pointer (the hotspot) and is moved by the follow spring.
+   Inside it, two shapes share the hotspot:
+     the berry   centred on the hotspot; lean (spring) > crossfade shape > hop and press squash
+                 (element.animate) > travel stretch (spring) > breathing (CSS) > the svg
+     the arrow   an arrowhead whose tip is the hotspot
+   The morph between them is a crossfade-and-scale: the leaving shape squashes and shrinks into
+   the hotspot while the arriving one springs out of it with an overshoot (Duolingo's squash then
+   overshoot), both in about 260ms. Switched by data-shape on .mascot. */
+.mascot { position:fixed; z-index:1000; left:0; top:0; width:0; height:0; pointer-events:none; }
+.mascot-pos { position:absolute; left:0; top:0; width:0; height:0; will-change:transform; }
+.mascot-berry { position:absolute; left:-16px; top:-17px; width:32px; height:32px; transform-origin:50% 53%; }
+.mascot-shape { width:100%; height:100%; transform-origin:50% 53%; }
+.mascot-squash, .mascot-hop { width:100%; height:100%; transform-origin:50% 100%; }
+.mascot-breathe { width:100%; height:100%; transform-origin:50% 100%; animation:mascot-breathe 2.8s ease-in-out infinite; }
+.mascot[data-mood="asleep"] .mascot-breathe { animation-duration:4.4s; }
+@keyframes mascot-breathe { 0%, 100% { transform:none; } 50% { transform:scale(1.04, .96); } }
+
+/* The arrowhead: tip at (0,0) of its box, so the box's top-left corner is the hotspot. */
+.mascot-arrow { position:absolute; left:0; top:0; width:0; height:0; overflow:visible; transform-origin:0 0; opacity:0; transform:scale(.2); }
+.mascot-arrow svg { display:block; overflow:visible; max-width:none; } /* globals caps svg at 100% of a 0px box */
+
+/* Berry to arrow */
+.mascot[data-shape="arrow"] .mascot-shape { animation:mascot-berry-out 200ms ease-in forwards; }
+.mascot[data-shape="arrow"] .mascot-arrow { animation:mascot-arrow-in 280ms var(--ease-spring) forwards; }
+/* Arrow to berry */
+.mascot[data-shape="berry"] .mascot-shape { animation:mascot-berry-in 300ms var(--ease-spring) both; }
+.mascot[data-shape="berry"] .mascot-arrow { animation:mascot-arrow-out 160ms ease-in both; }
+@keyframes mascot-berry-out { 0% { transform:none; opacity:1; } 35% { transform:scale(1.18, .78); opacity:1; } 100% { transform:scale(.15); opacity:0; } }
+@keyframes mascot-berry-in { 0% { transform:scale(.2); opacity:0; } 60% { transform:scale(1.12, .9); opacity:1; } 100% { transform:none; opacity:1; } }
+@keyframes mascot-arrow-in { 0% { transform:scale(.2); opacity:0; } 100% { transform:none; opacity:1; } }
+@keyframes mascot-arrow-out { 0% { transform:none; opacity:1; } 100% { transform:scale(.3); opacity:0; } }
+/* Until the berry has left once, it just shows (no arrive pop on the first paint). */
+.mascot[data-fresh] .mascot-shape, .mascot[data-fresh] .mascot-arrow { animation:none; }
+
+/* The sleep "z": drifts up from the calyx while asleep. */
+.mascot-z { position:absolute; left:26px; top:-8px; opacity:0; }
+.mascot[data-mood="asleep"][data-shape="berry"] .mascot-z { animation:mascot-z 2.4s ease-out infinite; }
+@keyframes mascot-z { 0% { opacity:0; transform:translate(0, 6px) scale(.6); } 25% { opacity:1; } 100% { opacity:0; transform:translate(10px, -16px) scale(1.1); } }
+
+html[data-motion="reduced"] .mascot { display:none; }

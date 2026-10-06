@@ -1,0 +1,28 @@
+/* The island finale (app/sections/island.tsx, plan 4.10). Every selector starts at .island.
+   Prefix il-, never isl-: the .isl* rules in globals.css belong to the old, unused
+   app/island-section.tsx. */
+.island { display:flex; flex-direction:column; align-items:center; margin-top:0; padding:8px var(--gutter) 0; background:var(--ground); color:var(--on); }
+
+.island .il-window { width:100%; display:grid; grid-template-columns:minmax(0,40fr) minmax(0,60fr); gap:clamp(24px,3.4vw,56px); align-items:center;
+  padding:clamp(24px,3.4vw,52px); border-radius:var(--card-r); background:var(--berry); color:var(--on); }
+.island .il-text { display:flex; flex-direction:column; align-items:flex-start; gap:20px; min-width:0; }
+.island .il-title { font-size:clamp(44px,6vw,92px); line-height:.94; } /* room for the accents on RÉSUMÉ */
+.island .il-tagline { max-inline-size:30ch; font:500 clamp(19px,1.6vw,23px)/1.45 var(--body); color:var(--on); }
+.island .il-go { margin-top:8px; }
+
+/* The poster, framed as a sticker print: 2px ink outline, a slight turn. */
+.island .il-shot { margin:0; min-width:0; }
+.island .il-shot img { width:100%; height:auto; aspect-ratio:16 / 9; object-fit:cover; border-radius:20px; border:2px solid var(--ink); rotate:1.5deg; transition:rotate .6s var(--ease-spring); }
+@media (hover:hover) and (pointer:fine) {
+  .island .il-window:hover .il-shot img { rotate:0deg; }
+}
+html[data-motion="reduced"] .island .il-shot img { transition:none; }
+
+/* The end strip: the last words on the page. */
+.island .il-end { display:grid; justify-items:center; gap:6px; padding:44px 0 52px; text-align:center; color:var(--on-2); }
+.island .il-end-line { font:500 20px/1.45 var(--body); color:var(--on); }
+
+@media (max-width:860px) {
+  .island .il-window { grid-template-columns:minmax(0,1fr); }
+  .island .il-shot img { rotate:0deg; }
+}

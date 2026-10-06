@@ -1,0 +1,212 @@
+/* The chat dock (SITE-PLAN.md 6.2 and 6.3). Every selector starts with .chat- or html.chat-vt.
+   The launcher's base rule (.chat-launcher) and html[data-chat="docked"] main { padding-right }
+   live in app/globals.css; this file adds the rest.
+   Reduced motion is html[data-motion="reduced"], never the media query (the BOOT script sets it). */
+
+/* ---------- Launcher ---------- */
+.chat-glyph { width:30px; height:30px; flex:none; }
+/* While the panel is open or docked the launcher steps out (the panel has its own close), and
+   leaves the tab order too (visibility, not display, so it keeps its box for the transition's
+   origin and the header row does not shift). */
+html[data-chat] .chat-launcher { visibility:hidden; }
+
+/* The launcher sits in the header's right group (chat-dock.tsx portals it into #hdr-ask); its
+   pill, outline, lip and roll come from the pressables block in app/globals.css. */
+.chat-launcher .chat-glyph { transition:transform 420ms var(--ease-spring); }
+@media (hover:hover) { .chat-launcher:hover .chat-glyph { transform:rotate(-12deg) scale(1.08); } }
+html[data-motion="reduced"] .chat-launcher .chat-glyph { transition:none; transform:none; }
+
+/* ---------- The berry (chat-berry.tsx) ----------
+   One face, five moods. Open eyes blink every few seconds; happy and shy close them into kind
+   arcs with blush; thinking looks up with a small "o"; reading looks down toward the box. */
+.chat-berry { display:block; overflow:visible; }
+.chat-berry :is(.chat-berry-eyes, .chat-berry-kind, .chat-berry-smile, .chat-berry-o, .chat-berry-blush) { transform-box:fill-box; transform-origin:center; transition:opacity 160ms ease-out, transform 220ms var(--ease-spring); }
+.chat-berry .chat-berry-kind, .chat-berry .chat-berry-o, .chat-berry .chat-berry-blush { opacity:0; }
+.chat-berry .chat-berry-eyes { animation:chat-blink 4.8s infinite; }
+.chat-berry:is([data-mood="happy"], [data-mood="shy"]) .chat-berry-eyes { opacity:0; animation:none; }
+.chat-berry:is([data-mood="happy"], [data-mood="shy"]) .chat-berry-kind { opacity:1; }
+.chat-berry[data-mood="happy"] .chat-berry-blush { opacity:.5; }
+.chat-berry[data-mood="shy"] .chat-berry-blush { opacity:.85; }
+.chat-berry[data-mood="thinking"] .chat-berry-eyes { transform:translate(1px, -2px); }
+.chat-berry[data-mood="thinking"] .chat-berry-smile { opacity:0; }
+.chat-berry[data-mood="thinking"] .chat-berry-o { opacity:1; }
+.chat-berry[data-mood="reading"] .chat-berry-eyes { transform:translate(-1px, 2px); }
+@keyframes chat-blink { 0%, 93%, 100% { transform:none; } 96% { transform:scaleY(.1); } }
+@keyframes chat-bob { 0%, 100% { transform:none; } 50% { transform:translateY(-3px) rotate(-4deg); } }
+
+/* ---------- Panel: the shared surface ---------- */
+.chat-panel {
+  position:fixed; z-index:140; display:flex; flex-direction:column; min-height:0;
+  color:var(--paper);
+  /* A static sky: a little of --sky in the top corner, then berry-deep. Paper text stays above
+     12:1 everywhere on it. No WebGL. */
+  background:
+    radial-gradient(110% 60% at 100% 0%, color-mix(in srgb, var(--sky) 16%, var(--berry-deep)) 0%, transparent 70%),
+    radial-gradient(90% 50% at 0% 100%, color-mix(in srgb, var(--berry) 45%, var(--berry-deep)) 0%, transparent 70%),
+    var(--berry-deep);
+  font:400 16px/1.5 var(--body);
+  view-transition-name:chat;
+  animation:chat-slide-x 320ms var(--ease-spring) both;
+}
+
+/* 1100px and up: overlay or docked, the right edge, 380px, full height under the header. The
+   right-hand shadow fills the sliver the spring's overshoot would otherwise uncover. */
+.chat-panel[data-mode="overlay"], .chat-panel[data-mode="docked"] {
+  top:calc(var(--header-h) + 20px); right:0; bottom:0; width:380px;
+  border-radius:var(--r-panel) 0 0 0;
+  box-shadow:-8px 0 0 var(--ledge), 48px 0 0 var(--berry-deep);
+}
+
+/* Below 1100px: a full-height modal sheet over everything but the loader and the jump veil. */
+.chat-panel[data-mode="sheet"] {
+  inset:0; z-index:260;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  animation-name:chat-slide-y;
+}
+
+@keyframes chat-slide-x { from { transform:translateX(100%); } to { transform:none; } }
+@keyframes chat-slide-y { from { transform:translateY(100%); } to { transform:none; } }
+@keyframes chat-fade { from { opacity:0; } to { opacity:1; } }
+
+/* During a view transition the snapshot animates the panel (::view-transition-new(chat)), so the
+   live element must not animate as well. */
+html.chat-vt .chat-panel { animation:none; }
+html[data-motion="reduced"] .chat-panel { animation:chat-fade 150ms linear both; }
+
+/* ---------- Header ---------- */
+.chat-head { display:flex; flex-wrap:wrap; align-items:center; gap:10px 12px; padding:14px 16px 12px; border-bottom:1px solid color-mix(in srgb, var(--paper) 16%, transparent); }
+.chat-head-berry { width:40px; height:40px; flex:none; }
+.chat-head-berry[data-mood="thinking"] { animation:chat-bob 900ms ease-in-out infinite; }
+.chat-title { flex:1 1 auto; margin:0; font:700 18px/1.1 var(--display); letter-spacing:-.01em; text-transform:uppercase; font-variant-ligatures:none; }
+.chat-close { flex:none; display:inline-grid; place-items:center; width:var(--hit); height:var(--hit); border:0; border-radius:var(--r-control); background:var(--card); color:var(--ink); box-shadow:0 3px 0 var(--ledge); cursor:pointer; transition:transform .09s ease-out, box-shadow .09s ease-out; }
+.chat-close:active { transform:translateY(3px); box-shadow:none; }
+.chat-close svg { width:18px; height:18px; }
+.chat-controls { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; width:100%; }
+.chat-controls .switch { color:var(--paper); }
+.chat-controls .switch:disabled { opacity:.55; cursor:not-allowed; }
+.chat-mode { font:600 12px/1 var(--display); letter-spacing:.06em; text-transform:uppercase; color:var(--berry-soft); }
+
+/* ---------- One scrolling column: the hello, the conversation, the chips ---------- */
+.chat-scroll { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:0 16px 12px; }
+
+/* The hello: three real screenshots fanned out behind the berry, then his name and line. They
+   fan out from a stack and the berry pops up in front each time the panel opens. */
+.chat-hello { display:grid; justify-items:center; padding:22px 0 6px; text-align:center; }
+.chat-fan { position:relative; width:100%; max-width:300px; height:150px; }
+.chat-fan-img {
+  --spread:calc(var(--i) - 1);
+  position:absolute; left:50%; top:18px; width:46%; height:auto; aspect-ratio:16 / 10; object-fit:cover;
+  border-radius:12px; border:3px solid var(--card); box-shadow:0 5px 0 var(--ledge);
+  transform:translateX(calc(-50% + var(--spread) * 62%)) rotate(calc(var(--spread) * 9deg));
+  animation:chat-fan 620ms var(--ease-spring) both; animation-delay:calc(80ms + var(--i) * 60ms);
+}
+.chat-fan-img:nth-child(2) { z-index:1; top:6px; }
+.chat-hello-berry { position:absolute; z-index:2; left:50%; bottom:-6px; width:78px; height:78px; margin-left:-39px; animation:chat-pop 560ms var(--ease-spring) 240ms both, chat-bob 2.6s ease-in-out 1s infinite; }
+@keyframes chat-fan { from { transform:translateX(-50%) rotate(0deg); opacity:0; } }
+@keyframes chat-pop { from { transform:translateY(24px) scale(.4); opacity:0; } }
+.chat-hello-name { margin:14px 0 0; font:700 clamp(28px, 8vw, 36px)/1 var(--display); letter-spacing:-.02em; text-transform:uppercase; font-variant-ligatures:none; color:var(--paper); }
+.chat-hello-line { margin:8px 0 0; max-width:30ch; font:400 16px/1.4 var(--body); color:var(--berry-soft); }
+
+.chat-log { margin:0; padding:14px 0 0; list-style:none; display:flex; flex-direction:column; gap:14px; }
+.chat-row { display:flex; align-items:flex-end; gap:8px; animation:chat-rise 320ms var(--ease-out) both; }
+.chat-row[data-role="user"] { justify-content:flex-end; }
+.chat-avatar { width:32px; height:32px; flex:none; margin-bottom:2px; }
+.chat-bubbles { display:grid; gap:8px; max-width:calc(100% - 40px); min-width:0; }
+.chat-row[data-role="user"] .chat-bubbles { max-width:86%; }
+.chat-msg { padding:10px 14px; border-radius:18px; white-space:pre-wrap; overflow-wrap:anywhere; }
+.chat-row[data-role="user"] .chat-msg { background:var(--berry); color:#fff; border-bottom-right-radius:6px; box-shadow:0 3px 0 var(--ledge); }
+.chat-row[data-role="assistant"] .chat-msg { background:var(--card); color:var(--ink); border-bottom-left-radius:6px; box-shadow:0 3px 0 var(--ledge); }
+.chat-note { display:block; margin-bottom:6px; font:600 12px/1.35 var(--display); letter-spacing:.02em; color:var(--berry); }
+@keyframes chat-rise { from { transform:translateY(10px); opacity:0; } }
+
+/* The three dots while the first words are on their way. */
+.chat-typing { display:inline-flex; gap:5px; padding:6px 0; }
+.chat-typing i { width:7px; height:7px; border-radius:50%; background:var(--berry); animation:chat-dot 1s ease-in-out infinite; }
+.chat-typing i:nth-child(2) { animation-delay:.15s; }
+.chat-typing i:nth-child(3) { animation-delay:.3s; }
+@keyframes chat-dot { 0%,80%,100% { opacity:.3; transform:none; } 40% { opacity:1; transform:translateY(-3px); } }
+
+/* The card under an answer: real screenshots and the links for that topic. */
+.chat-extra { display:grid; gap:8px; animation:chat-rise 360ms var(--ease-spring) both; }
+.chat-shots { display:grid; gap:6px; }
+.chat-shots[data-count="3"] { grid-template-columns:repeat(3, minmax(0, 1fr)); }
+.chat-shot { display:block; width:100%; height:auto; aspect-ratio:16 / 10; object-fit:cover; border-radius:12px; border:3px solid var(--card); box-shadow:0 4px 0 var(--ledge); }
+.chat-links { display:flex; flex-wrap:wrap; gap:8px; }
+.chat-link { display:inline-flex; align-items:center; gap:6px; min-height:var(--hit); padding:0 14px; border-radius:var(--r-pill); background:var(--apricot); color:var(--ink); box-shadow:0 4px 0 var(--apricot-deep); font:600 13px/1 var(--display); letter-spacing:.04em; text-transform:uppercase; text-decoration:none; transition:transform .09s ease-out, box-shadow .09s ease-out; }
+.chat-link svg { width:13px; height:13px; }
+.chat-link:active { transform:translateY(4px); box-shadow:none; }
+
+/* The suggestions not asked yet, offered after the greeting and again after every answer. */
+.chat-chips { display:flex; flex-wrap:wrap; gap:8px; margin:0; padding:16px 0 4px 40px; list-style:none; }
+.chat-chips li { animation:chat-rise 320ms var(--ease-spring) both; }
+.chat-chips li:nth-child(2) { animation-delay:50ms; }
+.chat-chips li:nth-child(3) { animation-delay:100ms; }
+.chat-chips li:nth-child(4) { animation-delay:150ms; }
+.chat-chip { min-height:var(--hit); padding:0 16px; border:2px solid color-mix(in srgb, var(--paper) 40%, transparent); border-radius:var(--r-pill); background:transparent; color:var(--paper); font:400 15px/1.2 var(--body); cursor:pointer; transition:background var(--dur-ui) ease-out, color var(--dur-ui) ease-out, border-color var(--dur-ui) ease-out, transform .09s ease-out; }
+.chat-chip:hover { background:var(--card); color:var(--ink); border-color:var(--card); }
+.chat-chip:active { transform:translateY(2px); }
+
+/* ---------- Composer ---------- */
+.chat-form { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:8px 10px; padding:10px 16px 16px; border-top:1px solid color-mix(in srgb, var(--paper) 16%, transparent); }
+.chat-input { width:100%; min-height:var(--hit); max-height:160px; padding:11px 14px; border:0; border-radius:var(--r-control); background:var(--card); color:var(--ink); font:400 16px/1.4 var(--body); resize:none; field-sizing:content; }
+.chat-input::placeholder { color:var(--muted); }
+.chat-send { display:inline-grid; place-items:center; width:var(--hit); height:var(--hit); border:0; border-radius:var(--r-control); background:var(--apricot); color:var(--ink); box-shadow:0 4px 0 var(--apricot-deep); cursor:pointer; transition:transform .09s ease-out, box-shadow .09s ease-out, background var(--dur-ui) ease-out, color var(--dur-ui) ease-out; }
+.chat-send:active { transform:translateY(4px); box-shadow:0 0 0 var(--apricot-deep); }
+/* Disabled reads as "nothing to send yet", in the panel's own colours: an outlined square with a
+   berry-soft arrow (about 10:1 on berry-deep), no fill and no ledge. */
+.chat-send:disabled { background:transparent; color:var(--berry-soft); box-shadow:inset 0 0 0 2px color-mix(in srgb, var(--berry-soft) 45%, transparent); cursor:not-allowed; transform:none; }
+.chat-send svg { width:20px; height:20px; }
+.chat-count { grid-column:1 / -1; font:500 12px/1 var(--display); letter-spacing:.04em; color:var(--berry-soft); font-variant-numeric:tabular-nums; }
+
+.chat-sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+
+/* Reduced motion: nothing bobs, blinks, fans or rises; the face still changes. */
+html[data-motion="reduced"] :is(.chat-typing i, .chat-fan-img, .chat-hello-berry, .chat-row, .chat-extra, .chat-chips li, .chat-head-berry, .chat-berry-eyes) { animation:none; }
+html[data-motion="reduced"] .chat-berry * { transition:none; }
+html[data-motion="reduced"] .chat-typing i { opacity:.6; }
+
+/* ---------- The god's-eye zoom-out (plan 6.3) ----------
+   Open: the page you were reading (old root) is the ground falling away as the camera rises and
+   tilts to look down; the page with the panel (new root) is revealed through halftone dots that
+   grow out of the launcher's corner; the panel (its own snapshot, view-transition-name: chat)
+   slides in from the right. Close runs the same three in reverse.
+   --chat-ox / --chat-oy are the launcher's centre in px, set on <html> by chat-dock.tsx; the
+   ::view-transition pseudo-elements inherit them from <html>. */
+@property --chat-dot { syntax:'<length>'; inherits:false; initial-value:0px; }
+
+@keyframes chat-camera-rise { from { transform:none; } to { transform:perspective(1200px) rotateX(8deg) scale(.86); } }
+@keyframes chat-halftone {
+  from { --chat-dot:0px; clip-path:circle(0px at var(--chat-ox,100%) var(--chat-oy,100%)); }
+  to { --chat-dot:11px; clip-path:circle(150vmax at var(--chat-ox,100%) var(--chat-oy,100%)); }
+}
+@keyframes chat-slide-out { from { transform:none; } to { transform:translateX(100%); } }
+
+html.chat-vt::view-transition-old(root), html.chat-vt::view-transition-new(root) { mix-blend-mode:normal; transform-origin:50% 0; }
+/* A 14px grid of dots whose radius grows from 0 to 11px (past the tile's half-diagonal, so the
+   dots merge into a solid fill by the end). */
+html.chat-vt-open::view-transition-new(root), html.chat-vt-close::view-transition-old(root) {
+  -webkit-mask-image:radial-gradient(circle at 50% 50%, #000 var(--chat-dot), transparent calc(var(--chat-dot) + 1px));
+  mask-image:radial-gradient(circle at 50% 50%, #000 var(--chat-dot), transparent calc(var(--chat-dot) + 1px));
+  -webkit-mask-size:14px 14px; mask-size:14px 14px;
+}
+html.chat-vt-open::view-transition-old(root) { animation:chat-camera-rise 450ms var(--ease-out) both; }
+html.chat-vt-open::view-transition-new(root) { animation:chat-halftone 520ms var(--ease-out) both; }
+html.chat-vt-open::view-transition-new(chat) { animation:chat-slide-x 320ms var(--ease-spring) both; }
+
+html.chat-vt-close::view-transition-old(root) { z-index:1; animation:chat-halftone 520ms var(--ease-out) reverse both; }
+html.chat-vt-close::view-transition-new(root) { animation:chat-camera-rise 450ms var(--ease-out) reverse both; }
+html.chat-vt-close::view-transition-old(chat) { animation:chat-slide-out 320ms var(--ease-ui) both; }
+
+/* No startViewTransition: no snapshot. The panel slides in (its own animation above) while this
+   dotted overlay sweeps out from the launcher and fades, 400ms. It never takes a click. */
+.chat-sweep {
+  position:fixed; inset:0; z-index:135; pointer-events:none;
+  background:radial-gradient(circle at 50% 50%, var(--berry-deep) 0 5px, transparent 5.5px) 0 0 / 14px 14px;
+  animation:chat-sweep 400ms var(--ease-out) both;
+}
+@keyframes chat-sweep {
+  0% { clip-path:circle(0px at var(--chat-ox,100%) var(--chat-oy,100%)); opacity:1; }
+  70% { clip-path:circle(150vmax at var(--chat-ox,100%) var(--chat-oy,100%)); opacity:.9; }
+  100% { clip-path:circle(150vmax at var(--chat-ox,100%) var(--chat-oy,100%)); opacity:0; }
+}
+html[data-motion="reduced"] .chat-sweep { display:none; }

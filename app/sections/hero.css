@@ -1,0 +1,139 @@
+/* Hero (SITE-PLAN.md 4.1), the Slush poster. Every selector starts with .hero, the section root.
+   Ground: the section is flat paper; on it a sky band (--sky) outlined in 1px ink at the panel
+   radius. Text on the sky: ink 13.1:1, --ink-2 8.3:1, berry (LIU, the keyword) 5.5:1. The ticket
+   is a --card surface (ink 17.1:1, --muted 6.6:1). The strip is ink with paper text (15.8:1);
+   its label is ink on apricot (12.6:1).
+   --fs is the name's font size. hero.client.tsx measures the name in the display face once the fonts are
+   loaded and sets --fs-js so the name fills the stage (one line, ANDREW LIU, on a stage 760px
+   and wider; two lines below), capped so the band ends above the fold on a stage 640px and
+   wider. The motif behind the type is berry-soft: ink on it 13:1, berry 4.9:1 at display size. */
+
+.hero {
+  --elastic:cubic-bezier(.34,1.56,.64,1);
+  padding:calc(var(--header-h) + 12px) var(--gutter) calc(var(--curve-h) + 20px);
+  color:var(--ink);
+  overflow-x:clip; /* nothing in the hero may widen the page (the marquee track, a sticker) */
+}
+@supports (transition-timing-function:linear(0,1)) {
+  /* Slush's spring (slush skill, --ease-elastic): overshoots to 1.14 at a quarter, settles */
+  .hero { --elastic:linear(0,.5737 7.6%,.8382 11.87%,.9463 14.19%,1.0292 16.54%,1.0886 18.97%,1.1258 21.53%,1.137 22.97%,1.1424 24.48%,1.1423 26.1%,1.1366 27.86%,1.1165 31.01%,1.0507 38.62%,1.0219 42.57%,.9995 46.99%,.9872 51.63%,.9842 58.77%,1.0011 81.26%,1); }
+}
+/* A flat paper ground: the band is the colour, not a gradient behind it */
+.hero[data-gradient] { background:var(--paper); }
+
+.hero .hero-band {
+  max-width:1440px; margin:0 auto;
+  display:grid; gap:clamp(16px,2.4vw,28px);
+  padding:clamp(18px,3vw,40px) clamp(16px,3vw,40px) clamp(18px,2.4vw,32px);
+  /* A soft radial in the sky family (Andrew, 2026-10-06: no plain grounds); ink stays 13:1 or
+     better across it, berry 5.5:1 at its darkest */
+  background:radial-gradient(125% 125% at 30% 0%, color-mix(in srgb, var(--sky) 45%, var(--card)) 20%, var(--sky) 75%);
+  border:1px solid var(--ink); border-radius:40px;
+  --on:var(--ink); --on-2:var(--ink-2); --kw:var(--berry);
+}
+.hero .hero-stage { container:hero / inline-size; position:relative; display:grid; gap:clamp(12px,1.8vw,22px); }
+/* --fs-js is the measured size (hero.client.tsx); until it lands, a size that cannot overflow:
+   one line ("ANDREW LIU") on a wide stage, two on a narrow one */
+.hero .hero-stage > * { --fs:var(--fs-js, calc(100cqi / 5.6)); }
+@container hero (max-width:759px) { .hero .hero-stage > * { --fs:var(--fs-js, calc(100cqi / 3.4)); } }
+.hero .hero-name.fit { font-size:var(--fs); }
+
+.hero .hero-tag {
+  position:relative; z-index:4; /* above the name and its stickers */
+  justify-self:start; display:inline-flex; align-items:center; min-height:32px; padding:6px 14px;
+  border:1px solid var(--ink); border-radius:var(--r-pill); background:var(--card);
+  font:600 12px/1.2 var(--mono); letter-spacing:.12em; text-transform:uppercase; font-variant-ligatures:none;
+}
+
+/* ---------- The big motif behind the type: a flat berry on the stage's right ---------- */
+.hero .hero-motif { position:absolute; z-index:0; right:-2%; top:50%; width:min(46cqi, 560px); translate:0 -50%; rotate:-8deg; pointer-events:none; }
+.hero .hero-motif .st { width:100%; }
+@container hero (max-width:759px) { .hero .hero-motif { top:0; right:-14%; width:70cqi; translate:0 -12%; } }
+
+/* ---------- The name and its collage ---------- */
+.hero .hero-namewrap { position:relative; z-index:1; }
+.hero .hero-name { position:relative; z-index:1; color:var(--ink); }
+.hero .hero-nl { display:block; white-space:nowrap; }
+.hero .hero-nl-kw { color:var(--kw); }
+.hero .hero-c { display:inline-block; }
+/* Wide: the name is one line, ANDREW LIU */
+@container hero (min-width:760px) {
+  .hero .hero-nl { display:inline; }
+  .hero .hero-nl:first-of-type { margin-right:.2em; }
+}
+
+/* Sticker slots. hero.client.tsx pins each one's centre to a point on a letter (inline left and
+   top); the spots below are where they sit before that runs or with JavaScript off. Over the
+   name (z-index 2), each covering at most a corner of a letter. */
+.hero .hero-collage { position:absolute; inset:0; z-index:2; pointer-events:none; }
+.hero .hero-st { position:absolute; display:block; translate:-50% -50%; rotate:var(--r,0deg); pointer-events:auto; }
+.hero .hero-st-art { width:100%; }
+.hero .hero-st-berry { --r:12deg;  left:60%; top:6%;  width:max(60px, calc(var(--fs) * .46)); }
+.hero .hero-st-mol   { --r:-10deg; left:36%; top:88%; width:max(48px, calc(var(--fs) * .34)); }
+.hero .hero-st-card  { --r:-9deg;  left:10%; top:92%; width:max(60px, calc(var(--fs) * .44)); }
+.hero .hero-st-pan   { --r:16deg;  left:96%; top:80%; width:max(60px, calc(var(--fs) * .42)); }
+.hero .hero-st-bar   { --r:-7deg;  left:70%; top:100%; width:max(66px, calc(var(--fs) * .56)); }
+
+/* ---------- Under the name: who, the résumé, and the ticket ---------- */
+.hero .hero-foot { position:relative; z-index:3; display:grid; gap:16px; align-items:end; }
+@container hero (min-width:760px) {
+  .hero .hero-foot { grid-template-columns:minmax(0,1fr) minmax(0,340px); column-gap:24px; }
+}
+.hero .hero-about { display:grid; gap:14px; justify-items:start; }
+.hero .hero-lead { max-width:34ch; font-size:clamp(18px,1.6vw,21px); line-height:1.45; color:var(--ink-2); }
+
+.hero .hero-ticket {
+  display:grid; gap:10px; width:100%; max-width:340px; padding:14px 16px 12px;
+  background:var(--card); color:var(--ink); border:1px solid var(--ink); border-radius:20px;
+  /* Pressable, so it has the ledge (andliu, Duolingo): down fast, back slower */
+  box-shadow:0 4px 0 var(--ink);
+  transition:transform var(--dur-release) var(--ease-ui),box-shadow var(--dur-release) var(--ease-ui);
+}
+.hero .hero-ticket:active { transform:translateY(4px); box-shadow:0 0 0 var(--ink); transition-duration:var(--dur-press); }
+@media (hover:hover) and (pointer:fine) {
+  .hero .hero-ticket:hover { transform:translateY(-2px); box-shadow:0 6px 0 var(--ink); }
+  .hero .hero-ticket:hover:active { transform:translateY(4px); box-shadow:0 0 0 var(--ink); }
+}
+.hero .hero-ticket-eyebrow { font:600 11px/1.4 var(--mono); letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+.hero .hero-ticket-body { display:grid; grid-template-columns:104px minmax(0,1fr); gap:12px; align-items:center; }
+.hero .hero-ticket-thumb { display:block; height:66px; padding:4px; border:1px solid var(--ink); border-radius:12px; background:#fff; }
+.hero .hero-ticket-thumb svg { width:100%; height:100%; }
+.hero .hero-ticket-text { display:grid; gap:3px; min-width:0; }
+.hero .hero-ticket-title { font:700 22px/1 var(--display); letter-spacing:-.03em; }
+.hero .hero-ticket-line { font-size:15px; line-height:1.3; }
+.hero .hero-ticket-when { font:500 12px/1.3 var(--mono); letter-spacing:.04em; white-space:nowrap; color:var(--muted); }
+.hero .hero-ticket-go { display:inline-flex; align-items:center; gap:6px; font:600 12px/1 var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--berry); }
+.hero .hero-portrait { width:min(100%,220px); rotate:-3deg; }
+
+/* ---------- The strip: an ink marquee, tilted a degree, the "currently:" lines ---------- */
+.hero .hero-strip {
+  display:flex; align-items:center; gap:12px; min-width:0; min-height:48px; padding:6px;
+  background:var(--ink); color:var(--paper); border:1px solid var(--ink); border-radius:var(--r-pill);
+  rotate:-1deg; overflow:clip;
+}
+.hero .hero-strip-label {
+  flex:none; display:inline-flex; align-items:center; min-height:36px; padding:0 14px;
+  border-radius:var(--r-pill); background:var(--apricot); color:var(--ink);
+  font:600 13px/1 var(--mono); letter-spacing:.06em; text-transform:uppercase;
+}
+.hero .hero-mq { flex:1 1 auto; min-width:0; overflow-x:clip; }
+.hero .hero-mq-item { display:inline-flex; align-items:center; gap:18px; padding-right:18px; white-space:nowrap; font:600 14px/36px var(--mono); letter-spacing:.08em; text-transform:uppercase; }
+.hero .hero-mq-dot { width:10px; height:10px; fill:var(--apricot); }
+
+/* ---------- Entrance (Slush motion, gated on the loader's html.is-loaded) ---------- */
+.hero .hero-c { transition:opacity .3s linear calc(.1s + var(--i) * 30ms),transform .65s var(--elastic) calc(.1s + var(--i) * 30ms); }
+.hero .hero-rise { transition:opacity .5s linear calc(.5s + var(--d) * 100ms),translate 1s var(--elastic) calc(.5s + var(--d) * 100ms); }
+.hero .hero-st-art { transition:transform .5s var(--elastic); }
+html.js:not(.is-loaded):not([data-motion="reduced"]) .hero .hero-c { opacity:0; transform:translateX(-.25em); }
+html.js:not(.is-loaded):not([data-motion="reduced"]) .hero .hero-rise { opacity:0; translate:0 3em; }
+html.js:not(.is-loaded):not([data-motion="reduced"]) .hero .hero-st-art { opacity:0; }
+/* Stickers pop with a keyframe animation, not a transition, so the hover wiggle below keeps its
+   own timing. Fill "backwards" holds the small, turned first frame through the delay and then
+   lets go, so the hover transform is not overridden once the pop is done. */
+@keyframes hero-pop { from { opacity:0; transform:scale(.2) rotate(-90deg); } }
+html.js.is-loaded:not([data-motion="reduced"]) .hero .hero-st-art { animation:hero-pop 1s var(--elastic) calc(.8s + var(--k) * 100ms) backwards; }
+@media (hover:hover) and (pointer:fine) {
+  .hero .hero-st:hover .hero-st-art { transform:rotate(10deg) scale(1.08); }
+}
+html[data-motion="reduced"] .hero :is(.hero-c,.hero-rise,.hero-st-art) { transition:none; }
+html[data-motion="reduced"] .hero .hero-st:hover .hero-st-art { transform:none; }

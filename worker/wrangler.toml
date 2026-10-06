@@ -1,0 +1,31 @@
+# The chat proxy for andliu.dev (SITE-PLAN.md 6.5). The site is static, so the Anthropic key
+# lives here as a Worker secret and the browser only ever talks to this Worker.
+#
+# Deploy, from this folder (worker/), in this order:
+#   0. In the Anthropic Console, set a monthly spend limit on the key's workspace FIRST.
+#   1. node ../scripts/build-system-prompt.mjs        (regenerate system-prompt.txt from lib/site.ts)
+#   2. npx wrangler secret put ANTHROPIC_API_KEY       (paste the key; it is never written to a file)
+#   3. npx wrangler deploy
+#   4. Build the site with NEXT_PUBLIC_CHAT_URL set to the Worker's URL (empty = offline answers only).
+# Before step 3, decide whether to keep http://localhost:3000 in ALLOWED_ORIGINS (worker/handler.js).
+
+name = "andliu-chat"
+main = "chat.js"
+compatibility_date = "2026-05-01"
+
+[vars]
+# The current Haiku id, confirmed 2026-10-01 with the claude-api skill (its model table is
+# dated 2026-09-25). Change the model here, not in code.
+MODEL = "claude-haiku-4-5"
+
+# Per-IP rate limit, read as env.CHAT_LIMIT in handler.js: 10 requests per 60 seconds.
+[[ratelimits]]
+name = "CHAT_LIMIT"
+namespace_id = "1001"
+simple = { limit = 10, period = 60 }
+
+# Bundle system-prompt.txt as a string module (import SYSTEM_PROMPT from './system-prompt.txt').
+[[rules]]
+type = "Text"
+globs = ["**/*.txt"]
+fallthrough = true

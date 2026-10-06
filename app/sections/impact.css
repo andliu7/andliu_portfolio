@@ -1,0 +1,208 @@
+/* Impact (SITE-PLAN.md 4.6). Every selector starts with .impact, the section root.
+   Ground berry-deep: text --on (paper, 12.58:1), --on-2 (berry-soft, 9.54:1), --kw (apricot,
+   10.04:1). The panels are --card surfaces with ink text (17.06:1); inside them the roles are
+   re-pointed to the card.
+   Budget: at most 1.30 viewports with the first panel open. Worked heights, 1440x900 (cap 1170):
+   top pad 84, head 168, ticker 70, rows 3 x 66, card about 540, bottom pad 40 = about 1100.
+   390x844 (cap 1097): top pad 48, head 69, ticker 54, rows 72 + 72 + 48, card about 656,
+   bottom pad 40 = about 1060. The top pad can be short because html's scroll-padding-top
+   already keeps an anchor jump clear of the fixed header. */
+
+.impact { display:flex; flex-direction:column; padding:clamp(48px, 6cqi, calc(var(--header-h) + 8px)) var(--gutter) 40px; background-color:var(--ground); color:var(--on); overflow-x:clip; }
+.impact .impact-head { display:grid; gap:8px; margin-bottom:16px; }
+.impact .impact-head h2 { margin:0; }
+
+/* ---------- the ticker: every headline number, moving (Blueberry's marquee port) ---------- */
+.impact .impact-ticker { margin:0 calc(var(--gutter) * -1) 16px; padding:10px 0; border-block:1px solid color-mix(in srgb, var(--on) 22%, transparent); }
+.impact .impact-tick-group { display:inline-flex; align-items:baseline; gap:clamp(20px, 3cqi, 44px); padding-right:clamp(20px, 3cqi, 44px); white-space:nowrap; }
+.impact .impact-tick-p { align-self:center; padding:6px 12px; border:2px solid var(--kw); border-radius:var(--r-pill); font:600 12px/1 var(--display); letter-spacing:.1em; text-transform:uppercase; color:var(--kw); }
+.impact .impact-tick { display:inline-flex; align-items:baseline; gap:10px; }
+.impact .impact-tick-n { font:700 clamp(24px, 3.4cqi, 46px)/1 var(--display); letter-spacing:-.03em; color:var(--kw); font-variant-numeric:tabular-nums; }
+.impact .impact-tick-n small { margin-left:6px; font-size:.42em; font-weight:600; letter-spacing:.06em; text-transform:uppercase; }
+.impact .impact-tick-t { font:400 clamp(16px, 1.6cqi, 22px)/1 var(--body); color:var(--on-2); }
+
+/* ---------- the rows ---------- */
+.impact .impact-row { border-top:1px solid color-mix(in srgb, var(--on) 22%, transparent); }
+.impact .impact-row:last-child { border-bottom:1px solid color-mix(in srgb, var(--on) 22%, transparent); }
+.impact .impact-h { margin:0; font:600 clamp(24px, 3.4cqi, 46px)/1.1 var(--display); letter-spacing:-.01em; }
+.impact .impact-h .roll-row { align-items:center; padding:10px 0; }
+.impact .impact-h .roll-row:focus-visible { outline:3px solid var(--ring); outline-offset:2px; border-radius:var(--r-control); }
+/* The toggle sits on the LEFT, so the chat launcher in the bottom-right corner never covers it. */
+.impact .impact-lead { display:inline-flex; align-items:center; gap:14px; }
+.impact .impact-num { font:500 12px/1 var(--display); letter-spacing:.12em; color:var(--on-2); min-width:2.4ch; }
+.impact .impact-summary { font:400 17px/1.35 var(--body); color:var(--on-2); text-align:right; }
+/* Hover and focus roll the title only; the summary stays put (the shared rule fades it). */
+.impact .roll-row:focus-visible .roll-meta { opacity:1; }
+@media (hover:hover) and (pointer:fine) {
+  .impact .roll-row:hover .roll-meta { opacity:1; }
+}
+
+/* The plus that becomes a minus, on Blueberry's pressed disc when open. */
+.impact .impact-icon { position:relative; flex:none; width:32px; height:32px; border:2px solid currentColor; border-radius:var(--r-pill); color:var(--on); transition:background-color var(--dur-ui) var(--ease-ui),color var(--dur-ui) var(--ease-ui),border-color var(--dur-ui) var(--ease-ui); }
+.impact .impact-icon::before, .impact .impact-icon::after { content:''; position:absolute; left:50%; top:50%; width:12px; height:2px; margin:-1px 0 0 -6px; background:currentColor; transition:transform var(--dur-enter) var(--ease-out); }
+.impact .impact-icon::after { transform:rotate(90deg); }
+/* Open: ink on apricot (12.61:1 for the bar; the disc is decoration). */
+.impact .impact-row[data-open] .impact-icon { border-color:var(--kw); background:var(--kw); color:var(--ink); }
+.impact .impact-row[data-open] .impact-icon::after { transform:rotate(90deg) scaleX(0); }
+
+/* ---------- the panel's height: grid rows 0fr to 1fr, so no height is ever measured ---------- */
+.impact .impact-wrap { display:grid; grid-template-rows:0fr; transition:grid-template-rows 360ms var(--ease-out); }
+.impact .impact-row[data-open] .impact-wrap { grid-template-rows:1fr; }
+.impact .impact-wrap[data-instant] { transition:none; }
+.impact .impact-inner { min-height:0; overflow:clip; }
+
+/* ---------- the card ---------- */
+.impact .impact-card {
+  --on:var(--ink); --on-2:var(--ink-2); --kw:var(--berry); --ring:var(--berry);
+  display:grid; grid-template-columns:minmax(0,34fr) minmax(0,66fr); gap:20px 36px; align-items:stretch;
+  margin:4px 0 20px; padding:24px 28px; border-radius:var(--r-card); background:var(--card); color:var(--ink); box-shadow:0 6px 0 var(--ledge);
+}
+.impact .impact-card :focus-visible { outline:3px solid var(--ring); outline-offset:2px; }
+
+/* Left column: the big number, the picture, the tiles. Spread top to bottom so it meets the
+   chart column's height with no dead band under the tiles. */
+.impact .impact-side { display:flex; flex-direction:column; justify-content:space-between; gap:18px; min-width:0; }
+
+.impact .impact-hero { display:grid; gap:4px; margin:0; }
+.impact .impact-hero-n { font:700 clamp(64px, 8.4cqi, 128px)/.86 var(--display); letter-spacing:-.05em; color:var(--berry); font-variant-numeric:tabular-nums; }
+.impact .impact-hero-n small { margin-left:8px; font-size:.22em; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-2); }
+.impact .impact-hero-t { font:400 italic clamp(20px, 1.9cqi, 26px)/1.2 var(--body); color:var(--ink-2); }
+
+/* The unit grid: one square per memory. Colours: the validated chart palette (see chart.tsx). */
+.impact .impact-units { display:grid; gap:8px; margin:0; }
+.impact .impact-units-t { font:600 12px/1.2 var(--display); letter-spacing:.08em; text-transform:uppercase; color:var(--ink-2); }
+.impact .impact-unit-grid { display:grid; grid-template-columns:repeat(17, minmax(0,1fr)); gap:3px; }
+.impact .impact-unit { aspect-ratio:1; border-radius:4px; background:var(--k); transition:opacity var(--dur-ui) var(--ease-ui); }
+.impact :is(.impact-unit, .impact-unit-legend li)[data-k="0"] { --k:var(--berry); }
+.impact :is(.impact-unit, .impact-unit-legend li)[data-k="1"] { --k:var(--tile-teal); }
+.impact :is(.impact-unit, .impact-unit-legend li)[data-k="2"] { --k:var(--tile-violet); }
+.impact :is(.impact-unit, .impact-unit-legend li)[data-k="3"] { --k:var(--tile-apricot); }
+.impact .impact-unit-legend { display:flex; flex-wrap:wrap; gap:4px 14px; margin:0; padding:0; list-style:none; font:400 14px/1.3 var(--body); color:var(--ink-2); }
+.impact .impact-unit-legend li { display:inline-flex; align-items:center; gap:6px; cursor:default; }
+.impact .impact-unit-legend b { font:700 14px/1 var(--display); color:var(--ink); }
+.impact .impact-unit-key { width:12px; height:12px; border-radius:3px; background:var(--k); }
+/* Hover a legend entry: the other kinds step back. CSS :has, so no state and no re-render. */
+@media (hover:hover) and (pointer:fine) {
+  .impact .impact-units:has(.impact-unit-legend li[data-k="0"]:hover) .impact-unit:not([data-k="0"]),
+  .impact .impact-units:has(.impact-unit-legend li[data-k="1"]:hover) .impact-unit:not([data-k="1"]),
+  .impact .impact-units:has(.impact-unit-legend li[data-k="2"]:hover) .impact-unit:not([data-k="2"]),
+  .impact .impact-units:has(.impact-unit-legend li[data-k="3"]:hover) .impact-unit:not([data-k="3"]) { opacity:.18; }
+}
+
+/* The project's screenshot, tilting toward the pointer (TiltFrame, .tilt rules in globals). */
+.impact .impact-shot { height:clamp(150px, 15cqi, 210px); }
+.impact .impact-shot-back { display:block; width:100%; height:100%; border-radius:16px; background:var(--berry-soft); transform:translate(10px, 10px); }
+.impact .impact-shot img { display:block; width:100%; height:100%; object-fit:cover; object-position:top left; border-radius:16px; box-shadow:0 4px 0 var(--ledge); background:var(--paper); }
+
+/* Stat tiles: Blueberry-style fills carrying ink text (ink on apricot 12.61, on sky and
+   berry-soft above 12). */
+.impact .impact-stats { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; margin:0; padding:0; list-style:none; }
+.impact .impact-stat { display:grid; align-content:start; gap:4px; padding:12px; border-radius:14px; background:var(--apricot); color:var(--ink); box-shadow:0 3px 0 var(--ledge); }
+.impact .impact-stat:nth-child(3n+2) { background:var(--sky); }
+.impact .impact-stat:nth-child(3n+3) { background:var(--berry-soft); }
+.impact .impact-stat-n { font:700 clamp(20px, 1.9cqi, 28px)/1 var(--display); letter-spacing:-.03em; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.impact .impact-stat-n small { margin-left:4px; font-size:.5em; font-weight:600; text-transform:uppercase; }
+.impact .impact-stat-t { font:400 14px/1.25 var(--body); color:var(--ink-2); }
+
+/* ---------- the chart stage ---------- */
+.impact .impact-stage { display:grid; align-content:start; gap:12px; min-width:0; }
+/* Numbered tabs (01, 02...): square Blueberry press buttons in one row at every width. The
+   chart's own title, right under them, says which one is on. */
+.impact .impact-tabs { display:flex; flex-wrap:wrap; gap:8px; }
+.impact .impact-tab {
+  min-width:var(--hit); min-height:40px; padding:0 10px; border:2px solid var(--line); border-radius:var(--r-control); background:var(--card); color:var(--ink-2);
+  font:700 14px/1 var(--display); letter-spacing:.02em; font-variant-numeric:tabular-nums; cursor:pointer;
+  transition:background-color var(--dur-ui) var(--ease-ui),color var(--dur-ui) var(--ease-ui),border-color var(--dur-ui) var(--ease-ui),transform var(--dur-press) var(--ease-ui);
+}
+@media (hover:hover) and (pointer:fine) {
+  .impact .impact-tab:hover { border-color:var(--berry); color:var(--berry); }
+}
+.impact .impact-tab:active { transform:translateY(2px); }
+/* Selected: paper on berry (6.55:1) with Blueberry's ledge. */
+.impact .impact-tab[aria-selected="true"] { border-color:var(--berry); background:var(--berry); color:var(--paper); box-shadow:0 3px 0 var(--berry-deep); }
+
+.impact .impact-fig { display:grid; gap:8px; margin:0; min-width:0; }
+.impact .impact-fig-head { display:grid; gap:2px; }
+.impact .impact-fig-title { margin:0; font:600 18px/1.3 var(--display); color:var(--ink); }
+.impact .impact-fig-cap { margin:0; font:400 15px/1.4 var(--body); color:var(--ink-2); max-width:62ch; }
+.impact .impact-chart { width:100%; height:260px; min-height:220px; }
+.impact .impact-chart-ph { border-radius:12px; background:color-mix(in srgb, var(--line) 35%, transparent); }
+.impact .impact-chart-wrap { display:grid; gap:6px; }
+.impact .impact-chart :is(svg, .recharts-surface):focus { outline:none; }
+.impact .impact-chart .recharts-wrapper:focus-within { outline:3px solid var(--ring); outline-offset:2px; border-radius:8px; }
+
+.impact .impact-legend { display:flex; flex-wrap:wrap; gap:16px; margin:0; padding:0; list-style:none; font:500 13px/1 var(--display); color:var(--ink-2); }
+.impact .impact-legend li { display:inline-flex; align-items:center; gap:8px; }
+.impact .impact-key { display:inline-block; }
+.impact .impact-key-bar { width:12px; height:12px; border-radius:3px; }
+.impact .impact-key-line { width:16px; height:2px; }
+
+.impact .impact-tip { display:grid; gap:2px; padding:8px 10px; border-radius:10px; background:var(--ink); color:var(--paper); font:500 12px/1.4 var(--display); font-variant-numeric:tabular-nums; box-shadow:0 4px 0 var(--ledge); }
+.impact .impact-tip-x { color:var(--berry-soft); }
+
+/* One source disclosure and one table toggle per panel, left-aligned under the chart. */
+.impact .impact-foot { display:flex; flex-wrap:wrap; align-items:flex-start; gap:4px 24px; }
+.impact .impact-how { flex:1 1 260px; min-width:0; }
+.impact .impact-how summary { display:inline-flex; align-items:center; min-height:32px; cursor:pointer; font:600 12px/1.2 var(--display); letter-spacing:.06em; text-transform:uppercase; color:var(--ink-2); }
+.impact .impact-src { display:grid; gap:6px; margin:4px 0 0; font:500 12px/1.5 var(--display); color:var(--muted); overflow-wrap:anywhere; }
+.impact .impact-src dt { color:var(--ink-2); }
+.impact .impact-src dd { margin:0; }
+.impact .impact-show { min-height:32px; padding:0; border:0; background:none; cursor:pointer; font:600 12px/1.2 var(--display); letter-spacing:.06em; text-transform:uppercase; color:var(--berry); text-decoration:underline; text-decoration-color:var(--apricot-deep); text-underline-offset:5px; }
+
+.impact .impact-table-box { max-height:220px; overflow:auto; border:1px solid var(--line); border-radius:12px; overscroll-behavior:contain; }
+.impact .impact-table { width:100%; border-collapse:collapse; font:500 13px/1.4 var(--display); font-variant-numeric:tabular-nums; color:var(--ink); }
+.impact .impact-table :is(th, td) { padding:6px 12px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; }
+.impact .impact-table :is(thead th, tbody th) { text-align:left; }
+.impact .impact-table thead th { position:sticky; top:0; background:var(--card); color:var(--ink-2); font-weight:600; }
+
+/* ---------- entrances, once the open panel is on screen (data-live). Hidden start states only
+   with JavaScript on and full motion, so the content is always there without them. ---------- */
+@keyframes impact-pop { from { transform:scale(0) rotate(-30deg); } }
+@keyframes impact-rise { from { opacity:0; transform:translateY(18px); } }
+html.js:not([data-motion="reduced"]) .impact .impact-card[data-live] .impact-unit { animation:impact-pop 460ms var(--ease-spring) both; animation-delay:calc(var(--i) * 16ms); }
+html.js:not([data-motion="reduced"]) .impact .impact-card:not([data-live]) .impact-unit { transform:scale(0); }
+html.js:not([data-motion="reduced"]) .impact .impact-card:not([data-live]) :is(.impact-hero, .impact-shot, .impact-stat, .impact-fig-head) { opacity:0; }
+html.js:not([data-motion="reduced"]) .impact .impact-card[data-live] :is(.impact-hero, .impact-shot, .impact-stat, .impact-fig-head) { animation:impact-rise 560ms var(--ease-out) both; }
+html.js:not([data-motion="reduced"]) .impact .impact-card[data-live] .impact-shot { animation-delay:80ms; }
+html.js:not([data-motion="reduced"]) .impact .impact-card[data-live] .impact-stat:nth-child(1) { animation-delay:140ms; }
+html.js:not([data-motion="reduced"]) .impact .impact-card[data-live] .impact-stat:nth-child(2) { animation-delay:200ms; }
+html.js:not([data-motion="reduced"]) .impact .impact-card[data-live] .impact-stat:nth-child(3) { animation-delay:260ms; }
+
+/* ---------- narrow: one column, tiles 3-up under the picture, then the chart ---------- */
+@container (max-width:760px) {
+  .impact .impact-head { margin-bottom:12px; }
+  .impact .impact-ticker { margin-bottom:12px; padding:8px 0; }
+  .impact .impact-tick-n { font-size:24px; }
+  .impact .impact-tick-t { font-size:16px; }
+  .impact .impact-card { grid-template-columns:minmax(0,1fr); gap:16px; margin-bottom:16px; padding:16px; }
+  .impact .impact-side { gap:12px; }
+  /* The big number and its title side by side, to save a line. */
+  .impact .impact-hero { grid-template-columns:auto minmax(0,1fr); align-items:end; gap:12px; }
+  .impact .impact-hero-n { font-size:clamp(48px, 15cqi, 64px); }
+  .impact .impact-hero-t { font-size:18px; padding-bottom:4px; }
+  .impact .impact-unit-grid { gap:2px; }
+  .impact .impact-unit { border-radius:3px; }
+  .impact .impact-unit-legend { font-size:13px; gap:2px 10px; }
+  /* The screenshot is the one thing dropped on a phone: the number, tiles and chart carry it. */
+  .impact .impact-shot { display:none; }
+  .impact .impact-stats { gap:8px; }
+  .impact .impact-stat { padding:8px 10px; border-radius:12px; }
+  .impact .impact-stat-n { font-size:clamp(17px, 5cqi, 22px); }
+  .impact .impact-stat-t { font-size:12px; }
+  .impact .impact-tab { min-height:var(--hit); }
+  .impact .impact-fig-title { font-size:16px; }
+  /* The caption stays for screen readers; the title names the chart on a phone. */
+  .impact .impact-fig-cap { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+  .impact .impact-chart { height:220px; }
+  .impact .impact-h .roll-row { flex-wrap:wrap; row-gap:4px; padding:8px 0; }
+  .impact .roll-meta { flex-basis:100%; }
+  .impact .impact-summary { display:block; text-align:left; font-size:15px; }
+  /* The open row's summary repeats the big number right under it; keep it for the button's
+     name, not on screen. */
+  .impact .impact-row[data-open] .roll-meta { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+}
+
+/* ---------- reduced motion: instant open and close, nothing pops or rises ---------- */
+html[data-motion="reduced"] .impact :is(.impact-wrap, .impact-tab, .impact-icon, .impact-unit),
+html[data-motion="reduced"] .impact .impact-icon::before,
+html[data-motion="reduced"] .impact .impact-icon::after { transition:none; }

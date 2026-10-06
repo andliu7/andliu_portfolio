@@ -1,0 +1,56 @@
+/* Experience (app/sections/experience.tsx, plan 4.7). Every selector starts at .experience.
+   One screen at 1440x900: the head row, then the four roles as a 2x2 grid of cards. */
+
+.experience {
+  display:grid; gap:28px; align-content:start;
+  /* The bottom padding keeps Off the clock's rising curve clear of the last row; offclock.css
+     sets that curve to clamp(32px,4vw,56px), the same value used here. */
+  padding:calc(var(--header-h) + 12px) var(--gutter) calc(clamp(32px,4vw,56px) + 28px);
+  background-color:var(--ground); color:var(--on);
+}
+
+/* The head: eyebrow and one giant line on the left, the résumé pill at the end of the row. */
+.experience .xp-head { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:16px 32px; min-width:0; }
+.experience .xp-head-text { display:grid; gap:12px; min-width:0; }
+.experience .xp-title { font-size:clamp(56px,8cqi,128px); line-height:.9; }
+
+/* The cards: a 2x2 grid in reading order. */
+.experience .xp-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px 32px; padding:0; list-style:none; }
+
+/* A card: a pale wash of the role's tile colour (ink 13.3 or better, berry org 5.5 or better on
+   all four), 1px ink outline, 22px radius, one sticker of the role's own thing tucked over its
+   bottom-right corner. Row one is the role and org with the dates sticker on the right; row two
+   is the line at reading width, kept clear of the sticker (about 60 characters). */
+.experience .xp-card { position:relative; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:10px 16px; padding:20px 24px 22px;
+  border:1px solid var(--ink); border-radius:var(--r-card); background:color-mix(in srgb,var(--dot) 30%,var(--card)); color:var(--on); }
+.experience .xp-role { grid-column:1; grid-row:1; display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 12px; min-width:0; }
+.experience .xp-role .display { font-size:clamp(20px,1.75cqi,27px); line-height:1.05; }
+.experience .xp-org { font:500 clamp(18px,1.5cqi,22px)/1.1 var(--body); color:var(--kw); }
+/* The dates sticker: the role's full tile colour, ink outline, ink text (5.5 or better). */
+.experience .xp-when { grid-column:2; grid-row:1; display:inline-flex; align-items:center; min-height:30px; padding:0 12px; border:1px solid var(--ink); border-radius:var(--r-pill);
+  background:var(--dot); color:var(--ink); font:500 12px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; font-variant-ligatures:none; }
+.experience .xp-line { grid-column:1 / -1; max-inline-size:min(34em,100% - 56px); font:500 17px/1.5 var(--body); color:var(--on); }
+
+/* The sticker: over the card's bottom-right corner, turned, inside the grid gap and gutter. */
+.experience .xp-sticker { position:absolute; right:-10px; bottom:-14px; width:68px; height:auto; rotate:8deg;
+  transition:scale .5s var(--ease-spring), rotate .5s var(--ease-spring); }
+.experience .xp-card:nth-child(even) .xp-sticker { rotate:-7deg; }
+@media (hover:hover) and (pointer:fine) {
+  .experience .xp-card:hover .xp-sticker { scale:1.12; rotate:-4deg; }
+}
+/* Motion: the card fades up with the global data-reveal; its sticker pops on the shared spring
+   once the director marks the card .is-in. Hidden states apply only with JS on and full motion. */
+@keyframes xp-pop { from { opacity:0; transform:scale(.2) rotate(-90deg); } }
+html:not([data-motion="reduced"]) .experience .xp-card.is-in .xp-sticker { animation:xp-pop .9s var(--ease-spring) calc(var(--i) * 90ms + 250ms) both; }
+html.js:not([data-motion="reduced"]):not(.reveal-off) .experience .xp-card:not(.is-in) .xp-sticker { opacity:0; }
+html[data-motion="reduced"] .experience .xp-sticker { transition:none; }
+
+/* Narrow windows and phones: one column of cards; the dates sticker moves above the role and
+   the role sticker sits just inside the corner (the phone gutter is only 16px). */
+@media (max-width:900px) {
+  .experience .xp-list { grid-template-columns:minmax(0,1fr); gap:24px; }
+  .experience .xp-sticker { right:-4px; width:56px; }
+  .experience .xp-card { grid-template-columns:minmax(0,1fr); padding:18px 18px 20px; }
+  .experience .xp-when { grid-column:1; grid-row:1; justify-self:start; }
+  .experience .xp-role { grid-row:2; }
+}
