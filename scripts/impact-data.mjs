@@ -25,7 +25,9 @@ const ts = createRequire(import.meta.url)('typescript');
 
 const BRAIN = join(projects, 'second-brain/second-brain');
 const BB = join(projects, 'grignard/grignard-app-source');
-const TRAINER = join(projects, 'mechanism_trainer');
+const FF = join(projects, 'ff_technical_instructions');
+// The guide's local folder is not a git checkout, so its history comes from GitHub's public API.
+const FF_COMMITS_API = 'https://api.github.com/repos/andliu7/ff_technical_instructions/commits?per_page=100';
 
 const skip = (id, why) => console.log(`omitted ${id}: ${why}`);
 
@@ -243,28 +245,43 @@ function blueberryPanel() {
   return { id: 'blueberry', series };
 }
 
-function trainerPanel() {
-  const dates = commitDates(TRAINER);
-  if (!dates?.length) {
-    skip('trainer.*', 'no git history for mechanism_trainer');
-    return { id: 'trainer', series: [] };
-  }
-  const span = Math.round((toMs(dates[dates.length - 1]) - toMs(dates[0])) / DAY);
-  return {
-    id: 'trainer',
-    series: [
-      { id: 'trainer.commits', kind: 'line', unit: 'commits', dim: 'date', points: cumulative(dates), source: 'git -C mechanism_trainer log --format=%ad --date=short, running total by day' },
-      { id: 'trainer.commitsTotal', kind: 'stat', unit: 'commits', value: dates.length, source: 'git -C mechanism_trainer log: commit count' },
-      { id: 'trainer.span', kind: 'stat', unit: 'days', value: span, source: `git -C mechanism_trainer log: days from the first commit (${dates[0]}) to the last (${dates[dates.length - 1]})` },
-    ],
-  };
+async function ffPanel() {
+  const series = [];
+  let dates = null;
+  try {
+    const res = await fetch(FF_COMMITS_API, { headers: { 'User-Agent': 'impact-data' } });
+    if (res.ok) dates = (await res.json()).map(c => c.commit.author.date.slice(0, 10)).sort();
+  } catch { /* offline: the commit series are omitted below, never estimated */ }
+  if (dates?.length) {
+    const span = Math.round((toMs(dates[dates.length - 1]) - toMs(dates[0])) / DAY);
+    series.push(
+      { id: 'ff.commits', kind: 'line', unit: 'commits', dim: 'date', points: cumulative(dates), source: 'GitHub API, andliu7/ff_technical_instructions commits, running total by day' },
+      { id: 'ff.commitsTotal', kind: 'stat', unit: 'commits', value: dates.length, source: 'GitHub API, andliu7/ff_technical_instructions: commit count' },
+      { id: 'ff.span', kind: 'stat', unit: 'days', value: span, source: `GitHub API: days from the first commit (${dates[0]}) to the last (${dates[dates.length - 1]})` },
+    );
+  } else skip('ff.commits*', 'GitHub API unreachable or empty');
+
+  // The guide itself: words of visible text and its numbered sections (h2) in repo2/index.html.
+  const page = join(FF, 'repo2/index.html');
+  if (existsSync(page)) {
+    const html = readFileSync(page, 'utf8');
+    const text = html.replace(/<(script|style)[\s\S]*?<\/\1>/g, ' ').replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ');
+    const words = (text.match(/[A-Za-z0-9'’]+/g) ?? []).length;
+    const sections = (html.match(/<h2\b/g) ?? []).length;
+    series.push(
+      { id: 'ff.words', kind: 'stat', unit: 'words', value: words, source: 'ff_technical_instructions/repo2/index.html: words of visible text' },
+      { id: 'ff.sections', kind: 'stat', unit: 'sections', value: sections, source: 'ff_technical_instructions/repo2/index.html: h2 sections' },
+    );
+  } else skip('ff.words, ff.sections', 'no repo2/index.html');
+
+  return { id: 'guide', series };
 }
 
 // ---------- build, guard, write or check ----------
 
 async function build() {
   const titles = [];
-  const panels = [await brainPanel(titles), blueberryPanel(), trainerPanel()].filter(p => p.series.length);
+  const panels = [await brainPanel(titles), blueberryPanel(), await ffPanel()].filter(p => p.series.length);
   const data = { generated: new Date().toISOString(), panels };
   const json = `${JSON.stringify(data, null, 1)}\n`;
 

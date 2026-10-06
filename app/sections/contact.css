@@ -31,7 +31,7 @@ section.contact { padding-top:24px; overflow-x:clip; }
 /* The address itself, set in display type inside the card (Slush's crushed type on a saturated
    card), as the mailto link; Copy email sits beside it. Kept lowercase: it is an address. */
 .contact .ct-email { display:flex; flex-wrap:wrap; align-items:center; gap:12px 18px; margin-top:24px; }
-.contact .ct-mail { font-size:clamp(20px,4.2cqi,46px); line-height:1.1; text-transform:none; overflow-wrap:anywhere; text-decoration:underline; text-decoration-thickness:3px; text-underline-offset:.16em; text-decoration-color:var(--berry); }
+.contact .ct-mail { font-size:clamp(16px,2.6cqi,32px); /* 24 Fira characters at .6em each: small enough to stay on one line from 320px up */ line-height:1.1; text-transform:none; overflow-wrap:anywhere; text-decoration:underline; text-decoration-thickness:3px; text-underline-offset:.16em; text-decoration-color:var(--berry); }
 .contact .ct-mail:hover { color:var(--berry); }
 .contact .ct-note { margin-top:8px; font:500 17px/1.5 var(--body); color:var(--on-2); }
 

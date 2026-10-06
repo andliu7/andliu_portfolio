@@ -377,7 +377,7 @@ export type ImpactSummary = { total: number; first: string; last: string };
 export type ImpactSeriesCopy = { id: string; title: string; unit: string; caption?: string };
 
 export const IMPACT: readonly {
-  id: 'brain' | 'blueberry' | 'trainer';
+  id: 'brain' | 'blueberry' | 'guide';
   title: string;
   primary: string;
   summary: (s: ImpactSummary) => string;
@@ -410,12 +410,14 @@ export const IMPACT: readonly {
     ],
   },
   {
-    id: 'trainer', title: 'Mechanism Trainer', primary: 'trainer.commits', // title from PROJECTS
+    id: 'guide', title: 'Focus Family Guide', primary: 'ff.commits', // title from PROJECTS; replaced the Mechanism Trainer panel 2026-10-06 at Andrew's request
     summary: s => `${s.total} commits from ${s.first} to ${s.last}`, // [D] (needs sign-off)
     series: [
-      { id: 'trainer.commits', title: 'Commits over time', unit: 'commits' }, // [D]
-      { id: 'trainer.commitsTotal', title: 'Commits', unit: 'commits' }, // [D]
-      { id: 'trainer.span', title: 'First to last commit', unit: 'days' }, // [D]
+      { id: 'ff.commits', title: 'Commits over time', unit: 'commits' }, // [D]
+      { id: 'ff.commitsTotal', title: 'Commits', unit: 'commits' }, // [D]
+      { id: 'ff.span', title: 'First to last commit', unit: 'days' }, // [D]
+      { id: 'ff.words', title: 'Words in the guide', unit: 'words' }, // [D]
+      { id: 'ff.sections', title: 'Sections', unit: 'sections' }, // [D]
     ],
   },
 ];

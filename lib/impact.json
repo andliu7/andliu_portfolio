@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-01T20:52:22.846Z",
+ "generated": "2026-10-06T16:09:28.658Z",
  "panels": [
   {
    "id": "brain",
@@ -52,7 +52,11 @@
       },
       {
        "x": "2026-10-01",
-       "y": 51
+       "y": 52
+      },
+      {
+       "x": "2026-10-06",
+       "y": 55
       }
      ],
      "source": "second-brain/second-brain/memories/*.md: every \"## [date] kind |\" heading; dates only, running total by day"
@@ -65,11 +69,11 @@
      "points": [
       {
        "x": "decision",
-       "y": 30
+       "y": 32
       },
       {
        "x": "pref",
-       "y": 7
+       "y": 9
       },
       {
        "x": "gotcha",
@@ -173,21 +177,21 @@
      "id": "brain.rows",
      "kind": "stat",
      "unit": "rows",
-     "value": 62102,
+     "value": 62211,
      "source": "second-brain/second-brain/index.tsv: data rows after the header, streamed"
     },
     {
      "id": "brain.files",
      "kind": "stat",
      "unit": "files",
-     "value": 5442,
+     "value": 5446,
      "source": "second-brain/second-brain/index.tsv: distinct values in the first (path) column"
     },
     {
      "id": "brain.wiki",
      "kind": "stat",
      "unit": "pages",
-     "value": 4,
+     "value": 8,
      "source": "second-brain/second-brain/wiki/pages/*.md: file count"
     },
     {
@@ -223,6 +227,10 @@
       {
        "x": "2026-09-28",
        "y": 7
+      },
+      {
+       "x": "2026-10-05",
+       "y": 1
       }
      ],
      "source": "git -C second-brain log --format=%ad --date=short, counted per week starting Monday"
@@ -384,7 +392,7 @@
       },
       {
        "x": "2026-10-01",
-       "y": 311
+       "y": 313
       }
      ],
      "source": "git -C grignard/grignard-app-source log --format=%ad --date=short, running total by day"
@@ -432,48 +440,70 @@
      "id": "bb.commitsTotal",
      "kind": "stat",
      "unit": "commits",
-     "value": 311,
+     "value": 313,
      "source": "git -C grignard/grignard-app-source log: commit count"
     }
    ]
   },
   {
-   "id": "trainer",
+   "id": "guide",
    "series": [
     {
-     "id": "trainer.commits",
+     "id": "ff.commits",
      "kind": "line",
      "unit": "commits",
      "dim": "date",
      "points": [
       {
-       "x": "2026-08-06",
-       "y": 2
+       "x": "2026-09-09",
+       "y": 4
       },
       {
-       "x": "2026-08-07",
-       "y": 25
+       "x": "2026-09-14",
+       "y": 5
       },
       {
-       "x": "2026-08-08",
-       "y": 28
+       "x": "2026-09-15",
+       "y": 11
+      },
+      {
+       "x": "2026-09-27",
+       "y": 15
+      },
+      {
+       "x": "2026-09-28",
+       "y": 16
       }
      ],
-     "source": "git -C mechanism_trainer log --format=%ad --date=short, running total by day"
+     "source": "GitHub API, andliu7/ff_technical_instructions commits, running total by day"
     },
     {
-     "id": "trainer.commitsTotal",
+     "id": "ff.commitsTotal",
      "kind": "stat",
      "unit": "commits",
-     "value": 28,
-     "source": "git -C mechanism_trainer log: commit count"
+     "value": 16,
+     "source": "GitHub API, andliu7/ff_technical_instructions: commit count"
     },
     {
-     "id": "trainer.span",
+     "id": "ff.span",
      "kind": "stat",
      "unit": "days",
-     "value": 2,
-     "source": "git -C mechanism_trainer log: days from the first commit (2026-08-06) to the last (2026-08-08)"
+     "value": 19,
+     "source": "GitHub API: days from the first commit (2026-09-09) to the last (2026-09-28)"
+    },
+    {
+     "id": "ff.words",
+     "kind": "stat",
+     "unit": "words",
+     "value": 5474,
+     "source": "ff_technical_instructions/repo2/index.html: words of visible text"
+    },
+    {
+     "id": "ff.sections",
+     "kind": "stat",
+     "unit": "sections",
+     "value": 8,
+     "source": "ff_technical_instructions/repo2/index.html: h2 sections"
     }
    ]
   }
