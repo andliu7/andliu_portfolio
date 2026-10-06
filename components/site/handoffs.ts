@@ -2,26 +2,6 @@
 // SITE-PLAN.md 1.5. Integration verifies these; it does not wire anything new.
 
 // ---------------------------------------------------------------------------------------------
-// NOTCH_TO_ISLAND: the footer card's tab hangs down and the island window grows out of it.
-// The same values are written as CSS custom properties on :root in app/globals.css
-// (--notch-w, --notch-h, --notch-r, --notch-fill, --card-r). Use the variables in CSS; use these
-// constants in scripts and checks.
-// ---------------------------------------------------------------------------------------------
-
-export const NOTCH_TO_ISLAND = {
-  width: 'clamp(168px, 22cqi, 288px)', // --notch-w, measured against <main>, which is a container
-  height: 28, // --notch-h, px
-  radius: 14, // --notch-r, px: the outer radius where the tab meets the card
-  fill: 'var(--berry-deep)', // --notch-fill
-  cardRadius: 28, // --card-r, px
-  vars: { width: '--notch-w', height: '--notch-h', radius: '--notch-r', fill: '--notch-fill', cardRadius: '--card-r' },
-  out: 'notch-out', // data-handoff on the footer card's tab (contact piece)
-  in: 'notch-in', // data-handoff on the island window (island piece)
-  tolerancePx: 1, // integration: |out.bottom - in.top| and |out.width - in.width| at most this
-  checkWidths: [390, 1280, 1440],
-} as const;
-
-// ---------------------------------------------------------------------------------------------
 // Window events (plan 1.5). Fire with emit(); listen with on(). Sections only emit; none imports
 // mascot or chat code, so if a listener is not loaded the event simply falls on the floor.
 // ---------------------------------------------------------------------------------------------

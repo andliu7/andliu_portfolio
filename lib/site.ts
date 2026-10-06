@@ -131,7 +131,6 @@ export const FORK = {
     href: '#offclock',
     cta: 'See the rest of the week', // [UI] (needs sign-off) after OFF_CLOCK.headline [P]
   },
-  edgeLeft: 'berryCluster', // IMAGES key
 } as const;
 
 // 4.3 and 4.4 The Blueberry chapter (the dive's children are its head)
@@ -672,8 +671,6 @@ export type ImageEntry = {
 };
 
 export const IMAGES = {
-  berryWet: { src: '/images/photo/berry-wet.webp', w: 2560, h: 1707, alt: '', owner: 'exists', sections: ['dive'] },
-  berryCluster: { src: '/images/photo/cut-berry-cluster-a.webp', w: 700, h: 700, alt: '', owner: 'exists', sections: ['manifesto'] },
   skyCloudSea: { src: '/images/photo/sky-cloud-sea.webp', w: 2000, h: 1333, alt: '', owner: 'exists', sections: ['offclock'] },
   // Blueberry's own drawing of a Grignard reagent and a ketone (its lessons render it with RDKit),
   // copied from grignard-app-source/public/reactions/grignard-addition-ketone-start-light.svg

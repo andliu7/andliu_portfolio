@@ -1,6 +1,5 @@
 /* The island finale (app/sections/island.tsx, plan 4.10). Every selector starts at .island.
-   Prefix il-, never isl-: the .isl* rules in globals.css belong to the old, unused
-   app/island-section.tsx. */
+   Prefix il-. */
 .island { display:flex; flex-direction:column; align-items:stretch; gap:20px; margin-top:0; padding:8px var(--gutter) var(--gutter); background-color:var(--ground); color:var(--on); }
 
 .island .il-window { display:grid; grid-template-columns:minmax(0,40fr) minmax(0,60fr); gap:clamp(24px,3.4vw,56px); align-items:center;
