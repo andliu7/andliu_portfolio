@@ -21,13 +21,15 @@
   font:600 12px/1.4 var(--mono); letter-spacing:.1em; text-transform:uppercase; font-variant-ligatures:none;
 }
 
-/* ---------- The heading and its two stickers ---------- */
+/* ---------- The heading and its sticker ---------- */
 .dive .dv-head { position:relative; container-type:inline-size; }
 .dive .dv-title.fit { font-size:min(calc(100cqi / 11.5), 160px); }
 .dive .dv-collage { position:absolute; z-index:1; left:44cqi; top:52%; width:min(26cqi,280px); aspect-ratio:1.5; translate:-8% -96%; pointer-events:none; }
 .dive .dv-st { position:absolute; display:block; pointer-events:auto; }
 .dive .dv-st-card { right:0; top:4%; width:70%; rotate:8deg; }
-.dive .dv-st-mol { left:0; bottom:0; width:46%; rotate:-12deg; }
+/* Wide: the card alone now (the molecule beside it went 2026-10-06), so it sits at the left of
+   the collage, against the end of CHEMISTRY, instead of leaving the molecule's gap. */
+@container (min-width:700px) { .dive .dv-st-card { right:auto; left:0; } }
 @container (max-width:699px) {
   .dive .dv-title.fit { font-size:calc(100cqi / 8.6); }
   .dive .dv-collage { width:44cqi; left:40cqi; top:62%; translate:-4% -58%; }

@@ -1,0 +1,68 @@
+/* The site footer (components/site/footer.tsx), after the Focus Family guide's .foot. Prefix ft-.
+   Always dark in any section's ground: #0C0A09 with a #292524 rule and stone greys for type.
+   Contrast on #0C0A09: #FFFFFF 19.8, #D6D3D1 14.2, #A8A29E 8.1, so every line is AA at any size.
+   The focus ring is berry-soft (13.3 on the ground), since berry itself is 2.4 here. */
+
+/* The seam: zero height, riding the bottom edge of the page above the footer. Its ::before casts
+   the page's shadow down onto the footer (clipped so none of it falls back up onto the page). */
+.ft-seam { position:relative; z-index:1; height:0; pointer-events:none; --act:0; --laser:91 111 214; /* berry-2 */ }
+.ft-seam::before { content:''; position:absolute; left:0; right:0; bottom:0; height:24px; box-shadow:0 14px 36px rgba(0,0,0,.55); clip-path:inset(24px -60px -100px -60px); }
+
+/* The laser: a white-hot core with a berry glow across the middle 55% of the content column,
+   flickering and drifting, plus a heat band spilling down onto the footer. Scrolling raises --act
+   (footer.tsx), which brightens the glow and the heat. Decoration only. */
+.ft-laser { position:absolute; left:50%; bottom:0; width:calc(min(1200px,100%) * .55); height:0; transform:translateX(-50%); }
+.ft-core, .ft-glow, .ft-heat { position:absolute; left:0; right:0; }
+.ft-core { top:-3px; height:6px; background:radial-gradient(closest-side,#fff 55%,rgb(var(--laser) / .9) 80%,transparent);
+  animation:ft-flicker 7s steps(1,end) infinite, ft-drift 11s ease-in-out infinite alternate; }
+.ft-glow { top:-20px; height:40px; filter:blur(4px); opacity:calc(.6 + .4 * var(--act));
+  background:radial-gradient(closest-side,rgb(var(--laser) / .85),rgb(var(--laser) / .35) 45%,transparent); animation:ft-drift 11s ease-in-out infinite alternate; }
+.ft-heat { top:0; left:-10%; right:-10%; height:160px; opacity:calc(.3 + .7 * var(--act));
+  background:radial-gradient(ellipse 50% 100% at 50% 0,rgb(var(--laser) / .4),rgb(var(--laser) / .1) 45%,transparent 75%); }
+@keyframes ft-flicker { 0% { opacity:1; } 13% { opacity:.86; } 17% { opacity:1; } 46% { opacity:.92; } 49% { opacity:1; } 71% { opacity:.82; } 74% { opacity:1; } }
+@keyframes ft-drift { from { transform:translateY(-2px) rotate(-.25deg); } to { transform:translateY(2px) rotate(.25deg); } }
+html[data-motion="reduced"] :is(.ft-core,.ft-glow) { animation:none; }
+
+/* The footer, one layer down: z-index -1 inside <main>, which isolation makes a stacking context.
+   Without it, -1 would drop the footer under <main>'s own box, visible but unclickable. Nothing in
+   <main> rises above the header (no z-index over 50 in any section), so isolating it costs nothing. */
+main:has(> .ft) { isolation:isolate; }
+.ft { position:relative; z-index:-1; background:#0C0A09; border-top:1px solid #292524; color:#D6D3D1; }
+/* Stuck to the window's bottom only where it fits (data-fits) and motion is allowed. */
+html:not([data-motion="reduced"]) .ft[data-fits] { position:sticky; bottom:0; }
+
+.ft-in { max-width:1200px; margin:0 auto; padding:56px var(--gutter) 64px; display:grid; grid-template-columns:minmax(0,1.8fr) minmax(0,1fr); gap:40px 56px; }
+@media (max-width:760px) { .ft-in { grid-template-columns:minmax(0,1fr); padding-block:40px 48px; gap:32px; } }
+
+/* Left: the skip-ahead list. */
+.ft-h { margin:0 0 6px; font:600 13px/1.4 var(--mono); letter-spacing:.16em; text-transform:uppercase; color:#D6D3D1; }
+.ft-note { margin:0 0 16px; font:500 16px/1.5 var(--body); color:#A8A29E; }
+.ft-links { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 20px; }
+@media (max-width:560px) { .ft-links { grid-template-columns:minmax(0,1fr); gap:2px; } }
+.ft-links a { display:flex; align-items:center; gap:12px; min-height:var(--hit); padding:8px 10px; margin:0 -10px; border-radius:var(--r-control); color:inherit; text-decoration:none;
+  transition:background-color .15s ease, transform .15s ease; }
+.ft-links a:hover, .ft-links a:focus-visible { background:rgba(255,255,255,.07); transform:translateX(2px); }
+.ft-links a:active { transform:translateX(2px) translateY(1px); }
+.ft-ico { flex:none; display:grid; place-items:center; width:36px; height:36px; border-radius:10px; background:rgba(255,255,255,.09); color:#fff; transition:background-color .15s ease, color .15s ease; }
+.ft-links a:hover .ft-ico, .ft-links a:focus-visible .ft-ico { background:#fff; color:#0C0A09; }
+.ft-q { display:block; font:500 16px/1.35 var(--body); color:#D6D3D1; }
+.ft-a { display:block; margin-top:2px; font:700 13px/1.3 var(--mono); letter-spacing:.04em; text-transform:uppercase; color:#fff; }
+
+/* Right: the mark on its paper card (the header's, so LIU keeps its berry at AA: 7.6 on card),
+   the one-line blurb, the copyright, GitHub and LinkedIn. Right-aligned beside the links; under
+   them, left-aligned, on a phone. */
+.ft-brand { display:flex; flex-direction:column; align-items:flex-end; gap:14px; text-align:right; }
+@media (max-width:760px) { .ft-brand { align-items:flex-start; text-align:left; } }
+.ft-mark { --mark-size:30px; --kw:var(--berry); display:inline-grid; place-items:center; min-width:var(--hit); min-height:var(--hit); padding:8px 11px 9px; border-radius:var(--r-control); background:var(--card); }
+.ft-blurb { margin:0; max-inline-size:28ch; font:500 16px/1.5 var(--body); color:#D6D3D1; }
+.ft-meta { margin:0; font:500 12px/1.6 var(--mono); color:#A8A29E; }
+.ft-social { display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; }
+@media (max-width:760px) { .ft-social { justify-content:flex-start; } }
+.ft-btn { display:inline-flex; align-items:center; gap:8px; min-height:var(--hit); padding:0 16px; border:1px solid #292524; border-radius:var(--r-pill); background:rgba(255,255,255,.06); color:#fff;
+  font:600 14px/1 var(--mono); text-decoration:none; transition:background-color .15s ease, transform .09s ease-out; }
+.ft-btn:hover { background:rgba(255,255,255,.12); }
+.ft-btn:active { transform:translateY(1px); background:rgba(255,255,255,.03); }
+
+.ft :is(a):focus-visible { outline:2px solid var(--berry-soft); outline-offset:2px; }
+html[data-motion="reduced"] .ft :is(.ft-links a,.ft-ico,.ft-btn) { transition:none; }
+html[data-motion="reduced"] .ft .ft-links a:is(:hover,:focus-visible,:active) { transform:none; }

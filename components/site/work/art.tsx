@@ -1,7 +1,7 @@
 import type { CSSProperties, JSX } from 'react';
 
 // Flat, original drawings for the work act (style pass 2026-10-06): the check sticker (the
-// blueberry, molecule and flashcard stickers are the shared ones in components/site/stickers),
+// blueberry and flashcard stickers are the shared ones in components/site/stickers),
 // and three illustration cards for the projects that have no screenshot
 // (Flashcards, Second Brain until its shot is approved, the animation pipeline). Every one is
 // decoration, so each svg is aria-hidden; the words around it carry the meaning.
@@ -39,21 +39,8 @@ export function CheckSticker({ className = '' }: { className?: string }) {
 // Illustration cards, 800x500 (the screenshots' 16:10), for projects without a screenshot.
 // ---------------------------------------------------------------------------------------------
 
-/** A benzene ring with one pendant bond and an atom: Blueberry's drawing, simplified. */
-function Ring({ x, y, r, atom }: { x: number; y: number; r: number; atom: Tone }) {
-  const h = r * 0.866;
-  const pts = [[0, -r], [h, -r / 2], [h, r / 2], [0, r], [-h, r / 2], [-h, -r / 2]].map(([a, b]) => `${x + a},${y + b}`).join(' ');
-  const k = 0.74;
-  return (
-    <g>
-      <polygon points={pts} style={paint('none')} />
-      <path d={`M${x} ${y - r * k} ${x + h * k} ${y - (r / 2) * k}M${x + h * k} ${y + (r / 2) * k} ${x} ${y + r * k}M${x - h * k} ${y + (r / 2) * k}V${y - (r / 2) * k}M${x + h} ${y - r / 2} ${x + h + r * 0.8} ${y - r}`} style={paint('none')} />
-      <circle cx={x + h + r * 0.8 + 8} cy={y - r - 5} r={r * 0.3} style={paint(atom)} />
-    </g>
-  );
-}
-
-/** Flashcards: a deck fanned out, the front card showing a structure, and the self-rating row. */
+/** Flashcards: a deck fanned out, the front card showing a picture slot and lines of text, and the
+ * self-rating row. (Its benzene ring was removed 2026-10-06: Andrew wants no chemistry art.) */
 export function FlashcardsArt() {
   return (
     <svg className="art" viewBox="0 0 800 500" aria-hidden="true">
@@ -61,7 +48,7 @@ export function FlashcardsArt() {
       <rect x="250" y="70" width="300" height="200" rx="22" transform="rotate(-9 400 170)" style={paint('berry-soft')} />
       <rect x="250" y="70" width="300" height="200" rx="22" transform="rotate(6 400 170)" style={paint('apricot')} />
       <rect x="250" y="70" width="300" height="200" rx="22" style={paint('paper')} />
-      <Ring x={335} y={180} r={42} atom="berry" />
+      <rect x="290" y="130" width="96" height="96" rx="18" style={paint('berry-soft')} />
       <rect x="420" y="130" width="96" height="12" rx="6" style={ink} />
       <rect x="420" y="160" width="80" height="10" rx="5" style={{ ...ink, opacity: 0.3 }} />
       <rect x="420" y="184" width="64" height="10" rx="5" style={{ ...ink, opacity: 0.3 }} />
@@ -107,7 +94,8 @@ export function BrainArt() {
   );
 }
 
-/** The animation pipeline: a film strip of three reaction frames, the arrow moving the electrons. */
+/** The animation pipeline: a film strip of three frames of a ball in flight, the arc showing its
+ * path (the classic first animation exercise; the reaction rings went 2026-10-06, no chemistry art). */
 export function StudioArt() {
   const holes = [];
   for (let x = 60; x < 740; x += 44) {
@@ -123,7 +111,7 @@ export function StudioArt() {
       {frames.map((fx, i) => (
         <g key={fx}>
           <rect x={fx} y="130" width="208" height="220" rx="12" style={paint(i === 1 ? 'sky' : 'paper')} />
-          <Ring x={fx + 84} y={250} r={36} atom={i === 2 ? 'tile-leaf' : 'apricot'} />
+          <circle cx={fx + 50 + i * 54} cy={i === 1 ? 250 : 300} r={26} style={paint(i === 2 ? 'tile-leaf' : 'apricot')} />
           {i === 1 && <path d={`M${fx + 40} 190 Q${fx + 100} 140 ${fx + 150} 182`} style={{ ...paint('none', true, 5), stroke: 'var(--berry)' }} />}
           {i === 1 && <polygon points={`${fx + 150},182 ${fx + 136},180 ${fx + 148},168`} style={{ fill: 'var(--berry)', stroke: 'var(--berry)', strokeWidth: 3, strokeLinejoin: 'round' }} />}
         </g>

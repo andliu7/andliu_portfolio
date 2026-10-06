@@ -1,0 +1,10 @@
+/* Silk (components/site/silk/silk.tsx). Prefix silk-.
+   Fills its nearest positioned ancestor, one layer below that ancestor's content (z-index -1;
+   the ancestor sets isolation:isolate so it stays inside). Decoration only: no pointer events.
+   The gradient is the fallback, in the shader's four colours: it shows before the first frame,
+   without WebGL, and after a lost context (data-failed hides the canvas). */
+.silk { position:absolute; inset:0; z-index:-1; overflow:hidden; pointer-events:none;
+  background:radial-gradient(120% 90% at 70% 20%,#916BBF33,transparent 60%),
+    linear-gradient(160deg,#02010A 0%,#04052E 45%,#3D2C8D 85%,#916BBF 130%); }
+.silk-canvas { display:block; width:100%; height:100%; }
+.silk[data-failed] .silk-canvas { display:none; }

@@ -2,15 +2,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { ArrowUpRight } from 'lucide-react';
-import { A11Y, BLUEBERRY, IDENTITY, MICROCOPY, RESUME, SECTIONS } from '@/lib/site';
-import { FlipStage } from './flip-heading';
+import { A11Y, BLUEBERRY, MICROCOPY, RESUME, SECTIONS } from '@/lib/site';
+import { Mark } from './mark';
 import { Menu } from './menu';
 import { PillFaces } from './pill-faces';
 import { getSection, subscribeSection } from './section-state';
 
 // The fixed header (SITE-PLAN.md 6.1). Every control sits on an opaque surface with the ledge,
 // so it is never text on text.
-//   left    the two-voice wordmark ("Andrew" in Antic over "LIU" in Fira), which flips on hover
+//   left    the AND/LIU mark (components/site/mark.tsx, his handle andliu), which flips on hover
 //           like a small FlipHeading and goes home
 //   centre  the current section's label in a pill (1200px and up), rolling when it changes; where
 //           a section has no label, the centre mark (Blueberry's flat berry) instead
@@ -38,14 +38,13 @@ export function Header() {
   }, []);
 
   const { hidden, band } = useHideOnScroll();
-  const first = IDENTITY.first.charAt(0) + IDENTITY.first.slice(1).toLowerCase();
 
   return (
     // data-menu-open lifts the wordmark and the Visit Blueberry pill above the open menu, so the
     // header stays put while the menu covers the page (plan 6.1).
     <header className="site-header" data-menu-open={open ? '' : undefined} data-hidden={hidden ? '' : undefined} data-band={band ? '' : undefined}>
       <a className="wordmark flip-head" href={home ? '#top' : '/'} aria-label={A11Y.home}>
-        <FlipStage text={`*${first}*\n${IDENTITY.last}`} />
+        <Mark />
       </a>
       <SectionLabel />
       <div className="header-right">

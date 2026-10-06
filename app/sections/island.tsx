@@ -1,13 +1,11 @@
 import { Play } from 'lucide-react';
 import { IMAGES, ISLAND, MICROCOPY, sectionAttrs } from '@/lib/site';
-import { PotSticker } from '@/components/site/closing/stickers';
 import './island.css';
 
 // The island finale (SITE-PLAN.md 4.10), the static version. One wide berry window standing on
 // its own under the footer's marquee band: the title and tagline on the left, the island poster
-// on the right, and "Go to the game?" as a real button. Then the closing footer card (the end
-// line in display type, copyright and credits, a potted plant for the empty plot), and nothing
-// after it.
+// on the right, and "Go to the game?" as a real button. After it comes only the site footer
+// (components/site/footer.tsx), which holds the copyright and credits.
 // The NOTCH_TO_ISLAND tab and stem were removed in round 2 (they read as a glitch).
 //
 // The button is a plain link to the game's own page (ISLAND.src): the visitor chooses to go, the
@@ -43,14 +41,6 @@ export default function Island() {
           />
         </figure>
       </div>
-      <footer className="il-end" data-ground="paper">
-        <p className="display il-end-line">{ISLAND.endLine}</p>
-        <div className="il-end-meta">
-          <p className="caption">{ISLAND.copyright}</p>
-          <p className="caption">{MICROCOPY.credits}</p>
-        </div>
-        <PotSticker className="il-end-pot" />
-      </footer>
     </section>
   );
 }

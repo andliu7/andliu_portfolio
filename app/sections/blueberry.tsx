@@ -1,11 +1,10 @@
 import { ArrowUpRight } from 'lucide-react';
-import { BB_ENGINEERING, BB_FACTS, BB_HEAD, BB_SCREENS, BLUEBERRY_CHAPTER, PHONE_LAYERS, sectionAttrs } from '@/lib/site';
+import { BB_ENGINEERING, BB_FACTS, BB_HEAD, BB_SCREENS, BLUEBERRY_CHAPTER, sectionAttrs } from '@/lib/site';
 import { FlipHeading } from '@/components/site/flip-heading';
 import { Marquee } from '@/components/site/marquee';
 import { TiltFrame } from '@/components/site/tilt-frame';
-import { BlueberrySticker, FlashcardSticker, MoleculeSticker } from '@/components/site/stickers/stickers';
+import { BlueberrySticker, FlashcardSticker } from '@/components/site/stickers/stickers';
 import { CountUp } from '@/components/site/work/count-up';
-import { ExplodedPhone } from '@/components/site/work/phone';
 import { Shot } from '@/components/site/work/shot';
 import './blueberry.css';
 
@@ -14,8 +13,9 @@ import './blueberry.css';
 //   1. head:    a crushed two-line headline with stickers on it, the story at reading width,
 //               and the facts as count-up stickers beside it
 //   2. screens: a sky band; the three real captures, each zoomed to one readable region
-//   3. layers:  a lavender band; the exploded phone (CSS 3D, decoration) beside the layer list
-//   4. stack:   the stack as pills in an ink marquee strip
+//   3. stack:   the stack as pills in an ink marquee strip
+// The exploded phone and its "layer by layer" list were removed 2026-10-06 (Andrew: the layers
+// did not make sense); what replaces them is not decided yet.
 // The bands are Slush's colour bands: rounded panels inset from the berry ground, each carrying
 // data-ground="paper" so the text, links and focus ring inside switch to ink.
 // Left out on purpose: the "cards in his first deck" fact and the deck layer's label. Both come
@@ -25,10 +25,8 @@ import './blueberry.css';
 // A server component; TiltFrame, CountUp and the marquee are the only client parts.
 
 const FACTS = BB_FACTS.filter(fact => fact.value !== undefined);
-const LAYERS = PHONE_LAYERS.filter(layer => typeof layer.label === 'string');
 const SHOT_FILLS = ['apricot', 'card', 'berry-soft'] as const;
 const FACT_FILLS = ['apricot', 'sky', 'berry-soft'] as const;
-const LAYER_FILLS = ['sky', 'apricot', 'card', 'tile-gold'] as const;
 // The band repeats the stack twice so one copy is wider than the screen and the loop never
 // shows a gap; screen readers get the list once, from the marquee's label.
 const BAND = [...BB_ENGINEERING.stack, ...BB_ENGINEERING.stack];
@@ -41,7 +39,6 @@ export default function Blueberry() {
           <FlipHeading id="blueberry-title" text={BB_HEAD.headline} max={168} />
           <span className="bb-st bb-st-card" data-reveal><FlashcardSticker /></span>
           <span className="bb-st bb-st-berry" data-reveal><BlueberrySticker /></span>
-          <span className="bb-st bb-st-mol" data-reveal><MoleculeSticker /></span>
         </div>
         <div className="bb-intro">
           <p className="bb-story" data-reveal="lines">{BLUEBERRY_CHAPTER.story}</p>
@@ -70,24 +67,6 @@ export default function Blueberry() {
             </li>
           ))}
         </ul>
-      </div>
-
-      <div className="bb-band bb-inside" data-ground="paper">
-        <TiltFrame className="bb-phone-tilt" max={9} shift={0} layers={[{ depth: 0, node: <ExplodedPhone /> }]} />
-        <div className="bb-layers-col">
-          <span className="eyebrow">{BB_HEAD.layers}</span>
-          <ol className="bb-layers">
-            {LAYERS.map((layer, i) => (
-              <li key={layer.id} className="bb-layer" data-fill={LAYER_FILLS[i]} data-reveal>
-                <span className="bb-layer-n" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
-                <span className="bb-layer-text">
-                  <span className="bb-layer-name">{layer.name}</span>
-                  <span className="bb-layer-label">{layer.label as string}</span>
-                </span>
-              </li>
-            ))}
-          </ol>
-        </div>
       </div>
 
       <div className="bb-stack">

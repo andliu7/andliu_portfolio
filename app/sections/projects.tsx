@@ -5,7 +5,7 @@ import { FlipHeading } from '@/components/site/flip-heading';
 import { RollingRow } from '@/components/ui/rolling-list';
 import { TiltFrame } from '@/components/site/tilt-frame';
 import { CheckSticker, PROJECT_ART } from '@/components/site/work/art';
-import { BlueberrySticker, FlashcardSticker, MoleculeSticker } from '@/components/site/stickers/stickers';
+import { BlueberrySticker, FlashcardSticker } from '@/components/site/stickers/stickers';
 import { Shot } from '@/components/site/work/shot';
 import './projects.css';
 
@@ -30,7 +30,9 @@ const CARDS = SPREADS.filter(p => !FEATURED.includes(p.id));
 
 // One sticker fill per project, so neighbours never share one (ink text is AA on all of them).
 const FILL: Record<string, string> = { game: 'tile-teal', flashcards: 'tile-gold', brain: 'tile-pink', trainer: 'tile-leaf', studio: 'tile-apricot', guide: 'tile-teal' };
-const STICKER: Record<string, (props: { className?: string }) => JSX.Element> = { game: BlueberrySticker, flashcards: FlashcardSticker, brain: CheckSticker, trainer: MoleculeSticker, studio: MoleculeSticker, guide: FlashcardSticker };
+// The mechanism trainer and the animation pipeline have no sticker: theirs was the molecule,
+// removed 2026-10-06 (Andrew: no chemistry art). Visual already skips a missing one.
+const STICKER: Partial<Record<string, (props: { className?: string }) => JSX.Element>> = { game: BlueberrySticker, flashcards: FlashcardSticker, brain: CheckSticker, guide: FlashcardSticker };
 
 const rowHref = (id: string) => (id === 'blueberry' ? '#blueberry' : id === 'island' ? '#island' : `#work-${id}`);
 

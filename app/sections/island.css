@@ -17,20 +17,7 @@
 }
 html[data-motion="reduced"] .island .il-shot img { transition:none; }
 
-/* The closing footer card: the last words on the page in display type on a paper card, the
-   copyright and credits beside them, and a potted plant for the empty plot. Ink on card 17.1;
-   the captions use --on-2 (ink-2), 10.4. */
-.island .il-end { position:relative; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:16px 32px;
-  padding:clamp(24px,3vw,40px); padding-right:clamp(120px,14vw,200px); border:1px solid var(--ink); border-radius:var(--card-r); background:var(--card); color:var(--on); }
-.island .il-end-line { max-inline-size:24ch; font-size:clamp(26px,3vw,44px); line-height:1; }
-.island .il-end-meta { display:grid; gap:6px; justify-items:end; text-align:right; color:var(--on-2); }
-.island .il-end-meta .caption { font-size:13px; }
-.island .il-end-pot { position:absolute; right:clamp(16px,2.4vw,36px); bottom:-10px; width:clamp(88px,10vw,140px); height:auto; rotate:6deg; }
-
 @media (max-width:860px) {
   .island .il-window { grid-template-columns:minmax(0,1fr); }
-  .island .il-end { grid-template-columns:minmax(0,1fr); padding-right:clamp(24px,3vw,40px); padding-top:96px; }
-  .island .il-end-meta { justify-items:start; text-align:left; }
-  .island .il-end-pot { top:-24px; bottom:auto; width:84px; }
   .island .il-shot img { rotate:0deg; }
 }

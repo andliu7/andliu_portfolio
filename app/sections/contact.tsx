@@ -1,5 +1,5 @@
 import { ArrowLeft, ArrowUpRight } from 'lucide-react';
-import { CONTACT, FOOTER, MICROCOPY, RESUME, STACK, sectionAttrs } from '@/lib/site';
+import { CONTACT, MICROCOPY, RESUME, STACK, sectionAttrs } from '@/lib/site';
 import { FlipHeading } from '@/components/site/flip-heading';
 import { FlipLink } from '@/components/ui/flip-links';
 import { Marquee } from '@/components/site/marquee';
@@ -8,8 +8,9 @@ import './contact.css';
 
 // The footer card (SITE-PLAN.md 4.9) in the Slush look: one flat apricot card (no gradient),
 // the headline crushed giant, GitHub and LinkedIn as big outlined pills, the email address itself
-// in display type as the mailto link, the Pages sitemap as small pills on the right, and the
-// résumé as the one berry button so it is the first thing a recruiter finds. Each link appears
+// in display type as the mailto link, and the résumé as the one berry button so it is the first
+// thing a recruiter finds. The sitemap and copyright live in the site footer
+// (components/site/footer.tsx), not here. Each link appears
 // once in the card. Under the card, the STACK marquee runs as a full-bleed sky band.
 //
 // FooterCard is exported for About; its signature is fixed:
@@ -18,12 +19,9 @@ import './contact.css';
 //   variant 'about'  the same, plus a pill back to the home page (MICROCOPY.backHome)
 
 export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
-  // On About the in-page targets live on the home page.
-  const at = (href: string) => (variant === 'about' && href.startsWith('#') ? `/${href}` : href);
   const resume = CONTACT.links.find(link => link.href === RESUME);
   const mail = CONTACT.links.find(link => link.href.startsWith('mailto:'));
   const links = CONTACT.links.filter(link => link !== resume && link !== mail);
-  const pages = FOOTER.columns[0]; // Pages; Elsewhere repeated GitHub, LinkedIn and the résumé
   return (
     // A fragment (<>...</>): the card and the band are two siblings in the section, no wrapper.
     <>
@@ -53,12 +51,6 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
             </p>
             <p className="ct-note">{CONTACT.emailNote}</p>
           </div>
-          <nav className="ct-cols" aria-label={pages.title}>
-            <span className="eyebrow">{pages.title}</span>
-            <ul>
-              {pages.links.map(link => <li key={link.label}><a className="ct-site" href={at(link.href)}>{link.label}</a></li>)}
-            </ul>
-          </nav>
         </div>
       </div>
       {variant === 'about' && (

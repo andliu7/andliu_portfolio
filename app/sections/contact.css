@@ -14,9 +14,6 @@ section.contact { padding-top:24px; overflow-x:clip; }
 @container (max-width:560px) { .contact .ct-body .flip-heading { font-size:48px; } }
 
 .contact .ct-row { display:grid; grid-template-columns:minmax(0,1fr); gap:32px; }
-@container (min-width:860px) {
-  .contact .ct-row { grid-template-columns:minmax(0,1fr) minmax(0,440px); column-gap:56px; align-items:start; }
-}
 
 /* The links: each a big outlined pill (Slush's 2px ink outline), letters rolling on hover. The
    roll is FlipLink's own (.flip in globals.css); the two rules below extend it to the whole pill
@@ -34,16 +31,6 @@ section.contact { padding-top:24px; overflow-x:clip; }
 .contact .ct-mail { font-size:clamp(16px,2.6cqi,32px); /* 24 Fira characters at .6em each: small enough to stay on one line from 320px up */ line-height:1.1; text-transform:none; overflow-wrap:anywhere; text-decoration:underline; text-decoration-thickness:3px; text-underline-offset:.16em; text-decoration-color:var(--berry); }
 .contact .ct-mail:hover { color:var(--berry); }
 .contact .ct-note { margin-top:8px; font:500 17px/1.5 var(--body); color:var(--on-2); }
-
-/* The sitemap (Pages only): small outlined pills, 44px tall, that fill ink on hover and press
-   down 2px. */
-.contact .ct-cols { display:grid; gap:10px; align-content:start; }
-.contact .ct-cols ul { display:flex; flex-wrap:wrap; gap:8px; padding:0; list-style:none; }
-.contact .ct-site { display:inline-flex; align-items:center; min-height:var(--hit); padding:0 16px; border:1.5px solid var(--ink); border-radius:var(--r-pill); color:var(--ink);
-  font:500 16px/1 var(--body); transition:background-color var(--dur-ui) var(--ease-ui), color var(--dur-ui) var(--ease-ui), transform .09s ease-out; }
-.contact .ct-site:hover { background:var(--ink); color:var(--apricot); } /* apricot on ink 12.6 */
-.contact .ct-site:active { transform:translateY(2px); }
-html[data-motion="reduced"] .contact .ct-site { transition:none; }
 
 /* About only: the pill back home, at the card's bottom left. */
 .contact .ct-home { margin:0 clamp(24px,3.2vw,48px) clamp(24px,3.2vw,48px); }

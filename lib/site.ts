@@ -152,19 +152,6 @@ export const BLUEBERRY_CHAPTER = {
   ],
 } as const;
 
-// 4.4 The exploded phone's five layers, front to back. Labels only from the inventory; the deck
-// label is built from lib/bb-deck.json by the blueberry piece, which passes the deck in.
-export type DeckSummary = { count: number; title: string };
-export const deckLabel = (deck: DeckSummary) => `${deck.count} cards from ${deck.title}`; // [B]
-
-export const PHONE_LAYERS = [
-  { id: 'glass', name: 'Glass and the live deck', label: 'Flashcards that hunt down the one thing you keep getting wrong.' }, // [S] HERO.sell
-  { id: 'deck', name: 'The flashcard deck', label: deckLabel }, // [B]
-  { id: 'lesson', name: 'The lesson screen', label: 'Lessons that explain it properly.' }, // [S] HERO.sell
-  { id: 'rdkit', name: 'The RDKit grading layer', label: 'In-browser grading with RDKit.js on a bond-electron matrix model.' }, // [R]
-  { id: 'frame', name: 'The frame', label: 'A React 19 and TypeScript monorepo on Supabase with Postgres row-level security.' }, // [R]
-] as const;
-
 // 4.4 Facts that count up. `value` absent means the blueberry piece fills it from
 // lib/bb-deck.json (`count`): the résumé's "4 packages" is gone because disk now says 6, and
 // Impact shows the measured count instead (plan open question 5).
@@ -182,8 +169,7 @@ export const BB_SCREENS = [
   { image: 'bbLesson', caption: '#/LESSONS', href: `${BB_LIVE}#/lessons` }, // [P]
 ] as const;
 
-// 4.4 The engineering claims, one sentence each, and the stack as tags. The claims now label the
-// phone's layers (PHONE_LAYERS); the stack shows as tags under the facts.
+// 4.4 The engineering claims, one sentence each, and the stack as tags.
 export const BB_ENGINEERING = {
   claims: [
     'A custom SVG molecule renderer.', // [R]
@@ -199,7 +185,6 @@ export const BB_ENGINEERING = {
 export const BB_HEAD = {
   headline: 'FROM FLASHCARDS\nTO A *platform.*', // [P] BLUEBERRY_CHAPTER.story, "What began as flashcards ... learning platform"
   screens: 'Three real screens', // [plan 4.4] (needs sign-off)
-  layers: 'Layer by layer', // [plan 4.4] "what Blueberry is, layer by layer" (needs sign-off)
   stack: 'The stack', // [UI] label over BB_ENGINEERING.stack (needs sign-off)
 } as const;
 
@@ -470,37 +455,38 @@ export const CONTACT = {
   emailNote: 'Email is the fastest way to reach me.', // [Z contact]
 } as const;
 
-export const FOOTER = {
-  columns: [
-    {
-      title: 'Pages', // [plan 4.9] Lando's PAGES column
-      links: [
-        { label: 'Home', href: '#top' }, // [plan 4.9]
-        { label: 'Work', href: '#work' }, // [P]
-        { label: 'Impact', href: '#impact' }, // [plan 4.9]
-        { label: 'Experience', href: '#experience' }, // [P]
-        { label: 'About', href: '/about' }, // [plan 5]
-        { label: 'Island', href: '#island' }, // [P]
-      ],
-    },
-    {
-      title: 'Elsewhere', // [plan 4.9]
-      links: [
-        { label: 'GitHub', href: GITHUB }, // [P]
-        { label: 'LinkedIn', href: LINKEDIN }, // [P]
-        { label: 'Résumé', href: RESUME }, // [P]
-      ],
-    },
+// The site footer (components/site/footer.tsx), after the footer of Andrew's Focus Family guide:
+// a "skip ahead" list of the questions a visitor arrives with, each answered by a link, and a
+// brand column. The questions and answers are new [UI] wording: NEEDS ANDREW'S SIGN-OFF.
+// `icon` names an icon in footer.tsx; `external` opens a new tab.
+export const FOOTER_SKIP = {
+  heading: 'In a hurry? Skip ahead.', // [UI] after the Focus Family guide's footer (needs sign-off)
+  note: 'Pick the one thing you came for.', // [UI] (needs sign-off)
+  label: 'Skip ahead', // [UI] the link list's accessible name (needs sign-off)
+  links: [
+    { q: 'I want to see what he built.', a: 'Projects', href: '#work', icon: 'work', external: false }, // [UI] (needs sign-off)
+    { q: 'Show me the numbers.', a: 'Impact', href: '#impact', icon: 'impact', external: false }, // [UI] (needs sign-off)
+    { q: 'Where has he worked?', a: 'Timeline', href: '#experience', icon: 'experience', external: false }, // [UI] (needs sign-off)
+    { q: 'I need his résumé.', a: 'Résumé (PDF)', href: RESUME, icon: 'resume', external: true }, // [UI][P] (needs sign-off)
+    { q: 'How do I reach him?', a: 'Email', href: `mailto:${EMAIL}`, icon: 'email', external: false }, // [UI][P] (needs sign-off)
+    { q: 'What does he do for fun?', a: 'Off the clock', href: '#offclock', icon: 'fun', external: false }, // [UI][P] (needs sign-off)
+  ],
+  blurb: IDENTITY.line, // [P]
+  copyright: '© 2026 Andrew Liu', // [P] moved here from the island's end card
+  social: [
+    { label: 'GitHub', href: GITHUB, icon: 'github' }, // [P]
+    { label: 'LinkedIn', href: LINKEDIN, icon: 'linkedin' }, // [P]
   ],
 } as const;
+
+// The AND/LIU mark (header and footer): his handle, andliu, set over two lines.
+export const MARK = { top: IDENTITY.first.slice(0, 3), bottom: IDENTITY.last } as const; // [P] derived: "AND" over "LIU"
 
 export const ISLAND = {
   eyebrow: '07 / The island', // [P] renumbered after Impact
   titleTop: 'THE RÉSUMÉ', // [inventory 2.4]
   titleBottom: 'ISLAND', // [inventory 2.4]
   tagline: 'Every place on the island is one line of the résumé.', // [Z]
-  endLine: 'The empty plot is for whatever comes next.', // [Z now]
-  copyright: '© 2026 Andrew Liu', // [P]
   previewTitle: 'The résumé island', // [plan 4.10] iframe title in preview
   gameTitle: "Andrew Liu's island, a small driving game", // [P] app/island-section.tsx iframe title
   src: '/island/index.html', // [plan 4.10]

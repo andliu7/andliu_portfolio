@@ -5,6 +5,7 @@ import { Portrait } from '@/components/site/portrait';
 import { GradientGround } from '@/components/ui/gradient-backgrounds';
 import Motion from '../motion';
 import { FooterCard } from '../sections/contact';
+import { SiteFooter } from '@/components/site/footer';
 
 // STUB (foundation). The about piece replaces this file (about-us-section with its staggered
 // reveals and count-ups, the static berry, the note portraits). Here: every About line from
@@ -63,6 +64,7 @@ export default function AboutPage() {
       <section id="about-contact" data-ground="ink" data-texture="" className="contact">
         <FooterCard variant="about" />
       </section>
+      <SiteFooter />
     </>
   );
 }

@@ -264,13 +264,15 @@ section[data-texture] { isolation:isolate; }
    .site-header raises the specificity above .flip-head's color:inherit (which would hand it the
    page's --on, paper on dark grounds, and turn LIU cream on cream). It is a link home, so it has
    the outline and lip of every pressable. */
-.site-header .wordmark { --on:var(--ink); --kw:var(--berry); justify-self:start; display:inline-block; padding:4px 10px 5px; border:var(--bw) solid var(--ink); border-radius:var(--r-control); background:var(--card); color:var(--ink); box-shadow:0 var(--lip) 0 var(--ink); transition:transform var(--dur-release) var(--ease-spring),box-shadow var(--dur-release) var(--ease-spring),translate var(--dur-roll) var(--ease-elastic); }
+.site-header .wordmark { --on:var(--ink); --kw:var(--berry); justify-self:start; display:inline-grid; place-items:center; min-width:var(--hit); min-height:var(--hit); padding:4px 8px 5px; border:var(--bw) solid var(--ink); border-radius:var(--r-control); background:var(--card); color:var(--ink); box-shadow:0 var(--lip) 0 var(--ink); transition:transform var(--dur-release) var(--ease-spring),box-shadow var(--dur-release) var(--ease-spring),translate var(--dur-roll) var(--ease-elastic); }
 @media (hover:hover) { .site-header .wordmark:hover { transform:translateY(-2px); box-shadow:0 calc(var(--lip) + 2px) 0 var(--ink); } }
 .site-header .wordmark:active { transform:translateY(var(--lip)); box-shadow:0 0 0 var(--ink); transition-duration:var(--dur-press); }
-.wordmark .fh-line:first-child { font:400 22px/1 var(--accent); }
-.wordmark .fh-line:last-child { font:700 26px/.9 var(--display); letter-spacing:-.04em; }
-.wordmark .fh-kw-text { font-size:1em; color:var(--on); }
-.wordmark .fh-kw .fh-b { font-size:.8em; color:var(--kw); }
+/* The AND/LIU mark (components/site/mark.tsx), here and in the footer: two three-letter lines of
+   Fira Code 700 at one size, so (monospaced, .84em line advance from .fh-cell) they make a
+   near-square block. LIU is berry; on the flip AND turns berry (.fh-b is --kw) and LIU ink. */
+.mark { display:block; font:700 var(--mark-size,22px)/1 var(--display); letter-spacing:-.03em; color:var(--ink); text-transform:uppercase; }
+.mark .fh-line:last-child .fh-a { color:var(--berry); }
+.mark .fh-line:last-child .fh-b { color:var(--ink); }
 /* The centre (plan 6.1): the section label, an opaque pill that rolls on change; where a section
    has no label, Lando's centre mark instead (Blueberry's flat berry). Both share one grid cell and
    cross-fade. Hidden below 1200px, where the right group needs the room. Not pressable, so outlined but with no lip. */
@@ -319,9 +321,7 @@ section[data-texture] { isolation:isolate; }
 @media (max-width:760px) {
   .site-header { top:12px; gap:8px; }
   .site-header::before { top:-12px; bottom:-10px; }
-  .site-header .wordmark { padding:3px 8px 4px; }
-  .wordmark .fh-line:first-child { font-size:18px; }
-  .wordmark .fh-line:last-child { font-size:20px; }
+  .site-header .wordmark { padding:3px 7px 4px; --mark-size:19px; }
   .header-visit { --pill-pad:12px; font-size:13px; }
   .header-right { gap:8px; }
 }

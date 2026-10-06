@@ -2,7 +2,7 @@
    .bb, the section root. Ground berry under the berry-deep gradient: text --on (paper, 6.55:1 at
    the lightest point), --on-2 (berry-soft). Tiles are pastel token fills (sky, apricot,
    berry-soft, card) with 1.5px ink outlines and ink text: ink on sky 13.32, on apricot 12.61, on
-   berry-soft 11.98, on card 17.06, on tile-gold 7.54 (all AA). No shadows on tiles: the Slush
+   berry-soft 11.98, on card 17.06 (all AA). No shadows on tiles: the Slush
    rule, outlines only. Display type is Fira Code 700 (--display), small labels --mono.
    Reduced motion is html[data-motion="reduced"] (see app/globals.css). */
 
@@ -17,7 +17,7 @@
   overflow-x: clip;
 }
 /* SECTIONS gives this chapter a 3.6-viewport floor, which was scroll length for the pinned phone
-   stage. The phone here is not pinned, so that floor would only add bare ground under the
+   stage. Nothing here is pinned, so that floor would only add bare ground under the
    content (Andrew: no empty background). The chapter is as tall as what it shows. */
 .bb[data-budget] { min-height: 0; }
 @supports (transition-timing-function: linear(0, 1)) {
@@ -28,7 +28,6 @@
 .bb [data-fill="apricot"] { background: var(--apricot); }
 .bb [data-fill="berry-soft"] { background: var(--berry-soft); }
 .bb [data-fill="card"] { background: var(--card); }
-.bb [data-fill="tile-gold"] { background: var(--tile-gold); }
 
 /* The colour bands (Slush: each section a pastel poster, rounded and inset so a sliver of the
    berry ground frames it). They bleed out of the section's gutter to 12px from the edge. */
@@ -37,7 +36,6 @@
    its own token, so ink text stays AA everywhere on it (ink on sky 13.32 at the darkest point,
    on berry-soft 11.98). Bands only; tiles, cards and buttons stay flat. */
 .bb .bb-screens { background: radial-gradient(120% 120% at 15% 0%, color-mix(in srgb, var(--sky) 55%, var(--paper)) 0%, var(--sky) 65%); }
-.bb .bb-inside { background: radial-gradient(120% 120% at 85% 0%, color-mix(in srgb, var(--berry-soft) 55%, var(--paper)) 0%, var(--berry-soft) 65%); }
 .bb .eyebrow { margin-bottom: 18px; color: var(--on-2); }
 
 /* ---------- 1. head: headline with stickers, then story beside the fact stickers ---------- */
@@ -53,18 +51,15 @@
 .bb .bb-st { position: absolute; z-index: 2; display: block; pointer-events: none; }
 .bb .bb-st svg { width: 100%; height: auto; }
 /* Stickers overlap the letters (Slush collage), placed in units of the font size (--f) from
-   measured word boxes: the card on the F of FROM, the berry in the gap after FROM, the molecule
-   on the foot of the final S. None sits on the keyword, whose hover face (PLATFORM. in caps) has
+   measured word boxes: the card on the F of FROM, the berry in the gap after FROM. Neither sits on the keyword, whose hover face (PLATFORM. in caps) has
    a different width, so the roll never slides a letter under a sticker. */
 .bb .bb-st-card { width: calc(var(--f) * .7); left: calc(var(--f) * -.12); top: calc(var(--f) * -.3); rotate: -12deg; }
 .bb .bb-st-berry { width: calc(var(--f) * .6); left: calc(var(--f) * 2.2); top: calc(var(--f) * .55); rotate: -10deg; }
-.bb .bb-st-mol { width: calc(var(--f) * .8); left: calc(var(--f) * 7.9); top: calc(var(--f) * .6); rotate: 8deg; }
-/* Phones: three lines (FROM / FLASHCARDS / TO A platform.). The berry and molecule fill the open
-   end of line one, resting on the top of FLASHCARDS. */
+/* Phones: three lines (FROM / FLASHCARDS / TO A platform.). The berry fills the open end of
+   line one, resting on the top of FLASHCARDS. */
 @container (max-width: 759px) {
   .bb .bb-st-card { width: calc(var(--f) * 1); left: calc(var(--f) * -.1); top: calc(var(--f) * -.4); }
   .bb .bb-st-berry { width: calc(var(--f) * 1); left: calc(var(--f) * 3.6); top: calc(var(--f) * .1); }
-  .bb .bb-st-mol { width: calc(var(--f) * 1.3); left: calc(var(--f) * 5.4); top: calc(var(--f) * .02); }
 }
 
 .bb .bb-intro { display: grid; gap: 40px; align-items: center; }
@@ -107,57 +102,7 @@
   .bb .bb-shot .bb-shot-tile, .bb .bb-shot .bb-route { rotate: none; translate: none; }
 }
 
-/* ---------- 3. layers: the exploded phone beside the list of what each plane is ---------- */
-.bb .bb-inside { display: grid; gap: 40px; align-items: center; }
-@container (min-width: 900px) {
-  .bb .bb-inside { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: clamp(40px, 5cqi, 80px); }
-}
-.bb .bb-phone-tilt { justify-self: center; width: 100%; }
-.bb .bb-layers-col { max-inline-size: 62ch; }
-.bb .bb-layers { display: grid; gap: 12px; padding: 0; margin: 0; list-style: none; counter-reset: none; }
-.bb .bb-layer { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: start; padding: 16px 20px 18px 16px; border: var(--tile-line); border-radius: var(--r-card); color: var(--ink); }
-.bb .bb-layer-n { display: grid; place-items: center; width: 40px; height: 40px; border: var(--tile-line); border-radius: 50%; background: var(--card); font: 600 14px/1 var(--mono); font-variant-ligatures: none; }
-.bb .bb-layer[data-fill="card"] .bb-layer-n { background: var(--apricot); }
-.bb .bb-layer-text { display: grid; gap: 4px; padding-top: 2px; }
-.bb .bb-layer-name { font: 600 13px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; font-variant-ligatures: none; }
-.bb .bb-layer-label { font: 400 18px/1.45 var(--body); }
-
-/* The phone. --pw is the phone's width; every plane, the gap between planes (--gap) and the
-   stage's height follow from it, so the whole drawing scales as one. The stack is laid back
-   (rotateX) and turned (rotateZ) so the planes read as a pulled-apart sandwich. */
-.bb .bb-phone { --pw: clamp(132px, 19cqi, 230px); --ph: calc(var(--pw) * 2.05); --gap: calc(var(--pw) * .36); display: grid; place-items: center; height: calc(var(--pw) * 2.7); perspective: 1800px; }
-.bb .bb-phone-stack { position: relative; width: var(--pw); height: var(--ph); transform-style: preserve-3d; transform: rotateX(54deg) rotateZ(-36deg); }
-.bb .bb-plane { position: absolute; inset: 0; border-radius: calc(var(--pw) * .16); transform: translateZ(calc(var(--z) * var(--gap))); transition: transform 1.2s var(--ease-elastic) calc((2 - var(--z)) * 90ms); }
-/* Closed until the director marks the drawing in view; then the planes spring apart, front
-   first. Only with JavaScript and full motion, so without either the phone is already open. */
-html.js:not([data-motion="reduced"]):not(.reveal-off) .bb .bb-phone:not(.is-in) .bb-plane { transform: translateZ(calc(var(--z) * 3px)); }
-
-.bb .bb-plane-frame { background: var(--ink); border: 2px solid var(--berry-deep); }
-.bb .bb-phone-cam { position: absolute; top: 3.5%; left: 35%; width: 30%; height: 3%; border-radius: var(--r-pill); background: var(--berry-deep); }
-.bb .bb-phone-tabs { position: absolute; left: 10%; right: 10%; bottom: 3.5%; display: flex; gap: 8%; }
-.bb .bb-phone-tabs i { flex: 1; height: calc(var(--pw) * .07); border-radius: var(--r-pill); background: var(--berry-soft); }
-.bb .bb-phone-tabs i:first-child { background: var(--apricot); }
-
-.bb .bb-plane-rdkit { inset: 6%; border: 2px solid var(--ink); background: var(--sky); }
-.bb .bb-grid { position: absolute; inset: 8%; background-image: radial-gradient(circle, color-mix(in srgb, var(--ink) 45%, transparent) 1.4px, transparent 1.8px); background-size: calc(var(--pw) * .1) calc(var(--pw) * .1); }
-.bb .bb-rdkit-mol { position: absolute; left: 14%; top: 22%; width: 72%; height: auto; overflow: visible; }
-.bb .bb-rdkit-mol polygon { fill: var(--paper); stroke: var(--ink); stroke-width: 4; stroke-linejoin: round; }
-.bb .bb-rdkit-mol path { fill: none; stroke: var(--ink); stroke-width: 4; stroke-linecap: round; }
-.bb .bb-rdkit-check { position: absolute; right: 10%; bottom: 10%; width: 34%; height: auto; }
-
-.bb .bb-plane-lesson { inset: 6%; overflow: hidden; border: 2px solid var(--ink); background: var(--card); }
-.bb .bb-lesson-shot { width: 100%; height: 100%; object-fit: cover; object-position: 8% top; }
-
-.bb .bb-plane-deck { inset: 6%; }
-.bb .bb-deck-card { position: absolute; left: 10%; right: 10%; top: 30%; height: 36%; border: 2px solid var(--ink); border-radius: 14px; background: var(--apricot); }
-.bb .bb-deck-card + .bb-deck-card { translate: -8px -8px; background: var(--card); }
-
-.bb .bb-plane-glass { inset: 3%; border: 2px solid var(--ink); background: color-mix(in srgb, var(--paper) 35%, transparent); }
-.bb .bb-glass-card { position: absolute; left: 10%; right: 10%; top: 28%; height: 38%; display: grid; align-content: center; gap: 9%; padding: 0 10%; border: 2px solid var(--ink); border-radius: 14px; background: var(--paper); }
-.bb .bb-glass-card b { display: block; width: 62%; height: calc(var(--pw) * .055); border-radius: 99px; background: var(--ink); }
-.bb .bb-glass-card i { display: block; width: 80%; height: calc(var(--pw) * .04); border-radius: 99px; background: color-mix(in srgb, var(--ink) 30%, transparent); }
-
-/* ---------- 4. the stack: pills in an ink marquee strip (Slush's refero marquee), inset like
+/* ---------- 3. the stack: pills in an ink marquee strip (Slush's refero marquee), inset like
    the bands ---------- */
 .bb .bb-stack { margin-top: clamp(40px, 5cqi, 72px); }
 .bb .bb-strip { width: auto; max-width: none; margin-inline: calc(var(--band-inset) - var(--gutter)); padding: 14px 0; border-radius: var(--r-pill); background: var(--ink); }
@@ -172,11 +117,9 @@ html.js:not([data-motion="reduced"]):not(.reveal-off) .bb .bb-phone:not(.is-in) 
 @keyframes bb-card { from { opacity: 0; transform: perspective(1000px) translate3d(3em, 0, 12em) rotateY(-24deg) scale(.8); } }
 .bb .bb-st.is-in { animation: bb-pop 1s var(--ease-elastic) both; }
 .bb .bb-st-berry.is-in { animation-delay: 120ms; }
-.bb .bb-st-mol.is-in { animation-delay: 220ms; }
-.bb :is(.bb-fact, .bb-shot, .bb-layer).is-in { animation: bb-card .85s var(--ease-elastic) both; }
-.bb :is(.bb-fact, .bb-shot, .bb-layer):nth-child(2).is-in { animation-delay: 80ms; }
-.bb :is(.bb-fact, .bb-shot, .bb-layer):nth-child(3).is-in { animation-delay: 160ms; }
-.bb .bb-layer:nth-child(4).is-in { animation-delay: 240ms; }
+.bb :is(.bb-fact, .bb-shot).is-in { animation: bb-card .85s var(--ease-elastic) both; }
+.bb :is(.bb-fact, .bb-shot):nth-child(2).is-in { animation-delay: 80ms; }
+.bb :is(.bb-fact, .bb-shot):nth-child(3).is-in { animation-delay: 160ms; }
 
-html[data-motion="reduced"] .bb :is(.bb-st, .bb-fact, .bb-shot, .bb-layer) { animation: none !important; }
-html[data-motion="reduced"] .bb :is(.bb-plane, .bb-route) { transition: none; }
+html[data-motion="reduced"] .bb :is(.bb-st, .bb-fact, .bb-shot) { animation: none !important; }
+html[data-motion="reduced"] .bb .bb-route { transition: none; }

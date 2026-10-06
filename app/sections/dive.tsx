@@ -2,13 +2,13 @@ import type { CSSProperties } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { BLUEBERRY, BLUEBERRY_CHAPTER, MICROCOPY, sectionAttrs } from '@/lib/site';
 import { FlipHeading } from '@/components/site/flip-heading';
-import { FlashcardSticker, MoleculeSticker } from '@/components/site/stickers/stickers';
+import { FlashcardSticker } from '@/components/site/stickers/stickers';
 import { DiveFit } from './dive.client';
 import './dive.css';
 
 // The dive into Blueberry (SITE-PLAN.md 4.3), the chapter head, as a poster on a flat berry
-// band: an outlined tag, the headline stacked in three crushed lines with a flashcard and a
-// molecule stuck over the end of CHEMISTRY (the two things the sell names), then the sell and
+// band: an outlined tag, the headline stacked in three crushed lines with a flashcard stuck over
+// the end of CHEMISTRY (the molecule beside it was removed 2026-10-06), then the sell and
 // the two doors in one column under it.
 //
 // The headline uses BLUEBERRY_CHAPTER.headlineLines, the same words with line breaks; screen
@@ -24,7 +24,6 @@ export default function Dive() {
           <FlipHeading id="dive-title" text={BLUEBERRY_CHAPTER.headlineLines} max={128} className="dv-title" />
           <div className="dv-collage" aria-hidden="true">
             <span className="dv-st dv-st-card" style={{ '--k': 0 } as CSSProperties}><FlashcardSticker className="dv-st-art" /></span>
-            <span className="dv-st dv-st-mol" style={{ '--k': 1 } as CSSProperties}><MoleculeSticker className="dv-st-art" /></span>
           </div>
         </div>
         <div className="dv-body">

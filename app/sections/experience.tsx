@@ -1,23 +1,24 @@
-import type { CSSProperties } from 'react';
+import type { CSSProperties, JSX } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { EXPERIENCE_HEAD, JOBS, MICROCOPY, RESUME, sectionAttrs } from '@/lib/site';
 import { FlipHeading } from '@/components/site/flip-heading';
-import { BlueberrySticker, FlashcardSticker, MoleculeSticker } from '@/components/site/stickers/stickers';
+import { FlashcardSticker } from '@/components/site/stickers/stickers';
 import { ClockSticker } from '@/components/site/closing/stickers';
 import './experience.css';
 
 // Experience (SITE-PLAN.md 4.7): the four roles on one 1440x900 screen.
 // Top: the eyebrow, the heading in one giant line, and the résumé pill at the row's end.
 // Below: the roles as four Slush cards in a 2x2 grid, each filled with a pale wash of the role's
-// own tile colour and outlined in ink, its dates on a sticker in the full tile colour, and one
-// sticker of the role's own thing over its corner. On phones it is one column of cards.
+// own tile colour and outlined in ink, its dates on a sticker in the full tile colour, and, for
+// some roles, a sticker of the role's own thing over its corner. On phones it is one column of cards.
 //
 // A server component: plain markup. Motion is CSS: each card carries data-reveal, so the director
 // (app/motion.tsx) adds .is-in on enter, and experience.css pops the sticker when it does.
 
-// One sticker per role, by JOBS id: Blueberry its berry, Minnodi a clock (remote, across time
-// zones), Education One a molecule (chemistry), Kharis a flashcard (the guides he writes).
-const STICKERS = { blueberry: BlueberrySticker, minnodi: ClockSticker, educationone: MoleculeSticker, kcm: FlashcardSticker } as const;
+// A sticker for some roles, by JOBS id: Minnodi a clock (remote, across time zones), Kharis a
+// flashcard (the guides he writes). Blueberry and Education One have none on purpose (Andrew,
+// 2026-10-06: less Blueberry, no chemistry art), so the map is Partial and a role may skip it.
+const STICKERS: Partial<Record<string, (props: { className?: string }) => JSX.Element>> = { minnodi: ClockSticker, kcm: FlashcardSticker };
 
 export default function Experience() {
   return (
@@ -43,7 +44,7 @@ export default function Experience() {
               <span className="display">{job.role}</span> <span className="xp-org">{job.org}</span>
             </h3>
             <p className="xp-line">{job.line}</p>
-            <Sticker className="xp-sticker" />
+            {Sticker && <Sticker className="xp-sticker" />}
           </li>
           );
         })}

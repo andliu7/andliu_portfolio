@@ -2,12 +2,11 @@ import type { CSSProperties } from 'react';
 import { OFF_CLOCK, PORTRAITS, sectionAttrs, type PortraitId } from '@/lib/site';
 import { FitHeading, parseTwoVoice } from '@/components/site/type';
 import { Portrait } from '@/components/site/portrait';
-import { BlueberrySticker } from '@/components/site/stickers/stickers';
 import { ClockSticker, NOTE_STICKERS, SparkleSticker } from '@/components/site/closing/stickers';
 import './offclock.css';
 
 // Off the clock (SITE-PLAN.md 4.8): the eyebrow and the giant title with a sticker cluster on it
-// (a clock, the blueberry, a sparkle: Slush never leaves display type alone), then four cards in
+// (a clock and a sparkle: Slush never leaves display type alone), then four cards in
 // a staggered 2x2: cooking, lifting, landscape design (with the UMD garden line and a potted
 // plant) and faith. Each is a flat pastel card with its own sticker hanging off its top edge and
 // its line as a pull quote in the reading face, keywords in berry. A photo of Andrew shows only
@@ -44,7 +43,6 @@ export default function OffClock() {
         <FitHeading id="offclock-title" text={OFF_CLOCK.title} max={180} className="oc-title" />
         <div className="oc-cluster" aria-hidden="true" data-reveal="">
           <ClockSticker className="oc-cl-clock" />
-          <BlueberrySticker className="oc-cl-berry" />
           <SparkleSticker className="oc-cl-spark" />
         </div>
       </div>
