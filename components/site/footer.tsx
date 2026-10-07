@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Briefcase, ChartColumn, Coffee, FileText, LayoutGrid, Mail } from 'lucide-react';
 import { A11Y, FOOTER_SKIP, MICROCOPY } from '@/lib/site';
 import { getLenis } from '@/app/smooth';
+import { Flame } from './flame/flame';
 import { Mark } from './mark';
 import './footer.css';
 
@@ -27,6 +28,12 @@ import './footer.css';
 //
 // Every word comes from FOOTER_SKIP in lib/site.ts. On About the in-page targets live on the home
 // page, so "#work" becomes "/#work" there.
+//
+// The AND/LIU mark is the header's, behaviour and all: the same paper card, the letters roll on
+// hover and focus (.flip-head; a tap or Enter via the director), the card dances (.ft-mark-host
+// in globals.css), and it burns in the same flame. The flame only runs once the page has slid
+// far enough to uncover the footer (`revealed` below); stuck under the page it is on screen to
+// the browser, but nobody can see it.
 
 const ICONS = { work: LayoutGrid, impact: ChartColumn, experience: Briefcase, resume: FileText, email: Mail, fun: Coffee } as const;
 
@@ -36,6 +43,7 @@ export function SiteFooter() {
   const seamRef = useRef<HTMLDivElement>(null);
   const footRef = useRef<HTMLElement>(null);
   const [fits, setFits] = useState(false);
+  const [revealed, setRevealed] = useState(false);
 
   // Does the whole footer fit in the window? Re-measured when the window or the footer resizes
   // (a ResizeObserver fires when the element's own box changes, e.g. the font swap).
@@ -48,6 +56,15 @@ export function SiteFooter() {
     observer.observe(foot);
     window.addEventListener('resize', measure);
     return () => { observer.disconnect(); window.removeEventListener('resize', measure); };
+  }, []);
+
+  // Uncovered: the seam (the page's bottom edge) has come up into the window, or past its top.
+  useEffect(() => {
+    const seam = seamRef.current;
+    if (!seam) return;
+    const io = new IntersectionObserver(([entry]) => setRevealed(entry.boundingClientRect.top < window.innerHeight));
+    io.observe(seam);
+    return () => io.disconnect();
   }, []);
 
   // The laser brightens while you scroll (the guide's initLaser): each scroll adds "activity",
@@ -118,7 +135,9 @@ export function SiteFooter() {
             </nav>
           </div>
           <div className="ft-brand">
-            <a className="ft-mark" href={home ? '#top' : '/'} aria-label={A11Y.home}><Mark /></a>
+            <Flame className="ft-mark-host" height={20} spread={9} radius={12} paused={!revealed}>
+              <a className="ft-mark flip-head" href={home ? '#top' : '/'} aria-label={A11Y.home}><Mark /></a>
+            </Flame>
             <p className="ft-blurb">{FOOTER_SKIP.blurb}</p>
             <p className="ft-meta">{FOOTER_SKIP.copyright}<br />{MICROCOPY.credits}</p>
             <div className="ft-social">

@@ -37,10 +37,12 @@
 .offclock .oc-kw { font-style:normal; font-weight:700; color:var(--kw); }
 .offclock .oc-sub { max-inline-size:40ch; font:500 17px/1.5 var(--body); color:var(--on-2); text-wrap:pretty; }
 
-/* The island shot: a small framed print, turned a little, with the room's name under it. */
+/* The island shots: a small framed print, turned a little, with the room's name under it.
+   Every other one leans the other way, so the row reads as prints laid down by hand. */
 .offclock .oc-shot { margin:0; display:grid; gap:8px; width:min(340px,100%); rotate:2deg; }
 .offclock .oc-shot img { display:block; width:100%; height:auto; border:1px solid var(--ink); border-radius:var(--r-control); box-shadow:0 6px 0 var(--ink); background:var(--card); }
 .offclock .oc-shot figcaption { font:500 14px/1.4 var(--body); color:var(--on-2); }
+.offclock .oc-panel:nth-child(odd) .oc-shot { rotate:-2deg; }
 
 /* The sticker stands on the ground strip at the panel's right. */
 .offclock .oc-art { position:absolute; right:clamp(24px,4vw,56px); bottom:calc(var(--ground-h) - 14px); width:var(--art-w,150px); pointer-events:none; }
@@ -51,6 +53,11 @@
 .offclock .oc-gym { --art-w:190px; }
 .offclock .oc-eat { --art-w:200px; }
 .offclock .oc-someday { --art-w:110px; }
+/* COOK: the herb pot stands left of the pan on the same ground, inside the art's width. */
+.offclock .oc-cook { --art-w:230px; }
+.offclock .oc-cook .oc-art { display:flex; align-items:flex-end; gap:8px; }
+.offclock .oc-cook .oc-art .oc-herb { flex:none; width:34%; }
+.offclock .oc-cook .oc-art .oc-st { flex:1; min-width:0; }
 
 /* ---------- Stack (default) ---------- */
 .offclock .oc-track { position:relative; }
@@ -65,7 +72,7 @@
 .offclock[data-pin] .oc-panel { --ground-h:clamp(130px,21svh,200px); flex:none; width:clamp(560px,46vw,720px); height:100%;
   padding:calc(var(--header-h) + 96px) clamp(32px,4vw,64px) calc(var(--ground-h) + 24px); border-top:0; border-left:1px solid var(--ink); align-content:center; }
 .offclock[data-pin] .oc-intro { width:clamp(620px,58vw,880px); border-left:0; }
-.offclock[data-pin] .oc-study { width:clamp(820px,66vw,1040px); grid-template-columns:minmax(0,1fr) auto; align-items:center; }
+.offclock[data-pin] .oc-has-shot { width:clamp(820px,66vw,1040px); grid-template-columns:minmax(0,1fr) auto; align-items:center; }
 .offclock[data-pin] .oc-hint { display:block; }
 
 /* The name tag: once the intro's big title has slid off, OFF THE CLOCK stays at the top left. */
@@ -135,6 +142,7 @@ html[data-motion="reduced"] .offclock :is(.oc-art,.oc-copy,.oc-st,.oc-who,.cl-ey
 @media (max-width:700px) {
   .offclock .oc-panel:not(.oc-intro) { --art-w:110px; }
   .offclock .oc-panel:is(.oc-gym,.oc-eat) { --art-w:150px; }
+  .offclock .oc-cook { --art-w:170px; }
   .offclock .oc-shot { width:min(320px,100%); }
   .offclock .oc-who { --who-w:38px; }
 }

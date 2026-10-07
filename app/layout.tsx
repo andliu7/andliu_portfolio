@@ -23,7 +23,12 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
   title: META.title,
   description: META.description,
-  icons: { icon: '/favicon.svg' },
+  // The tab icon is the AND/LIU mark (public/favicon.svg, letters drawn as Fredoka 700 paths, since
+  // an SVG favicon cannot load a web font). The 32px PNG is for browsers without SVG favicons.
+  icons: {
+    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }, { url: '/icon-32.png', type: 'image/png', sizes: '32x32' }],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
+  },
   openGraph: { title: META.title, description: META.description, type: 'website', locale: 'en_US' },
 };
 

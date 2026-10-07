@@ -4,7 +4,7 @@ import { PREFS } from './handoffs';
 // The loader (SITE-PLAN.md 4.0), reworked 2026-10-06 as a pan (Andrew: "do a pan for the loading
 // of the page"). Technique: a wipe transition. Two full-screen sheets cover the page, a berry one
 // at the back and a berry-deep one in front carrying the dropping berry; at 100ms both slide off
-// to the right (translateX, 720ms on --ease-wipe), the back sheet 70ms behind the front, so the
+// to the left (translateX, 720ms on --ease-wipe), the back sheet 70ms behind the front, so the
 // page is uncovered by a berry edge sweeping across. 900ms at most, then it leaves the DOM.
 //
 // The panel covers the page from the moment the HTML is parsed, and its 900ms clock starts at

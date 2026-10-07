@@ -12,18 +12,24 @@ import './flame.css';
 // (the guide's sizing: `height` px of flame above, `spread` px of glow round the rest), and never
 // takes the pointer. It only draws while on screen and while the tab is visible. Reduced motion
 // (html[data-motion="reduced"], the site's one switch) draws a single still frame. Without
-// WebGL there is no canvas at all, just the card.
+// WebGL there is no canvas at all, just the card. `paused` stops it too, for a card that is on
+// screen but covered (the footer's, while the page still lies over it).
 
-type Props = { children: ReactNode; className?: string; height: number; spread: number; radius: number };
+type Props = { children: ReactNode; className?: string; height: number; spread: number; radius: number; paused?: boolean };
 
 const UNIFORMS = ['uRes', 'uTime', 'uCenter', 'uHalf', 'uRadius', 'uColor', 'uHot', 'uIntensity', 'uHeight', 'uSpread', 'uScale',
   'uTurb', 'uTurbScale', 'uSparks', 'uSparkSize', 'uSparkDensity', 'uSparkSpeed', 'uRim', 'uSmoke'] as const;
 
-export function Flame({ children, className = '', height, spread, radius }: Props) {
+export function Flame({ children, className = '', height, spread, radius, paused = false }: Props) {
   const hostRef = useRef<HTMLSpanElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // No WebGL: drop the canvas from the markup, so only the card renders.
   const [failed, setFailed] = useState(false);
+  // Refs, not state: the GL loop reads the latest `paused` without the GL effect re-running, and
+  // wakeRef lets the small effect below restart the loop that lives inside the big one.
+  const pausedRef = useRef(paused);
+  const wakeRef = useRef(() => {});
+  useEffect(() => { pausedRef.current = paused; wakeRef.current(); }, [paused]);
 
   // One effect owns the whole GL lifetime: set up on mount, and its cleanup frees every GL
   // object and observer on unmount (or before re-running if the size props ever change).
@@ -101,7 +107,7 @@ export function Flame({ children, className = '', height, spread, radius }: Prop
     // draws one still frame (time stays put) and stops.
     let raf = 0, time = 1, last = 0, onScreen = false;
     const reduced = () => document.documentElement.getAttribute('data-motion') === 'reduced';
-    const live = () => onScreen && !document.hidden && w > 0;
+    const live = () => onScreen && !pausedRef.current && !document.hidden && w > 0;
     const frame = (now: number) => {
       const still = reduced();
       if (!still) time += Math.min((now - last) / 1000, 1 / 30) * FLAME.speed;
@@ -116,6 +122,7 @@ export function Flame({ children, className = '', height, spread, radius }: Prop
       last = performance.now();
       raf = requestAnimationFrame(frame);
     }
+    wakeRef.current = wake;
 
     const io = new IntersectionObserver(entries => { onScreen = entries[entries.length - 1].isIntersecting; wake(); });
     io.observe(canvas);
@@ -128,6 +135,7 @@ export function Flame({ children, className = '', height, spread, radius }: Prop
     size();
 
     return () => {
+      wakeRef.current = () => {};
       cancelAnimationFrame(raf);
       io.disconnect();
       ro.disconnect();

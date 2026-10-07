@@ -266,16 +266,18 @@ section[data-texture] { isolation:isolate; }
 /* The wordmark is a paper card on every ground, so its colours follow the card, not the page:
    .site-header raises the specificity above .flip-head's color:inherit (which would hand it the
    page's --on, paper on dark grounds, and turn LIU cream on cream). It is a link home, so it has
-   the outline and lip of every pressable. */
-.site-header .wordmark { --on:var(--ink); --kw:var(--berry); justify-self:start; display:inline-grid; place-items:center; min-width:var(--hit); min-height:var(--hit); padding:4px 8px 5px; border:var(--bw) solid var(--ink); border-radius:var(--r-control); background:var(--card); color:var(--ink); box-shadow:0 var(--lip) 0 var(--ink); transition:transform var(--dur-release) var(--ease-spring),box-shadow var(--dur-release) var(--ease-spring),translate var(--dur-roll) var(--ease-elastic); }
-@media (hover:hover) { .site-header .wordmark:hover { transform:translateY(-2px); box-shadow:0 calc(var(--lip) + 2px) 0 var(--ink); } }
-.site-header .wordmark:active { transform:translateY(var(--lip)); box-shadow:0 0 0 var(--ink); transition-duration:var(--dur-press); }
+   the outline and lip of every pressable. The footer's mark (.ft .ft-mark) is the same card. */
+:is(.site-header .wordmark,.ft .ft-mark) { --on:var(--ink); --kw:var(--berry); justify-self:start; display:inline-grid; place-items:center; min-width:var(--hit); min-height:var(--hit); padding:4px 8px 5px; border:var(--bw) solid var(--ink); border-radius:var(--r-control); background:var(--card); color:var(--ink); box-shadow:0 var(--lip) 0 var(--ink); transition:transform var(--dur-release) var(--ease-spring),box-shadow var(--dur-release) var(--ease-spring),translate var(--dur-roll) var(--ease-elastic); }
+@media (hover:hover) { :is(.site-header .wordmark,.ft .ft-mark):hover { transform:translateY(-2px); box-shadow:0 calc(var(--lip) + 2px) 0 var(--ink); } }
+:is(.site-header .wordmark,.ft .ft-mark):active { transform:translateY(var(--lip)); box-shadow:0 0 0 var(--ink); transition-duration:var(--dur-press); }
 /* The flame's host (components/site/flame/) wraps the wordmark and is the header's grid item.
    The dance: on hover, keyboard focus, a tap and once on load (header.tsx's useHello, all via
-   data-flipped), the card hops 2px and wobbles 3deg, fire and all. Reduced motion: none. */
-.site-header > .wordmark-host { justify-self:start; display:grid; transform-origin:50% 100%; }
-@media (hover:hover) and (pointer:fine) { .site-header > .wordmark-host:hover { animation:mark-dance 640ms var(--ease-ui) both; } }
-.site-header > .wordmark-host:has(:focus-visible,[data-flipped]) { animation:mark-dance 640ms var(--ease-ui) both; }
+   data-flipped), the card hops 2px and wobbles 3deg, fire and all. The footer's host
+   (.ft-mark-host, footer.tsx) dances the same way. Reduced motion: none. */
+.site-header > .wordmark-host { justify-self:start; }
+:is(.site-header > .wordmark-host,.ft-mark-host) { display:grid; transform-origin:50% 100%; }
+@media (hover:hover) and (pointer:fine) { :is(.site-header > .wordmark-host,.ft-mark-host):hover { animation:mark-dance 640ms var(--ease-ui) both; } }
+:is(.site-header > .wordmark-host,.ft-mark-host):has(:focus-visible,[data-flipped]) { animation:mark-dance 640ms var(--ease-ui) both; }
 @keyframes mark-dance { 0%,100% { transform:none; } 20% { transform:translateY(-2px) rotate(-3deg); } 45% { transform:translateY(0) rotate(2.5deg); } 70% { transform:translateY(-1px) rotate(-1.5deg); } }
 /* The AND/LIU mark (components/site/mark.tsx), here and in the footer: two short lines at one
    size, centred, in the mark's own display face. --mark-font is the one line to change to try
@@ -417,13 +419,14 @@ html[data-hscroll="on"] .site-header:not([data-menu-open]) > .header-right { tra
 
 /* ---------- Loader (plan 4.0). Inserted by the loader script only, so with JS off there is none,
    and it is never in the server HTML. 900ms at most. ---------- */
-/* The pan (a wipe transition): two full-screen sheets slide off to the right, the berry-deep front
-   one first and the berry back one 70ms behind it, so a berry edge sweeps the page into view. */
+/* The pan (a wipe transition): two full-screen sheets slide off to the left (Andrew's preference,
+   2026-10-06), the berry-deep front one first and the berry back one 70ms behind it, so a berry
+   edge sweeps the page into view from the right. */
 .loader { position:fixed; inset:0; z-index:450; overflow:hidden; pointer-events:none; }
 .loader-sheet { position:absolute; inset:0; will-change:transform; }
 .loader-sheet-back { background:var(--berry); }
 .loader-sheet-front { display:grid; place-items:center; background:var(--berry-deep); color:var(--paper); }
-.loader.is-wiping .loader-sheet { transform:translateX(101%); transition:transform 720ms var(--ease-wipe); }
+.loader.is-wiping .loader-sheet { transform:translateX(-101%); transition:transform 720ms var(--ease-wipe); }
 .loader.is-wiping .loader-sheet-back { transition-delay:70ms; }
 .loader-berry { width:clamp(80px,11vw,128px); opacity:0; }
 .loader.is-running .loader-berry { opacity:1; animation:berry-drop .3s cubic-bezier(.3,1.4,.6,1) both; }
@@ -591,7 +594,7 @@ html[data-motion="reduced"] [data-reveal] { opacity:1 !important; transform:none
 html[data-motion="reduced"] .flip-ch { transition:none; }
 html[data-motion="reduced"] .flip:is(:hover,:focus-visible) .flip-row-a .flip-ch { transform:none; }
 html[data-motion="reduced"] .flip-row-b { display:none; }
-html[data-motion="reduced"] :is(.press,.press-soft,.pill,.square-btn,.menu-btn,.chat-launcher,.site-header .wordmark,.switch-track,.switch-knob) { transition:none; }
+html[data-motion="reduced"] :is(.press,.press-soft,.pill,.square-btn,.menu-btn,.chat-launcher,.site-header .wordmark,.ft .ft-mark,.switch-track,.switch-knob) { transition:none; }
 /* Pressables: the press still lands (instantly) and the second face still shows, but it fades
    in place instead of rolling; the header's pills hide and return without travelling. */
 html[data-motion="reduced"] :is(.pill,.square-btn,.menu-btn,.chat-launcher)::before { transform:none; transition:opacity .15s linear; }
@@ -605,7 +608,7 @@ html[data-motion="reduced"][data-hscroll="on"] .site-header:not([data-menu-open]
 html[data-motion="reduced"][data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within)::before { opacity:0; }
 html[data-motion="reduced"] :is(.menu,.menu-print) { animation:none; }
 html[data-motion="reduced"] .hdr-mark { transition:none; }
-html[data-motion="reduced"] .site-header > .wordmark-host { animation:none; }
+html[data-motion="reduced"] :is(.site-header > .wordmark-host,.ft-mark-host) { animation:none; }
 html[data-motion="reduced"] .hdr-label-track[data-roll] { animation:none; transform:translateY(-50%); }
 html[data-motion="reduced"] .hdr-label { transition:none; }
 /* FlipHeading: no roll; the colours swap instantly on hover and focus instead. */

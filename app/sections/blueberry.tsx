@@ -6,6 +6,7 @@ import { TiltFrame } from '@/components/site/tilt-frame';
 import { BlueberrySticker, FlashcardSticker } from '@/components/site/stickers/stickers';
 import { CountUp } from '@/components/site/work/count-up';
 import { Shot } from '@/components/site/work/shot';
+import { BlueberrySwing } from './blueberry.client';
 import './blueberry.css';
 
 // The Blueberry chapter (SITE-PLAN.md 4.4), style pass 2026-10-06. The product's slogan section
@@ -22,7 +23,10 @@ import './blueberry.css';
 // from lib/bb-deck.json (`count`), which does not exist yet, and a fact without its number is
 // worse than no fact. They return when scripts/bb-deck.mjs writes that file.
 //
-// A server component; TiltFrame, CountUp and the marquee are the only client parts.
+// Everything sits in one inner layer, .bb-flow, which carries the chapter's ground: as the
+// chapter scrolls in over Contents, that layer swings up from 30deg to flat (blueberry.client.tsx).
+//
+// A server component; TiltFrame, CountUp, the marquee and the swing are the only client parts.
 
 // The chapter is project 01 of the numbered list (Projects carries on from 02), so its headline
 // wears the same outlined index number as the project spreads.
@@ -37,47 +41,50 @@ const BAND = [...BB_ENGINEERING.stack, ...BB_ENGINEERING.stack];
 export default function Blueberry() {
   return (
     <section {...sectionAttrs('blueberry')} className="bb" aria-labelledby="blueberry-title">
-      <div className="bb-head">
-        {NUM && <span className="bb-num" aria-hidden="true">{NUM}</span>}
-        <div className="bb-title">
-          <FlipHeading id="blueberry-title" text={BB_HEAD.headline} max={168} />
-          <span className="bb-st bb-st-card" data-reveal><FlashcardSticker /></span>
-          <span className="bb-st bb-st-berry" data-reveal><BlueberrySticker /></span>
+      <BlueberrySwing />
+      <div className="bb-flow">
+        <div className="bb-head">
+          {NUM && <span className="bb-num" aria-hidden="true">{NUM}</span>}
+          <div className="bb-title">
+            <FlipHeading id="blueberry-title" text={BB_HEAD.headline} max={168} />
+            <span className="bb-st bb-st-card" data-reveal><FlashcardSticker /></span>
+            <span className="bb-st bb-st-berry" data-reveal><BlueberrySticker /></span>
+          </div>
+          <div className="bb-intro">
+            <p className="bb-story" data-reveal="lines">{BLUEBERRY_CHAPTER.story}</p>
+            <ul className="bb-facts">
+              {FACTS.map((fact, i) => (
+                <li key={fact.id} className="bb-fact" data-fill={FACT_FILLS[i % FACT_FILLS.length]} data-reveal>
+                  <CountUp value={fact.value ?? 0} className="bb-fact-n" />
+                  <span className="bb-fact-label">{fact.label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-        <div className="bb-intro">
-          <p className="bb-story" data-reveal="lines">{BLUEBERRY_CHAPTER.story}</p>
-          <ul className="bb-facts">
-            {FACTS.map((fact, i) => (
-              <li key={fact.id} className="bb-fact" data-fill={FACT_FILLS[i % FACT_FILLS.length]} data-reveal>
-                <CountUp value={fact.value ?? 0} className="bb-fact-n" />
-                <span className="bb-fact-label">{fact.label}</span>
+
+        <div className="bb-band bb-screens" data-ground="paper">
+          <span className="eyebrow">{BB_HEAD.screens}</span>
+          <ul className="bb-shots">
+            {BB_SCREENS.map((screen, i) => (
+              <li key={screen.caption} className="bb-shot" data-reveal>
+                <div className="bb-shot-tile" data-fill={SHOT_FILLS[i]}>
+                  <TiltFrame max={7} shift={10} layers={[{ depth: 0.6, node: <span className="bb-crop"><Shot image={screen.image} sizes="(min-width: 760px) 45vw, 90vw" /></span> }]} />
+                </div>
+                <a className="bb-route" href={screen.href} target="_blank" rel="noreferrer">
+                  {screen.caption} <ArrowUpRight size={14} aria-hidden="true" />
+                </a>
               </li>
             ))}
           </ul>
         </div>
-      </div>
 
-      <div className="bb-band bb-screens" data-ground="paper">
-        <span className="eyebrow">{BB_HEAD.screens}</span>
-        <ul className="bb-shots">
-          {BB_SCREENS.map((screen, i) => (
-            <li key={screen.caption} className="bb-shot" data-reveal>
-              <div className="bb-shot-tile" data-fill={SHOT_FILLS[i]}>
-                <TiltFrame max={7} shift={10} layers={[{ depth: 0.6, node: <span className="bb-crop"><Shot image={screen.image} sizes="(min-width: 760px) 45vw, 90vw" /></span> }]} />
-              </div>
-              <a className="bb-route" href={screen.href} target="_blank" rel="noreferrer">
-                {screen.caption} <ArrowUpRight size={14} aria-hidden="true" />
-              </a>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="bb-stack">
-        <span className="eyebrow">{BB_HEAD.stack}</span>
-        <Marquee className="bb-strip" label={BB_ENGINEERING.stack.join(', ')} duration={34} fade={false}>
-          {BAND.map((tag, i) => <span key={i} className="bb-pill">{tag}</span>)}
-        </Marquee>
+        <div className="bb-stack">
+          <span className="eyebrow">{BB_HEAD.stack}</span>
+          <Marquee className="bb-strip" label={BB_ENGINEERING.stack.join(', ')} duration={34} fade={false}>
+            {BAND.map((tag, i) => <span key={i} className="bb-pill">{tag}</span>)}
+          </Marquee>
+        </div>
       </div>
     </section>
   );

@@ -20,18 +20,19 @@
 .hob-pencil, .hob-laptop { top:calc(var(--pt) + var(--fs) * .17 - var(--h) / 2); }
 .hob-phone, .hob-card { top:calc(var(--pt) + var(--fs) * var(--low, .7) + var(--h) / 2); }
 
-.hob-pencil { --ar:.4167; --h:calc(var(--fs) * .8);  --x:62%; --r:-14deg; }
-.hob-laptop { --ar:1.375; --h:calc(var(--fs) * .68); --x:86%; --r:6deg; }
-.hob-phone  { --ar:.5833; --h:calc(var(--fs) * .74); --x:49%; --r:-8deg; }
-.hob-card   { --ar:1.0833; --h:calc(var(--fs) * .64); --x:73%; --r:8deg; }
+/* 1.3 times their first size (Andrew 2026-10-06, more presence); the hero's --pt and foot grew to match */
+.hob-pencil { --ar:.4167; --h:calc(var(--fs) * 1.04); --x:62%; --r:-14deg; }
+.hob-laptop { --ar:1.375; --h:calc(var(--fs) * .88); --x:86%; --r:6deg; }
+.hob-phone  { --ar:.5833; --h:calc(var(--fs) * .96); --x:49%; --r:-8deg; }
+.hob-card   { --ar:1.0833; --h:calc(var(--fs) * .83); --x:73%; --r:8deg; }
 
 /* A narrow stage (a phone): the name is small, so the objects keep a floor size, sit a little
    further from the letters' middles, and their labels show only on keyboard focus */
 @container hero (max-width:759px) {
-  .hob-pencil { --h:max(72px, calc(var(--fs) * .8));  --x:14%; }
-  .hob-laptop { --h:max(60px, calc(var(--fs) * .68)); --x:78%; }
-  .hob-phone  { --h:max(70px, calc(var(--fs) * .74)); --x:30%; }
-  .hob-card   { --h:max(60px, calc(var(--fs) * .64)); --x:74%; }
+  .hob-pencil { --h:max(94px, calc(var(--fs) * 1.04)); --x:14%; }
+  .hob-laptop { --h:max(78px, calc(var(--fs) * .88)); --x:78%; }
+  .hob-phone  { --h:max(91px, calc(var(--fs) * .96)); --x:30%; }
+  .hob-card   { --h:max(78px, calc(var(--fs) * .83)); --x:74%; }
   .hob-phone, .hob-card { --low:.82; }
   .hob-label { opacity:0; pointer-events:none; }
   .hob:focus-visible .hob-label { opacity:1; }
@@ -61,16 +62,32 @@
 }
 .hob:focus-visible .hob-label { scale:1.08; font-weight:800; }
 
-/* Entrance and idle (Slush stickers): each pops in from small and turned on the spring, then
+/* Entrance and idle (Andrew: "the icons fall into place like slush does"). Each object drops in
+   from 70vh above its spot (off the top of the screen for the upper two), tumbling one and a
+   half turns about its vertical axis as it falls (ease-in, like gravity), lands with a squash, springs back up past its spot and settles: the
+   landing is Slush's spring (overshoot to about 1.14, a small dip, settle; motion.md) written out
+   as keyframes, because one spring curve over the whole drop would overshoot by a seventh of the
+   fall. They start .8s after html.is-loaded, when the loader's pan has cleared the screen, 120ms
+   apart (Slush's sticker stagger is .1s), and the label fades in as its object lands. Then each
    bobs on its own period and delay so no two move together. The bob uses the translate and
-   rotate properties, the pop uses transform, so the two never fight over one property. */
-@keyframes hob-pop { from { opacity:0; transform:scale(.2) rotate(-90deg); } }
+   rotate properties, the fall uses transform, so the two never fight over one property. */
+@keyframes hob-fall {
+  0%   { opacity:0; transform:perspective(600px) translateY(-70vh) rotateY(540deg) rotate(-25deg); animation-timing-function:cubic-bezier(.4,0,.85,.55); }
+  6%   { opacity:1; }
+  56%  { transform:perspective(600px) translateY(0) rotateY(0) rotate(0) scale(1.14,.84); animation-timing-function:cubic-bezier(.2,.8,.4,1); }
+  71%  { transform:perspective(600px) translateY(-14%) rotate(4deg) scale(.95,1.07); animation-timing-function:cubic-bezier(.6,0,.4,1); }
+  85%  { transform:perspective(600px) translateY(2%) rotate(-1deg) scale(1.03,.98); }
+  100% { opacity:1; transform:none; }
+}
+@keyframes hob-label-in { from { opacity:0; } }
 @keyframes hob-bob { from { translate:0 0; rotate:-2deg; } to { translate:0 -7px; rotate:2deg; } }
-html.js:not(.is-loaded):not([data-motion="reduced"]) .hob-art { opacity:0; }
+html.js:not(.is-loaded):not([data-motion="reduced"]) :is(.hob-art,.hob-label) { opacity:0; }
+.hob-art { transform-origin:50% 100%; } /* the squash happens at the object's feet */
 html.js.is-loaded:not([data-motion="reduced"]) .hob-art {
   animation:
-    hob-pop 1s var(--ease-elastic) calc(.8s + var(--k) * 120ms) backwards,
-    hob-bob calc(5.2s + var(--k) * .7s) ease-in-out calc(1.8s + var(--k) * 370ms) infinite alternate;
+    hob-fall 1.3s linear calc(.8s + var(--k) * 120ms) backwards,
+    hob-bob calc(5.2s + var(--k) * .7s) ease-in-out calc(2.1s + var(--k) * 370ms) infinite alternate;
 }
+html.js.is-loaded:not([data-motion="reduced"]) .hob-label { animation:hob-label-in .3s ease-out calc(1.55s + var(--k) * 120ms) backwards; }
 html[data-motion="reduced"] :is(.hob,.hob-label) { transition:none; }
-html[data-motion="reduced"] .hob-art { animation:none; }
+html[data-motion="reduced"] :is(.hob-art,.hob-label) { animation:none; }

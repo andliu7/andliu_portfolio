@@ -9,3 +9,29 @@
   84%, 100% { transform:translateY(0); }
 }
 html[data-motion="reduced"] .tp .tp-lift { animation:none; }
+
+/* The terrapin as a button (sweaty-terrapin.tsx): no button chrome, the site's focus ring. */
+.tp-button { display:block; width:100%; padding:0; border:0; background:none; cursor:pointer; border-radius:24px; -webkit-tap-highlight-color:transparent; }
+.tp-button:focus-visible { outline:3px solid var(--ring,#000000); outline-offset:4px; }
+
+/* A sweat drop: pops in at the brow, slides off the head, then falls to the floor (accelerating),
+   and a splash flicks up where it lands. Units are the drawing's own (440 wide). */
+.tp .tp-drop, .tp .tp-splash { transform-box:fill-box; transform-origin:50% 50%; }
+.tp .tp-drop { animation:tp-drop 1.25s both; }
+@keyframes tp-drop {
+  0%   { transform:translate(0,0) scale(0); animation-timing-function:cubic-bezier(.34,1.56,.64,1); }
+  16%  { transform:translate(0,0) scale(1); animation-timing-function:ease-in-out; }
+  42%  { transform:translate(22px,26px) scale(1); animation-timing-function:cubic-bezier(.5,0,1,1); }
+  92%  { transform:translate(40px,340px) scale(1,1.15); opacity:1; }
+  100% { transform:translate(40px,346px) scale(1.6,.3); opacity:0; }
+}
+.tp .tp-splash { opacity:0; animation:tp-splash 1.25s both; }
+@keyframes tp-splash {
+  0%, 88% { opacity:0; transform:scale(.3); }
+  93%     { opacity:1; transform:scale(1); }
+  100%    { opacity:0; transform:scale(1.35); }
+}
+/* Reduced motion: the drop appears at the brow and fades, no travel and no splash. */
+html[data-motion="reduced"] .tp .tp-drop { animation:tp-drop-still 1.25s both; }
+html[data-motion="reduced"] .tp .tp-splash { animation:none; opacity:0; }
+@keyframes tp-drop-still { 0% { opacity:0; } 20%, 70% { opacity:1; } 100% { opacity:0; } }

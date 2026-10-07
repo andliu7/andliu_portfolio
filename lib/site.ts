@@ -85,7 +85,7 @@ export const META = {
 
 // 4.1 Hero
 export const HERO = {
-  chip: 'Computer Science Major, Pre-Dental Track. Expected May 2027.', // [R] Andrew's wording 2026-10-06
+  chip: 'B.S. Computer Science, Pre-Dental Track. Expected May 2027.', // [R] Andrew's wording 2026-10-06 (B.S. instead of "Major")
   first: 'ANDREW', // [P]
   last: 'LIU', // [P]
   // The four cartoon objects around the name, each a link to its project (labels are PROJECTS titles)
@@ -107,6 +107,20 @@ export const HERO_BAR = [
   'Mentoring 25+ students at Kharis', // [R] Kharis line
   'RDKit.js grading in the browser', // [R] Blueberry highlights
 ] as const;
+
+// 4.1 The caution tape crossing the bar: "CAUTION" then a dry warning (Andrew 2026-10-06: "CAUTION
+// [INSERT WARNING HERE] ... be a little creative"). The tape sets text in caps; `code: true`
+// keeps a line's own case, because it is code. All [UI], signed off by Andrew 2026-10-06.
+export const HERO_CAUTION = {
+  word: 'CAUTION', // [UI] signed off 2026-10-06
+  warnings: [
+    { text: 'RECRUITERS, PROCEED WITH CAUTION: MAY CAUSE INTERVIEWS' }, // [UI] signed off 2026-10-06
+    { text: '// TODO: SCHEDULE THE INTERVIEW' }, // [UI] signed off 2026-10-06
+    { text: 'WARNING: MERGES CLEANLY' }, // [UI] signed off 2026-10-06
+    { text: 'try { interview(andrew) } catch { /* unreachable */ }', code: true }, // [UI] signed off 2026-10-06
+    { text: 'WRITES TESTS BEFORE BEING ASKED' }, // [UI] signed off 2026-10-06; the tape's CAUTION box supplies the "CAUTION:" so it is not doubled
+  ],
+} as const;
 
 // 4.1 The rotating "currently:" line (prefix MICROCOPY.currently). Assembled from inventory
 // phrases; needs Andrew's sign-off (plan 2.4).
@@ -408,7 +422,8 @@ export const IMPACT: readonly {
 ];
 
 // ---------------------------------------------------------------------------------------------
-// Off the clock (4.8). Gardening is NOT a hobby (plan A12): the one garden line is the UMD line.
+// Off the clock (4.8). Gardening goes with cooking [Andrew 2026-10-06]: "the garden fuels the cooking."
+// It replaces plan A12's old "gardening is not a hobby" rule; the garden line now sits under COOK.
 // Andrew will add lines here; this is the one file he edits.
 // ---------------------------------------------------------------------------------------------
 
@@ -442,8 +457,8 @@ export const OFF_CLOCK = {
 // order he gave it ("usually I like to get work done in the morning ... after work or classes gym
 // and then cook and then eat and then I lead bible studies"). No clock times on purpose: he gave
 // an order, not times. `big` is the scene's display word, `voice` its line with keywords in
-// *asterisks*, `sub` a smaller line or null. The last scene keeps landscape design and the UMD
-// garden line (an interest, never a hobby). All of it needs Andrew's sign-off.
+// *asterisks*, `sub` a smaller line or null. COOK carries the garden (it fuels the cooking,
+// [Andrew 2026-10-06]) and SOMEDAY keeps landscape design. All of it needs Andrew's sign-off.
 export const EVENING = {
   intro: 'Mornings are for *work*. Here is the *evening*.', // [Andrew 2026-10-06 via lead brief] (needs sign-off)
   hint: 'Scroll through the evening', // [UI] (needs sign-off)
@@ -453,13 +468,20 @@ export const EVENING = {
   scenes: [
     { id: 'after', when: 'After work or classes', big: 'CLOCK OUT', voice: 'Work or *classes* at UMD come first.', sub: null }, // [Andrew 2026-10-06][R] (needs sign-off)
     { id: 'gym', when: 'Then the gym', big: 'GYM', voice: 'Lifting with the *UMD Barbell Club*.', sub: null }, // [Andrew 2026-10-06 via lead brief] (needs sign-off)
-    { id: 'cook', when: 'Then I cook', big: 'COOK', voice: 'A *pan* on the stove.', sub: null }, // [Andrew 2026-10-06] (needs sign-off)
+    { id: 'cook', when: 'Then I cook', big: 'COOK', voice: 'The *garden* fuels the *cooking*.', sub: GARDEN_LINE }, // [Andrew 2026-10-06] his words, plus the UMD garden line [Z yard] (needs sign-off)
     { id: 'eat', when: 'Then we eat', big: 'EAT', voice: 'A *kitchen*, and people at the *table*.', sub: null }, // [P] OFF_CLOCK.notes[0].voice
     { id: 'study', when: 'Then Bible study', big: 'BIBLE STUDY', voice: 'I lead *Focus Family* at Kharis Campus Ministry.', sub: FAITH_LINE }, // [R][P] (needs sign-off)
-    { id: 'someday', when: 'Someday', big: 'SOMEDAY', voice: 'Landscape design: the interest that keeps *growing*.', sub: GARDEN_LINE }, // [P][Z yard]
+    { id: 'someday', when: 'Someday', big: 'SOMEDAY', voice: 'Landscape design: the interest that keeps *growing*.', sub: null }, // [P] the garden line moved to COOK [Andrew 2026-10-06]
   ],
-  shotCaption: 'Focus Family Circle, inside the chapel on my island.', // [Z chapel] the room's own name (needs sign-off)
-  shot: 'islandFocusFamily', // IMAGES key
+  // One small framed shot from the island game per scene that has one, keyed by scene id: the
+  // IMAGES key and the caption under it (Andrew 2026-10-06: "more images of the game").
+  shots: {
+    gym: { image: 'islandGym', caption: 'The Home Gym on my island.' }, // [Z yard] the room's own name (needs sign-off)
+    cook: { image: 'islandKitchen', caption: 'The Kitchen on my island, with the pan on the stove.' }, // [Z yard] the room's own name and its pan (needs sign-off)
+    eat: { image: 'islandTable', caption: 'The table in the Kitchen on my island.' }, // [Z yard] (needs sign-off)
+    study: { image: 'islandFocusFamily', caption: 'Focus Family Circle, inside the chapel on my island.' }, // [Z chapel] the room's own name (needs sign-off)
+    someday: { image: 'islandPlaza', caption: 'The plaza where my island starts.' }, // [Z] the spawn plaza (needs sign-off)
+  },
 } as const;
 
 // ---------------------------------------------------------------------------------------------
@@ -618,7 +640,7 @@ export const CHAT_FALLBACK = {
     { intent: 'skills', keywords: ['skill', 'stack', 'language', 'react', 'python', 'typescript', 'ai'],
       answer: 'Python, TypeScript, JavaScript, Java, Kotlin and SQL; React, Vite, Tailwind, Supabase and Postgres; plus agentic coding and Claude and Gemini API work, always checked against live runs.' }, // [research 3.5]
     { intent: 'personal', keywords: ['hobby', 'fun', 'free time', 'cook', 'lift', 'garden', 'faith'],
-      answer: 'Off the clock: cooking, lifting, faith, and a growing interest in landscape design. He loves the UMD garden, and someday wants a garden of his own with spices on hand. Faith is why the guides he writes for his campus community matter to him.' }, // [P][Z yard] rewritten per plan A12
+      answer: 'Off the clock: cooking, lifting, faith, and a growing interest in landscape design. He loves the UMD garden, and someday wants a garden of his own with spices on hand. Faith is why the guides he writes for his campus community matter to him.' }, // [P][Z yard] written under plan A12; since [Andrew 2026-10-06] gardening goes with cooking (still true as worded)
     { intent: 'island', keywords: ['island', 'game', 'play'],
       answer: 'The island at the bottom of the page is his résumé as a little world: every building is one line of it. It is opt-in, and it opens full screen when you choose to play.' }, // [research 3.5]
     { intent: 'contact', keywords: ['contact', 'email', 'hire', 'reach', 'linkedin', 'github', 'resume'],
@@ -640,7 +662,7 @@ export const UMD = {
   tags: ['UMD Barbell Club', 'Focus Family at Kharis', 'The UMD garden'], // [Andrew 2026-10-06 via lead brief, as EVENING gym][R][Z yard] (needs sign-off)
   courseworkLabel: EDUCATION.courseworkLabel, // [R]
   coursework: EDUCATION.coursework.join(', '), // [R][Z umd]
-  art: 'A cartoon terrapin in a UMD shirt deadlifting a barbell', // [UI] the drawing's alt (needs sign-off)
+  sweat: 'Make the terrapin sweat', // [Andrew 2026-10-06 via lead] the terrapin button's name (needs sign-off)
   down: 'Contents below', // [UI] from the approved design (needs sign-off)
 } as const;
 
@@ -774,6 +796,13 @@ export const IMAGES = {
   // Re-captured 2026-10-06 with the gold leader in the middle hidden (Andrew: it read as a cult).
   // Shown small in #offclock's Bible study scene (Andrew asked for it there, 2026-10-06).
   islandFocusFamily: { src: '/images/work/island-focus-family.webp', w: 1600, h: 1000, sm: '/images/work/island-focus-family-800.webp', smW: 800, alt: 'The Focus Family Circle room from my island game: advisors, officers and leaders seated in a ring, and two rows of students behind them', owner: 'capture', sections: ['offclock'] }, // [Z chapel] alt (needs sign-off)
+  // Captured 2026-10-06 the same way at 3x (2x for the plaza) and cropped 16:10, HUD hidden: the
+  // yard's Home Gym and Kitchen (island/src/interiors/yard.js, rooms "gym" and "kitchen"), and the
+  // spawn plaza outdoors. Each sits small in its #offclock scene.
+  islandGym: { src: '/images/work/island-gym.webp', w: 1600, h: 1000, sm: '/images/work/island-gym-800.webp', smW: 800, alt: 'The Home Gym from my island game: a round green friend beside a yellow one squatting a barbell in a red rack, a plate tree, kettlebells and a bench', owner: 'capture', sections: ['offclock'] }, // [Z yard] alt (needs sign-off)
+  islandKitchen: { src: '/images/work/island-kitchen.webp', w: 1600, h: 1000, sm: '/images/work/island-kitchen-800.webp', smW: 800, alt: 'The Kitchen from my island game: a red pot and a pan of vegetables on the stove, a chalkboard that says toss it 4 times, and an island counter with stools', owner: 'capture', sections: ['offclock'] }, // [Z yard] alt (needs sign-off)
+  islandTable: { src: '/images/work/island-table.webp', w: 1600, h: 1000, sm: '/images/work/island-table-800.webp', smW: 800, alt: 'The kitchen table from my island game: a plate, a bowl of fruit and three stools, with a yellow friend on one of them', owner: 'capture', sections: ['offclock'] }, // [Z yard] alt (needs sign-off)
+  islandPlaza: { src: '/images/work/island-plaza.webp', w: 1600, h: 1000, sm: '/images/work/island-plaza-800.webp', smW: 800, alt: 'The plaza outdoors on my island game: a sign with my name, letter blocks spelling Andrew Liu, a garage, roads and little round people', owner: 'capture', sections: ['offclock'] }, // [Z] alt (needs sign-off)
   islandS3: {
     src: '/media/island/s3-3840.webp', w: 3840, h: 2160,
     srcset: [

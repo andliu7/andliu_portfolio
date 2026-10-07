@@ -1,31 +1,30 @@
 /* The contents (app/sections/contents.tsx). Every selector starts at .contents. Prefix toc-.
    Ground berry-deep (globals.css paints it): paper 12.58:1, berry-soft 9.54:1, apricot 10.04:1.
-   One viewport tall at most. The bottom padding keeps the rows clear of the manifesto's curve,
+   The title, then the ContainerScroll card of rows (components/ui/container-scroll-animation.tsx),
+   whose inner is berry-deep too, so the same text colours hold. The bottom padding keeps the rows clear of the manifesto's curve,
    which rises var(--curve-h) over the bottom of this section. */
 
+/* display:block on purpose: Tailwind's `contents` utility (display:contents) shares this class name.
+   The ground is painted here too: while the Blueberry chapter swings up over this section
+   (blueberry.client.tsx), GSAP's pin wraps it in a pin-spacer, so the globals.css rule that
+   paints `main > section` grounds no longer matches it. */
 .contents {
-  min-height:100svh; box-sizing:border-box; display:flex; flex-direction:column; justify-content:center;
+  display:block; box-sizing:border-box; overflow-x:clip;
+  background-color:var(--ground); background-image:var(--ground-grad);
   padding:calc(var(--header-h) + 12px) var(--gutter) calc(var(--curve-h) + 16px);
   color:var(--on);
 }
 
-.contents .toc-grid { width:100%; max-width:1280px; margin-inline:auto; display:grid; grid-template-columns:minmax(0,340px) minmax(0,1fr); gap:clamp(32px,5.5vw,80px); }
-
-.contents .toc-head { display:flex; flex-direction:column; justify-content:space-between; gap:24px; min-width:0; }
-.contents .toc-intro { display:flex; flex-direction:column; gap:14px; }
+.contents .toc-intro { display:flex; flex-direction:column; align-items:center; gap:14px; }
 .contents .toc-title { margin:0; font-size:clamp(44px,5cqi,68px); line-height:.95; letter-spacing:-.03em; }
-.contents .toc-note { margin:0; max-inline-size:30ch; font:500 18px/1.5 var(--body); color:var(--on-2); }
+.contents .toc-note { margin:0; max-inline-size:44ch; font:500 18px/1.5 var(--body); color:var(--on-2); }
 
-.contents .toc-stickers { position:relative; height:clamp(120px,22svh,200px); }
-.contents .toc-sticker { position:absolute; }
-.contents .toc-sticker-a { left:0; top:12%; rotate:-6deg; }
-.contents .toc-sticker-b { left:150px; top:40%; rotate:9deg; }
-
-.contents .toc-nav { min-width:0; align-self:center; }
-.contents .toc-list { list-style:none; margin:0; padding:0; border-top:1px solid rgba(201,209,244,.4); }
+.contents .toc-nav { min-width:0; }
+.contents .toc-list { list-style:none; margin:0; padding:0; }
+.contents .toc-list li:last-child .toc-row { border-bottom:0; }
 .contents .toc-row {
   display:grid; grid-template-columns:52px minmax(0,1fr) auto 28px; align-items:center; gap:20px;
-  min-height:clamp(64px,11svh,104px); padding:8px 16px; box-sizing:border-box;
+  min-height:clamp(64px,9svh,88px); padding:8px 16px; box-sizing:border-box;
   border-bottom:1px solid rgba(201,209,244,.4); color:var(--on); text-decoration:none;
   transition:background-color var(--dur-ui) var(--ease-ui);
 }
@@ -45,10 +44,8 @@ html[data-motion="reduced"] .contents .toc-row { transition:none; }
 html[data-motion="reduced"] .contents .toc-row .toc-arrow { transition:none; transform:none; }
 
 @media (max-width:900px) {
-  .contents .toc-grid { grid-template-columns:minmax(0,1fr); gap:20px; }
-  .contents .toc-stickers { display:none; }
   .contents .toc-intro { gap:10px; }
-  .contents .toc-row { grid-template-columns:32px minmax(0,1fr) 22px; gap:12px; padding:8px 4px; min-height:clamp(60px,9.5svh,80px); }
+  .contents .toc-row { grid-template-columns:32px minmax(0,1fr) 22px; gap:12px; padding:8px 10px; min-height:clamp(60px,9.5svh,80px); }
   .contents .toc-meta { display:none; }
   .contents .toc-sub { font-size:15px; }
 }

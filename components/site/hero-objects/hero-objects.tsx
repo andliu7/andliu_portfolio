@@ -81,7 +81,7 @@ function NoteCard() {
   );
 }
 
-// key: which drawing; --k orders the pop-in and offsets each bob so no two move in step
+// key: which drawing; --k orders the fall-in and offsets each bob so no two move in step
 const OBJECTS = [
   { key: 'pencil', Art: Pencil },
   { key: 'laptop', Art: Laptop },

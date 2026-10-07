@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-06T20:38:39.210Z",
+ "generated": "2026-10-07T02:07:20.081Z",
  "panels": [
   {
    "id": "brain",
@@ -56,7 +56,7 @@
       },
       {
        "x": "2026-10-06",
-       "y": 58
+       "y": 64
       }
      ],
      "source": "second-brain/second-brain/memories/*.md: every \"## [date] kind |\" heading; dates only, running total by day"
@@ -69,19 +69,19 @@
      "points": [
       {
        "x": "decision",
-       "y": 34
+       "y": 35
       },
       {
        "x": "pref",
-       "y": 10
+       "y": 13
       },
       {
        "x": "gotcha",
-       "y": 10
+       "y": 11
       },
       {
        "x": "fact",
-       "y": 4
+       "y": 5
       }
      ],
      "source": "second-brain/second-brain/memories/*.md: the same headings, counted by their kind field"
@@ -177,21 +177,21 @@
      "id": "brain.rows",
      "kind": "stat",
      "unit": "rows",
-     "value": 62214,
+     "value": 62249,
      "source": "second-brain/second-brain/index.tsv: data rows after the header, streamed"
     },
     {
      "id": "brain.files",
      "kind": "stat",
      "unit": "files",
-     "value": 5446,
+     "value": 5447,
      "source": "second-brain/second-brain/index.tsv: distinct values in the first (path) column"
     },
     {
      "id": "brain.wiki",
      "kind": "stat",
      "unit": "pages",
-     "value": 8,
+     "value": 9,
      "source": "second-brain/second-brain/wiki/pages/*.md: file count"
     },
     {
@@ -230,7 +230,7 @@
       },
       {
        "x": "2026-10-05",
-       "y": 1
+       "y": 4
       }
      ],
      "source": "git -C second-brain log --format=%ad --date=short, counted per week starting Monday"

@@ -10,11 +10,19 @@
   --ease-elastic: cubic-bezier(.34,1.56,.64,1);
   --tile-line: 1.5px solid var(--ink);
   --band-inset: 12px;
+  color: var(--on);
+  overflow-x: clip;
+}
+/* The inner layer carries the ground and the layout, so the whole page swings up over Contents
+   (blueberry.client.tsx) while the section itself stays transparent. overflow-x on .bb clips the
+   tilted layer, so the page never scrolls sideways during the swing. */
+.bb[data-gradient] { background: none; }
+.bb .bb-flow {
   display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: var(--band-inset);
   /* The bottom pad leaves room for the Work section's curved edge, which rises over this one. */
   padding: clamp(64px, 7cqi, 112px) var(--gutter) calc(var(--curve-h) + clamp(32px, 4cqi, 56px));
-  color: var(--on);
-  overflow-x: clip;
+  background: radial-gradient(125% 125% at 50% 10%, var(--berry) 40%, var(--berry-deep) 100%);
+  will-change: transform;
 }
 /* SECTIONS gives this chapter a 3.6-viewport floor, which was scroll length for the pinned phone
    stage. Nothing here is pinned, so that floor would only add bare ground under the

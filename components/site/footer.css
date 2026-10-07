@@ -53,7 +53,10 @@ html:not([data-motion="reduced"]) .ft[data-fits] { position:sticky; bottom:0; }
    them, left-aligned, on a phone. */
 .ft-brand { display:flex; flex-direction:column; align-items:flex-end; gap:14px; text-align:right; }
 @media (max-width:760px) { .ft-brand { align-items:flex-start; text-align:left; } }
-.ft-mark { --mark-size:30px; --kw:var(--berry); display:inline-grid; place-items:center; min-width:var(--hit); min-height:var(--hit); padding:8px 11px 9px; border-radius:var(--r-control); background:var(--card); }
+/* The card itself (outline, lip, colours, press) is the header's rule in globals.css; here only
+   its bigger size. The flame round it (components/site/flame/) needs the room above it. */
+.ft .ft-brand .ft-mark { --mark-size:30px; padding:8px 11px 9px; }
+.ft-mark-host { margin-top:24px; }
 .ft-blurb { margin:0; max-inline-size:28ch; font:500 16px/1.5 var(--body); color:#D6D3D1; }
 .ft-meta { margin:0; font:500 12px/1.6 var(--mono); color:#A8A29E; }
 .ft-social { display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; }

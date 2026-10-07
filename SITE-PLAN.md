@@ -10,6 +10,8 @@
 - Experience and Off the clock are pinned horizontal strips now, so the page has more than the
   three pins of 1.3; the SECTIONS budgets for those two are out of date and no script enforces them.
 - Changes go in small steps on what is live. No drastic rebuilds; Andrew reviews each piece.
+- Gardening goes with cooking: "the garden fuels the cooking. I love cooking, but gardening goes with
+  that." This replaces A12's "Gardening is NOT a hobby" rule.
 
 ## A2. Late amendments from Andrew, 2026-10-01 (override everything below)
 

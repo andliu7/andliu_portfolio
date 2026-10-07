@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState, type CSSProperties, type JSX, type KeyboardEvent, type PointerEvent } from 'react';
-import { EVENING, FORK, IMAGES, OFF_CLOCK, sectionAttrs } from '@/lib/site';
+import { EVENING, FORK, IMAGES, OFF_CLOCK, sectionAttrs, type ImageEntry } from '@/lib/site';
 import { parseTwoVoice } from '@/components/site/type';
 import { ClockSwitch } from '@/components/site/clock-switch';
 import { useHorizontalScroll } from '@/components/site/use-horizontal-scroll';
@@ -11,9 +11,10 @@ import './offclock.css';
 // Off the clock (rebuilt 2026-10-06 from Andrew's note: "take me through my evening ... a
 // horizontal scroll with more animated feeling"). The section pins and vertical scroll walks a
 // strip through his evening, in his order: the intro ("mornings are for work"), after work or
-// classes, the gym, cook, eat, Bible study (with a small shot of the Focus Family Circle room
-// from his island), and a last "someday" panel that keeps landscape design and the UMD garden
-// line. The pin itself lives in components/site/use-horizontal-scroll.ts, which explains it.
+// classes, the gym, cook (with the UMD garden line: the garden fuels the cooking), eat, Bible
+// study, and a last "someday" panel that keeps landscape design. Every scene but the first holds
+// a small framed shot of the matching place in his island game (EVENING.shots: the Home Gym, the Kitchen, its table, the
+// Focus Family Circle room, the plaza outdoors). The pin itself lives in components/site/use-horizontal-scroll.ts, which explains it.
 //
 // Time of day: each panel is a flat band of colour, late afternoon (sky) to night (ink), so the
 // ground darkens as you scroll. No gradient wash (Andrew is unsure about gradients). In the foot
@@ -34,9 +35,16 @@ import './offclock.css';
 
 type Scene = (typeof EVENING.scenes)[number];
 
+// COOK's art: the pan with a herb pot beside it, since the garden fuels the cooking (Andrew
+// 2026-10-06). The pot is not given className, so only the pan bobs. <>...</> is a Fragment:
+// it returns two siblings without adding a wrapper element.
+function CookArt({ className }: { className?: string }) {
+  return <><PotSticker className="oc-herb" /><PanSticker className={className} /></>;
+}
+
 // One sticker per scene, by EVENING.scenes id.
 const ART: Record<Scene['id'], (props: { className?: string }) => JSX.Element> = {
-  after: BackpackSticker, gym: BarbellSticker, cook: PanSticker, eat: TableSticker, study: BookSticker, someday: PotSticker,
+  after: BackpackSticker, gym: BarbellSticker, cook: CookArt, eat: TableSticker, study: BookSticker, someday: PotSticker,
 };
 
 // The flat band behind each panel, late afternoon to night: the intro, then the six scenes.
@@ -52,7 +60,9 @@ const CROWD: Record<Scene['id'], { tone: PersonTone; tall?: boolean; extra?: 'ba
   someday: [{ tone: 'leaf', tall: true }],
 };
 
-const shot = IMAGES[EVENING.shot];
+// The scenes' island shots by scene id. Widened to a Partial record so a scene without one reads
+// as undefined instead of a type error.
+const SHOTS: Partial<Record<Scene['id'], { image: keyof typeof IMAGES; caption: string }>> = EVENING.shots;
 
 function Voice({ text }: { text: string }) {
   return <>{parseTwoVoice(text).map((part, i) => (part.kw ? <em key={i} className="oc-kw">{part.text}</em> : part.text))}</>;
@@ -148,19 +158,21 @@ export default function OffClock() {
           </article>
           {EVENING.scenes.map((scene, i) => {
             const Art = ART[scene.id];
+            const shot = SHOTS[scene.id];
+            const img: ImageEntry | null = shot ? IMAGES[shot.image] : null;
             return (
               // --i staggers the sticker's bob; data-band paints the panel's colour (offclock.css).
-              <article key={scene.id} className={`oc-panel oc-${scene.id}`} data-band={BANDS[i + 1]} data-hs-item="" aria-labelledby={`oc-${scene.id}-big`} style={{ '--i': i } as CSSProperties}>
+              <article key={scene.id} className={`oc-panel oc-${scene.id}${shot ? ' oc-has-shot' : ''}`} data-band={BANDS[i + 1]} data-hs-item="" aria-labelledby={`oc-${scene.id}-big`} style={{ '--i': i } as CSSProperties}>
                 <div className="oc-copy">
                   <span className="oc-when">{scene.when}</span>
                   <h3 className="oc-big" id={`oc-${scene.id}-big`}>{scene.big}</h3>
                   <p className="oc-voice"><Voice text={scene.voice} /></p>
                   {scene.sub && <p className="oc-sub">{scene.sub}</p>}
                 </div>
-                {scene.id === 'study' && (
+                {shot && img && (
                   <figure className="oc-shot">
-                    <img src={shot.sm} srcSet={`${shot.sm} ${shot.smW}w, ${shot.src} ${shot.w}w`} sizes="(min-width: 700px) 340px, 90vw" width={shot.w} height={shot.h} alt={shot.alt} loading="lazy" decoding="async" />
-                    <figcaption>{EVENING.shotCaption}</figcaption>
+                    <img src={img.sm ?? img.src} srcSet={`${img.sm ?? img.src} ${img.smW ?? img.w}w, ${img.src} ${img.w}w`} sizes="(min-width: 700px) 340px, 90vw" width={img.w} height={img.h} alt={img.alt} loading="lazy" decoding="async" />
+                    <figcaption>{shot.caption}</figcaption>
                   </figure>
                 )}
                 <Crowd id={scene.id} />

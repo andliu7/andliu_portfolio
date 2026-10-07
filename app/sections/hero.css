@@ -1,22 +1,35 @@
 /* Hero (SITE-PLAN.md 4.1), the Slush poster. Every selector starts with .hero, the section root.
-   Ground: the section is flat paper; on it a band outlined in 1px ink at the panel radius, with
-   Andrew's Cloudscape (components/ui/cloudscape.tsx) behind it at his own colours: sky
-   #87ceeb, cloud #f8f8f8 and #ffffff. Text sits straight on the clouds, so it is measured
-   against the darkest of them, the sky: ink 10.4:1, berry
+   Ground: Andrew's Cloudscape (components/ui/cloudscape.tsx) fills the whole section edge to edge,
+   behind the fixed header too, at his own colours: sky #87ceeb, cloud #f8f8f8 and #ffffff. Text
+   sits straight on the clouds, so it is measured against the darkest of them, the sky: ink 10.4:1, berry
    (LIU, display size) 4.3:1. On white cloud the same two read 18.1 and 7.5:1. The chip
    and the object labels are ink on --card (17.1:1). The bar is ink on --card (17.1:1).
    --fs is the name's font size. hero.client.tsx measures the name in the display face once the
    fonts are loaded and sets --fs-js so the name fills the stage on one line, capped so the band
-   and the bar end above the fold on a stage 640px and wider. */
+   and the room for the bar and tape above the seam fit the first screen on a stage 640px and wider. */
 
 .hero {
   --elastic:cubic-bezier(.34,1.56,.64,1);
-  /* No curve-top section follows the hero since the UMD section went in, so the bottom keeps only
-     breathing room, not the old --curve-h clearance. */
-  padding:calc(var(--header-h) + 12px) var(--gutter) 20px;
-  position:relative; /* the offset parent HeroFit measures the bar against */
+  /* A full screen of sky. The bar and the tape (.hero-cross) sit on the seam with the UMD
+     section, half over each, so the hero is one screen less the bar's lower half: on arrival the
+     whole bar shows at the foot of the screen and the flag starts right under it. The bottom
+     padding is the room the cross takes above the seam (the bottom tape's tilted left end, --tan
+     over half its width, plus its half height, plus --raise), so the tape runs just under the
+     résumé button and never covers it or the objects. --raise lifts the bottom tape off the seam
+     by one and a half times its 52px height (Andrew 2026-10-06) on a screen 900px tall or more,
+     less on a shorter one and none at 720px: every pixel of it comes out of the name's size.
+     --w is the cross's width, the screen plus 48px a side. --tilt is the tape's angle and --tan
+     its tangent: 8deg, and 12deg on a narrow screen, where a shallow angle over 486px would lay
+     the tape almost exactly over the bar. */
+  --w:calc(100vw + 96px); --tilt:8deg; --tan:.14; --raise:clamp(0px, calc((100svh - 720px) * .43), 78px);
+  min-height:calc(100svh - 27px);
+  display:flex; flex-direction:column; justify-content:flex-start;
+  padding:calc(var(--header-h) + 12px) var(--gutter) calc(var(--w) * var(--tan) / 2 + 28px + var(--raise));
+  position:relative; /* the offset parent HeroFit measures against, and the cross hangs from */
+  z-index:2; /* above the UMD section, so the cross's lower half lies over the flag */
+  isolation:isolate; /* the sky's z-index 0 stays inside the hero */
   color:var(--ink);
-  overflow-x:clip; /* nothing in the hero may widen the page (the tilted bar, an object) */
+  overflow-x:clip; /* nothing in the hero may widen the page (the tilted tape, an object) */
 }
 @supports (transition-timing-function:linear(0,1)) {
   /* Slush's spring (slush skill, --ease-elastic): overshoots to 1.14 at a quarter, settles */
@@ -26,40 +39,57 @@
 .hero[data-gradient] { background:var(--paper); }
 
 .hero .hero-band {
-  position:relative; isolation:isolate;
-  max-width:1440px; margin:0 auto;
-  padding:clamp(18px,3vw,40px) clamp(16px,3vw,40px) clamp(18px,2.4vw,32px);
-  background:var(--sky); border:1px solid var(--ink); border-radius:40px;
+  position:relative; z-index:1;
+  width:100%; max-width:1440px; margin:0 auto;
   --on:var(--ink); --on-2:var(--ink-2); --kw:var(--berry);
 }
-/* The sky fills the band and takes its rounded corners (the component clips its canvas) */
-.hero .hero-sky { position:absolute; inset:0; z-index:0; border-radius:inherit; }
+/* Wide: room above the stage so the top objects' labels clear the fixed header's buttons */
+@media (min-width:760px) { .hero .hero-band { padding-top:32px; } }
+/* Narrow: the content is shorter than the screen, so the band sits in the middle of the free sky
+   above the bar instead of leaving a bare stretch under the résumé button */
+@media (max-width:759px) { .hero .hero-band { margin-block:auto; } .hero { --tilt:12deg; --tan:.213; } }
+/* The sky fills the whole hero, full bleed, under the band and the bar */
+.hero .hero-sky { position:absolute; inset:0; z-index:0; }
 
 .hero .hero-stage { container:hero / inline-size; position:relative; z-index:1; display:grid; gap:clamp(12px,1.8vw,22px); }
 /* --fs-js is the measured size (hero.client.tsx); until it lands, a size that cannot overflow */
 .hero .hero-stage > * { --fs:var(--fs-js, calc(100cqi / 5.6)); }
 .hero .hero-name.fit { font-size:var(--fs); }
 
-/* The title chip (Andrew: "keep that too"): above the name, never under an object */
+/* The title chip (Andrew: "keep that too"): above the name, never under an object. At most 46% of
+   the stage wide (it wraps), so it stops short of the pencil's label at 62% across. */
 .hero .hero-tag {
   position:relative; z-index:4;
-  justify-self:start; display:inline-flex; align-items:center; min-height:32px; max-width:100%; padding:6px 14px;
+  justify-self:start; display:inline-flex; align-items:center; min-height:48px; max-width:min(100%, 46cqi); padding:9px 21px;
   border:1px solid var(--ink); border-radius:var(--r-pill); background:var(--card);
-  font:600 12px/1.35 var(--mono); letter-spacing:.1em; text-transform:uppercase; font-variant-ligatures:none;
+  font:600 18px/1.35 var(--mono); letter-spacing:.1em; text-transform:uppercase; font-variant-ligatures:none;
 }
-@container hero (max-width:759px) { .hero .hero-tag { border-radius:16px; } }
+@container hero (max-width:759px) { .hero .hero-tag { max-width:100%; border-radius:20px; font-size:15px; padding:8px 16px; } }
 
 /* ---------- The name and its objects ----------
    --pt is the room above the letters for the top two objects; the bottom two hang beside the
    résumé button on a wide stage, and get their own room under the name on a narrow one. */
-.hero .hero-namewrap { --pt:calc(var(--fs) * .42); position:relative; z-index:1; padding-top:var(--pt); }
+.hero .hero-namewrap { --pt:calc(var(--fs) * .55); position:relative; z-index:1; padding-top:var(--pt); }
 @container hero (max-width:759px) {
-  .hero .hero-namewrap { --pt:max(64px, calc(var(--fs) * .42)); padding-bottom:max(68px, calc(var(--fs) * .6)); }
+  .hero .hero-namewrap { --pt:max(84px, calc(var(--fs) * .55)); padding-bottom:max(90px, calc(var(--fs) * .8)); }
 }
 .hero .hero-name { position:relative; z-index:1; color:var(--ink); white-space:nowrap; }
 .hero .hero-nl { display:inline; white-space:nowrap; }
 .hero .hero-nl-kw { color:var(--kw); }
 .hero .hero-c { display:inline-block; }
+/* The roll (Slush's wordmark slot roll; NameRoll in hero.client.tsx sets data-roll on the h1).
+   Each letter clips top and bottom to its own line box, which holds the caps (.07em to .76em of
+   the .84 line), and hangs its second face one line below; the roll lifts both a full line on
+   Slush's spring, letter by letter from the first, 50ms apart (Slush offsets its columns .05s),
+   and drops them back when data-roll goes. Transforms only, so the fitted size never moves.
+   ANDREW's second face is berry, LIU's is ink. */
+.hero .hero-c { overflow-x:visible; overflow-y:clip; vertical-align:top; }
+.hero .hero-roll { position:relative; display:block; transition:transform .75s var(--elastic) calc(var(--j) * 50ms); }
+.hero .hero-fa { display:block; }
+.hero .hero-fb { position:absolute; left:0; top:100%; color:var(--kw); }
+.hero .hero-nl-kw .hero-fb { color:var(--ink); }
+.hero .hero-name[data-roll] .hero-roll { transform:translateY(-100%); }
+html[data-motion="reduced"] .hero .hero-name .hero-roll { transition:none; transform:none; }
 /* the word gap: a margin on ANDREW (not the first span, which is the sr-only name). HeroFit
    measures the name with it, so the fitted size includes the gap. */
 .hero .hero-nl:not(.hero-nl-kw) { margin-right:.34em; }
@@ -69,20 +99,34 @@
 .hero .hero-foot { position:relative; z-index:3; display:grid; gap:16px; align-items:end; pointer-events:none; }
 .hero .hero-foot > * { pointer-events:auto; }
 @container hero (min-width:760px) {
-  /* the right half stays clear: the bottom two objects hang there */
-  .hero .hero-foot { grid-template-columns:minmax(0,1fr) minmax(0,1.4fr); column-gap:24px; min-height:calc(var(--fs) * .62 + 40px); }
+  /* the right half stays clear: the bottom two objects hang there. Its height is the objects'
+     hang under the letters (.82em) and their labels, less the 80px or so the tilted bottom tape
+     drops between the résumé button at the left and the objects near the middle */
+  .hero .hero-foot { grid-template-columns:minmax(0,1fr) minmax(0,1.4fr); column-gap:24px; min-height:calc(var(--fs) * .84 - 40px); }
 }
 .hero .hero-about { display:grid; gap:14px; justify-items:start; }
 .hero .hero-portrait { width:min(100%,220px); rotate:-3deg; }
 
-/* ---------- The bar: full bleed, cream, tilted a degree and a half, short true facts ----------
-   Wider than the hero by 48px a side, so the tilted ends hang past the viewport; .hero clips them. */
+/* ---------- The cross: the bar and the caution tape in an X, on the seam ----------
+   Andrew: the bar level and on the seam with the UMD flag, "so it looks like a cleaner
+   transition", the tape crossing it at an angle. Both sit in one grid cell, so their centres line
+   up; the tape turns --tilt about its middle and is lifted --raise, so it crosses the bar right of
+   centre and runs just under the résumé button on the left.
+   Wider than the screen by 48px a side, so the tilted ends hang past it; .hero clips them. */
+.hero .hero-cross {
+  position:absolute; z-index:2; left:-48px; right:-48px; top:100%;
+  transform:translateY(-50%); /* centred on the seam; the entrance's rise uses translate, not this */
+  display:grid; align-items:center;
+}
+.hero .hero-cross > * { grid-area:1 / 1; }
+.hero .hero-cross > .hero-tape { translate:0 calc(-1 * var(--raise)); } /* lifted off the seam; it still crosses the bar toward the right */
+
+/* ---------- The bar: full bleed, cream, level on the seam, short true facts ---------- */
 .hero .hero-strip {
-  position:relative; z-index:2;
-  margin:clamp(20px,3vw,36px) calc(-1 * var(--gutter) - 48px) 0;
+  position:relative; z-index:1;
   display:flex; align-items:center; min-width:0; min-height:52px;
   background:var(--card); color:var(--ink); border-block:1px solid var(--ink);
-  rotate:-1.5deg; overflow:clip;
+  overflow:clip;
 }
 .hero .hero-mq { flex:1 1 auto; min-width:0; overflow-x:clip; }
 .hero .hero-mq-item { display:inline-flex; align-items:center; gap:22px; padding-right:22px; white-space:nowrap; font:700 14px/50px var(--mono); letter-spacing:.06em; text-transform:uppercase; font-variant-ligatures:none; }
@@ -92,6 +136,42 @@ html[data-motion="reduced"] .hero .hero-mq .mq { overflow:visible; }
 html[data-motion="reduced"] .hero .hero-mq .mq-track { flex-shrink:1; flex-wrap:wrap; justify-content:center; padding:8px calc(var(--gutter) + 48px); }
 html[data-motion="reduced"] .hero .hero-mq .mq-item { flex-shrink:1; }
 html[data-motion="reduced"] .hero .hero-mq-item { line-height:32px; }
+
+/* ---------- The caution tape: yellow, black hazard stripes on both edges, scrolling right ----------
+   Black on #ffd200 is 13:1; the CAUTION box is the same pair reversed. */
+.hero .hero-tape {
+  --tape:#ffd200; --tape-ink:#111;
+  --hazard:repeating-linear-gradient(-45deg,var(--tape-ink) 0 8px,var(--tape) 8px 16px);
+  position:relative; z-index:2;
+  display:flex; align-items:center; min-width:0;
+  padding-block:8px; /* the stripes */
+  background:var(--hazard) top / 100% 8px no-repeat, var(--hazard) bottom / 100% 8px no-repeat, var(--tape);
+  color:var(--tape-ink);
+  rotate:var(--tilt); overflow:clip; /* about its middle, so it crosses the bar mid-screen */
+  box-shadow:0 6px 0 rgb(18 20 43 / .18); /* a flat drop, so the tape reads as lying over the bar */
+}
+.hero .hero-tape-mq { flex:1 1 auto; min-width:0; overflow-x:clip; }
+.hero .hero-tape-item { display:inline-flex; align-items:center; gap:14px; padding-right:28px; white-space:nowrap; font:700 15px/36px var(--mono); letter-spacing:.06em; text-transform:uppercase; font-variant-ligatures:none; }
+.hero .hero-tape-code { text-transform:none; letter-spacing:0; }
+.hero .hero-tape-word { padding:0 10px; background:var(--tape-ink); color:var(--tape); line-height:28px; letter-spacing:.14em; }
+/* Reduced motion: still (the Marquee drops its copy and its scroll); the tape still crosses the bar */
+
+/* ---------- The right tape: a second run of the tape, in from the right edge, down to the left ----------
+   Andrew: "comes in from the right side around the bottom of the flashcard icon ... crosses
+   through the bottom caution tape (this one the text goes the opposite direction)". It turns
+   -12deg (-22deg on a phone) about its right end, which sits 48px past the screen's edge at
+   --tape-y, set by HeroFit (hero.client.tsx) from the measured objects, labels and button so it
+   passes under all of them.
+   The clip box is the hero itself, so the tape ends at the seam, under the cream bar, and never
+   reaches the UMD section; z-index 1 before the band in the page order, so the band (the name, the
+   chip, the objects, the button) draws over it, and the cross (z-index 2) does too. */
+.hero .hero-tape-clip { position:absolute; inset:0; z-index:1; overflow:clip; pointer-events:none; }
+.hero .hero-tape-right {
+  position:absolute; right:-48px; top:var(--tape-y, 72%); width:calc(100vw + 160px);
+  translate:0 -50%; rotate:-12deg; transform-origin:100% 50%;
+}
+/* a phone: steeper, or over 390px it would never reach the bottom tape */
+@media (max-width:759px) { .hero .hero-tape-right { rotate:-22deg; } }
 
 /* ---------- Entrance (Slush motion, gated on the loader's html.is-loaded) ---------- */
 .hero .hero-c { transition:opacity .3s linear calc(.1s + var(--i) * 30ms),transform .65s var(--elastic) calc(.1s + var(--i) * 30ms); }
