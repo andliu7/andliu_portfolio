@@ -2,7 +2,6 @@ import Motion from './motion';
 import Hero from './sections/hero';
 import Umd from './sections/umd';
 import Contents from './sections/contents';
-import Manifesto from './sections/manifesto';
 import Blueberry from './sections/blueberry';
 import Projects from './sections/projects';
 import Impact from './sections/impact';
@@ -24,7 +23,6 @@ export default function Home() {
       <Hero />
       <Umd />
       <Contents />
-      <Manifesto />
       <Blueberry />
       <Projects />
       <Impact />

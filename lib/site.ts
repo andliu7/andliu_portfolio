@@ -130,12 +130,8 @@ export const TICKET = {
   thumb: 'bbHome', // IMAGES key (its 800px variant), once capture has produced it
 } as const;
 
-// 4.2 Manifesto. Words in *asterisks* are the Antic keywords (components/site/type.tsx TwoVoice).
-export const MANIFESTO = {
-  eyebrow: 'B.S. Computer Science, Pre-Dental Track, UMD. Expected May 2027.', // [R]
-  text: 'I BUILD TOOLS THAT MAKE *complicated* IDEAS EASIER TO *understand*, FOR PEOPLE I ACTUALLY *know*.', // [P]
-  plain: 'I build tools that make complicated ideas easier to understand, for people I actually know.', // [P]
-} as const;
+// 4.2 The manifesto band was removed 2026-10-06 (Andrew: "remove the orange page and go directly
+// into the from flashcards to a platform page"); its sentence still runs in the hero's marquee.
 
 // 4.2 The ON / OFF fork. The on-side line is MICROCOPY.forkCounts (derived from the data).
 export const FORK = {
@@ -691,7 +687,6 @@ export const SECTIONS = [
   // budget 1.7 = one sticky viewport plus a 0.7 viewport runway (0 under reduced motion).
   { id: 'umd', ground: 'apricot', gradient: null, label: null, budget: 1.7, kind: 'cap', project: false, pinned: true, texture: true },
   { id: 'contents', ground: 'berry-deep', gradient: null, label: null, budget: 1.0, kind: 'cap', project: false, pinned: false, texture: true },
-  { id: 'manifesto', ground: 'apricot', gradient: null, label: null, budget: 0.9, kind: 'cap', project: false, pinned: false, texture: true },
   { id: 'blueberry', ground: 'berry', gradient: 'berry-deep', label: 'Blueberry', budget: 3.6, kind: 'floor', project: true, pinned: true, texture: true },
   { id: 'work', ground: 'berry-deep', gradient: null, label: 'Projects', budget: 4.2, kind: 'floor', project: true, pinned: false, texture: true },
   { id: 'impact', ground: 'berry-deep', gradient: null, label: 'Impact', budget: 1.3, kind: 'cap', project: true, pinned: false, texture: true },
