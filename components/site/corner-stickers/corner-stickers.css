@@ -1,0 +1,36 @@
+/* CornerStickers (corner-stickers.tsx). The layer covers its positioned parent and takes no
+   pointer; each sticker is placed per section below, in a margin that section leaves empty.
+   --cs is the sticker's size (56 to 96px on a wide screen, about two thirds on a phone), --r its
+   tilt. They bob slowly (translate and rotate, each on its own period); reduced motion: still. */
+.cs-layer { position:absolute; inset:0; z-index:1; pointer-events:none; overflow:clip; }
+.cs { position:absolute; display:block; width:var(--cs,72px); height:var(--cs,72px); rotate:var(--r,-8deg); }
+.cs svg { display:block; width:100%; height:100%; overflow:visible; }
+@keyframes cs-bob { from { translate:0 0; rotate:calc(var(--r,-8deg) - 3deg); } to { translate:0 -8px; rotate:calc(var(--r,-8deg) + 3deg); } }
+html:not([data-motion="reduced"]) .cs { animation:cs-bob calc(4.6s + var(--k) * .9s) ease-in-out calc(var(--k) * -1.7s) infinite alternate; }
+@media (max-width:699px) { .cs { --cs:var(--cs-sm,52px); } .cs-wide { display:none; } }
+
+/* Impact: a little chart and a sparkle in the top right corner, past the headline's full stop */
+.cs-impact .cs-1 { --cs:72px; --r:8deg; right:2.5%; top:18px; }
+.cs-impact .cs-2 { --cs:40px; --r:0deg; right:calc(2.5% + 80px); top:12px; }
+@media (max-width:699px) { .cs-impact .cs-1 { --cs-sm:40px; top:4px; } .cs-impact .cs-2 { display:none; } }
+
+/* Timeline (in the pinned frame): a clock and a briefcase in the bottom corners, under the cards */
+.cs-experience .cs-1 { --cs:72px; --r:-10deg; left:2.5%; bottom:24px; }
+.cs-experience .cs-2 { --cs:68px; --r:8deg; right:3%; bottom:28px; }
+@media (max-width:699px) { .cs-experience .cs-1 { top:calc(var(--header-h) + 8px); bottom:auto; left:auto; right:4%; } .cs-experience .cs-2 { display:none; } }
+
+/* Off the clock (in the pinned frame): a moon high on the right, the herb pot under the name tag */
+.cs-offclock .cs-1 { --cs:76px; --r:-14deg; right:4%; top:calc(var(--header-h) + 24px); }
+.cs-offclock .cs-2 { --cs:60px; --r:6deg; right:calc(4% + 96px); top:calc(var(--header-h) + 40px); }
+/* a phone (the stacked panels): only the moon, small, above the eyebrow */
+@media (max-width:699px) { .cs-offclock .cs-1 { --cs-sm:44px; top:28px; } .cs-offclock .cs-2 { display:none; } }
+
+/* Contact: an envelope and a paper plane in the card's empty right side, under the résumé button */
+.cs-contact .cs-1 { --cs:84px; --r:-8deg; right:11%; top:330px; }
+.cs-contact .cs-2 { --cs:64px; --r:14deg; right:4.5%; top:290px; }
+@media (max-width:699px) { .cs-contact .cs-1 { display:none; } .cs-contact .cs-2 { top:70px; right:6%; } }
+
+/* The island: a palm tree and a wave in the clear column between the title and the picture */
+.cs-island .cs-1 { --cs:88px; --r:-6deg; left:32%; top:48px; }
+.cs-island .cs-2 { --cs:68px; --r:8deg; left:34%; bottom:70px; }
+@media (max-width:699px) { .cs-island .cs-1 { --cs-sm:44px; left:auto; right:6%; top:6px; } .cs-island .cs-2 { display:none; } }

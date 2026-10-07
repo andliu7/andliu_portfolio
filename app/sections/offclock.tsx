@@ -7,6 +7,7 @@ import { useHorizontalScroll } from '@/components/site/use-horizontal-scroll';
 import { BarbellSticker, PanSticker } from '@/components/site/stickers/stickers';
 import { BackpackSticker, BlobPerson, BookSticker, ClockSticker, MoonSticker, PotSticker, SparkleSticker, SunSticker, TableSticker, type PersonTone } from '@/components/site/closing/stickers';
 import './offclock.css';
+import { CornerStickers } from '@/components/site/corner-stickers/corner-stickers';
 
 // Off the clock (rebuilt 2026-10-06 from Andrew's note: "take me through my evening ... a
 // horizontal scroll with more animated feeling"). The section pins and vertical scroll walks a
@@ -144,6 +145,7 @@ export default function OffClock() {
   return (
     <section {...sectionAttrs('offclock')} ref={runwayRef} className="offclock" aria-labelledby="offclock-title">
       <div className="oc-frame">
+        <CornerStickers set="offclock" />
         <div className="oc-track" ref={trackRef}>
           <article className="oc-panel oc-intro" data-band={BANDS[0]} data-hs-item="">
             <span className="eyebrow">{OFF_CLOCK.eyebrow}</span>

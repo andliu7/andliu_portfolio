@@ -35,14 +35,15 @@ section.contact { padding-top:24px; overflow-x:clip; }
 /* About only: the pill back home, at the card's bottom left. */
 .contact .ct-home { margin:0 clamp(24px,3.2vw,48px) clamp(24px,3.2vw,48px); }
 
-/* The marquee: a full-bleed sky band under the card (the section's gutters are undone with a
-   negative margin), display-size ink words between berry dots, turned a degree and a half so it
-   reads as a strip laid on the page. A soft radial within the sky family (lighter at the top
-   left); ink on its darkest stop, plain sky, is 13.3. */
-.contact .ct-mq { max-width:none; margin:40px calc(-1 * var(--gutter) - 24px) 36px; border-block:2px solid var(--ink); background:radial-gradient(120% 260% at 30% 0%, color-mix(in srgb,var(--sky) 55%,var(--card)) 0%, var(--sky) 70%); color:var(--ink); rotate:-1.5deg; }
-.contact .ct-mq .mq { padding:18px 0 14px; }
-.contact .ct-mq-item { display:inline-flex; align-items:center; gap:36px; padding-left:36px; font-family:var(--display); font-size:clamp(32px,4vw,56px); line-height:1; text-transform:uppercase; white-space:nowrap; }
-.contact .ct-mq-item::after { content:''; width:.36em; height:.36em; border-radius:50%; border:2px solid var(--ink); background:var(--berry); }
+/* The stack band: a full-bleed sky band under the card (the section's gutters are undone with a
+   negative margin), turned a degree and a half so it reads as a strip laid on the page. On it the
+   STACK slides as logo chips (components/site/stack-logos.tsx) in display type, ink logos and
+   names on card fills (17.1:1); under reduced motion it is one still, wrapped row. A soft radial
+   within the sky family (lighter at the top left); ink on its darkest stop, plain sky, is 13.3. */
+.contact .ct-mq { margin:40px calc(-1 * var(--gutter) - 24px) 36px; padding:18px 0; border-block:2px solid var(--ink); background:radial-gradient(120% 260% at 30% 0%, color-mix(in srgb,var(--sky) 55%,var(--card)) 0%, var(--sky) 70%); rotate:-1.5deg; overflow:hidden; }
+.contact .ct-mq .islider[data-static] { padding-inline:calc(var(--gutter) + 24px); }
+.contact .ct-mq-item { --chip-h:clamp(52px,4.6vw,68px); --chip-fs:clamp(18px,1.9vw,28px); border-width:2px; font-family:var(--display); font-weight:700; letter-spacing:-.02em; }
+.contact .ct-mq-item:nth-child(3n + 2) { background:var(--apricot); }
 
 @media (max-width:640px) {
   .contact .ct-pill { font-size:26px; }

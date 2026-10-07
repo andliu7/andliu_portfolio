@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 // face's letters are not one width, so "chars times a factor" either overflows or leaves a gap.
 // After the web fonts have loaded (document.fonts.ready), this measures the name at its current
 // size and sets --fs-js on the stage so that:
-//   1. the name, one line, fills the stage's width exactly, and
+//   1. the name, one line, fills the glass card's inner width exactly, and
 //   2. on a stage 640px or wider, the band and the room under it for the bar and tape on the
 //      seam still fit the first screen (the name and the room for its objects shrink first; a phone
 //      scrolls, so there the width alone decides).
@@ -65,7 +65,8 @@ export function HeroFit() {
       const natural = name.getBoundingClientRect().width;
       name.style.width = '';
       if (!current || !natural) return;
-      let size = (current * stage.clientWidth) / natural;
+      // the name's column is the glass card's inside (hero.css .hero-card), the namewrap's width
+      let size = (current * wrap.clientWidth) / natural;
       if (stage.clientWidth >= 640) {
         // The name's wrapper (the letters plus the room above them for the objects) and the foot
         // under it (its wide-stage min-height is in units of --fs) scale with the size; everything
@@ -120,6 +121,9 @@ export function HeroFit() {
 // 1.4s, long enough for the last letter to land, then clears it so the letters roll back. The
 // clock only runs while the hero is on screen and the tab is visible; under reduced motion it
 // never rolls. Like HeroFit it renders nothing and works on the server HTML's h1.
+// It also runs LIU's flip to his Chinese surname (hero.css .hero-liu): data-zh on the h1 while the
+// pointer is over LIU itself, or for 1.6s after a tap on it. While that shows, the intermittent
+// roll waits, and an entrance straight onto LIU does not start the whole-name roll.
 const ROLL_HOLD = 1400;
 
 export function NameRoll() {
@@ -129,12 +133,14 @@ export function NameRoll() {
     const hero = document.getElementById('top');
     if (!name || !hero) return;
 
+    const liu = name.querySelector<HTMLElement>('.hero-liu');
     let onScreen = true;
+    let tapBack = 0;
     let next = 0;
     let back = 0;
     const reduced = () => d.getAttribute('data-motion') === 'reduced';
     const roll = () => {
-      if (reduced() || name.hasAttribute('data-roll')) return;
+      if (reduced() || name.hasAttribute('data-roll') || name.hasAttribute('data-zh') || liu?.matches(':hover')) return;
       name.setAttribute('data-roll', '');
       back = window.setTimeout(() => name.removeAttribute('data-roll'), ROLL_HOLD);
     };
@@ -148,7 +154,25 @@ export function NameRoll() {
     observer.observe(hero);
     document.addEventListener('visibilitychange', schedule);
     name.addEventListener('mouseenter', roll);
+    const zhOn = () => { window.clearTimeout(back); name.removeAttribute('data-roll'); name.setAttribute('data-zh', ''); };
+    const zhOff = () => name.removeAttribute('data-zh');
+    const onEnter = (e: PointerEvent) => { if (e.pointerType !== 'touch') zhOn(); };
+    const onLeave = (e: PointerEvent) => { if (e.pointerType !== 'touch') zhOff(); };
+    const onTap = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return;
+      zhOn();
+      window.clearTimeout(tapBack);
+      tapBack = window.setTimeout(zhOff, 1600);
+    };
+    liu?.addEventListener('pointerenter', onEnter);
+    liu?.addEventListener('pointerleave', onLeave);
+    liu?.addEventListener('pointerdown', onTap);
     return () => {
+      liu?.removeEventListener('pointerenter', onEnter);
+      liu?.removeEventListener('pointerleave', onLeave);
+      liu?.removeEventListener('pointerdown', onTap);
+      window.clearTimeout(tapBack);
+      name.removeAttribute('data-zh');
       observer.disconnect();
       document.removeEventListener('visibilitychange', schedule);
       name.removeEventListener('mouseenter', roll);

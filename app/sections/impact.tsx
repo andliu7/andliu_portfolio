@@ -4,6 +4,7 @@ import { Marquee } from '@/components/site/marquee';
 import impact from '@/lib/impact.json';
 import { ImpactAccordion, type PanelView, type SeriesData, type SeriesView } from './impact.client';
 import './impact.css';
+import { CornerStickers } from '@/components/site/corner-stickers/corner-stickers';
 
 // Impact (SITE-PLAN.md 4.6, A8): what the work measurably did, one accordion row per project.
 // Every number comes from lib/impact.json (written by scripts/impact-data.mjs from disk and git);
@@ -89,6 +90,7 @@ export default function Impact() {
 
   return (
     <section {...sectionAttrs('impact')} className="impact" aria-labelledby="impact-title">
+      <CornerStickers set="impact" />
       <header className="impact-head">
         <span className="eyebrow">{IMPACT_HEAD.eyebrow}</span>
         <FlipHeading id="impact-title" text={IMPACT_HEAD.headline} max={150} />

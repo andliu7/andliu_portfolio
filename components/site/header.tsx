@@ -2,7 +2,8 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { usePathname } from 'next/navigation';
 import { ArrowUpRight } from 'lucide-react';
-import { A11Y, BLUEBERRY, MICROCOPY, RESUME, SECTIONS } from '@/lib/site';
+import { A11Y, BLUEBERRY, HERO, MICROCOPY, RESUME, SECTIONS } from '@/lib/site';
+import { ChipMarquee } from './chip-marquee';
 import { Flame } from './flame/flame';
 import { Mark } from './mark';
 import { Menu } from './menu';
@@ -13,9 +14,12 @@ import { getSection, subscribeSection } from './section-state';
 // so it is never text on text.
 //   left    the AND/LIU mark (components/site/mark.tsx, his handle andliu), which flips and
 //           dances on hover, focus and once on load, goes home, and burns in a small berry and
-//           apricot flame (components/site/flame/)
+//           apricot flame (components/site/flame/); beside it the degree chip, one line, which
+//           turns into a slow marquee when the room before the centre is too short (720px and
+//           up; a phone shows it in the hero instead)
 //   centre  the current section's label in a pill (1200px and up), rolling when it changes; where
-//           a section has no label, the centre mark (Blueberry's flat berry) instead
+//           a section has no label, the centre berry instead, a link back to the top that grows
+//           to "ANDLIU.DEV" on hover and keyboard focus
 //   right   Résumé (the PDF, a new tab; 720px and up, the menu has it on phones), the berry
 //           "Visit Blueberry" pill (the live site, a new tab), Ask (an empty slot that the chat
 //           dock fills with its launcher through a portal) and the menu button
@@ -50,18 +54,22 @@ export function Header() {
     // data-menu-open lifts the wordmark and the Visit Blueberry pill above the open menu, so the
     // header stays put while the menu covers the page (plan 6.1).
     <header className="site-header" data-menu-open={open ? '' : undefined} data-hidden={hidden ? '' : undefined} data-band={band ? '' : undefined}>
-      {/* The flame's host span is the header's grid item now (.wordmark-host in globals.css). */}
-      <Flame className="wordmark-host" height={16} spread={7} radius={12}>
-        <a ref={markRef} className="wordmark flip-head" href={home ? '#top' : '/'} aria-label={A11Y.home}>
-          <Mark />
-        </a>
-      </Flame>
-      <SectionLabel />
+      {/* The left group is the header's first grid item: the flame's host span (.wordmark-host
+          in globals.css) around the mark, then the degree chip */}
+      <div className="hdr-left">
+        <Flame className="wordmark-host" height={16} spread={7} radius={12}>
+          <a ref={markRef} className="wordmark flip-head" href={home ? '#top' : '/'} aria-label={A11Y.home}>
+            <Mark />
+          </a>
+        </Flame>
+        {home && <span className="hdr-chip"><ChipMarquee text={HERO.chip} /></span>}
+      </div>
+      <SectionLabel home={home} />
       <div className="header-right">
-        <a className="pill pill-light header-resume" href={RESUME} target="_blank" rel="noreferrer">
+        <a className="pill pill-berry header-resume" href={RESUME} target="_blank" rel="noreferrer">
           <PillFaces>{MICROCOPY.resumeShort}</PillFaces>
         </a>
-        <a className="pill pill-berry header-visit" href={BLUEBERRY.live} target="_blank" rel="noreferrer">
+        <a className="pill pill-light header-visit" href={BLUEBERRY.live} target="_blank" rel="noreferrer">
           <PillFaces>{MICROCOPY.visitBlueberry} <ArrowUpRight size={18} aria-hidden="true" /></PillFaces>
         </a>
         {/* The chat launcher lands here (chat-dock.tsx, createPortal). display: contents, so the
@@ -139,11 +147,11 @@ function useHideOnScroll() {
 }
 
 // The centre pill. Not a link, not focusable, aria-hidden: the page's landmarks already say
-// where you are. When the section changes, the old label rolls up and out while the new one
+// where you are. Where there is no label, the berry instead, which is a real link to the top. When the section changes, the old label rolls up and out while the new one
 // rolls in (rolling-list's mechanic): both sit in one track that moves -50%.
 // Pattern: `key` on the track. Changing a key makes React drop the old element and mount a new
 // one, which restarts the CSS animation without any timer.
-function SectionLabel() {
+function SectionLabel({ home }: { home: boolean }) {
   const [labels, setLabels] = useState<{ now: string | null; was: string | null }>({ now: null, was: null });
 
   // Subscribe once on mount; the returned unsubscribe is the effect's cleanup.
@@ -165,16 +173,23 @@ function SectionLabel() {
   // and holds one word again.
   const settle = () => setLabels(prev => (prev.was === null ? prev : { now: prev.now, was: null }));
   // Where a section has no label (the hero, the manifesto) the centre holds Lando's centre mark
-  // instead: Blueberry's berry, flat, the same one the loader drops. Mark and pill share one grid
-  // cell and cross-fade, so the header never jumps.
+  // instead: Blueberry's berry, flat, the same one the loader drops, as a pill-shaped link to the
+  // top whose "ANDLIU.DEV" slides out on hover and focus (the SocialButton pattern, globals.css
+  // .hdr-berry). Berry and pill share one grid cell and cross-fade, so the header never jumps.
+  // While a label shows, the berry is faded out, so it also leaves the tab order and the
+  // accessibility tree (tabIndex -1, aria-hidden).
+  const away = Boolean(labels.now);
   return (
-    <span className="hdr-centre" aria-hidden="true" data-empty={labels.now ? undefined : ''}>
-      <svg className="hdr-mark" viewBox="0 0 100 100" focusable="false">
-        <circle cx="50" cy="54" r="40" fill="var(--berry)" />
-        <circle cx="36" cy="40" r="9" fill="var(--berry-soft)" opacity=".55" />
-        <path d="M50 20l6 -9 3 10 10 -2 -6 8 -13 1 -13 -1 -6 -8 10 2 3 -10z" fill="var(--ink)" />
-      </svg>
-      <span className="hdr-label">
+    <span className="hdr-centre" data-empty={away ? undefined : ''}>
+      <a className="hdr-berry" href={home ? '#top' : '/'} aria-label={A11Y.berryHome} tabIndex={away ? -1 : undefined} aria-hidden={away ? true : undefined}>
+        <svg className="hdr-mark" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+          <circle cx="50" cy="54" r="40" fill="var(--berry)" />
+          <circle cx="36" cy="40" r="9" fill="var(--berry-soft)" opacity=".55" />
+          <path d="M50 20l6 -9 3 10 10 -2 -6 8 -13 1 -13 -1 -6 -8 10 2 3 -10z" fill="var(--ink)" />
+        </svg>
+        <span className="hdr-berry-text" aria-hidden="true">{MICROCOPY.domain}</span>
+      </a>
+      <span className="hdr-label" aria-hidden="true">
         {shown && (
           <span key={shown} className="hdr-label-track" data-roll={rolling ? '' : undefined} onAnimationEnd={settle}>
             {rolling && <span className="hdr-label-text">{labels.was}</span>}

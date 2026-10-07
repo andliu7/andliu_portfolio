@@ -2,6 +2,7 @@ import { Play } from 'lucide-react';
 import { IMAGES, ISLAND, MICROCOPY, sectionAttrs } from '@/lib/site';
 import { IslandDoor } from './island.client';
 import './island.css';
+import { CornerStickers } from '@/components/site/corner-stickers/corner-stickers';
 
 // The island finale (SITE-PLAN.md 4.10), the static version. One wide berry window standing on
 // its own under the footer's marquee band: the title and tagline on the left, the island poster
@@ -21,6 +22,7 @@ const poster = IMAGES[ISLAND.poster];
 export default function Island() {
   return (
     <section {...sectionAttrs('island')} className="island" aria-labelledby="island-title">
+      <CornerStickers set="island" />
       <div className="il-window" data-ground="berry">
         <div className="il-text">
           <span className="eyebrow">{ISLAND.eyebrow}</span>

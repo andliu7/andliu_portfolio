@@ -183,7 +183,7 @@ export default function ChatDock() {
       <button
         ref={launcherRef}
         type="button"
-        className="pill pill-light chat-launcher"
+        className="pill pill-berry chat-launcher"
         aria-label={MICROCOPY.ask}
         aria-expanded={open}
         aria-controls={open ? 'chat-panel' : undefined}

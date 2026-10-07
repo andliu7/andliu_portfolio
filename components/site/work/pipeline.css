@@ -1,0 +1,41 @@
+/* The animation pipeline diagram (components/site/work/pipeline.tsx). Ink text on card (17.06:1);
+   tiles carry 1.5px ink outlines; logo glyph contrasts are in logos.tsx. The drawn tiles are ink
+   glyphs on apricot (12.6), sky (13.3) and berry-soft (12.0). */
+
+.pl { container-type: inline-size; background: var(--card); color: var(--ink); }
+.pl-in { display: grid; align-content: center; gap: clamp(16px, 4cqi, 28px); padding: clamp(16px, 5cqi, 36px) clamp(14px, 4cqi, 32px); }
+.pl-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 30px; margin: 0; padding: 0; list-style: none; }
+.pl-step { position: relative; display: grid; align-content: start; justify-items: start; gap: 6px; min-width: 0; }
+/* The arrow to the next step, in the gap between columns. */
+.pl-steps .pl-step:not(:last-child)::after {
+  content: ''; position: absolute; top: 15px; right: -26px; width: 22px; height: 14px;
+  background: var(--ink);
+  clip-path: polygon(0 40%, 62% 40%, 62% 0, 100% 50%, 62% 100%, 62% 60%, 0 60%);
+}
+.pl-icons { display: flex; gap: 4px; }
+.pl-tile { display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 auto; border: 1.5px solid var(--ink); border-radius: 12px; }
+.pl-tile svg { width: 56%; height: 56%; }
+.pl-tile-sm { width: 30px; height: 30px; align-self: end; border-radius: 9px; }
+.pl-tile[data-tone="raster"] { background: var(--apricot); }
+.pl-tile[data-tone="video"] { background: var(--berry-soft); }
+.pl-tile[data-tone="mic"], .pl-tile[data-tone="spec"] { background: var(--sky); }
+.pl-tile:is([data-tone]) svg { color: var(--ink); }
+.pl-name { font: 700 13px/1.2 var(--mono); letter-spacing: .04em; text-transform: uppercase; font-variant-ligatures: none; }
+.pl-line { font: 400 15px/1.35 var(--body); }
+.pl-spec { display: flex; align-items: center; gap: 12px; margin: 0; padding-top: clamp(12px, 3cqi, 20px); border-top: 1.5px dashed color-mix(in srgb, var(--ink) 45%, transparent); }
+.pl-spec .pl-name { margin-right: 4px; }
+
+/* A narrow card: the steps run down, arrows pointing down. */
+@container (max-width: 519px) {
+  .pl-steps { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .pl-step { grid-template-columns: auto minmax(0, 1fr); column-gap: 14px; row-gap: 2px; align-items: center; }
+  .pl-step .pl-icons { grid-row: span 2; }
+  .pl-steps .pl-step:not(:last-child)::after { top: auto; bottom: -20px; right: auto; left: 15px; width: 14px; height: 18px; clip-path: polygon(40% 0, 60% 0, 60% 62%, 100% 62%, 50% 100%, 0 62%, 40% 62%); }
+}
+
+/* The index row's hover picture: tiles and arrows only. */
+.pl-compact { display: flex !important; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 6px; background: var(--card); }
+.pl-compact .pl-step { display: flex; align-items: center; }
+.pl-compact .pl-arrow { flex: 0 0 auto; width: 9px; height: 10px; margin: 0 5px; background: var(--ink); clip-path: polygon(0 0, 100% 50%, 0 100%); }
+.pl-compact .pl-tile { width: 27px; height: 27px; border-radius: 8px; }
+.pl-compact .pl-tile-sm { display: none; }

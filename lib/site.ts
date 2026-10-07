@@ -88,6 +88,9 @@ export const HERO = {
   chip: 'B.S. Computer Science, Pre-Dental Track. Expected May 2027.', // [R] Andrew's wording 2026-10-06 (B.S. instead of "Major")
   first: 'ANDREW', // [P]
   last: 'LIU', // [P]
+  // His surname in Chinese, the face LIU flips to under the pointer (Andrew 2026-10-06). Simplified;
+  // swap for the traditional '劉' here if he prefers (the hero's font link loads both).
+  lastZh: '刘', // [Andrew 2026-10-06 via lead]
   // The four cartoon objects around the name, each a link to its project (labels are PROJECTS titles)
   objects: {
     pencil: { label: 'Focus Family Guide', href: '#work-guide' }, // [P] PROJECTS guide
@@ -186,14 +189,27 @@ export const BB_FACTS: readonly { id: string; value?: number; label: string }[] 
   { id: 'deckCards', label: 'cards in his first deck' }, // [B] value = lib/bb-deck.json count
 ] as const;
 
-// 4.4 Four real screens, each a feature mid-use (Andrew, 2026-10-06: "the functional ones").
-// Captions are the literal routes the captures were taken on.
+// 4.4 Seven real screens, each a feature mid-use (Andrew, 2026-10-06: "the functional ones";
+// 2026-10-07: "grab like 3 more images. the tetris game maybe. include a quick demo video of the
+// aldol addition"). They hang as prints on a string (components/ui/polaroid-line-carousel.tsx).
+// `route` is the literal route each capture was taken on; `title` is the feature's own name in
+// the app; `caption` restates what the capture shows (its IMAGES alt), nothing more.
 export const BB_SCREENS = [
-  { image: 'bbFlashcards', caption: '#/APP/CARDS', href: `${BB_LIVE}#/app/cards` }, // [S] game routes.ts tab "cards"
-  { image: 'bbPathway', caption: '#/APP/PATHWAY', href: `${BB_LIVE}#/app/pathway` }, // [S]
-  { image: 'bbArrows', caption: '#/APP/TRAINER', href: `${BB_LIVE}#/app/trainer` }, // [S] game routes.ts tab "trainer"
-  { image: 'bbMolecules', caption: '#/DRAW/GRIGNARD-ADDITION-KETONE', href: `${BB_LIVE}#/draw/grignard-addition-ketone` }, // [S] App.tsx route draw/<reaction id>
+  { image: 'bbFlashcards', title: 'Flashcards', caption: 'A card flipped to its answer, then rated Again, Hard, Good or Easy.', route: '#/app/cards', href: `${BB_LIVE}#/app/cards` }, // [S] game routes.ts tab "cards"
+  { image: 'bbAldol', title: 'Aldol addition, 2 steps', caption: 'Hydroxide makes the enolate, then its carbon attacks formaldehyde: six arrows, drawn in the trainer.', route: '#/app/trainer?sequence=seq-aldol', href: `${BB_LIVE}#/app/trainer?sequence=seq-aldol` }, // [S] game demo/sequences.ts seq-aldol, recorded 2026-10-07
+  { image: 'bbArrows', title: 'Mechanism trainer', caption: "A curved arrow mid-drag, pushing the allyl cation's pi bond toward the empty carbon.", route: '#/app/trainer', href: `${BB_LIVE}#/app/trainer` }, // [S] game routes.ts tab "trainer"; [R] "curved-arrow mechanism trainer"
+  { image: 'bbPathway', title: 'Pathway', caption: 'Organic Chemistry II, Unit 1, as a column of lesson nodes.', route: '#/app/pathway', href: `${BB_LIVE}#/app/pathway` }, // [S]
+  { image: 'bbLessonAldol', title: 'Aldol lesson', caption: 'Two acetaldehydes give 3-hydroxybutanal, with the conditions stage by stage.', route: '#/lessons/enolate/aldol-addition', href: `${BB_LIVE}#/lessons/enolate/aldol-addition` }, // [S] App.tsx route lessons/<section>/<reaction>; data/reactions.ts aldol-addition
+  { image: 'bbMolecules', title: 'Draw the product', caption: 'A Grignard addition: the starting material beside a molecule editor.', route: '#/draw/grignard-addition-ketone', href: `${BB_LIVE}#/draw/grignard-addition-ketone` }, // [S] App.tsx route draw/<reaction id>
+  { image: 'bbTetris', title: 'Break: Tetris', caption: 'The focus timer offers Tetris on a break, and only on a break.', route: '#/lessons', href: `${BB_LIVE}#/lessons` }, // [S] lib/featureIndex.ts "Break: Tetris and sound"; components/ui/break-room.tsx
 ] as const;
+
+// The carousel's own labels (screen readers and the arrow buttons).
+export const BB_CAROUSEL = {
+  label: 'Blueberry screens', // [UI] (needs sign-off)
+  prev: 'Previous screen', // [UI] (needs sign-off)
+  next: 'Next screen', // [UI] (needs sign-off)
+} as const;
 
 // 4.4 The engineering claims, one sentence each, and the stack as tags.
 export const BB_ENGINEERING = {
@@ -210,7 +226,8 @@ export const BB_ENGINEERING = {
 // 2026-10-06). This headline tells the story's arc; the product slogan's own section was removed.
 export const BB_HEAD = {
   headline: 'FROM FLASHCARDS\nTO A *platform.*', // [P] BLUEBERRY_CHAPTER.story, "What began as flashcards ... learning platform"
-  screens: 'Four real screens', // [plan 4.4] count follows BB_SCREENS (four since 2026-10-06; needs sign-off)
+  screens: 'Seven real screens', // [plan 4.4] count follows BB_SCREENS (seven since 2026-10-07; needs sign-off)
+  forReal: 'FOR\nREAL!', // [UI] Andrew 2026-10-07: "make a for real exclamation on the side" (needs sign-off)
   stack: 'The stack', // [UI] label over BB_ENGINEERING.stack (needs sign-off)
 } as const;
 
@@ -296,7 +313,7 @@ export const PROJECTS = [
     tags: ['Python', 'SVG', 'ffmpeg'], // [P]
     links: [], // [P] none
     url: null,
-    image: null, imageApproved: null, // drawn reaction frames (plan 2.6)
+    image: null, imageApproved: null, // shown as the pipeline diagram (STUDIO_FLOW) instead of a picture
   },
   {
     id: 'guide', num: '06', title: 'Focus Family Guide', year: null, // [P]
@@ -322,6 +339,21 @@ export const PROJECTS = [
     image: null, imageApproved: null,
   },
 ] as const;
+
+// 4.5 The animation pipeline's card shows what it does as a flow of steps with tool logos
+// (Andrew 2026-10-06: "more detailed on what it actually does with logos"). Every step restates
+// the studio lines above and its kind (Python, cairosvg, ffmpeg); `tools` name logos in
+// components/site/work/logos.tsx.
+export const STUDIO_FLOW = {
+  label: 'How the pipeline works', // [UI]
+  steps: [
+    { id: 'render', tools: ['python', 'svg'], name: 'Python', line: 'Draws each reaction frame as SVG, in code' }, // [Z studio][P]
+    { id: 'raster', tools: [], name: 'cairosvg', line: 'Rasterizes the frames' }, // [Z studio] kind; Andrew 2026-10-06
+    { id: 'compose', tools: ['ffmpeg'], name: 'ffmpeg', line: 'Composites the frames with narration' }, // [Z studio][P]
+    { id: 'video', tools: [], name: 'Explainer video', line: 'Replaces hand-animated slides' }, // [Z studio][P]
+  ],
+  spec: { name: 'The spec', line: "Interactive chemistry figures for a professor's online textbook" }, // [Z studio][R]
+} as const;
 
 // `dot` names the Stage token for the role's 10px tile dot (decoration only, plan 4.7).
 export const JOBS = [
@@ -351,6 +383,7 @@ export const WORK_HEAD = {
   eyebrow: '02 / Selected work', // [P]
   headline: 'SELECTED *work.*', // [P]
   label: 'Selected work', // [P] as headline, plain, for the Projects section's visually hidden heading
+  hint: 'hover!', // [UI] Andrew 2026-10-06 ("add a little 'hover!' icon"); the sticker over the index (needs sign-off)
 } as const;
 
 export const EXPERIENCE_HEAD = {
@@ -673,6 +706,8 @@ export const CONTENTS = {
   title: 'WHERE TO?', // [UI] from the approved design (needs sign-off)
   note: 'You do not have to read this front to back. Pick the part you came for.', // [UI] from the approved design (needs sign-off)
   label: 'Contents', // [UI] the list's accessible name (needs sign-off)
+  resumeLine: 'Or skip the tour and take the one-page version.', // [UI] the line over the contents' résumé button (needs sign-off)
+  spin: 'Spin the compass', // [UI] the compass sticker's button name (needs sign-off)
   rows: [
     // The Blueberry chapter first (Andrew, 2026-10-06: "Where to?" should go into "From flashcards
     // to a platform", numbered 01 as the start of the list).
@@ -784,13 +819,25 @@ export const IMAGES = {
   bbPathway: { src: '/images/work/bb-pathway.webp', w: 1600, h: 1200, sm: '/images/work/bb-pathway-800.webp', smW: 800, alt: "The Blueberry pathway for Organic Chemistry II, Unit 1: a column of lesson nodes starting at allylic and resonance delocalization", owner: 'capture', sections: ['blueberry'] },
   bbArrows: { src: '/images/work/bb-arrows.webp', w: 1600, h: 1200, sm: '/images/work/bb-arrows-800.webp', smW: 800, alt: "A curved arrow being drawn in Blueberry's trainer, pushing the allyl cation's pi bond toward the empty carbon", owner: 'capture', sections: ['blueberry'] },
   bbMolecules: { src: '/images/work/bb-molecules.webp', w: 1600, h: 1200, sm: '/images/work/bb-molecules-800.webp', smW: 800, alt: "Blueberry's draw-the-product page for a Grignard addition: the starting material and conditions beside a molecule editor holding acetophenone", owner: 'capture', sections: ['blueberry'] },
+  // Captured 2026-10-07 the same way (SwiftShader, 2x, onboarding skipped). bbAldol is a recording
+  // of the trainer's seq-aldol solved arrow by arrow at 800x600, cropped 4:3 to the step text and
+  // canvas; its still is step 2 with all three arrows drawn, before Check. bbTetris is the focus
+  // timer's break with a few pieces dropped; bbLessonAldol the lesson with its product shown.
+  bbAldol: { src: '/images/work/bb-aldol.webp', w: 1200, h: 900, sm: '/images/work/bb-aldol-800.webp', smW: 800, video: '/media/work/bb-aldol.webm', alt: "Blueberry's trainer solving the aldol addition in two steps: hydroxide takes an alpha hydrogen from acetone to make the enolate, then the enolate's carbon attacks formaldehyde, each step drawn as three curved arrows", owner: 'capture', sections: ['blueberry'] },
+  bbLessonAldol: { src: '/images/work/bb-lesson-aldol.webp', w: 1600, h: 1200, sm: '/images/work/bb-lesson-aldol-800.webp', smW: 800, alt: "Blueberry's aldol addition lesson: two acetaldehydes give 3-hydroxybutanal, above the conditions, dilute sodium hydroxide in cold water", owner: 'capture', sections: ['blueberry'] },
+  bbTetris: { src: '/images/work/bb-tetris.webp', w: 1600, h: 1200, sm: '/images/work/bb-tetris-800.webp', smW: 800, alt: "The Tetris game in Blueberry's focus timer break card, a few pieces stacked on its ten by eighteen board", owner: 'capture', sections: ['blueberry'] },
   mechanismTrainer: { src: '/images/work/mechanism-trainer.webp', w: 1600, h: 1000, sm: '/images/work/mechanism-trainer-800.webp', smW: 800, alt: 'The Mechanism Trainer', owner: 'capture', sections: ['work'] },
-  focusFamilyGuide: { src: '/images/work/focus-family-guide.webp', w: 1600, h: 1000, sm: '/images/work/focus-family-guide-800.webp', smW: 800, alt: 'The Focus Family Guide', owner: 'capture', sections: ['work'] },
+  // Re-captured 2026-10-07 at Andrew's request ("make the ff_tech... an animated slide with the
+  // new fire animation and the marquee"): the live guide in headless SwiftShader Chrome at
+  // 960x600 2x, its clock stepped by hand, as an 11.2s loop: the cover (the flame round the KCM
+  // logo, the tool dock marquee), Step 1 and Step 10, joined by slides, ending on the first frame
+  // (scratchpad ffv/rec.mjs). The still is that first frame. scripts/capture.mjs would overwrite it.
+  focusFamilyGuide: { src: '/images/work/focus-family-guide.webp', w: 1600, h: 1000, sm: '/images/work/focus-family-guide-800.webp', smW: 800, alt: 'The Focus Family Guide: its cover with the KCM logo burning and the tool logos scrolling, then the Procedure and Step 10 pages', owner: 'capture', sections: ['work'], video: '/media/work/focus-family-guide.webm' },
   // Re-captured 2026-10-06 at Andrew's request ("make the second brain animated, like the actual
   // site ... not include the file names, but keep the look"): one full 90s turn of the local app's
   // globe, every label and panel hidden, stepped to 300 frames and played as a 15s seamless loop
   // (scratchpad brain-video.mjs). The still is the loop's own frame, shown under reduced motion.
-  secondBrain: { src: '/images/work/second-brain-globe.webp', w: 1200, h: 750, alt: 'The Second Brain globe turning: every file on my machine as one node per folder and kind, linked by the references between them', owner: 'capture', sections: ['work'], gated: 'secondBrainShot', srcset: [{ src: '/images/work/second-brain-globe-800.webp', w: 800 }, { src: '/images/work/second-brain-globe.webp', w: 1200 }], video: '/media/work/second-brain-globe.webm' },
+  secondBrain: { src: '/images/work/second-brain-globe.webp', w: 1200, h: 750, alt: 'The Second Brain globe turning: every file on my machine as one node per folder and kind on the surface of a sphere, linked by the references between them as lines that curve through the inside of the sphere', owner: 'capture', sections: ['work'], gated: 'secondBrainShot', srcset: [{ src: '/images/work/second-brain-globe-800.webp', w: 800 }, { src: '/images/work/second-brain-globe.webp', w: 1200 }], video: '/media/work/second-brain-globe.webm' },
   // Captured 2026-10-06 from the island game (island/src/interiors/chapel.js, room "circle") in
   // headless SwiftShader Chrome via window.__island.enterInterior('chapel') and room.go('circle').
   // Re-captured 2026-10-06 with the gold leader in the middle hidden (Andrew: it read as a cult).
@@ -886,6 +933,7 @@ export const MICROCOPY = {
   resumeShort: 'Résumé', // header pill; the same [P] link as the footer's "Résumé" (opens the PDF in a new tab)
   credits: 'Photographs from Unsplash', // Blueberry footer pattern [S site-footer]
   backHome: 'Back to andliu.dev', // About footer tab (same words as `back`)
+  domain: 'andliu.dev', // [P] public/CNAME; shown in caps beside the header's centre berry on hover (needs sign-off)
 } as const;
 
 // Where each MICROCOPY.nav label goes. Far targets go through jumpTo (components/site/jump.ts);
@@ -905,6 +953,7 @@ export const A11Y = {
   home: 'Andrew Liu, home', // [P] wordmark
   menuDialog: 'Site menu', // UI
   loader: 'Andrew Liu', // [P] the loader's word
+  berryHome: 'andliu.dev, back to top', // [P] the site's domain (public/CNAME), as MICROCOPY.back; the header's centre berry (needs sign-off)
 } as const;
 
 export const APPROVALS = { microcopy: false, secondBrainShot: true } as const; // Andrew flips these. secondBrainShot: approved 2026-10-06 (he asked for the globe picture)

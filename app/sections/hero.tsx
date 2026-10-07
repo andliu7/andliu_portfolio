@@ -3,15 +3,20 @@ import { HERO, HERO_BAR, HERO_CAUTION, IDENTITY, PORTRAITS, RESUME, MICROCOPY, s
 import { Portrait } from '@/components/site/portrait';
 import { Marquee } from '@/components/site/marquee';
 import { HeroObjects } from '@/components/site/hero-objects/hero-objects';
+import { HeroExit, ObjectsFly } from '@/components/site/hero-objects/travel';
 import Cloudscape from '@/components/ui/cloudscape';
 import { FlowButton } from '@/components/ui/flow-button';
+import { ChipMarquee } from '@/components/site/chip-marquee';
 import { HeroFit, NameRoll } from './hero.client';
 import './hero.css';
 
 // The hero (SITE-PLAN.md 4.1) in the Slush poster language: Andrew's Cloudscape sky drifting
-// edge to edge across the whole first screen (behind the header too), the title chip, the name crushed onto one line as
-// wide as the band allows, four cartoon objects of his projects around it (each a link), the
-// résumé button, then a cream marquee of short true facts on the seam, crossed by a caution tape.
+// edge to edge across the whole first screen (behind the header too), a frosted glass card on it
+// holding the name crushed onto one line as wide as the card allows, four cartoon objects of his
+// projects on the name's four corners (each a link), the résumé button centred under it, then a
+// cream marquee of short true facts on the seam, crossed by a caution tape. The degree chip lives
+// in the header (components/site/header.tsx); a phone has no room there, so it shows here, one
+// line, above the card.
 //
 // Layout (hero.css): the hero is one screen tall less half the bar, so on arrival the bar shows
 // whole at the foot of the screen, on the seam with the next section. The band's inner stage is a
@@ -36,16 +41,30 @@ const NAME_CHARS = HERO.first.length + HERO.last.length;
 // shorter than the bar's, which takes 80s): both measured at about 43px a second.
 const TAPE_SECONDS = 61;
 
+// Only the CJK glyphs of his surname, from Google Fonts' text= subset (a few KB): Fira Code has
+// none. React 19 hoists a <link rel="stylesheet"> with `precedence` into the document head.
+const ZH_FONT = 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@900&text=%E5%88%98%E5%8A%89&display=swap';
+
 function NameLine({ text, start, kw = false }: { text: string; start: number; kw?: boolean }) {
+  const letters = Array.from(text).map((char, i) => (
+    // --i counts from the last letter, so the stagger runs right to left (Slush's entrance);
+    // --j counts from the first, for the roll (NameRoll): the letter as set, its second face below
+    <span key={i} className="hero-c" style={{ '--i': NAME_CHARS - 1 - (start + i), '--j': start + i } as CSSProperties}>
+      <span className="hero-roll"><span className="hero-fa">{char}</span><span className="hero-fb">{char}</span></span>
+    </span>
+  ));
+  if (!kw) return <span className="hero-nl" aria-hidden="true">{letters}</span>;
+  // LIU as one word that flips to his Chinese surname under the pointer (NameRoll sets data-zh on
+  // the h1; hero.css .hero-liu): the letters ride up out of the word's clip and the character
+  // rises in from below. It is absolutely placed, so the fitted width never counts it.
   return (
-    <span className={`hero-nl ${kw ? 'hero-nl-kw' : ''}`} aria-hidden="true">
-      {Array.from(text).map((char, i) => (
-        // --i counts from the last letter, so the stagger runs right to left (Slush's entrance);
-        // --j counts from the first, for the roll (NameRoll): the letter as set, its second face below
-        <span key={i} className="hero-c" style={{ '--i': NAME_CHARS - 1 - (start + i), '--j': start + i } as CSSProperties}>
-          <span className="hero-roll"><span className="hero-fa">{char}</span><span className="hero-fb">{char}</span></span>
+    <span className="hero-nl hero-nl-kw" aria-hidden="true">
+      <span className="hero-liu">
+        <span className="hero-liu-track">
+          {letters}
+          <span className="hero-zh" lang="zh">{HERO.lastZh}</span>
         </span>
-      ))}
+      </span>
     </span>
   );
 }
@@ -73,26 +92,36 @@ export default function Hero() {
       </div>
       <div className="hero-band">
         <div className="hero-stage">
+          <link rel="stylesheet" href={ZH_FONT} precedence="default" />
           <HeroFit />
           <NameRoll />
-          <span className="hero-tag hero-rise" style={{ '--d': 0 } as CSSProperties}>{HERO.chip}</span>
+          {/* the four objects slide off the sides as the hero scrolls away, and a second set flies
+              in beside the Contents rows and the Selected work index further down (travel.tsx) */}
+          <HeroExit />
+          <ObjectsFly />
+          {/* phones only (hero.css); the header carries it on a wider screen */}
+          <span className="hero-tag hero-rise" style={{ '--d': 0 } as CSSProperties}><ChipMarquee text={HERO.chip} /></span>
 
-          <div className="hero-namewrap">
-            <h1 id="hero-title" className="display fit hero-name" style={{ '--chars': 6, '--max': '300px' } as CSSProperties}>
-              <span className="sr-only">{IDENTITY.name}</span>
-              <NameLine text={HERO.first} start={0} />
-              <NameLine text={HERO.last} start={HERO.first.length} kw />
-            </h1>
-            <HeroObjects />
-          </div>
-
-          <div className="hero-foot">
-            <div className="hero-about hero-rise" style={{ '--d': 1 } as CSSProperties}>
-              <div className="row-actions">
-                <FlowButton href={RESUME} text={MICROCOPY.resume} />
-              </div>
+          {/* The glass card (hero.css .hero-card): the name, its objects and the button on frosted
+              glass over the sky; the objects hang over its edges */}
+          <div className="hero-card">
+            <div className="hero-namewrap">
+              <h1 id="hero-title" className="display fit hero-name" style={{ '--chars': 6, '--max': '300px' } as CSSProperties}>
+                <span className="sr-only">{IDENTITY.name}</span>
+                <NameLine text={HERO.first} start={0} />
+                <NameLine text={HERO.last} start={HERO.first.length} kw />
+              </h1>
+              <HeroObjects />
             </div>
-            {PORTRAITS.hero.src ? <Portrait id="hero" className="hero-portrait hero-rise" /> : null}
+
+            <div className="hero-foot">
+              <div className="hero-about hero-rise" style={{ '--d': 1 } as CSSProperties}>
+                <div className="row-actions">
+                  <FlowButton href={RESUME} text={MICROCOPY.resume} />
+                </div>
+              </div>
+              {PORTRAITS.hero.src ? <Portrait id="hero" className="hero-portrait hero-rise" /> : null}
+            </div>
           </div>
         </div>
       </div>

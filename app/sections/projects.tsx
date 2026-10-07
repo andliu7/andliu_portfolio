@@ -7,6 +7,7 @@ import { TiltFrame } from '@/components/site/tilt-frame';
 import { CheckSticker, PROJECT_ART } from '@/components/site/work/art';
 import { FlashcardSticker } from '@/components/site/stickers/stickers';
 import { Shot } from '@/components/site/work/shot';
+import { HoverHint } from '@/components/site/work/hover-hint';
 import './projects.css';
 
 // Projects (SITE-PLAN.md 4.5), style pass 2026-10-06.
@@ -16,11 +17,12 @@ import './projects.css';
 //   - two feature spreads (Flashcards, Second Brain: the ones Andrew most wants seen; the game
 //     left the list 2026-10-06, the Blueberry chapter covers it),
 //     picture and text side by side on a pastel panel, alternating sides
-//   - the other three as sticker cards, two up, the odd one full width
+//   - the other three as sticker cards, two up, the odd one full width. The animation pipeline
+//     has no screenshot, so its picture is its flow diagram (components/site/work/pipeline.tsx)
 // Text columns stop at 60ch. Pictures are the real captures in a small browser window that tilts
 // toward the pointer; a project without one gets a drawn illustration, never an empty box.
 //
-// A server component; TiltFrame is the only client part.
+// A server component; TiltFrame and the "hover!" sticker (HoverHint) are the client parts.
 
 type Project = (typeof PROJECTS)[number];
 
@@ -44,11 +46,11 @@ function imageOf(p: Project): ImageKey | null {
 }
 
 /** The picture: the capture, else the drawing. Null only for the island row, which has neither. */
-function Media({ project, sizes }: { project: Project; sizes: string }) {
+function Media({ project, sizes, compact = false }: { project: Project; sizes: string; compact?: boolean }) {
   const image = imageOf(project);
   if (image) return <Shot image={image} sizes={sizes} />;
   const Art = PROJECT_ART[project.id];
-  return Art ? <Art /> : null;
+  return Art ? <Art compact={compact} /> : null;
 }
 
 /** The picture in a small browser window (three dots and the real address), tilting toward the
@@ -125,6 +127,7 @@ export default function Projects() {
         {/* The display title was removed (Andrew, 2026-10-06); the heading stays for screen
             readers, so the section landmark keeps its name (aria-labelledby). */}
         <h2 id="work-title" className="sr-only">{WORK_HEAD.label}</h2>
+        <HoverHint text={WORK_HEAD.hint} />
       </div>
 
       <ol className="wk-index">
@@ -136,7 +139,7 @@ export default function Projects() {
                 href={rowHref(project.id)}
                 lead={<span className="wk-index-num">{project.num}</span>}
                 meta={project.id === 'island' ? MICROCOPY.islandBelow : project.kind}
-                aside={hasMedia ? <span className="wk-thumb"><Media project={project} sizes="200px" /></span> : undefined}
+                aside={hasMedia ? <span className="wk-thumb"><Media project={project} sizes="240px" compact /></span> : undefined}
               >
                 {project.title}
               </RollingRow>

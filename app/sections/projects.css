@@ -37,6 +37,22 @@
 /* The section's height floor (SECTIONS budget) would otherwise stretch every row, the head too. */
 .work { align-content: start; }
 
+/* ---------- the "hover!" sticker (components/site/work/hover-hint.tsx): a tilted apricot tag
+   (ink on apricot 12.6:1) with an ink arrow curling down to row 01's empty middle, so it covers
+   no title, number or kind label (and stays clear of both row ends). It bobs, and fades away for
+   good after the first row hover. Only where hovering exists; still under reduced motion. ---------- */
+.work .wk-head { position: relative; }
+.work .wk-hint { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .work .wk-hint { position: absolute; z-index: 3; left: 44%; bottom: -46px; display: flex; align-items: flex-start; pointer-events: none; transition: opacity .4s ease, translate .5s var(--ease-elastic); }
+  .work .wk-hint[data-done] { opacity: 0; translate: 0 -10px; }
+}
+.work .wk-hint-tag { order: 2; padding: 7px 14px 8px; border: 1.5px solid var(--ink); border-radius: 14px 14px 14px 4px; background: var(--apricot); color: var(--ink); font: 700 18px/1 var(--display); letter-spacing: -.02em; font-variant-ligatures: none; rotate: -7deg; animation: wk-bob 2.4s ease-in-out infinite; }
+.work .wk-hint-arrow { order: 1; width: 46px; height: 38px; margin: 18px -4px 0 0; fill: none; stroke: var(--apricot); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; animation: wk-bob 2.4s ease-in-out infinite; animation-delay: -.3s; }
+@keyframes wk-bob { 50% { transform: translateY(-5px); } }
+html[data-motion="reduced"] .work :is(.wk-hint-tag, .wk-hint-arrow) { animation: none; }
+html[data-motion="reduced"] .work .wk-hint { transition: none; }
+
 /* ---------- the index ---------- */
 .work .wk-index { display: grid; padding: 0; margin: 0; list-style: none; }
 .work .wk-index > li { border-top: 1px solid color-mix(in srgb, var(--on) 20%, transparent); }
@@ -51,9 +67,9 @@
 .work .wk-index .roll-meta { flex: 0 0 clamp(180px, 20cqi, 240px); font: 500 12px/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--on-2); text-align: right; }
 /* The hover picture takes the kind label's place (it fades as the picture arrives), so it never
    covers the title. */
-.work .wk-index .roll-aside { right: 0; top: 50%; margin-top: -58px; }
-.work .wk-thumb { display: block; width: 186px; aspect-ratio: 16 / 10; overflow: hidden; border: var(--tile-line); border-radius: 14px; background: var(--card); }
-.work .wk-thumb :is(img, svg) { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.work .wk-index .roll-aside { right: 0; top: 50%; margin-top: -72px; }
+.work .wk-thumb { display: block; width: 232px; aspect-ratio: 16 / 10; overflow: hidden; border: var(--tile-line); border-radius: 14px; background: var(--card); }
+.work .wk-thumb > :is(img, svg, video) { width: 100%; height: 100%; object-fit: cover; object-position: top; }
 @container (max-width: 759px) {
   .work .wk-index .roll-row { flex-wrap: wrap; row-gap: 6px; align-items: baseline; font-size: clamp(24px, 7.4cqi, 34px); }
   .work .wk-index .roll-mask { flex-basis: calc(100% - 4ch); }
@@ -69,7 +85,7 @@
 .work .wk-chrome i:nth-child(2) { background: var(--sky); }
 .work .wk-chrome i:nth-child(3) { background: var(--berry-soft); }
 .work .wk-url { min-width: 0; margin-left: 8px; padding: 4px 12px; overflow: hidden; border-radius: var(--r-pill); background: var(--paper); font: 500 11px/1.2 var(--mono); letter-spacing: .02em; color: var(--ink-2); white-space: nowrap; text-overflow: ellipsis; font-variant-ligatures: none; }
-.work .wk-media :is(img, svg, video) { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; }
+.work .wk-media > :is(img, svg, video) { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; }
 /* Every picture grows a little inside its window on hover, on the spring (transform only; the
    window's overflow clips it, so the frame never moves). Reduced motion: it stays put. */
 .work .wk-media { overflow: hidden; }
@@ -102,8 +118,11 @@ html[data-motion="reduced"] .work .wk-media > * { transition: none; transform: n
 .work .wk-spreads { display: grid; gap: clamp(28px, 4cqi, 56px); }
 .work .wk-spread { display: grid; gap: clamp(24px, 3cqi, 40px); align-items: center; padding: clamp(20px, 3.4cqi, 52px); border: var(--tile-line); border-radius: 40px; scroll-margin-top: calc(var(--header-h) + 16px); }
 @container (max-width: 599px) { .work .wk-spread { border-radius: var(--r-tile); } }
+/* The picture takes about 22% more of the row than it did (Andrew 2026-10-06: the hoverable
+   images larger at rest); the words keep their 48ch cap, so they only wrap a little sooner. */
 @container (min-width: 900px) {
-  .work .wk-spread { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); column-gap: clamp(32px, 4.5cqi, 72px); }
+  .work .wk-spread { grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); column-gap: clamp(32px, 4.5cqi, 72px); }
+  .work .wk-spread:nth-child(even) { grid-template-columns: minmax(0, 1fr) minmax(0, 1.9fr); }
   .work .wk-spread:nth-child(even) .wk-visual { order: 2; }
 }
 
@@ -116,7 +135,7 @@ html[data-motion="reduced"] .work .wk-media > * { transition: none; transform: n
 .work .wk-card .wk-lines p { font-size: clamp(18px, 1.35cqi, 20px); }
 @container (min-width: 900px) {
   .work .wk-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .work .wk-card:last-child:nth-child(odd) { grid-column: 1 / -1; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: clamp(32px, 4.5cqi, 72px); align-items: center; }
+  .work .wk-card:last-child:nth-child(odd) { grid-column: 1 / -1; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); column-gap: clamp(32px, 4.5cqi, 72px); align-items: center; }
 }
 
 /* ---------- Entrances (Slush motion on the director's .is-in): panels spring in from behind ---------- */

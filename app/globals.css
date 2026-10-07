@@ -248,10 +248,10 @@ section[data-texture] { isolation:isolate; }
    down sends the pills up and out (yPercent -300 on the elastic spring, 30ms apart), scrolling
    up brings them back on a paper band. header.tsx writes data-hidden and data-band; keyboard
    focus inside or an open menu always shows it; reduced motion keeps it in place. The header box itself takes no pointer, only its pills do. */
-.site-header { position:fixed; z-index:60; top:16px; left:var(--gutter); right:var(--gutter); display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px; pointer-events:none; }
+.site-header { position:fixed; z-index:60; top:16px; left:var(--gutter); right:var(--gutter); display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:12px; pointer-events:none; }
 /* Explicit columns: below 1200px the label is display:none, and without these the right group
    would fall into the middle column instead of the right edge. */
-.site-header > .wordmark-host { grid-column:1; --hdr-i:0; }
+.site-header > .hdr-left { grid-column:1; --hdr-i:0; }
 .site-header > .hdr-centre { grid-column:2; --hdr-i:1; }
 .site-header > .header-right { grid-column:3; --hdr-i:2; }
 .site-header > * { pointer-events:auto; transition:translate var(--dur-roll) var(--ease-elastic) calc(var(--hdr-i,0) * 30ms); }
@@ -274,10 +274,19 @@ section[data-texture] { isolation:isolate; }
    The dance: on hover, keyboard focus, a tap and once on load (header.tsx's useHello, all via
    data-flipped), the card hops 2px and wobbles 3deg, fire and all. The footer's host
    (.ft-mark-host, footer.tsx) dances the same way. Reduced motion: none. */
-.site-header > .wordmark-host { justify-self:start; }
-:is(.site-header > .wordmark-host,.ft-mark-host) { display:grid; transform-origin:50% 100%; }
-@media (hover:hover) and (pointer:fine) { :is(.site-header > .wordmark-host,.ft-mark-host):hover { animation:mark-dance 640ms var(--ease-ui) both; } }
-:is(.site-header > .wordmark-host,.ft-mark-host):has(:focus-visible,[data-flipped]) { animation:mark-dance 640ms var(--ease-ui) both; }
+/* The left group: the mark, then the degree chip (components/site/chip-marquee.tsx), which takes
+   whatever room is left before the centre and scrolls when its one line does not fit. An outlined
+   pill with no lip: it is not pressable. Ink on --card is 17:1. Phones show it in the hero. */
+.site-header > .hdr-left { justify-self:stretch; display:flex; align-items:center; gap:10px; min-width:0; pointer-events:none; }
+.hdr-left > * { pointer-events:auto; }
+.hdr-chip { display:flex; align-items:center; flex:0 1 auto; min-width:0; height:40px; padding:0 14px; margin-right:8px; border:var(--bw) solid var(--ink); border-radius:var(--r-pill); background:var(--card); color:var(--ink);
+  font:600 13px/1 var(--mono); letter-spacing:.06em; text-transform:uppercase; font-variant-ligatures:none; }
+.hdr-chip .chipm { flex:1 1 auto; }
+@media (max-width:719px) { .hdr-chip { display:none; } }
+.site-header[data-menu-open] .hdr-chip { visibility:hidden; }
+:is(.site-header .wordmark-host,.ft-mark-host) { flex:none; display:grid; transform-origin:50% 100%; }
+@media (hover:hover) and (pointer:fine) { :is(.site-header .wordmark-host,.ft-mark-host):hover { animation:mark-dance 640ms var(--ease-ui) both; } }
+:is(.site-header .wordmark-host,.ft-mark-host):has(:focus-visible,[data-flipped]) { animation:mark-dance 640ms var(--ease-ui) both; }
 @keyframes mark-dance { 0%,100% { transform:none; } 20% { transform:translateY(-2px) rotate(-3deg); } 45% { transform:translateY(0) rotate(2.5deg); } 70% { transform:translateY(-1px) rotate(-1.5deg); } }
 /* The AND/LIU mark (components/site/mark.tsx), here and in the footer: two short lines at one
    size, centred, in the mark's own display face. --mark-font is the one line to change to try
@@ -292,11 +301,23 @@ section[data-texture] { isolation:isolate; }
    cross-fade. Hidden below 1200px, where the right group needs the room. Not pressable, so outlined but with no lip. */
 .hdr-centre { justify-self:center; display:grid; place-items:center; }
 .hdr-centre > * { grid-area:1 / 1; }
-.hdr-mark { width:40px; height:40px; opacity:0; transform:scale(.7) rotate(-20deg); transition:opacity var(--dur-ui) var(--ease-ui),transform 420ms var(--ease-spring); }
-.hdr-centre[data-empty] .hdr-mark { opacity:1; transform:none; }
-.hdr-centre[data-empty]:hover .hdr-mark { transform:translateY(-3px) rotate(-8deg); }
+.hdr-mark { flex:none; width:36px; height:36px; transition:transform 420ms var(--ease-spring); }
+/* The berry is a link to the top (header.tsx): a pill holding just the berry at rest, which grows
+   "ANDLIU.DEV" (Fira Code 700, ink on --card 17:1) on hover and keyboard focus, as
+   components/site/social-button.css grows its word. Faded out (and out of the tab order) while a
+   section label holds the centre. */
+.hdr-berry { display:inline-flex; align-items:center; min-height:var(--hit); padding:0 4px; border:var(--bw) solid transparent; border-radius:var(--r-pill); color:var(--ink); text-decoration:none;
+  opacity:0; transform:scale(.7) rotate(-20deg); pointer-events:none;
+  transition:opacity var(--dur-ui) var(--ease-ui),transform 420ms var(--ease-spring),background-color var(--dur-ui) var(--ease-ui),border-color var(--dur-ui) var(--ease-ui),padding .35s var(--ease-spring); }
+.hdr-centre[data-empty] .hdr-berry { opacity:1; transform:none; pointer-events:auto; }
+.hdr-berry-text { max-width:0; opacity:0; overflow:hidden; white-space:nowrap; margin-left:0; font:700 15px/1 var(--mono); letter-spacing:.04em; text-transform:uppercase; font-variant-ligatures:none;
+  transition:max-width .35s var(--ease-spring),opacity .2s ease,margin-left .35s var(--ease-spring); }
+.hdr-centre[data-empty] .hdr-berry:is(:hover,:focus-visible) { padding:0 16px 0 4px; border-color:var(--ink); background:var(--card); }
+.hdr-centre[data-empty] .hdr-berry:is(:hover,:focus-visible) .hdr-berry-text { max-width:10em; opacity:1; margin-left:6px; }
+.hdr-centre[data-empty] .hdr-berry:is(:hover,:focus-visible) .hdr-mark { transform:rotate(-8deg); }
+.hdr-berry:focus-visible { outline:3px solid var(--berry); outline-offset:3px; }
 .hdr-label { display:inline-flex; align-items:flex-start; justify-content:center; min-width:96px; height:36px; padding:0 16px; overflow:hidden; border:var(--bw) solid var(--ink); border-radius:var(--r-pill); background:var(--card); color:var(--ink); font:600 13px/32px var(--mono); letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; transition:opacity var(--dur-ui) var(--ease-ui),transform var(--dur-ui) var(--ease-ui); }
-.hdr-centre[data-empty] .hdr-label { opacity:0; transform:scale(.9); }
+.hdr-centre[data-empty] .hdr-label { opacity:0; transform:scale(.9); pointer-events:none; } /* it shares the berry's cell, so it must not take the berry's pointer */
 .hdr-label-track { display:flex; flex-direction:column; }
 .hdr-label-text { display:block; height:32px; text-align:center; overflow:hidden; text-overflow:ellipsis; }
 /* Never wider than the room between the two side groups (about 1080px of the row at 1280). */
@@ -319,7 +340,7 @@ html:not([data-motion="reduced"]):not([data-hscroll="on"]) .site-header[data-hid
    button stay floating, so there is always a way out. They pop back in on the spring if the bar
    had left on scroll. Keyboard focus inside the header, or an open menu, still shows all of it. */
 .site-header .header-right > :is(.header-resume,.header-visit) { transition:transform var(--dur-release) var(--ease-spring),box-shadow var(--dur-release) var(--ease-spring),color var(--dur-ui) var(--ease-ui),translate var(--dur-roll) var(--ease-elastic); }
-html[data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within) > :is(.wordmark-host,.hdr-centre),
+html[data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within) > :is(.hdr-left,.hdr-centre),
 html[data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within) > .header-right > :is(.header-resume,.header-visit) { translate:0 -300%; }
 html[data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within)::before { translate:0 -110%; }
 html[data-hscroll="on"] .site-header:not([data-menu-open]) > .header-right { translate:none; }
@@ -342,7 +363,7 @@ html[data-hscroll="on"] .site-header:not([data-menu-open]) > .header-right { tra
    menu has Résumé and Ask), so the menu's close button, drawn where the menu button was, shows
    through and takes the clicks. */
 .site-header[data-menu-open] { z-index:210; }
-.site-header[data-menu-open] > :is(.wordmark-host,.header-right) { position:relative; z-index:201; }
+.site-header[data-menu-open] > :is(.hdr-left,.header-right) { position:relative; z-index:201; }
 .site-header[data-menu-open] > .header-right { pointer-events:none; }
 .site-header[data-menu-open] > .header-right > .header-visit { pointer-events:auto; }
 .site-header[data-menu-open] > .header-right > :not(.header-visit), .site-header[data-menu-open] > .hdr-centre { visibility:hidden; }
@@ -603,12 +624,12 @@ html[data-motion="reduced"] :is(.pill-face,.pill-back) { translate:none !importa
 html[data-motion="reduced"] .site-header > *, html[data-motion="reduced"] .site-header::before { transition:none; translate:none !important; }
 /* A pinned strip still clears the bar (the same rule as above), by hiding it in place. */
 html[data-motion="reduced"] .site-header .header-right > :is(.header-resume,.header-visit) { transition:none; }
-html[data-motion="reduced"][data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within) > :is(.wordmark-host,.hdr-centre),
+html[data-motion="reduced"][data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within) > :is(.hdr-left,.hdr-centre),
 html[data-motion="reduced"][data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within) > .header-right > :is(.header-resume,.header-visit) { visibility:hidden; }
 html[data-motion="reduced"][data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within)::before { opacity:0; }
 html[data-motion="reduced"] :is(.menu,.menu-print) { animation:none; }
-html[data-motion="reduced"] .hdr-mark { transition:none; }
-html[data-motion="reduced"] :is(.site-header > .wordmark-host,.ft-mark-host) { animation:none; }
+html[data-motion="reduced"] :is(.hdr-mark,.hdr-berry,.hdr-berry-text) { transition:none; }
+html[data-motion="reduced"] :is(.site-header .wordmark-host,.ft-mark-host) { animation:none; }
 html[data-motion="reduced"] .hdr-label-track[data-roll] { animation:none; transform:translateY(-50%); }
 html[data-motion="reduced"] .hdr-label { transition:none; }
 /* FlipHeading: no roll; the colours swap instantly on hover and focus instead. */

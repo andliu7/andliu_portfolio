@@ -6,6 +6,7 @@ import { FlipHeading } from '@/components/site/flip-heading';
 import { PillFaces } from '@/components/site/pill-faces';
 import { useHorizontalScroll } from '@/components/site/use-horizontal-scroll';
 import './experience.css';
+import { CornerStickers } from '@/components/site/corner-stickers/corner-stickers';
 
 // Experience, the timeline (rebuilt 2026-10-06 from the approved design, Timeline.dc.html).
 // The section pins and vertical scroll slides the four roles left past a dated track, oldest to
@@ -37,6 +38,7 @@ export default function Experience() {
   return (
     <section {...sectionAttrs('experience')} ref={runwayRef} className="experience" aria-labelledby="experience-title">
       <div className="xp-frame">
+        <CornerStickers set="experience" />
         <div className="xp-head">
           <div className="xp-head-text">
             <span className="eyebrow">{EXPERIENCE_HEAD.eyebrow}</span>

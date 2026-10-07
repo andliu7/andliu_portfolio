@@ -1,11 +1,10 @@
-import { ArrowUpRight } from 'lucide-react';
-import { BB_ENGINEERING, BB_FACTS, BB_HEAD, BB_SCREENS, BLUEBERRY_CHAPTER, PROJECTS, sectionAttrs } from '@/lib/site';
+import { BB_CAROUSEL, BB_ENGINEERING, BB_FACTS, BB_HEAD, BB_SCREENS, BLUEBERRY_CHAPTER, IMAGES, PROJECTS, sectionAttrs, type ImageEntry } from '@/lib/site';
 import { FlipHeading } from '@/components/site/flip-heading';
-import { Marquee } from '@/components/site/marquee';
-import { TiltFrame } from '@/components/site/tilt-frame';
+import { InfiniteSlider } from '@/components/ui/infinite-slider';
+import { StackChip } from '@/components/site/stack-logos';
 import { BlueberrySticker, FlashcardSticker } from '@/components/site/stickers/stickers';
 import { CountUp } from '@/components/site/work/count-up';
-import { Shot } from '@/components/site/work/shot';
+import PolaroidLineCarousel, { type Slide } from '@/components/ui/polaroid-line-carousel';
 import { BlueberrySwing } from './blueberry.client';
 import './blueberry.css';
 
@@ -13,8 +12,9 @@ import './blueberry.css';
 // that used to sit above it was removed; this chapter tells how it got here and what it is made of:
 //   1. head:    a crushed two-line headline with stickers on it, the story at reading width,
 //               and the facts as count-up stickers beside it
-//   2. screens: a sky band; four real captures, each a feature mid-use, in a 2x2 grid
-//   3. stack:   the stack as pills in an ink marquee strip
+//   2. screens: a sky band; FOR REAL! in giant display type beside seven real captures, each a
+//               feature mid-use, hung as prints on a string (one is a recording of the trainer)
+//   3. stack:   the stack as logo chips sliding along an ink strip
 // The exploded phone and its "layer by layer" list were removed 2026-10-06 (Andrew: the layers
 // did not make sense); what replaces them is not decided yet.
 // The bands are Slush's colour bands: rounded panels inset from the berry ground, each carrying
@@ -26,16 +26,22 @@ import './blueberry.css';
 // Everything sits in one inner layer, .bb-flow, which carries the chapter's ground: as the
 // chapter scrolls in over Contents, that layer swings up from 30deg to flat (blueberry.client.tsx).
 //
-// A server component; TiltFrame, CountUp, the marquee and the swing are the only client parts.
+// A server component; CountUp, the carousel, the stack slider and the swing are the only client parts.
 
 // The chapter is project 01 of the numbered list (Projects carries on from 02), so its headline
 // wears the same outlined index number as the project spreads.
 const NUM = PROJECTS.find(p => p.id === 'blueberry')?.num;
 const FACTS = BB_FACTS.filter(fact => fact.value !== undefined);
-const SHOT_FILLS = ['apricot', 'card', 'berry-soft', 'apricot'] as const;
 const FACT_FILLS = ['apricot', 'sky', 'berry-soft'] as const;
+// The captures as the carousel's slides: each IMAGES entry's files and alt, with the screen's own
+// title, caption and live route. The aldol print starts in front (its recording plays there).
+const SLIDES: Slide[] = BB_SCREENS.map(screen => {
+  const entry: ImageEntry = IMAGES[screen.image];
+  return { image: entry.src, sm: entry.sm, alt: entry.alt, video: entry.video, title: screen.title, caption: screen.caption, href: screen.href, linkText: screen.route };
+});
+const START = Math.max(0, BB_SCREENS.findIndex(screen => screen.image === 'bbAldol'));
 // The band repeats the stack twice so one copy is wider than the screen and the loop never
-// shows a gap; screen readers get the list once, from the marquee's label.
+// shows a gap; the repeats are marked `repeat`, so screen readers get the list once.
 const BAND = [...BB_ENGINEERING.stack, ...BB_ENGINEERING.stack];
 
 export default function Blueberry() {
@@ -64,26 +70,31 @@ export default function Blueberry() {
         </div>
 
         <div className="bb-band bb-screens" data-ground="paper">
-          <span className="eyebrow">{BB_HEAD.screens}</span>
-          <ul className="bb-shots">
-            {BB_SCREENS.map((screen, i) => (
-              <li key={screen.caption} className="bb-shot" data-reveal>
-                <div className="bb-shot-tile" data-fill={SHOT_FILLS[i]}>
-                  <TiltFrame max={7} shift={10} layers={[{ depth: 0.6, node: <span className="bb-crop"><Shot image={screen.image} sizes="(min-width: 760px) 45vw, 90vw" /></span> }]} />
-                </div>
-                <a className="bb-route" href={screen.href} target="_blank" rel="noreferrer">
-                  {screen.caption} <ArrowUpRight size={14} aria-hidden="true" />
-                </a>
-              </li>
-            ))}
-          </ul>
+          <div className="bb-real">
+            <span className="eyebrow">{BB_HEAD.screens}</span>
+            <p className="bb-real-word" data-reveal>
+              {BB_HEAD.forReal.split('\n').map(line => <span key={line}>{line}</span>)}
+            </p>
+          </div>
+          <PolaroidLineCarousel
+            className="bb-line"
+            slides={SLIDES}
+            start={START}
+            height="var(--bb-line-h)"
+            cardWidth={380}
+            label={BB_CAROUSEL.label}
+            prevLabel={BB_CAROUSEL.prev}
+            nextLabel={BB_CAROUSEL.next}
+          />
         </div>
 
         <div className="bb-stack">
           <span className="eyebrow">{BB_HEAD.stack}</span>
-          <Marquee className="bb-strip" label={BB_ENGINEERING.stack.join(', ')} duration={34} fade={false}>
-            {BAND.map((tag, i) => <span key={i} className="bb-pill">{tag}</span>)}
-          </Marquee>
+          <div className="bb-strip">
+            <InfiniteSlider label={BB_HEAD.stack} gap={14} duration={40} durationOnHover={110}>
+              {BAND.map((tag, i) => <StackChip key={i} name={tag} repeat={i >= BB_ENGINEERING.stack.length} className="bb-pill" />)}
+            </InfiniteSlider>
+          </div>
         </div>
       </div>
     </section>

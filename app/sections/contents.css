@@ -9,6 +9,7 @@
    (blueberry.client.tsx), GSAP's pin wraps it in a pin-spacer, so the globals.css rule that
    paints `main > section` grounds no longer matches it. */
 .contents {
+  position:relative; /* the corner stickers' box; GSAP's pin-spacer stops main > section from matching */
   display:block; box-sizing:border-box; overflow-x:clip;
   background-color:var(--ground); background-image:var(--ground-grad);
   padding:calc(var(--header-h) + 12px) var(--gutter) calc(var(--curve-h) + 16px);
@@ -23,7 +24,7 @@
 .contents .toc-list { list-style:none; margin:0; padding:0; }
 .contents .toc-list li:last-child .toc-row { border-bottom:0; }
 .contents .toc-row {
-  display:grid; grid-template-columns:52px minmax(0,1fr) auto 28px; align-items:center; gap:20px;
+  display:grid; grid-template-columns:52px 44px minmax(0,1fr) auto 28px; align-items:center; gap:20px;
   min-height:clamp(64px,9svh,88px); padding:8px 16px; box-sizing:border-box;
   border-bottom:1px solid rgba(201,209,244,.4); color:var(--on); text-decoration:none;
   transition:background-color var(--dur-ui) var(--ease-ui);
@@ -45,7 +46,54 @@ html[data-motion="reduced"] .contents .toc-row .toc-arrow { transition:none; tra
 
 @media (max-width:900px) {
   .contents .toc-intro { gap:10px; }
-  .contents .toc-row { grid-template-columns:32px minmax(0,1fr) 22px; gap:12px; padding:8px 10px; min-height:clamp(60px,9.5svh,80px); }
+  .contents .toc-row { grid-template-columns:28px 36px minmax(0,1fr) 22px; gap:10px; padding:8px 10px; min-height:clamp(60px,9.5svh,80px); }
   .contents .toc-meta { display:none; }
   .contents .toc-sub { font-size:15px; }
 }
+
+/* WHERE TO? is a FlipHeading: its second face is --kw (apricot on berry-deep, 10:1) */
+.contents .toc-title .flip-head { display:inline-block; }
+
+/* The second résumé button, under the card: the hero's FlowButton with a line over it */
+.contents .toc-cta { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:18px; margin-top:clamp(40px,6svh,64px); text-align:center; }
+/* Room under it: this section holds still while the Blueberry chapter swings up over its foot
+   (blueberry.client.tsx), so the button must stand clear of the first of that swing */
+@media (min-width:700px) { .contents .toc-cta { margin-bottom:clamp(80px,14svh,140px); } }
+.contents .toc-cta-line { margin:0; max-inline-size:40ch; font:500 18px/1.5 var(--body); color:var(--on-2); }
+
+/* ---------- Row icons (contents-icons.tsx) ----------
+   44px on a wide screen, 36px on a phone. The hand waves (three rocks about the wrist) and the
+   off-its-hinges clock swings on its one hinge, on row hover and keyboard focus; the hand also
+   waves once when the section first comes into view (data-seen, contents.client.tsx). The rest
+   hop a little. Reduced motion: still. */
+.contents .toc-ic { display:block; width:44px; height:44px; }
+.contents .toc-ic svg { display:block; width:100%; height:100%; overflow:visible; }
+.contents .toc-ic-wave { transform-origin:60% 90%; transform-box:view-box; }
+.contents .toc-ic-swing { transform-origin:30% 30%; transform-box:view-box; rotate:14deg; }
+@keyframes toc-wave { 0%,100% { rotate:0deg; } 15%,55% { rotate:-16deg; } 35%,75% { rotate:14deg; } }
+@keyframes toc-wobble { 0%,100% { rotate:14deg; } 25% { rotate:28deg; } 50% { rotate:6deg; } 75% { rotate:20deg; } }
+.contents .toc-ic { transition:translate .3s var(--ease-spring); }
+html:not([data-motion="reduced"]) .contents .toc-row:is(:hover,:focus-visible) .toc-ic { translate:0 -3px; }
+html:not([data-motion="reduced"]) .contents[data-seen] .toc-ic-wave { animation:toc-wave .9s ease-in-out .9s; }
+/* a second name, so a hover after the first wave starts it again */
+@keyframes toc-wave-h { 0%,100% { rotate:0deg; } 15%,55% { rotate:-16deg; } 35%,75% { rotate:14deg; } }
+html:not([data-motion="reduced"]) .contents .toc-row:is(:hover,:focus-visible) .toc-ic-wave { animation:toc-wave-h .9s ease-in-out; }
+html:not([data-motion="reduced"]) .contents .toc-row:is(:hover,:focus-visible) .toc-ic-swing { animation:toc-wobble .8s ease-in-out; }
+@media (max-width:900px) { .contents .toc-ic { width:36px; height:36px; } }
+
+/* ---------- The compass (contents.client.tsx, CompassSpin) ----------
+   A sticker-sized button in the top left corner, beside the eyebrow: no chrome, the drawing is
+   the button. It bobs like the other corner stickers; a press spins the needle on a spring with
+   overshoot (cubic-bezier past 1). Reduced motion: no bob, the needle turns instantly. */
+.contents .toc-compass { position:absolute; z-index:2; left:4%; top:calc(var(--header-h) + 12px); width:128px; height:128px; padding:0; border:0; border-radius:50%; background:none; cursor:pointer; rotate:-10deg; }
+.contents .toc-compass svg { display:block; width:100%; height:100%; overflow:visible; }
+.contents .toc-needle { transform-box:view-box; transform-origin:50% 50%; transform:rotate(var(--a,0deg)); transition:transform 1.6s cubic-bezier(.2,1.35,.4,1); }
+.contents .toc-compass:focus-visible { outline:3px solid var(--berry-soft); outline-offset:4px; }
+@keyframes toc-compass-bob { from { translate:0 0; } to { translate:0 -8px; } }
+html:not([data-motion="reduced"]) .contents .toc-compass { animation:toc-compass-bob 5s ease-in-out infinite alternate; }
+@media (hover:hover) { .contents .toc-compass:hover { rotate:-4deg; } }
+.contents .toc-compass { transition:rotate .3s var(--ease-spring); }
+html[data-motion="reduced"] .contents :is(.toc-needle,.toc-compass) { transition:none; }
+@media (max-width:899px) { .contents .toc-compass { width:72px; height:72px; left:3%; } }
+/* a phone: right of the title, which is narrower than the screen there */
+@media (max-width:599px) { .contents .toc-compass { width:60px; height:60px; left:auto; right:3%; top:calc(var(--header-h) + 44px); } }

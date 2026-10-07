@@ -1,0 +1,19 @@
+/* ChipMarquee (components/site/chip-marquee.tsx). The pill's look (outline, fill, type) comes
+   from the caller's class; this file is the one-line behaviour only. */
+.chipm { display:inline-flex; align-items:center; min-width:0; max-width:100%; overflow:hidden; white-space:nowrap; }
+.chipm-track { display:flex; flex:none; }
+.chipm-text { flex:none; }
+/* Moving: each copy carries a gap after it, and the track slides one copy's width, so the
+   second copy lands exactly where the first began. The mask fades both ends. */
+.chipm[data-moving] .chipm-text { padding-right:3em; }
+.chipm[data-moving] { --chipm-fade:28px;
+  -webkit-mask-image:linear-gradient(to right,transparent 0,#000 var(--chipm-fade),#000 calc(100% - var(--chipm-fade)),transparent 100%);
+  mask-image:linear-gradient(to right,transparent 0,#000 var(--chipm-fade),#000 calc(100% - var(--chipm-fade)),transparent 100%); }
+.chipm[data-moving] .chipm-track { animation:chipm-x var(--chipm-dur,20s) linear infinite; }
+@media (hover:hover) { .chipm[data-moving]:hover .chipm-track { animation-play-state:paused; } }
+@keyframes chipm-x { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+/* Reduced motion: still, the start of the line showing, fading out on the right only */
+html[data-motion="reduced"] .chipm[data-moving] .chipm-track { animation:none; }
+html[data-motion="reduced"] .chipm[data-moving] {
+  -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 40px),transparent 100%);
+  mask-image:linear-gradient(to right,#000 calc(100% - 40px),transparent 100%); }

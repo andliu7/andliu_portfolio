@@ -1,19 +1,22 @@
 import { ArrowLeft, ArrowUpRight } from 'lucide-react';
-import { CONTACT, MICROCOPY, RESUME, STACK, sectionAttrs } from '@/lib/site';
+import { BB_HEAD, CONTACT, MICROCOPY, RESUME, STACK, sectionAttrs } from '@/lib/site';
 import { FlipHeading } from '@/components/site/flip-heading';
 import { FlipLink } from '@/components/ui/flip-links';
 import { SocialButton, socialKind } from '@/components/site/social-button';
-import { Marquee } from '@/components/site/marquee';
+import { InfiniteSlider } from '@/components/ui/infinite-slider';
+import { StackChip } from '@/components/site/stack-logos';
 import { ContactForm } from '@/components/site/contact-form';
 import CopyEmail from '../copy-email';
 import './contact.css';
+import { CornerStickers } from '@/components/site/corner-stickers/corner-stickers';
 
 // The footer card (SITE-PLAN.md 4.9) in the Slush look: one flat apricot card (no gradient),
 // the headline crushed giant, GitHub and LinkedIn as big outlined pills, the email address itself
 // in display type as the mailto link, and the résumé as the one berry button so it is the first
 // thing a recruiter finds. The sitemap and copyright live in the site footer
 // (components/site/footer.tsx), not here. Each link appears
-// once in the card. Under the card, the STACK marquee runs as a full-bleed sky band.
+// once in the card. Under the card, the STACK runs as a full-bleed sky band of logo chips that
+// slides (components/ui/infinite-slider.tsx) and slows on hover.
 //
 // FooterCard is exported for About; its signature is fixed:
 //   variant 'home'   the card, then the marquee band. The NOTCH_TO_ISLAND tab is gone (round 2:
@@ -66,9 +69,11 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
         <a className="pill pill-light ct-home" href="/"><ArrowLeft size={16} aria-hidden="true" /> {MICROCOPY.backHome}</a>
       )}
     </div>
-    <Marquee className="ct-mq" label={STACK.join(', ')} duration={45} fade={false}>
-      {STACK.map(item => <span className="ct-mq-item" key={item}>{item}</span>)}
-    </Marquee>
+    <div className="ct-mq">
+      <InfiniteSlider label={BB_HEAD.stack} gap={16} duration={55} durationOnHover={140}>
+        {STACK.map(item => <StackChip key={item} name={item} className="ct-mq-item" />)}
+      </InfiniteSlider>
+    </div>
     </>
   );
 }
@@ -76,6 +81,7 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
 export default function Contact() {
   return (
     <section {...sectionAttrs('contact')} className="contact" aria-labelledby="contact-title">
+      <CornerStickers set="contact" />
       <FooterCard variant="home" />
     </section>
   );

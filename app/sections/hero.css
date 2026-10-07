@@ -56,15 +56,37 @@
 .hero .hero-stage > * { --fs:var(--fs-js, calc(100cqi / 5.6)); }
 .hero .hero-name.fit { font-size:var(--fs); }
 
-/* The title chip (Andrew: "keep that too"): above the name, never under an object. At most 46% of
-   the stage wide (it wraps), so it stops short of the pencil's label at 62% across. */
+/* The degree chip, phones only (720px and up it sits in the header, globals.css .hdr-chip): one
+   line, a slow marquee with faded ends when it does not fit (components/site/chip-marquee.tsx). */
 .hero .hero-tag {
   position:relative; z-index:4;
-  justify-self:start; display:inline-flex; align-items:center; min-height:48px; max-width:min(100%, 46cqi); padding:9px 21px;
+  justify-self:stretch; display:flex; align-items:center; min-width:0; min-height:44px; padding:0 16px;
   border:1px solid var(--ink); border-radius:var(--r-pill); background:var(--card);
-  font:600 18px/1.35 var(--mono); letter-spacing:.1em; text-transform:uppercase; font-variant-ligatures:none;
+  font:600 15px/1 var(--mono); letter-spacing:.06em; text-transform:uppercase; font-variant-ligatures:none;
 }
-@container hero (max-width:759px) { .hero .hero-tag { max-width:100%; border-radius:20px; font-size:15px; padding:8px 16px; } }
+.hero .hero-tag .chipm { flex:1 1 auto; }
+@media (min-width:720px) { .hero .hero-tag { display:none; } }
+
+/* ---------- The glass card (Andrew 2026-10-06: "still want the glass background") ----------
+   Frosted glass over the sky: a light white tint, blurred and a little more saturated behind,
+   a 1.5px white rim, a bright line along the top edge and a soft drop. The name, the objects and
+   the button sit in it; the objects hang over its edges (they are positioned on the name), and
+   the tapes and the bar draw over its foot at the seam. The tint is 38% white, so the brightest
+   thing behind it is white cloud (#fff) and the darkest the sky (#87ceeb): the glass reads from
+   #b9e1f2 to #fff. Ink on #b9e1f2 is 13.6:1, berry (LIU, display size) 5.6:1 and ink on white 18:1.
+   Without backdrop-filter, a translucent paper fill instead. */
+.hero .hero-card {
+  position:relative; display:grid; gap:inherit;
+  padding:clamp(10px,1.4vw,18px) clamp(12px,1.8vw,26px) clamp(14px,1.8vw,26px);
+  border:1.5px solid rgb(255 255 255 / .55); border-radius:clamp(28px,3vw,40px);
+  background:rgb(251 248 241 / .82);
+  box-shadow:inset 0 1.5px 0 rgb(255 255 255 / .85), inset 0 24px 40px -28px rgb(255 255 255 / .7), 0 24px 60px -24px rgb(18 20 43 / .28);
+}
+/* a wide screen: the card reaches 32px into the gutters, so the name inside it stays as wide as the stage */
+@media (min-width:720px) { .hero .hero-card { margin-inline:calc(-1 * min(var(--gutter), 32px)); } }
+@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
+  .hero .hero-card { background:rgb(255 255 255 / .38); -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4); }
+}
 
 /* ---------- The name and its objects ----------
    --pt is the room above the letters for the top two objects; the bottom two hang beside the
@@ -90,21 +112,34 @@
 .hero .hero-nl-kw .hero-fb { color:var(--ink); }
 .hero .hero-name[data-roll] .hero-roll { transform:translateY(-100%); }
 html[data-motion="reduced"] .hero .hero-name .hero-roll { transition:none; transform:none; }
+/* LIU to 刘 (Andrew 2026-10-06: "make my last name turn into the chinese character if you
+   directly hover over it"). NameRoll (hero.client.tsx) sets data-zh on the h1 while the pointer is
+   on LIU (or for a moment after a tap). The word clips to its own line box; its track holds the
+   three letters and, one line below, the character, which is centred across the word in Noto
+   Sans SC 900 (only these glyphs are downloaded, hero.tsx ZH_FONT) at the line's height, in
+   berry. The track lifts a full line on the hero's spring, so LIU leaves upward as 刘 rises in;
+   it drops back on leave. Transforms only: the fitted size never moves. Reduced motion: instant. */
+.hero .hero-liu { display:inline-block; vertical-align:top; overflow-x:visible; overflow-y:clip; }
+.hero .hero-liu-track { position:relative; display:block; white-space:nowrap; transition:transform .6s var(--elastic); }
+.hero .hero-zh { position:absolute; left:0; right:0; top:100%; text-align:center; color:var(--berry);
+  font:900 .9em/.934 'Noto Sans SC','PingFang SC','Microsoft YaHei','Hiragino Sans GB',sans-serif; letter-spacing:0; }
+.hero .hero-name[data-zh] .hero-liu-track { transform:translateY(-100%); }
+html[data-motion="reduced"] .hero .hero-liu-track { transition:none; }
+
 /* the word gap: a margin on ANDREW (not the first span, which is the sr-only name). HeroFit
    measures the name with it, so the fitted size includes the gap. */
 .hero .hero-nl:not(.hero-nl-kw) { margin-right:.34em; }
 
 /* ---------- Under the name: the résumé ---------- */
 /* The foot spans the stage but only its contents take the pointer, so the objects beside it stay clickable */
-.hero .hero-foot { position:relative; z-index:3; display:grid; gap:16px; align-items:end; pointer-events:none; }
+.hero .hero-foot { position:relative; z-index:3; display:grid; gap:16px; align-items:end; justify-items:center; pointer-events:none; }
 .hero .hero-foot > * { pointer-events:auto; }
 @container hero (min-width:760px) {
-  /* the right half stays clear: the bottom two objects hang there. Its height is the objects'
-     hang under the letters (.82em) and their labels, less the 80px or so the tilted bottom tape
-     drops between the résumé button at the left and the objects near the middle */
-  .hero .hero-foot { grid-template-columns:minmax(0,1fr) minmax(0,1.4fr); column-gap:24px; min-height:calc(var(--fs) * .84 - 40px); }
+  /* The button is centred between the bottom two objects, which hang from the name's lower
+     corners; the foot is as tall as their hang under the letters, less what the button covers */
+  .hero .hero-foot { min-height:calc(var(--fs) * .5); }
 }
-.hero .hero-about { display:grid; gap:14px; justify-items:start; }
+.hero .hero-about { display:grid; gap:14px; justify-items:center; }
 .hero .hero-portrait { width:min(100%,220px); rotate:-3deg; }
 
 /* ---------- The cross: the bar and the caution tape in an X, on the seam ----------

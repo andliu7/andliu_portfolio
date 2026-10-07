@@ -1,0 +1,9 @@
+/* StackChip (components/site/stack-logos.tsx). The base chip: a pill with a 1.5px ink outline,
+   the logo in currentColor, the name in mono caps, the version as a berry badge (paper on berry,
+   6.55:1). Each band sets the chip's fill, size (--chip-h, --chip-fs) and ink. */
+.stack-chip { --chip-h:44px; --chip-fs:14px; display:inline-flex; flex-shrink:0; align-items:center; gap:.55em; min-height:var(--chip-h); padding:0 1.15em 0 .9em; border:1.5px solid var(--ink); border-radius:var(--r-pill); background:var(--card); color:var(--ink); font:600 var(--chip-fs)/1 var(--mono); letter-spacing:.04em; text-transform:uppercase; white-space:nowrap; font-variant-ligatures:none; }
+.stack-chip-logos { display:inline-flex; gap:.3em; }
+.stack-chip-logos svg { width:1.45em; height:1.45em; flex-shrink:0; }
+.stack-chip-v { padding:.28em .5em .24em; border-radius:var(--r-pill); background:var(--berry); color:var(--paper); font-size:.82em; font-weight:700; letter-spacing:.02em; text-transform:none; }
+/* In the slider's still, wrapped row (reduced motion) the repeats would show twice: hide them. */
+.islider[data-static] .stack-chip[aria-hidden="true"] { display:none; }

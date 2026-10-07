@@ -1,9 +1,10 @@
 import type { CSSProperties, JSX } from 'react';
+import { Pipeline } from './pipeline';
 
 // Flat, original drawings for the work act (style pass 2026-10-06): the check sticker (the
 // blueberry and flashcard stickers are the shared ones in components/site/stickers),
-// and three illustration cards for the projects that have no screenshot
-// (Flashcards, Second Brain until its shot is approved, the animation pipeline). Every one is
+// and two illustration cards for the projects that have no screenshot
+// (Flashcards, Second Brain until its shot is approved). Every one is
 // decoration, so each svg is aria-hidden; the words around it carry the meaning.
 //
 // Colours come from the site tokens through `style` (var() inside a presentation attribute is
@@ -94,37 +95,11 @@ export function BrainArt() {
   );
 }
 
-/** The animation pipeline: a film strip of three frames of a ball in flight, the arc showing its
- * path (the classic first animation exercise; the reaction rings went 2026-10-06, no chemistry art). */
-export function StudioArt() {
-  const holes = [];
-  for (let x = 60; x < 740; x += 44) {
-    holes.push(<rect key={`t${x}`} x={x} y="96" width="20" height="14" rx="4" style={paint('card', false)} />);
-    holes.push(<rect key={`b${x}`} x={x} y="370" width="20" height="14" rx="4" style={paint('card', false)} />);
-  }
-  const frames = [0, 1, 2].map(i => 74 + i * 222);
-  return (
-    <svg className="art" viewBox="0 0 800 500" aria-hidden="true">
-      <rect width="800" height="500" style={paint('card', false)} />
-      <rect x="40" y="80" width="720" height="320" rx="20" style={ink} />
-      {holes}
-      {frames.map((fx, i) => (
-        <g key={fx}>
-          <rect x={fx} y="130" width="208" height="220" rx="12" style={paint(i === 1 ? 'sky' : 'paper')} />
-          <circle cx={fx + 50 + i * 54} cy={i === 1 ? 250 : 300} r={26} style={paint(i === 2 ? 'tile-leaf' : 'apricot')} />
-          {i === 1 && <path d={`M${fx + 40} 190 Q${fx + 100} 140 ${fx + 150} 182`} style={{ ...paint('none', true, 5), stroke: 'var(--berry)' }} />}
-          {i === 1 && <polygon points={`${fx + 150},182 ${fx + 136},180 ${fx + 148},168`} style={{ fill: 'var(--berry)', stroke: 'var(--berry)', strokeWidth: 3, strokeLinejoin: 'round' }} />}
-        </g>
-      ))}
-      <circle cx="712" cy="438" r="40" style={paint('apricot')} />
-      <polygon points="700,418 734,438 700,458" style={paint('ink', true, 2)} />
-    </svg>
-  );
-}
-
 /** The drawing for a project with no screenshot, by PROJECTS id. */
-export const PROJECT_ART: Partial<Record<string, () => JSX.Element>> = {
+// The animation pipeline's picture is its flow diagram (pipeline.tsx); `compact` is the index
+// row's small version. The drawings ignore it.
+export const PROJECT_ART: Partial<Record<string, (props: { compact?: boolean }) => JSX.Element>> = {
   flashcards: FlashcardsArt,
   brain: BrainArt,
-  studio: StudioArt,
+  studio: Pipeline,
 };
