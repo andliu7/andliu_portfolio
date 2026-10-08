@@ -1,0 +1,21 @@
+/* The strips' auto-play button and Esc hint (components/site/strip-autoplay.tsx).
+   The button is the one place the Duolingo palette appears: Cardinal red (#ff4b4b) while auto-play
+   is on, Feather green (#58cc02) once it is off. Labels are ink on both (ink on red 5.1:1, ink on
+   green 8.1:1, AA). The outline and the lip are the site's ink, as on every other ledge. */
+.sa-btn { --face:#58cc02; --lip:4px;
+  display:inline-flex; align-items:center; gap:8px; min-height:var(--hit); padding:0 16px; margin-bottom:var(--lip);
+  border:2px solid var(--ink); border-radius:var(--r-pill); background:var(--face); color:var(--ink);
+  box-shadow:0 var(--lip) 0 var(--ink); font:700 13px/1.1 var(--mono); letter-spacing:.04em; text-transform:uppercase;
+  white-space:nowrap; font-variant-ligatures:none; cursor:pointer; touch-action:manipulation; user-select:none;
+  transition:transform 90ms ease-out, box-shadow 90ms ease-out, filter .15s; }
+.sa-btn[data-on] { --face:#ff4b4b; }
+@media (hover:hover) { .sa-btn:hover { filter:brightness(1.06); } }
+/* The press: the face sinks by exactly the lip and the lip goes, so it lands where the lip was. */
+.sa-btn:active { transform:translateY(var(--lip)); box-shadow:0 0 0 var(--ink); }
+.sa-btn:focus-visible { outline:3px solid var(--berry); outline-offset:3px; border-radius:var(--r-pill); }
+html[data-motion="reduced"] .sa-btn { transition:none; }
+
+/* Plain text, not an outlined pill: a pill reads as a button, and this note cannot be clicked. */
+.sa-esc { display:inline-flex; align-items:center; font:500 12px/1 var(--mono); letter-spacing:.1em; text-transform:uppercase; white-space:nowrap; font-variant-ligatures:none; }
+/* No Esc key on a touch-only screen. */
+@media (hover:none) { .sa-esc { display:none; } }

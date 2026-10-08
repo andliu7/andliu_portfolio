@@ -6,7 +6,12 @@
    rule, outlines only. Display type is Fira Code 700 (--display), small labels --mono.
    Reduced motion is html[data-motion="reduced"] (see app/globals.css). */
 
+/* z-index 2 keeps the chapter over Selected work (the swing sets the same), so the stack strip
+   can hang over the seam and the chapter's rounded foot closes over Work's ground. */
 .bb {
+  position: relative; z-index: 2;
+  --bb-close: clamp(40px, 6cqi, 96px);
+  --bb-strip-h: 76px;
   --ease-elastic: cubic-bezier(.34,1.56,.64,1);
   --tile-line: 1.5px solid var(--ink);
   --band-inset: 12px;
@@ -19,8 +24,10 @@
 .bb[data-gradient] { background: none; }
 .bb .bb-flow {
   display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: var(--band-inset);
-  /* The bottom pad leaves room for the Work section's curved edge, which rises over this one. */
-  padding: clamp(64px, 7cqi, 112px) var(--gutter) calc(var(--curve-h) + clamp(32px, 4cqi, 56px));
+  /* No bottom pad: the stack strip, the last thing here, straddles this layer's rounded bottom
+     edge, half on the chapter and half on Selected work's ground (the hand-off, section 3). */
+  padding: clamp(64px, 7cqi, 112px) var(--gutter) 0;
+  border-radius: 0 0 var(--bb-close) var(--bb-close);
   background: radial-gradient(125% 125% at 50% 10%, var(--berry) 40%, var(--berry-deep) 100%);
   will-change: transform;
 }
@@ -92,16 +99,28 @@
    Lando Norris stacked words, then his Polaroid Line Carousel). The carousel's own look is in
    components/ui/polaroid-line-carousel.css; this places it. Ink on the sky band 13.32:1, berry on
    sky 5.6:1 (the second word is 100px and up, so AA large needs 3:1). ---------- */
-.bb .bb-screens { --bb-line-h: 580px; display: grid; gap: 0; }
+.bb .bb-screens { --bb-line-h: 610px; display: grid; gap: 0; }
 .bb .bb-real { display: grid; align-content: center; justify-items: start; gap: 6px; }
 .bb .bb-real .eyebrow { margin-bottom: 0; }
 .bb .bb-real-word { display: grid; margin: 0; font: 700 clamp(76px, 21cqi, 120px)/.82 var(--display); letter-spacing: -.07em; text-transform: uppercase; font-variant-ligatures: none; color: var(--ink); }
-.bb .bb-real-word span { display: block; }
-.bb .bb-real-word span + span { color: var(--berry); rotate: -4deg; translate: .12em .02em; transform-origin: 0 50%; }
+.bb .bb-real-word > span { display: block; }
+.bb .bb-real-word > span + span { color: var(--berry); rotate: -4deg; translate: .12em .02em; transform-origin: 0 50%; }
+/* Fira Code is monospace, so "!" sits mid-cell with wide bearings and read as a stray mark
+   about 30px off the L; pulled back against it. */
+.bb .bb-real-word .bb-bang { margin-left: -.16em; }
 /* The prints hang inside the band; the line's ends run to the band's rounded edge. */
 .bb .bb-line { margin-inline: calc(-1 * max(18px, calc(var(--gutter) - var(--band-inset)))); width: auto; border-radius: 0; }
+/* The small carousel (the website, PolaroidMini) sits in the lower left: after the line on
+   phones, under FOR REAL! beside the line on wide screens. It stays clearly smaller than a print
+   on the line (about 270px wide on a 390 phone, 460px wide on desktop), so the app reads first. */
+.bb .bb-more { justify-self: start; display: grid; justify-items: start; gap: 10px; width: 100%; max-width: 172px; margin-top: 28px; }
+.bb .bb-more .eyebrow { margin-bottom: 0; }
+@container (min-width: 640px) { .bb .bb-more { max-width: 210px; } }
 @container (min-width: 960px) {
-  .bb .bb-screens { --bb-line-h: 660px; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: clamp(8px, 2cqi, 32px); }
+  .bb .bb-screens { --bb-line-h: 720px; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: clamp(8px, 2cqi, 32px); }
+  .bb .bb-real { grid-area: 1 / 1; align-self: end; }
+  .bb .bb-line { grid-area: 1 / 2 / 3 / 3; }
+  .bb .bb-more { grid-area: 2 / 1; align-self: start; margin-top: 36px; }
   .bb .bb-real-word { font-size: clamp(96px, 9.6cqi, 156px); }
   /* The line's left end meets FOR REAL!, so prints fade out there instead of being cut off. */
   .bb .bb-line { margin-inline: 0 calc(-1 * max(18px, calc(var(--gutter) - var(--band-inset)))); -webkit-mask-image: linear-gradient(90deg, transparent, #000 96px); mask-image: linear-gradient(90deg, transparent, #000 96px); }
@@ -112,15 +131,29 @@
    strip (components/ui/infinite-slider.tsx), inset like the bands. The slider slows on hover;
    under reduced motion it is one still, wrapped row. Logos are ink on the light chip fills
    (12.6:1 or better), the strip's ink edge frames them. ---------- */
-.bb .bb-stack { margin-top: clamp(40px, 5cqi, 72px); }
+.bb .bb-stack { margin-top: clamp(40px, 5cqi, 72px); margin-bottom: calc(var(--bb-strip-h) / -2); }
 .bb .bb-strip { margin-inline: calc(var(--band-inset) - var(--gutter)); padding: 14px 0; border-radius: var(--r-pill); background: var(--ink); overflow: hidden; }
 .bb .bb-strip .islider[data-static] { padding-inline: 18px; }
 .bb .bb-pill { --chip-h: 48px; --chip-fs: 15px; }
 .bb .bb-pill:nth-child(3n + 2) { background: var(--apricot); }
 .bb .bb-pill:nth-child(3n) { background: var(--sky); }
 @container (max-width: 759px) {
+  .bb { --bb-strip-h: 72px; }
   .bb .bb-strip { border-radius: 28px; }
   .bb .bb-pill { --chip-h: 44px; --chip-fs: 13px; }
+}
+
+/* The hand-off into Selected work (Andrew 2026-10-07: "the stack should transition into the
+   selected work page"). The strip is the seam: it hangs half over Work's ground (the margin
+   above), and as it scrolls up through the screen it slides down onto that edge and lies flat,
+   scrubbed by the scroll itself (a CSS scroll-driven animation: no JavaScript, transform only,
+   run by the compositor). The timeline is named on .bb-stack because a view timeline on the
+   moving strip would measure its own motion. Browsers without scroll timelines, and reduced
+   motion, get the strip already settled. */
+@keyframes bb-settle { from { transform: translateY(-56px) rotate(-2.5deg) scale(.94); } }
+@supports (animation-timeline: view()) {
+  .bb .bb-stack { view-timeline: --bb-stack block; }
+  html:not([data-motion="reduced"]) .bb .bb-strip { animation: bb-settle linear both; animation-timeline: --bb-stack; animation-range: entry 0% cover 40%; }
 }
 
 /* ---------- Entrances (Slush motion, on the director's .is-in): stickers pop from small and

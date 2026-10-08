@@ -1,0 +1,160 @@
+/* The projects as floating windows (components/site/work/floating-tabs.tsx). Every selector starts
+   with .fw, the component root, so it works wherever it is placed (not .ft: the footer owns that
+   prefix, and its z-index:-1 rule once buried the desk). The desk's own lines use the ground's --on (paper on the work section's berry-deep). Each window is card with ink text
+   (17.06:1); its title bar is the project's fill mixed 40% into card, lighter than the fill, so
+   ink stays above the fill's own ratio (gold 7.54, pink 5.43, leaf 6.75, apricot 7.11, teal
+   5.52:1, all AA). The back face is the full fill with ink text, as the spreads.
+   Reduced motion is html[data-motion="reduced"] (app/globals.css): faces swap with no turn,
+   windows jump instead of gliding. */
+
+.fw { --fw-bar: 48px; --fw-line: 1.5px solid var(--ink); --fw-spring: cubic-bezier(.34, 1.4, .64, 1); color: var(--on, var(--ink)); }
+.fw [data-fill="tile-gold"] { --fill: var(--tile-gold); }
+.fw [data-fill="tile-pink"] { --fill: var(--tile-pink); }
+.fw [data-fill="tile-leaf"] { --fill: var(--tile-leaf); }
+.fw [data-fill="tile-apricot"] { --fill: var(--tile-apricot); }
+.fw [data-fill="tile-teal"] { --fill: var(--tile-teal); }
+
+/* ---------- the desk: a dotted mat, the windows' room above, the dock below ---------- */
+.fw-desk {
+  display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 14px;
+  height: clamp(600px, calc(100svh - var(--header-h, 76px) - 110px), 900px);
+  padding: 20px;
+  border: 1.5px solid color-mix(in srgb, var(--on, var(--ink)) 30%, transparent);
+  border-radius: 28px;
+  background-color: color-mix(in srgb, var(--on, var(--ink)) 5%, transparent);
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--on, var(--ink)) 20%, transparent) 1.3px, transparent 1.7px);
+  background-size: 24px 24px;
+}
+.fw-area { position: relative; min-height: 0; }
+
+/* ---------- a window ---------- */
+.fw-win {
+  position: absolute;
+  /* --fx and --fy are fractions of the room left, so 0..1 always lands inside the area. */
+  left: calc((100% - min(var(--w), 100%)) * var(--fx));
+  /* --h is the measured height once flipped (floating-tabs.tsx); max() keeps a tall window's bar on the desk. */
+  top: max(0px, calc((100% - var(--h)) * var(--fy)));
+  width: min(var(--w), 100%);
+  rotate: var(--rot);
+  /* minmax(0, 1fr): the column is the window's width, never the tall text side's ratio-made minimum. */
+  display: grid; grid-template-rows: var(--fw-bar) auto; grid-template-columns: minmax(0, 1fr);
+  border: 2.5px solid var(--fill);
+  border-radius: 16px;
+  background: var(--card); color: var(--ink);
+  box-shadow: 0 6px 0 var(--ledge);
+  outline: none;
+  transition: left .55s var(--fw-spring), top .55s var(--fw-spring), width .55s var(--fw-spring), rotate .55s var(--fw-spring), box-shadow .2s ease, scale .2s ease;
+}
+.fw-win[data-flipped] { rotate: 0deg; } /* square while its text side is up, so the text is not drawn tilted */
+.fw-win:focus-visible { outline: 3px solid var(--ring, var(--berry)); outline-offset: 4px; }
+.fw-win[data-dragging] { transition: box-shadow .2s ease, scale .2s ease; scale: 1.015; box-shadow: 0 14px 0 var(--ledge); }
+.fw[data-dragging] { user-select: none; }
+
+.fw-titlebar {
+  display: flex; align-items: center; gap: 8px; min-width: 0;
+  padding: 0 2px 0 10px;
+  border-radius: 13px 13px 0 0;
+  border-bottom: 2.5px solid var(--fill);
+  background: color-mix(in srgb, var(--fill) 40%, var(--card));
+  cursor: grab; touch-action: none; user-select: none;
+  --ring: var(--berry);
+}
+.fw-win[data-dragging] .fw-titlebar { cursor: grabbing; }
+.fw-titlebar-num { flex: 0 0 auto; padding: 4px 8px; border: var(--fw-line); border-radius: var(--r-pill); background: var(--card); font: 500 12px/1 var(--mono); letter-spacing: .04em; font-variant-ligatures: none; }
+.fw-title { flex: 1 1 auto; min-width: 0; margin: 0; overflow: hidden; font: 700 15px/1.1 var(--display); letter-spacing: -.01em; text-transform: uppercase; font-variant-ligatures: none; }
+/* A long name wraps to a second line inside the 48px bar (2 x 16.5px) before it is cut with an ellipsis. */
+.fw-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
+
+/* The controls: 44px targets, a 28px round face with the Duolingo press (lip, translateY). */
+.fw-ctl { display: grid; place-items: center; flex: 0 0 auto; width: var(--hit); height: var(--hit); padding: 0; border: 0; background: none; color: var(--ink); cursor: pointer; }
+.fw-ctl-face { display: grid; place-items: center; width: 28px; height: 28px; border: var(--fw-line); border-radius: 50%; background: var(--card); box-shadow: 0 2px 0 var(--ink); transition: transform var(--dur-release) var(--ease-ui), box-shadow var(--dur-release) var(--ease-ui), background var(--dur-release) ease; }
+@media (hover: hover) and (pointer: fine) {
+  .fw-ctl:hover .fw-ctl-face { background: var(--apricot); transform: translateY(-1px); box-shadow: 0 3px 0 var(--ink); }
+}
+.fw-ctl:active .fw-ctl-face { transform: translateY(2px); box-shadow: 0 0 0 var(--ink); transition-duration: var(--dur-press); }
+.fw-ctl:focus-visible { outline: none; }
+.fw-ctl:focus-visible .fw-ctl-face { outline: 3px solid var(--berry); outline-offset: 2px; background: var(--apricot); }
+
+/* ---------- the pane that flips: front the picture, back the text side ---------- */
+/* user-select: a drag across the pane must not select the hidden face's text or wash the picture. */
+.fw-pane { position: relative; aspect-ratio: 16 / 10; perspective: 1600px; cursor: pointer; -webkit-user-select: none; user-select: none; }
+.fw-turn { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .75s var(--fw-spring); }
+.fw-win[data-flipped] .fw-turn { transform: rotateY(180deg); }
+.fw-face { position: absolute; inset: 0; overflow: hidden; border-radius: 0 0 13px 13px; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+.fw-media { position: absolute; inset: 0; background: var(--card); }
+.fw-media > :is(img, video, svg) { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+/* The animation pipeline's small diagram, scaled up to fill its window (tiles grow with the width). */
+.fw-media { container-type: inline-size; }
+.fw-media .pl-compact .pl-tile { width: clamp(26px, 9.5cqi, 52px); height: clamp(26px, 9.5cqi, 52px); border-radius: 10px; }
+.fw-media .pl-compact .pl-arrow { width: clamp(9px, 3cqi, 16px); height: clamp(10px, 3.4cqi, 18px); margin: 0 clamp(4px, 1.6cqi, 10px); }
+
+/* On the desk the pane's height is set, not left to the content, so it can ease with the turn:
+   the picture's 16:10 at the window's width (as .fw-win: min(--w, the desk's width) less the
+   border), or, flipped, the text side's measured height (--back, floating-tabs.tsx) if taller. */
+@media (min-width: 700px) {
+  .fw-area { container-type: inline-size; }
+  .fw-pane { aspect-ratio: auto; height: calc((min(var(--w), 100cqw) - 5px) * .625); transition: height .75s var(--fw-spring); }
+  .fw-win[data-flipped] .fw-pane { height: max(calc((min(var(--w), 100cqw) - 5px) * .625), var(--back, 0px)); }
+}
+
+.fw-back {
+  transform: rotateY(180deg);
+  overflow: hidden;
+  background: var(--fill); color: var(--ink);
+  cursor: pointer;
+  --on: var(--ink); --on-2: var(--ink); --ring: var(--ink);
+}
+.fw-back-in { display: grid; align-content: start; justify-items: start; gap: 10px; padding: 16px 18px 22px; }
+.fw-num { font: 700 44px/.8 var(--display); letter-spacing: -.05em; color: transparent; -webkit-text-stroke: 1.5px var(--ink); font-variant-ligatures: none; }
+.fw-kind { font: 500 11px/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+.fw-line { margin: 0; max-inline-size: 60ch; font: 400 15px/1.5 var(--body); }
+.fw-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 0; padding: 0; list-style: none; }
+.fw-tag { display: inline-flex; align-items: center; min-height: 26px; padding: 0 10px; border: var(--fw-line); border-radius: var(--r-pill); background: color-mix(in srgb, var(--paper) 70%, transparent); font: 500 11px/1 var(--mono); letter-spacing: .04em; text-transform: uppercase; font-variant-ligatures: none; }
+.fw-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+
+/* ---------- the "click to flip" sticker: only where hovering exists ---------- */
+.fw-hint { position: absolute; top: 12px; right: 12px; display: none; align-items: flex-start; gap: 2px; pointer-events: none; }
+@media (hover: hover) and (pointer: fine) {
+  .fw-hint { display: flex; opacity: 0; translate: 0 6px; transition: opacity .2s ease, translate .45s var(--fw-spring); }
+  .fw-pane:hover .fw-hint { opacity: 1; translate: 0 0; }
+}
+.fw-hint-tag { padding: 6px 11px 7px; border: var(--fw-line); border-radius: 12px 12px 4px 12px; background: var(--apricot); color: var(--ink); font: 700 14px/1 var(--display); letter-spacing: -.01em; font-variant-ligatures: none; rotate: -5deg; box-shadow: 0 3px 0 var(--ink); }
+.fw-hint-arrow { width: 40px; height: 36px; margin-top: 12px; overflow: visible; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.fw-hint-under { stroke: var(--ink); stroke-width: 7; }
+.fw-hint-over { stroke: var(--apricot); stroke-width: 3; }
+
+/* ---------- the resize corner: a 44px grab area, two short strokes in the project's colour ---------- */
+.fw-grip { position: absolute; right: -6px; bottom: -6px; z-index: 2; width: var(--hit); height: var(--hit); cursor: nwse-resize; touch-action: none; }
+.fw-grip::after { content: ''; position: absolute; right: 12px; bottom: 12px; width: 14px; height: 14px; border-right: 3px solid var(--ink); border-bottom: 3px solid var(--ink); border-radius: 0 0 6px 0; background: var(--fill); clip-path: polygon(100% 0, 100% 100%, 0 100%); }
+
+/* ---------- the dock: one chip per minimized window ---------- */
+.fw-foot { display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 12px 0 0; border-top: 1.5px dashed color-mix(in srgb, var(--on, var(--ink)) 30%, transparent); }
+.fw-dock { flex: 1 1 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-width: 0; margin: 0; padding: 0; list-style: none; }
+.fw-tidy { flex: 0 0 auto; }
+.fw-chip { display: inline-flex; align-items: center; gap: 8px; min-height: var(--hit); padding: 0 16px 0 7px; border: var(--fw-line); border-radius: var(--r-pill); background: var(--fill); color: var(--ink); box-shadow: 0 var(--lip) 0 var(--ink); font: 700 13px/1 var(--display); letter-spacing: -.01em; text-transform: uppercase; font-variant-ligatures: none; cursor: pointer; animation: fw-pop .45s var(--fw-spring) both; transition: transform var(--dur-release) var(--ease-ui), box-shadow var(--dur-release) var(--ease-ui); }
+.fw-chip-num { padding: 4px 7px; border: var(--fw-line); border-radius: var(--r-pill); background: var(--card); font: 500 11px/1 var(--mono); }
+@media (hover: hover) and (pointer: fine) {
+  .fw-chip:hover { transform: translateY(-2px); box-shadow: 0 calc(var(--lip) + 2px) 0 var(--ink); }
+}
+.fw-chip:active { transform: translateY(var(--lip)); box-shadow: 0 0 0 var(--ink); transition-duration: var(--dur-press); }
+.fw-chip:focus-visible { outline: 3px solid var(--ring, var(--berry)); outline-offset: 3px; }
+@keyframes fw-pop { from { opacity: 0; transform: translateY(14px) scale(.8); } }
+
+/* ---------- phones: one column, nothing to drag or resize ---------- */
+@media (max-width: 699px) {
+  .fw-tidy { display: none; }
+  .fw-desk { height: auto; padding: 14px; border-radius: 22px; }
+  .fw-area { display: grid; gap: 20px; }
+  .fw-win { position: relative; left: auto; top: auto; width: auto; rotate: none; }
+  .fw-titlebar { cursor: default; touch-action: auto; }
+  .fw-grip { display: none; }
+  /* Flipped, the text side sets the height: the turn and the back join the flow, so it is never
+     cut off; the min-height keeps a short text side as tall as the picture was. */
+  .fw-win[data-flipped] .fw-pane { display: grid; min-width: 0; aspect-ratio: auto; min-height: calc((100vw - 64px) * .625); }
+  .fw-win[data-flipped] .fw-turn { position: relative; inset: auto; display: grid; }
+  .fw-win[data-flipped] .fw-back { position: relative; inset: auto; overflow: visible; }
+}
+
+html[data-motion="reduced"] .fw :is(.fw-win, .fw-pane, .fw-turn, .fw-hint, .fw-chip, .fw-ctl-face) { transition: none; }
+html[data-motion="reduced"] .fw .fw-chip { animation: none; }
+html[data-motion="reduced"] .fw .fw-win[data-dragging] { scale: none; }

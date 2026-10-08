@@ -11,29 +11,31 @@
      white on Lava under the scrim  6.83:1  worst case, Lava's #FF9F21 under 50% black
      focus ring black on red        4.41:1  over the 3:1 non-text minimum (berry would be 1.58)
 
-   The pin: the section is one viewport plus --runway, and .umd-stage is position: sticky at the
-   top, so the stage holds the frame while the runway scrolls past, then releases into
-   #contents. Plain CSS, no scroll library. Reduced motion sets the runway to 0. */
+   No pin (Andrew 2026-10-07: "don't make the umd page stick"): one screen tall, it scrolls like
+   any section. Until the flag's first frame is drawn the section shows its own red under the
+   shade, then the flag wipes in from the pole (flag.tsx sets data-ready). */
 
 section.umd {
   --umd-red:#E21833; --umd-gold:#FFD200; --umd-black:#000000;
   --on:var(--umd-black); --on-2:var(--umd-black); --kw:var(--umd-black); --ring:var(--umd-black);
-  --runway:70svh;
-  min-height:calc(100svh + var(--runway));
   background:var(--umd-red);
   color:var(--umd-black);
 }
-html[data-motion="reduced"] section.umd { --runway:0px; }
 
 .umd .umd-stage {
   --cue-pad:clamp(104px,15svh,124px);
-  position:sticky; top:0; height:100svh; box-sizing:border-box;
+  position:relative; min-height:100svh; box-sizing:border-box;
   padding:clamp(100px,11svh,140px) var(--gutter) var(--cue-pad);
 }
 /* The flag (components/site/umd/flag.tsx) fills the stage, and a static shadow sits over it:
    darkest on the left where the headline, degree line and pills are, clear by about two thirds,
    so the flag reads fully behind the terrapin and the Maryland icon. */
 .umd .umd-flag { position:absolute; inset:0; z-index:0; display:block; width:100%; height:100%; }
+/* The live canvas stays clipped away (the red shows) until its first frame, then slides in from
+   the top; it replays each time the section comes back into view (flag.tsx clears data-ready). */
+.umd .umd-flag canvas { display:block; width:100%; height:100%; clip-path:inset(0 0 100% 0); }
+.umd .umd-flag canvas[data-ready] { clip-path:inset(0 0 0 0); transition:clip-path 900ms var(--ease-out); }
+html[data-motion="reduced"] .umd .umd-flag canvas[data-ready] { transition:none; }
 .umd .umd-shade { position:absolute; inset:0; z-index:0; pointer-events:none;
   background:linear-gradient(90deg, rgba(0,0,0,.66) 0, rgba(0,0,0,.66) max(50%, 560px), rgba(0,0,0,0) max(74%, 820px)); }
 
@@ -43,7 +45,7 @@ html[data-motion="reduced"] section.umd { --runway:0px; }
    the hero, where the hero's marquees cross (90px of it must stay clear; 70px on phones). The text blocks are direct grid items so
    the phone layout can put the terrapin beside the tags. */
 .umd .umd-grid {
-  position:relative; z-index:1; height:100%; max-width:1280px; margin-inline:auto;
+  position:relative; z-index:1; max-width:1280px; margin-inline:auto;
   display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);
   grid-template-areas:"chip art" "title art" "degree art" "tags art" "card art";
   align-content:start; column-gap:clamp(24px,3vw,48px); row-gap:clamp(10px,2svh,20px);

@@ -3,38 +3,43 @@
    pill's rolling ::before with the flow: arrows trade places, the label shifts, and an ink circle
    grows from the centre (the pasted curves: .8s cubic-bezier(.19,1,.22,1) for the circle, the
    site spring for the arrows). Label: white on berry 7.5:1 at rest, white on ink 18:1 filled.
-   About twice the usual pill: 88px tall, 26px Fira 700 caps. */
+   About twice the usual pill: 88px tall, 26px Fira 700 caps. The sizes are custom properties, so
+   a bigger call to action (contents.css .toc-cta) scales the whole button by setting them. */
 .flow-btn {
-  --flow-pad:60px;
-  min-height:88px; padding:0 var(--flow-pad); gap:0;
-  font:700 26px/1 var(--mono); letter-spacing:.06em;
+  /* Always the hero's berry face with a white label, on every ground. Dark grounds otherwise swap
+     the primary to apricot with an ink label, and the ink circle then hid the ink label (Andrew saw
+     the Contents CTA "black out" on hover, 2026-10-07). */
+  --pb-face:var(--berry); --pb-on:#fff;
+  --flow-pad:60px; --flow-h:88px; --flow-fs:26px; --flow-arr:28px; --flow-edge:22px; --flow-fill:560px;
+  min-height:var(--flow-h); padding:0 var(--flow-pad); gap:0;
+  font:700 var(--flow-fs)/1 var(--mono); letter-spacing:.06em;
   transition:transform var(--dur-release) var(--ease-spring),box-shadow var(--dur-release) var(--ease-spring),border-radius .6s cubic-bezier(.23,1,.32,1);
 }
 .flow-btn::before { content:none; } /* the circle is this button's hover fill, not the roll */
 .flow-text { position:relative; z-index:1; translate:-14px 0; transition:translate .8s ease-out; }
-.flow-arr { position:absolute; z-index:2; top:50%; width:28px; height:28px; margin-top:-14px; stroke-width:2.5; transition:left .8s var(--ease-spring),right .8s var(--ease-spring); }
+.flow-arr { position:absolute; z-index:2; top:50%; width:var(--flow-arr); height:var(--flow-arr); margin-top:calc(var(--flow-arr) / -2); stroke-width:2.5; transition:left .8s var(--ease-spring),right .8s var(--ease-spring); }
 .flow-arr-in { left:-25%; }
-.flow-arr-out { right:22px; }
+.flow-arr-out { right:var(--flow-edge); }
 .flow-circle { position:absolute; z-index:0; top:50%; left:50%; width:20px; height:20px; translate:-50% -50%; border-radius:50%; background:var(--ink); opacity:0; transition:width .8s cubic-bezier(.19,1,.22,1),height .8s cubic-bezier(.19,1,.22,1),opacity .8s cubic-bezier(.19,1,.22,1); pointer-events:none; }
 /* hover with a fine pointer, and keyboard focus, run the flow; the label stays white throughout */
 @media (hover:hover) and (pointer:fine) {
   .pill.flow-btn:hover:not(:disabled) { color:var(--face-on); border-radius:20px; } /* beats the pill's hover colour */
   .flow-btn:hover .flow-text { translate:14px 0; }
-  .flow-btn:hover .flow-arr-in { left:22px; }
+  .flow-btn:hover .flow-arr-in { left:var(--flow-edge); }
   .flow-btn:hover .flow-arr-out { right:-25%; }
-  .flow-btn:hover .flow-circle { width:560px; height:560px; opacity:1; }
+  .flow-btn:hover .flow-circle { width:var(--flow-fill); height:var(--flow-fill); opacity:1; }
 }
 .pill.flow-btn:focus-visible { color:var(--face-on); border-radius:20px; } /* beats the pill's focus colour, which would be ink on the ink circle */
 .flow-btn:focus-visible .flow-text { translate:14px 0; }
-.flow-btn:focus-visible .flow-arr-in { left:22px; }
+.flow-btn:focus-visible .flow-arr-in { left:var(--flow-edge); }
 .flow-btn:focus-visible .flow-arr-out { right:-25%; }
-.flow-btn:focus-visible .flow-circle { width:560px; height:560px; opacity:1; }
+.flow-btn:focus-visible .flow-circle { width:var(--flow-fill); height:var(--flow-fill); opacity:1; }
 /* a phone: the same button a little smaller, so it never crowds the screen's width */
-@media (max-width:479px) { .flow-btn { --flow-pad:48px; min-height:76px; font-size:21px; } }
+@media (max-width:479px) { .flow-btn { --flow-pad:48px; --flow-h:76px; --flow-fs:21px; } }
 /* Reduced motion: no slide or grow; the face simply turns ink */
 html[data-motion="reduced"] .flow-btn, html[data-motion="reduced"] .flow-btn * { transition:none; }
 html[data-motion="reduced"] .flow-btn .flow-text { translate:none; }
 html[data-motion="reduced"] .flow-btn .flow-arr-in { display:none; }
-html[data-motion="reduced"] .flow-btn .flow-arr-out { right:22px; }
+html[data-motion="reduced"] .flow-btn .flow-arr-out { right:var(--flow-edge); }
 html[data-motion="reduced"] .flow-btn .flow-circle { display:none; }
 html[data-motion="reduced"] .pill.flow-btn:is(:hover,:focus-visible) { background:var(--ink); color:var(--face-on); border-radius:var(--r-pill); }

@@ -1,0 +1,10 @@
+/* The contour lines behind the berry-deep sections (contour-bg.tsx). The host fills its section
+   at z-index -1: every berry-deep section is a stacking context (section[data-texture] in
+   app/globals.css), so -1 paints above the section's own ground and under all of its content.
+   The canvas sticks to the top of the screen while its section scrolls past, so it is never
+   taller than one screen however long the section is.
+   --contour is the line colour: berry-soft at low alpha, texture only. Text over it stays AA:
+   the lightest blend under a line (berry-deep plus 16% berry-soft, about #39416e) still gives
+   paper 8.5:1 and berry-soft 6.4:1. */
+.contour-host { position:absolute; inset:0; z-index:-1; pointer-events:none; --contour:rgb(201 209 244 / .16); }
+.contour-canvas { position:sticky; top:0; display:block; width:100%; height:min(100%, 100lvh); }

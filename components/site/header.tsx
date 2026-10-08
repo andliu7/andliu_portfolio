@@ -1,10 +1,9 @@
 'use client';
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import { usePathname } from 'next/navigation';
 import { ArrowUpRight } from 'lucide-react';
-import { A11Y, BLUEBERRY, HERO, MICROCOPY, RESUME, SECTIONS } from '@/lib/site';
+import { A11Y, BLUEBERRY, HERO, MICROCOPY, SECTIONS } from '@/lib/site';
 import { ChipMarquee } from './chip-marquee';
-import { Flame } from './flame/flame';
 import { Mark } from './mark';
 import { Menu } from './menu';
 import { PillFaces } from './pill-faces';
@@ -13,8 +12,7 @@ import { getSection, subscribeSection } from './section-state';
 // The fixed header (SITE-PLAN.md 6.1). Every control sits on an opaque surface with the ledge,
 // so it is never text on text.
 //   left    the AND/LIU mark (components/site/mark.tsx, his handle andliu), which flips and
-//           dances on hover, focus and once on load, goes home, and burns in a small berry and
-//           apricot flame (components/site/flame/); beside it the degree chip, one line, which
+//           dances on hover, focus and once on load, and goes home; beside it the degree chip, one line, which
 //           turns into a slow marquee when the room before the centre is too short (720px and
 //           up; a phone shows it in the hero instead)
 //   centre  the current section's label in a pill (1200px and up), rolling when it changes; where
@@ -42,6 +40,7 @@ export function Header() {
   // useCallback keeps one stable function across renders, so the menu's key listener effect
   // (which lists onClose as a dependency) does not re-subscribe every time the header renders.
   const close = useCallback((returnFocus: boolean) => {
+    resumeFrom.current = resumeRef.current?.getBoundingClientRect() ?? null;
     setOpen(false);
     if (returnFocus) requestAnimationFrame(() => buttonRef.current?.focus());
   }, []);
@@ -50,23 +49,51 @@ export function Header() {
   const markRef = useRef<HTMLAnchorElement>(null);
   useHello(markRef);
 
+  // While the menu is open the header keeps only Résumé, which slides over to sit beside the
+  // close button (globals.css puts it there) and slides back on close. This is the FLIP trick:
+  // measure where it was before the change (First), let React move it (Last), then animate the
+  // difference back to zero (Invert, Play). useLayoutEffect runs after React has moved it but
+  // before the browser paints, so the jump is never seen. A phone hides Résumé while the menu is
+  // closed, so there it has no start point and just fades in. Reduced motion: placed, no slide.
+  const resumeRef = useRef<HTMLAnchorElement>(null);
+  const resumeFrom = useRef<DOMRect | null>(null);
+  const openMenu = () => {
+    resumeFrom.current = resumeRef.current?.getBoundingClientRect() ?? null;
+    setOpen(true);
+  };
+  useLayoutEffect(() => {
+    const el = resumeRef.current;
+    const from = resumeFrom.current;
+    resumeFrom.current = null;
+    if (!el || !from || !el.animate || document.documentElement.getAttribute('data-motion') === 'reduced') return;
+    const to = el.getBoundingClientRect();
+    if (!to.width) return;
+    const spring = getComputedStyle(el).getPropertyValue('--ease-elastic').trim() || 'ease-out';
+    const frames = from.width
+      ? [{ transform: `translateX(${from.left - to.left}px)` }, { transform: 'none' }]
+      : [{ transform: 'translateX(-24px)', opacity: 0 }, { transform: 'none', opacity: 1 }];
+    el.animate(frames, { duration: 750, easing: spring });
+  }, [open]);
+
   return (
-    // data-menu-open lifts the wordmark and the Visit Blueberry pill above the open menu, so the
-    // header stays put while the menu covers the page (plan 6.1).
+    // data-menu-open keeps Résumé above the open menu and hides the rest (plan 6.1).
     <header className="site-header" data-menu-open={open ? '' : undefined} data-hidden={hidden ? '' : undefined} data-band={band ? '' : undefined}>
-      {/* The left group is the header's first grid item: the flame's host span (.wordmark-host
-          in globals.css) around the mark, then the degree chip */}
+      {/* The left group is the header's first grid item: the host span (.wordmark-host in
+          globals.css, which dances) around the mark, then the degree chip */}
       <div className="hdr-left">
-        <Flame className="wordmark-host" height={16} spread={7} radius={12}>
+        <span className="wordmark-host">
           <a ref={markRef} className="wordmark flip-head" href={home ? '#top' : '/'} aria-label={A11Y.home}>
             <Mark />
           </a>
-        </Flame>
+        </span>
         {home && <span className="hdr-chip"><ChipMarquee text={HERO.chip} /></span>}
       </div>
       <SectionLabel home={home} />
       <div className="header-right">
-        <a className="pill pill-berry header-resume" href={RESUME} target="_blank" rel="noreferrer">
+        {/* Glides to the résumé preview (app/motion.tsx). With the menu open, the menu closes first,
+            then the same link is clicked again once scrolling is free. */}
+        <a ref={resumeRef} className="pill pill-berry header-resume" href={home ? '#resume' : '/#resume'}
+          onClick={event => { if (!open) return; event.preventDefault(); close(false); setTimeout(() => resumeRef.current?.click(), 600); }}>
           <PillFaces>{MICROCOPY.resumeShort}</PillFaces>
         </a>
         <a className="pill pill-light header-visit" href={BLUEBERRY.live} target="_blank" rel="noreferrer">
@@ -82,7 +109,7 @@ export function Header() {
           aria-label={MICROCOPY.menu}
           aria-expanded={open}
           aria-controls="site-menu"
-          onClick={() => setOpen(true)}
+          onClick={openMenu}
         >
           <span aria-hidden="true" /><span aria-hidden="true" />
         </button>
@@ -121,20 +148,23 @@ function useHello(ref: RefObject<HTMLAnchorElement | null>) {
 // hidden: the header should be out of the way, after scrolling down past the first 120px and
 // until the reader scrolls up again. Small moves (under 8px) are ignored, so a trackpad's jitter
 // does not flicker it. band: the page has scrolled at all, so the header needs its paper band.
-// Read at most once a frame (the requestAnimationFrame guard).
+// Read at most once a frame (the requestAnimationFrame guard), and setState is called only when
+// a value actually flips, so scrolling does not ask React to re-render the header every frame.
 function useHideOnScroll() {
   const [hidden, setHidden] = useState(false);
   const [band, setBand] = useState(false);
   useEffect(() => {
     let last = window.scrollY;
     let frame = 0;
+    let isHidden = false, isBand = false;
+    const hide = (next: boolean) => { if (next !== isHidden) { isHidden = next; setHidden(next); } };
     const check = () => {
       frame = 0;
       const y = window.scrollY;
-      setBand(y > 8);
-      if (y < 120) setHidden(false);
-      else if (y - last > 8) setHidden(true);
-      else if (last - y > 8) setHidden(false);
+      if ((y > 8) !== isBand) { isBand = y > 8; setBand(isBand); }
+      if (y < 120) hide(false);
+      else if (y - last > 8) hide(true);
+      else if (last - y > 8) hide(false);
       else return; // too small to count; keep `last` where it was
       last = y;
     };

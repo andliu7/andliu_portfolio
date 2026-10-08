@@ -3,10 +3,10 @@ import './stickers.css';
 // The closing sections' extra stickers, drawn to match the shared set in
 // components/site/stickers/stickers.tsx (same .st base: flat token fills, 2px ink outline that
 // never scales). The pan and barbell come from that shared set so the page has one of each;
-// these add what it lacks, mostly for Off the clock's evening strip: a plant in a pot (landscape
-// design and the garden line), a clock and a sparkle (the intro), a backpack (after work or
-// classes), a table with two of the island's round people (eat), an open book (Bible study), and
-// the sun and moon that ride the strip's arc. Fills live in ./stickers.css: an SVG fill attribute
+// these add what it lacks, for the evening reel in the island finale
+// (components/site/closing/evening-reel.tsx): a plant in a pot (landscape design and the garden
+// line), a backpack (after work or classes), a table with two of the island's round people (eat),
+// an open book (Bible study), and the round people themselves. Fills live in ./stickers.css: an SVG fill attribute
 // cannot read a CSS variable everywhere.
 // All decoration: aria-hidden, no text.
 
@@ -23,27 +23,6 @@ export function PotSticker({ className = '' }: Props) {
       <path className="cl-leaf cl-leaf-2" vectorEffect={NS} d="M63 30c-12-2-20-12-18-24 12 2 20 10 18 24z" />
       <path className="cl-pot" vectorEffect={NS} d="M30 94h60l-8 40H38z" />
       <rect className="cl-pot-rim" vectorEffect={NS} x="26" y="88" width="68" height="14" rx="6" />
-    </svg>
-  );
-}
-
-// A clock face, hands at five past six.
-export function ClockSticker({ className = '' }: Props) {
-  return (
-    <svg className={`st cl-clock ${className}`} viewBox="0 0 120 120" aria-hidden="true" focusable="false">
-      <circle className="cl-clock-rim" vectorEffect={NS} cx="60" cy="60" r="52" />
-      <circle className="cl-clock-face" vectorEffect={NS} cx="60" cy="60" r="40" />
-      {[0, 90, 180, 270].map(a => <rect key={a} className="cl-tick" x="58" y="24" width="4" height="9" rx="2" transform={`rotate(${a} 60 60)`} />)}
-      <path className="cl-hands" d="M60 60V34M60 60l14 20" />
-      <circle className="cl-pin" vectorEffect={NS} cx="60" cy="60" r="5" />
-    </svg>
-  );
-}
-
-export function SparkleSticker({ className = '' }: Props) {
-  return (
-    <svg className={`st cl-sparkle ${className}`} viewBox="0 0 80 80" aria-hidden="true" focusable="false">
-      <path vectorEffect={NS} d="M40 4c4 22 14 32 36 36-22 4-32 14-36 36-4-22-14-32-36-36 22-4 32-14 36-36z" />
     </svg>
   );
 }
@@ -95,28 +74,10 @@ export function BookSticker({ className = '' }: Props) {
   );
 }
 
-// The sun and the moon that ride the evening strip's arc.
-export function SunSticker({ className = '' }: Props) {
-  return (
-    <svg className={`st cl-sun-st ${className}`} viewBox="0 0 80 80" aria-hidden="true" focusable="false">
-      <path className="cl-rays" vectorEffect={NS} d="M40 4v10M40 66v10M4 40h10M66 40h10M14 14l7 7M59 59l7 7M66 14l-7 7M21 59l-7 7" />
-      <circle className="cl-sun" vectorEffect={NS} cx="40" cy="40" r="20" />
-    </svg>
-  );
-}
-
-export function MoonSticker({ className = '' }: Props) {
-  return (
-    <svg className={`st cl-moon ${className}`} viewBox="0 0 80 80" aria-hidden="true" focusable="false">
-      <path vectorEffect={NS} d="M52 10a30 30 0 1 0 18 46A26 26 0 0 1 52 10z" />
-    </svg>
-  );
-}
-
 // One of the island's round people standing on their own (the same capsule body and two dot eyes
-// as the pair at TableSticker), for the evening strip's small crowds. `tall` stretches the body;
+// as the pair at TableSticker), for the evening reel's small crowds. `tall` stretches the body;
 // `extra` adds one prop: a gym headband, a chef's hat, or a small book held in front. The body and
-// the eyes are separate groups so offclock.css can bob one and blink the other.
+// the eyes are separate groups so island.css can bob one and blink the other.
 export type PersonTone = 'pink' | 'sky' | 'leaf' | 'gold' | 'apricot' | 'teal' | 'violet';
 type PersonProps = Props & { tone: PersonTone; tall?: boolean; extra?: 'band' | 'chef' | 'book' };
 

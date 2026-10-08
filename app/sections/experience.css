@@ -66,3 +66,20 @@ html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-item.hs-in .xp-ca
 html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-tick::after { scale:0; transition:scale .6s var(--ease-spring) .15s; }
 html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-item.hs-in .xp-tick::after { scale:1; }
 html[data-motion="reduced"] .experience :is(.xp-card,.xp-tick) { transition:none; }
+
+/* ---------- The way through (2026-10-07): the Esc hint and the auto-play button ----------
+   Under the meter at the head row's right; both render only while the strip pins. */
+.experience .xp-side { display:grid; justify-items:end; gap:14px; }
+.experience .xp-ctl { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:12px; color:var(--on-2); }
+.experience .xp-ctl .sa-btn { margin-bottom:4px; }
+
+/* ---------- The hand-off shadow (2026-10-07) ----------
+   Contact, next, sits on ink; this ground is berry-deep. A gradient from clear through berry-deep
+   to ink lies along the frame's foot. Pinned, it grows in with the strip's progress (--p, from
+   use-horizontal-scroll.ts): opacity and a scaleY from the foot, nothing that lays out again. In
+   the stack (phones, reduced motion) there is no progress, so it sits there at full strength.
+   z-index -1 inside the frame keeps it under the cards and over the contour lines. */
+.experience .xp-frame { position:relative; isolation:isolate; }
+.experience .xp-frame::after { content:''; position:absolute; z-index:-1; left:0; right:0; bottom:0; height:clamp(160px,32svh,320px); pointer-events:none;
+  background:linear-gradient(to bottom, transparent, color-mix(in srgb,var(--berry-deep) 60%,var(--ink)) 55%, var(--ink));
+  transform-origin:50% 100%; opacity:var(--p,1); transform:scaleY(calc(.4 + var(--p,1) * .6)); }

@@ -19,8 +19,9 @@ import { useReducedMotion } from '@/components/site/use-reduced-motion';
 //   3. section state: one trigger per `main section[id][data-ground]`, the only caller of
 //      setSection() in components/site/section-state.ts (1.4)
 //   4. in-page links: a target more than two viewports away goes through jumpTo, so a long trip
-//      never mounts every heavy component on the way (1.6). #island is the island's to handle.
+//      never mounts every heavy component on the way (1.6).
 //   5. FlipHeading taps and Enter: data-flipped for 900ms, so touch and keyboard see the flip
+//   6. data-away on off-screen sections, which pauses their CSS animations (pauseAway below)
 // Section motion lives in each section's own client enhancer, not here.
 //
 // Pattern: an "effect-only" component. useEffect runs in the browser after the page mounts, and
@@ -43,6 +44,7 @@ export default function Motion() {
       lenis ? syncLenis(lenis) : () => {},
       reduced ? () => {} : reveals(),
       sectionTriggers(),
+      pauseAway(),
       linkDelegate(),
       flipTaps(),
     ];
@@ -163,9 +165,45 @@ function sectionTriggers() {
   return () => { triggers.forEach(t => t.kill()); registerResync(null); };
 }
 
+// Off-screen sections get data-away, and app/globals.css pauses the looping CSS animations inside
+// them (animation-play-state), so stickers, eyes and marquees stop restyling every frame while
+// nobody can see them. One shared IntersectionObserver watches all sections; a paused loop
+// resumes from the same frame when its section scrolls back in, so nothing visibly changes.
+// Only infinite loops are paused (marked data-loop as their section leaves): a one-shot entrance
+// that would have finished unseen must not wait and then play in front of the visitor.
+function pauseAway() {
+  const markLoops = (section: Element) => {
+    for (const anim of section.getAnimations({ subtree: true })) {
+      if (anim instanceof CSSAnimation && anim.effect?.getTiming().iterations === Infinity) {
+        (anim.effect as KeyframeEffect).target?.setAttribute('data-loop', '');
+      }
+    }
+  };
+  const onEntries = (entries: IntersectionObserverEntry[]) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) markLoops(entry.target);
+      entry.target.toggleAttribute('data-away', !entry.isIntersecting);
+    }
+  };
+  const io = new IntersectionObserver(onEntries);
+  const sections = document.querySelectorAll<HTMLElement>('main section[id]');
+  sections.forEach(el => io.observe(el));
+  // The footer's laser seam (components/site/footer.tsx) is not a section but loops all the same
+  // (a blurred glow that drifts and flickers), and it is on screen only at the very end of the
+  // page. It is a 0px-tall line whose glow reaches about 20px either side, hence the margin.
+  const seamIo = new IntersectionObserver(onEntries, { rootMargin: '24px 0px' });
+  const seam = document.querySelector<HTMLElement>('main > .ft-seam');
+  if (seam) seamIo.observe(seam);
+  return () => {
+    io.disconnect();
+    seamIo.disconnect();
+    sections.forEach(el => el.removeAttribute('data-away'));
+    seam?.removeAttribute('data-away');
+  };
+}
+
 // In-page anchors. Near targets scroll smoothly (Lenis, or native under reduced motion); a
-// target more than two viewports away goes through jumpTo. #island is not handled here: the
-// island's own capture-phase delegate takes it first and stops the event. #main (the skip link)
+// target more than two viewports away goes through jumpTo. #main (the skip link)
 // is left to the browser, which also moves keyboard focus there.
 function linkDelegate() {
   const onClick = (event: MouseEvent) => {
@@ -174,11 +212,20 @@ function linkDelegate() {
     if (!link || link.target === '_blank') return;
     const href = link.getAttribute('href') ?? '';
     const hash = href.startsWith('#') ? href : href.startsWith('/#') && location.pathname === '/' ? href.slice(1) : null;
-    if (!hash || hash === '#' || hash === '#main' || hash === '#island') return;
+    if (!hash || hash === '#' || hash === '#main') return;
     const target = document.getElementById(hash.slice(1));
     if (!target) return;
     event.preventDefault();
     const distance = Math.abs(target.getBoundingClientRect().top);
+    // Every résumé button glides down to the résumé preview, slow then quick, so the sections on
+    // the way flash past (Andrew 2026-10-07). An absolute target from the real scroll position.
+    const lenis = getLenis();
+    if (hash === '#resume' && lenis) {
+      const y = window.scrollY + target.getBoundingClientRect().top;
+      lenis.scrollTo(y, { duration: Math.min(3.2, 1.2 + distance / 4000), easing: t => t * t * t });
+      history.pushState(null, '', hash);
+      return;
+    }
     if (distance > window.innerHeight * 2) jumpTo(target);
     else {
       const lenis = getLenis();

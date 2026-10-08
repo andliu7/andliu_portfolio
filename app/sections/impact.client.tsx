@@ -8,6 +8,7 @@ import { TiltFrame } from '@/components/site/tilt-frame';
 import { preserveAnchor } from '@/components/site/jump';
 import { emit, EVENTS } from '@/components/site/handoffs';
 import { useReducedMotion, isReducedMotion } from '@/components/site/use-reduced-motion';
+import { SKYLINE } from '@/lib/site';
 
 // The Impact accordion (SITE-PLAN.md 4.6). One row per project; the first is open by default;
 // opening one closes the others. Click, Enter or Space toggles (a real <button>, so Enter and
@@ -24,11 +25,13 @@ import { useReducedMotion, isReducedMotion } from '@/components/site/use-reduced
 // when an open panel comes near the viewport.
 
 const ImpactChart = lazy(() => import('@/components/ui/chart'));
+// The commits-per-day series ('days') draws as the contribution skyline, split out the same way.
+const Skyline = lazy(() => import('@/components/ui/contribution-skyline'));
 
 export type Point = { x: string; y: number; y2?: number; n?: number };
 export type SeriesData = {
   id: string;
-  kind: string; // 'line' | 'bar' | 'stat'
+  kind: string; // 'line' | 'bar' | 'stat' | 'days' (one point per day, drawn as the skyline)
   unit: string;
   dim?: string; // what x is: date, week, kind, arm, item
   fields?: { y: string; y2: string }; // names of y and y2, from the source file's own keys
@@ -196,7 +199,9 @@ function Panel({ panel, open, reduced, labels }: { panel: PanelView; open: boole
   const countUp = live && !reduced;
 
   return (
-    <div className="impact-card" ref={card} data-live={live ? '' : undefined}>
+    // data-wide: the skyline wants the card's full width, so the number and tiles go above it
+    // in one row (impact.css) instead of a tall column with dead ground under the tiles.
+    <div className="impact-card" ref={card} data-live={live ? '' : undefined} data-wide={current?.kind === 'days' ? '' : undefined}>
       <div className="impact-side">
         {panel.hero && <Hero hero={panel.hero} run={countUp} />}
         {panel.units && <UnitGrid series={panel.units} />}
@@ -344,7 +349,7 @@ function StatTile({ stat, run }: { stat: SeriesView; run: boolean }) {
 
 function ChartBlock({ chart, live, reduced, tableId, showTable }: { chart: SeriesView; live: boolean; reduced: boolean; tableId: string; showTable: boolean }) {
   const points = chart.points ?? [];
-  const placeholder = <div className="impact-chart impact-chart-ph" aria-hidden="true" />;
+  const placeholder = <div className={`impact-chart impact-chart-ph${chart.kind === 'days' ? ' impact-chart-days' : ''}`} aria-hidden="true" />;
   const yHead = chart.fields ? `${chart.fields.y} (${chart.unit})` : chart.unit;
 
   return (
@@ -357,7 +362,9 @@ function ChartBlock({ chart, live, reduced, tableId, showTable }: { chart: Serie
           viewport; otherwise a same-height placeholder holds its space. */}
       {live ? (
         <NearViewport placeholder={placeholder} margin="100%">
-          <ImpactChart series={chart} reduced={reduced} />
+          {chart.kind === 'days'
+            ? <Skyline points={points} unit={chart.unit} reduced={reduced} labels={SKYLINE} />
+            : <ImpactChart series={chart} reduced={reduced} />}
         </NearViewport>
       ) : placeholder}
       {/* The accessible alternative to the chart. Collapsed, it is still in the page for screen

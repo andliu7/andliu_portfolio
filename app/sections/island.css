@@ -1,6 +1,7 @@
-/* The island finale (app/sections/island.tsx, plan 4.10). Every selector starts at .island.
-   Prefix il-. */
-.island { display:flex; flex-direction:column; align-items:stretch; gap:20px; margin-top:0; padding:8px var(--gutter) var(--gutter); background-color:var(--ground); color:var(--on); }
+/* The island finale (app/sections/island.tsx). Every selector starts at .island, except the
+   confirm popup, which is portalled to <body>. Prefixes: il- the window and the door
+   (components/site/closing/island-door.tsx), er- the evening reel (components/site/closing/evening-reel.tsx). */
+.island { display:flex; flex-direction:column; align-items:stretch; gap:20px; padding:8px var(--gutter) var(--gutter); }
 
 .island .il-window { display:grid; grid-template-columns:minmax(0,40fr) minmax(0,60fr); gap:clamp(24px,3.4vw,56px); align-items:center;
   padding:clamp(24px,3.4vw,52px); border-radius:var(--card-r); background:var(--berry); color:var(--on); }
@@ -12,23 +13,66 @@
 /* The poster, framed as a sticker print: 2px ink outline, a slight turn. */
 .island .il-shot { margin:0; min-width:0; }
 .island .il-shot img { width:100%; height:auto; aspect-ratio:16 / 9; object-fit:cover; border-radius:20px; border:2px solid var(--ink); rotate:1.5deg; transition:rotate .6s var(--ease-spring); }
-@media (hover:hover) and (pointer:fine) {
-  .island .il-window:hover .il-shot img { rotate:0deg; }
-}
+@media (hover:hover) and (pointer:fine) { .island .il-shot:hover img { rotate:0deg; } }
 html[data-motion="reduced"] .island .il-shot img { transition:none; }
+
+/* The poster's door: a link around the image, with the site's focus ring. */
+.island .il-door { display:block; border-radius:20px; }
+.island .il-door:focus-visible { outline:3px solid var(--ring,var(--apricot)); outline-offset:4px; }
+
+/* ---------- Off the clock: small, under "Go to the game?", centred in the left column ---------- */
+.island .il-evening { align-self:stretch; display:grid; justify-items:center; gap:12px; width:min(100%,420px); margin:clamp(12px,2vw,28px) auto 0; }
+/* The title in the display font, small, tilted a hair like FOR REAL! */
+.island .il-evening-title { margin:0; font:700 clamp(26px,2.4vw,36px)/.9 var(--display); letter-spacing:-.02em; text-transform:uppercase; font-variant-ligatures:none; color:var(--on); rotate:-2deg; }
+.island .er { display:grid; gap:10px; width:100%; }
+
+/* The stage: a flat paper band with a darker ground strip, the scenes standing on it. Only one
+   scene shows at a time; the others wait right ("next") or have left ("was"), faded out. */
+.island .er-stage { --ground-h:28px; position:relative; height:clamp(120px,11vw,150px); overflow:hidden; border:1px solid var(--ink); border-radius:var(--r-control); background:var(--sky); }
+.island .er-ground { position:absolute; inset:auto 0 0; height:var(--ground-h); background:color-mix(in srgb,var(--sky) 70%,var(--ink)); border-top:1px solid var(--ink); }
+.island .er-scene { position:absolute; z-index:1; left:0; right:0; bottom:calc(var(--ground-h) - 6px); display:flex; justify-content:center; align-items:flex-end; gap:10px;
+  transition:translate .9s var(--ease-spring), opacity .6s linear; }
+.island .er-scene[data-place="now"] { translate:0 0; opacity:1; }
+.island .er-scene[data-place="next"] { translate:45% 0; opacity:0; }
+.island .er-scene[data-place="was"] { translate:-45% 0; opacity:0; }
+.island .er-crowd { display:flex; align-items:flex-end; gap:4px; }
+.island .er-who { display:block; width:clamp(30px,2.8vw,40px); }
+.island .er-who .st { display:block; width:100%; }
+.island .er-art { display:flex; align-items:flex-end; gap:6px; width:clamp(76px,7vw,100px); }
+.island .er-art .st { width:100%; }
+.island .er-cook .er-art { width:clamp(104px,10vw,130px); }
+.island .er-cook .er-art .er-herb { flex:none; width:34%; }
+.island .er-cook .er-art .er-st { flex:1; min-width:0; }
+.island :is(.er-gym,.er-eat) .er-art { width:clamp(90px,8.5vw,116px); }
+
+/* The bar: prev, the caption, next. */
+.island .er-bar { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:10px; }
+.island .er-btn { display:grid; place-items:center; width:44px; height:44px; padding:0; border:2px solid var(--ink); border-radius:50%; background:var(--card); color:var(--ink); box-shadow:0 3px 0 var(--ink); cursor:pointer; }
+.island .er-btn:active { translate:0 3px; box-shadow:0 0 0 var(--ink); }
+.island .er-btn:focus-visible { outline:3px solid var(--apricot); outline-offset:3px; }
+.island .er-cap { margin:0; min-height:2.9em; font:500 16px/1.45 var(--body); color:var(--on); text-align:center; text-wrap:pretty; }
+.island .er-cap-in { display:inline-block; }
+.island .er-when { font:500 12px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--berry-soft); }
+.island .er-voice em { font-style:normal; font-weight:700; color:var(--apricot); } /* apricot on berry 5.2:1 */
+
+/* Motion: the people bob out of step and blink; the caption fades in each scene. */
+@keyframes er-idle { from { translate:0 0; scale:1 1; } to { translate:0 -4px; scale:.97 1.03; } }
+@keyframes er-blink { 0%, 92%, 100% { scale:1 1; } 96% { scale:1 .1; } }
+@keyframes er-in { from { opacity:0; } to { opacity:1; } }
+html:not([data-motion="reduced"]) .island .er-who { transform-origin:50% 100%; animation:er-idle calc(1.1s + var(--k,0) * .25s) ease-in-out calc(var(--k,0) * -.4s) infinite alternate; }
+html:not([data-motion="reduced"]) .island .er-cap-in { animation:er-in .5s linear; }
+html:not([data-motion="reduced"]) .island .er-who .cl-eyes { transform-box:fill-box; transform-origin:50% 50%; animation:er-blink calc(3.4s + var(--k,0) * .9s) linear infinite; }
+/* Reduced motion: no slide, a plain cross-fade, and nothing bobs. */
+html[data-motion="reduced"] .island .er-scene { translate:none; transition:opacity .3s linear; }
 
 @media (max-width:860px) {
   .island .il-window { grid-template-columns:minmax(0,1fr); }
   .island .il-shot img { rotate:0deg; }
 }
 
-/* The poster as a door (island.client.tsx): a link around the image, with the site's focus ring. */
-.island .il-door { display:block; border-radius:20px; }
-.island .il-door:focus-visible { outline:3px solid var(--ring,var(--apricot)); outline-offset:4px; }
-
-/* The confirm popup: portalled to <body>, so these selectors cannot start at .island. It carries
-   data-ground="ink", the section's own ground, so the button and text tokens match it. The
-   unlayered rules here win over the Tailwind utilities in alert-dialog.tsx. */
+/* The door's confirm popup: portalled to <body>, so these selectors cannot start at .island. It
+   carries data-ground="ink" so the button and text tokens match it. The unlayered rules here win
+   over the Tailwind utilities in alert-dialog.tsx. */
 .il-dialog { width:min(480px, calc(100vw - 32px)); max-width:none; display:grid; gap:14px; padding:28px; border:2px solid var(--ink); border-radius:var(--r-card);
   background:var(--ink); color:var(--paper); box-shadow:0 6px 0 var(--apricot); outline:none; }
 .il-dialog .il-dialog-q { margin:0; font:700 clamp(28px,3vw,36px)/1 var(--display); letter-spacing:-.02em; color:var(--paper); }

@@ -19,18 +19,6 @@ html:not([data-motion="reduced"]) .cs { animation:cs-bob calc(4.6s + var(--k) * 
 .cs-experience .cs-2 { --cs:68px; --r:8deg; right:3%; bottom:28px; }
 @media (max-width:699px) { .cs-experience .cs-1 { top:calc(var(--header-h) + 8px); bottom:auto; left:auto; right:4%; } .cs-experience .cs-2 { display:none; } }
 
-/* Off the clock (in the pinned frame): a moon high on the right, the herb pot under the name tag */
-.cs-offclock .cs-1 { --cs:76px; --r:-14deg; right:4%; top:calc(var(--header-h) + 24px); }
-.cs-offclock .cs-2 { --cs:60px; --r:6deg; right:calc(4% + 96px); top:calc(var(--header-h) + 40px); }
-/* a phone (the stacked panels): only the moon, small, above the eyebrow */
-@media (max-width:699px) { .cs-offclock .cs-1 { --cs-sm:44px; top:28px; } .cs-offclock .cs-2 { display:none; } }
-
-/* Contact: an envelope and a paper plane in the card's empty right side, under the résumé button */
-.cs-contact .cs-1 { --cs:84px; --r:-8deg; right:11%; top:330px; }
-.cs-contact .cs-2 { --cs:64px; --r:14deg; right:4.5%; top:290px; }
-@media (max-width:699px) { .cs-contact .cs-1 { display:none; } .cs-contact .cs-2 { top:70px; right:6%; } }
-
 /* The island: a palm tree and a wave in the clear column between the title and the picture */
 .cs-island .cs-1 { --cs:88px; --r:-6deg; left:32%; top:48px; }
-.cs-island .cs-2 { --cs:68px; --r:8deg; left:34%; bottom:70px; }
-@media (max-width:699px) { .cs-island .cs-1 { --cs-sm:44px; left:auto; right:6%; top:6px; } .cs-island .cs-2 { display:none; } }
+@media (max-width:699px) { .cs-island .cs-1 { --cs-sm:44px; left:auto; right:6%; top:6px; } }

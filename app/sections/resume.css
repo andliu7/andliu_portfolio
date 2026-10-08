@@ -1,0 +1,45 @@
+/* The résumé preview (app/sections/resume.tsx, resume.client.tsx). Every selector starts at
+   .resume, except the dialog, which is portalled to <body>. Prefix: rs-. No animation runs while
+   scrolling: the only motion is the card straightening on hover. */
+section.resume { padding:clamp(40px,6vw,88px) var(--gutter); color:var(--on); }
+
+/* Desktop: the title, line and buttons on the left, the card on the right.
+   Phone: title, then the card, then the buttons. */
+.resume .rs-wrap { display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"text card" "actions card";
+  align-content:center; column-gap:clamp(32px,6vw,96px); row-gap:28px; max-width:1100px; margin:0 auto; }
+.resume .rs-text { grid-area:text; align-self:end; display:grid; gap:18px; min-width:0; }
+.resume .rs-title { margin:0; font-size:clamp(56px,8vw,128px); line-height:.9; color:var(--on); }
+.resume .rs-line { margin:0; max-inline-size:34ch; font:500 clamp(18px,1.5vw,21px)/1.5 var(--body); color:var(--on); }
+.resume .rs-actions { grid-area:actions; align-self:start; display:flex; flex-wrap:wrap; gap:14px; }
+
+/* The card: the page on paper, 2px ink outline, a berry ledge (an ink ledge would vanish on the
+   ink ground), turned a little; it straightens on hover or focus. */
+.resume .rs-card { grid-area:card; display:block; width:min(400px,84vw); padding:0; border:2px solid var(--ink); border-radius:14px; overflow:hidden;
+  background:var(--card); box-shadow:0 10px 0 var(--berry); cursor:zoom-in; rotate:2deg; transition:rotate .6s var(--ease-spring); }
+.resume .rs-card img { display:block; width:100%; height:auto; aspect-ratio:880 / 1139; }
+@media (hover:hover) and (pointer:fine) { .resume .rs-card:hover { rotate:0deg; } }
+.resume .rs-card:focus-visible { rotate:0deg; outline:3px solid var(--ring,var(--apricot)); outline-offset:6px; }
+html[data-motion="reduced"] .resume .rs-card { transition:none; }
+
+@media (max-width:760px) {
+  .resume .rs-wrap { grid-template-columns:minmax(0,1fr); grid-template-areas:"text" "card" "actions"; }
+  .resume .rs-card { justify-self:center; margin-block:4px 10px; }
+  .resume .rs-actions { justify-content:center; gap:10px; }
+  .resume .rs-actions .pill-big { --pill-pad:18px; }
+}
+
+/* ---------- The dialog (portalled to <body>, so not under .resume) ---------- */
+/* Unlayered, so these beat the Tailwind utilities on DialogContent. */
+.rs-dialog { display:flex; flex-direction:column; gap:0; width:min(1000px,calc(100vw - 24px)); max-width:none; height:calc(100dvh - 32px); padding:0;
+  border:2px solid var(--ink); border-radius:var(--r-panel); overflow:hidden; background:var(--ink); color:var(--on); }
+.rs-dialog .rs-bar { display:flex; align-items:center; gap:12px; padding:10px 12px 10px 20px; border-bottom:2px solid var(--berry); }
+.rs-dialog .rs-dialog-title { flex:1; margin:0; font:700 22px/1 var(--display); letter-spacing:-.01em; text-transform:uppercase; color:var(--on); }
+.rs-dialog .rs-close { flex:none; }
+.rs-dialog .rs-frame { flex:1; width:100%; min-height:0; border:0; background:var(--card); }
+.rs-dialog .rs-fallback { flex:1; min-height:0; overflow:auto; display:grid; justify-items:center; gap:14px; padding:16px; }
+.rs-dialog .rs-note { margin:0; max-inline-size:60ch; font:500 17px/1.5 var(--body); color:var(--on); text-align:center; }
+.rs-dialog .rs-fallback img { width:100%; max-width:880px; height:auto; border-radius:10px; background:var(--card); }
+.rs-dialog :focus-visible { outline:3px solid var(--apricot); outline-offset:3px; }
+/* Above the fixed site header (z 60), which would otherwise sit over the dialog's top bar. */
+.rs-dialog, [data-slot="dialog-overlay"]:has(+ .rs-dialog) { z-index:70; }
+html[data-motion="reduced"] :is(.rs-dialog, [data-slot="dialog-overlay"]:has(+ .rs-dialog)) { animation:none; }

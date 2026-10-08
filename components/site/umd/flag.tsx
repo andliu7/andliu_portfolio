@@ -1,46 +1,54 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from '@/components/site/use-reduced-motion';
+import { useAfterLoad } from '@/components/site/after-load';
 
 // The Maryland flag waving behind College Park (Andrew 2026-10-06: "an animated flowing maryland
 // flag ... with a 'flow' like wind blowing it every now and then").
 //
-// Built from the Canvas UI "Cloth" component he pasted (scratchpad cloth-spec.md): the same
-// height-field simulation (a damped wave equation on a grid, driven by travelling wind waves and
-// a slowly varying gust), the same cursor brush, the same fold lighting shaders. The difference:
-// Cloth captured live HTML through an experimental browser API, so here the cloth is textured
-// with the flag drawn once in code (drawMaryland below) on an offscreen 2D canvas. Pinned on the
-// left edge like a flag on a pole. Its contact shadow pass is left out: the cloth is full bleed,
-// so there is nothing for a shadow to fall on.
+// Rendering comes from the Canvas UI "Cloth" component he pasted (scratchpad cloth-spec.md; Canvas
+// UI is MIT + Commons Clause, free to use in a site): its grid mesh, foreshortening and fold
+// lighting shaders. Cloth captured live HTML through an experimental browser API, so here the
+// cloth is textured with the flag drawn once in code (drawMaryland below). Its contact shadow is
+// left out: the cloth is full bleed, so there is nothing for a shadow to fall on.
 //
-// Wind: a low base breeze, and every 5 to 11 seconds a gust that rises over about a second and
-// dies away over a few. Paused off screen and while the tab is hidden. Reduced motion: the
-// simulation runs a few seconds instantly and draws one still, gently folded frame. No WebGL2:
-// the flat flag is drawn with the 2D canvas instead.
+// Motion (reworked 2026-10-07, Andrew: "it should be a couple of wave ripples through the entire
+// flag"): Cloth's wave-equation solver is gone, because driven and reflecting off the hems it
+// broke into local, blotchy jitter. The surface is now a formula of position and time: two to
+// three long waves travel from the pole to the free edge, growing toward the free edge, with a
+// small faster flutter on top. Same input, same shape, so it can never turn chaotic. The cursor
+// gently deepens the waves passing under it. Paused off screen and while the tab is hidden.
+// Reduced motion: one still frame of the same wave.
+//
+// Load reveal (Andrew 2026-10-07: "the maryland page can do a load reveal if it doesn't have the
+// flag rendered"): the canvas exists only once the loader has lifted (useAfterLoad, so WebGL
+// setup never lands in hydration) and within one screen of the viewport, and is removed again
+// (its WebGL context freed) two screens away. Until its first frame is drawn, umd.css clips it
+// away and the section's red shows under the shade; the first frame sets data-ready and it wipes
+// in from the pole. No WebGL2, or shaders that will not compile: the red simply stays.
 //
 // Pattern: everything lives in one useEffect, outside React's render. The GL objects, the arrays
 // and the frame loop are plain variables inside the effect, created on mount and freed by the
 // cleanup it returns; React re-runs it only when the Motion setting changes.
 
 const P = {
-  wind: 1.6, // base breeze between gusts
-  gustPeak: 2.4, // extra wind at the top of a gust
-  speed: 0.55, // playback rate of the simulation
-  amplitude: 40, // fold height, px
-  drape: 26, // billow toward the viewer during a gust, px
-  brush: 1.6, // cursor lift (0 disables)
-  brushSize: 150, // cursor radius, px
-  damping: 1.1,
-  light: 0.55,
+  waves: 2.3, // wavelengths across the cloth, pole to free edge
+  hz: 0.4, // crests per second leaving the pole (a crest crosses in about 6 s)
+  slant: 0.3, // crests lean this many wavelengths from top to bottom, as on a real flag
+  amplitude: 56, // main fold height at the free edge, px
+  ripple: 16, // the same waves bending the pattern up and down, px (what makes them read on a full-bleed flag)
+  flutter: 0.16, // the faster small ripple, as a share of the main wave
+  drape: 22, // a still billow toward the viewer through the middle of the fly, px
+  cursor: 0.35, // how much the waves deepen under the cursor (0 disables)
+  cursorSize: 240, // cursor radius, px
+  light: 0.7,
   sheen: 0.12,
   perspective: 1200,
 };
 
 const SEG = 96;
 const NODES = SEG + 1;
-const DT = 1 / 120;
-const STIFFNESS = 0.55;
-const FORCE_GAIN = 5.0;
+const TAU = Math.PI * 2;
 const MARGIN = 72; // the cloth overhangs the frame on every side, so folds never open a gap
 
 const GOLD = '#FFD200';
@@ -175,7 +183,27 @@ function pixelRatio(el: HTMLElement) {
   return Math.min(ratio, Math.sqrt(8_000_000 / area)); // keep big screens under ~8M pixels
 }
 
+
 export function MarylandFlag({ className }: { className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [near, setNear] = useState(false);
+  const loaded = useAfterLoad();
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    // Two IntersectionObservers with different margins: mount within one screen, unmount beyond
+    // two, so scrolling to and fro at one boundary does not rebuild the GL scene each time.
+    const mount = new IntersectionObserver(([e]) => { if (e.isIntersecting) setNear(true); }, { rootMargin: '100% 0px' });
+    const unmount = new IntersectionObserver(([e]) => { if (!e.isIntersecting) setNear(false); }, { rootMargin: '200% 0px' });
+    mount.observe(el); unmount.observe(el);
+    return () => { mount.disconnect(); unmount.disconnect(); };
+  }, []);
+
+  return <div ref={ref} className={className} aria-hidden="true">{loaded && near && <FlagCanvas />}</div>;
+}
+
+function FlagCanvas() {
   const ref = useRef<HTMLCanvasElement>(null);
   const reduced = useReducedMotion();
 
@@ -194,23 +222,12 @@ export function MarylandFlag({ className }: { className?: string }) {
     };
 
     const gl = canvas.getContext('webgl2', { antialias: true, premultipliedAlpha: true, alpha: true });
-    if (!gl) {
-      // No WebGL2: the flat flag, drawn straight onto the canvas.
-      const draw = () => {
-        const dpr = pixelRatio(host);
-        canvas.width = Math.round(host.clientWidth * dpr); canvas.height = Math.round(host.clientHeight * dpr);
-        const g = canvas.getContext('2d');
-        if (g) drawMaryland(g, canvas.width, canvas.height);
-      };
-      draw();
-      const ro = new ResizeObserver(draw);
-      ro.observe(host);
-      return () => ro.disconnect();
-    }
+    if (!gl) return; // no WebGL2: the placeholder red stays
 
     // ---------- GL setup ----------
+    let vs: WebGLShader, fs: WebGLShader;
+    try { vs = compile(gl, gl.VERTEX_SHADER, VERT); fs = compile(gl, gl.FRAGMENT_SHADER, FRAG); } catch { return; }
     const prog = gl.createProgram()!;
-    const vs = compile(gl, gl.VERTEX_SHADER, VERT), fs = compile(gl, gl.FRAGMENT_SHADER, FRAG);
     gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
     const u = (name: string) => gl.getUniformLocation(prog, name);
     const uRes = u('uRes'), uOut = u('uOut'), uBleed = u('uBleed'), uFocal = u('uFocal'), uLight = u('uLight'), uSheen = u('uSheen');
@@ -244,12 +261,11 @@ export function MarylandFlag({ className }: { className?: string }) {
 
     const tex = gl.createTexture()!;
 
-    // ---------- Simulation state ----------
-    const h = new Float32Array(N), v = new Float32Array(N);
+    // ---------- State ----------
     let W = 1, H = 1, CW = 1, CH = 1; // frame and cloth size, CSS px
-    let ax = 1, ay = 1, K = 1000;
-    let t = 0, gust = 0.4, gustAt = 4 + Math.random() * 4, gustStart = -100;
-    const pointer = { x: -1e4, y: -1e4, sx: -1e4, sy: -1e4, inside: false, speed: 0 };
+    let t = 0;
+    // x, y: the cursor; sx, sy: a softly following copy; k: its strength, eased in and out.
+    const pointer = { x: -1e4, y: -1e4, sx: -1e4, sy: -1e4, inside: false, k: 0 };
 
     const resize = () => {
       const dpr = pixelRatio(host);
@@ -257,10 +273,6 @@ export function MarylandFlag({ className }: { className?: string }) {
       CW = W + MARGIN * 2; CH = H + MARGIN * 2;
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
       gl.viewport(0, 0, canvas.width, canvas.height);
-      // Equal physical wave speed both ways on non-square cells, and a stable explicit step.
-      const cx = CW / SEG, cy = CH / SEG;
-      ax = 1; ay = (cx / cy) ** 2;
-      K = (STIFFNESS * 0.9) / (DT * DT * 2 * (ax + ay));
       gl.bindTexture(gl.TEXTURE_2D, tex);
       gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, flagCanvas(CW, CH));
@@ -271,70 +283,59 @@ export function MarylandFlag({ className }: { className?: string }) {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     };
 
-    // Gusts "every now and then": a slow breathing base (Cloth's own gust curve, scaled down),
-    // plus a gust every 5 to 11 seconds that rises in about a second and decays over a few.
-    const windNow = () => {
-      const base = Math.max(0.55 + 0.35 * Math.sin(t * 0.31 + 1.3) + 0.25 * Math.sin(t * 0.83) * (0.5 + 0.5 * Math.sin(t * 0.17)), 0.15);
-      if (t > gustAt) { gustStart = t; gustAt = t + 5 + Math.random() * 6; }
-      const s = t - gustStart;
-      const g = s < 0 ? 0 : s < 1.1 ? Math.sin((s / 1.1) * Math.PI * 0.5) : Math.exp(-(s - 1.1) / 1.6);
-      return (P.wind * base + P.gustPeak * g) / (P.wind + P.gustPeak);
-    };
-
-    const stepSim = () => {
-      const target = windNow();
-      gust += (target - gust) * 0.02;
-      const force = FORCE_GAIN * gust * 12;
-      const damp = P.damping * 1.6;
-      // The cursor, spring-followed, lifts the cloth under it (Cloth's touchImprint).
-      const sigX = P.brushSize / (CW / SEG), sigY = P.brushSize / (CH / SEG);
-      const bi = ((pointer.sx + MARGIN) / CW) * SEG, bj = ((pointer.sy + MARGIN) / CH) * SEG;
-      const brush = pointer.inside && P.brush > 0 ? P.brush * (0.25 + Math.min(pointer.speed / 900, 1)) : 0;
-      for (let j = 1; j < SEG; j++) {
+    // The surface at time t: height toward the viewer, px, for every grid node. u runs from the
+    // pole (0) to the free edge (1), v from top to bottom.
+    const z = new Float32Array(N);
+    const dy = new Float32Array(N); // vertical shift of each node, px
+    const shapeCloth = () => {
+      const breathe = 0.88 + 0.12 * Math.sin(t * 0.23); // the breeze swells and eases slowly
+      // The cursor, in grid units, and its Gaussian radius.
+      const pu = (pointer.sx + MARGIN) / CW, pv = (pointer.sy + MARGIN) / CH;
+      const ru = P.cursorSize / CW, rv = P.cursorSize / CH;
+      for (let j = 0; j < NODES; j++) {
         const vj = j / SEG;
-        for (let i = 1; i <= SEG; i++) {
-          const k = j * NODES + i;
+        for (let i = 0; i < NODES; i++) {
           const ui = i / SEG;
-          // The free edge has one neighbour on the x side: mirror it.
-          const right = i < SEG ? h[k + 1] : h[k - 1];
-          const lap = (h[k - 1] + right - 2 * h[k]) * ax + (h[k - NODES] + h[k + NODES] - 2 * h[k]) * ay;
-          // Wind: waves travelling away from the pole, stronger toward the free edge.
-          const f = force * Math.pow(ui, 1.2) * (Math.sin(Math.PI * 2 * (3.2 * ui + 0.35 * vj) - t * 3.4) + 0.45 * Math.sin(Math.PI * 2 * (1.4 * vj + 0.8 * ui) - t * 2.1));
-          let acc = K * lap + f - damp * v[k];
-          if (brush) {
-            const dx = (i - bi) / sigX, dy = (j - bj) / sigY;
-            const d2 = dx * dx + dy * dy;
-            if (d2 < 9) acc += brush * 60 * Math.exp(-d2 * 0.5);
+          // Main wave: long crests leaving the pole, leaning slightly, deepening toward the fly.
+          const main = Math.sin(TAU * (P.waves * ui + P.slant * vj - P.hz * t));
+          // Flutter: a shorter, faster ripple that only shows near the free edge.
+          const flutter = P.flutter * ui * Math.sin(TAU * (2.1 * P.waves * ui - 0.2 * vj - 2.3 * P.hz * t) + 1.7);
+          // A slow sway along the height, so crests are not ruler straight.
+          const sway = 0.12 * Math.sin(TAU * (0.7 * vj - 0.11 * t) + 2.5 * ui);
+          let lift = 1;
+          if (pointer.k > 0.001) {
+            const du = (ui - pu) / ru, dv = (vj - pv) / rv;
+            lift += P.cursor * pointer.k * Math.exp(-(du * du + dv * dv) * 0.5);
           }
-          v[k] += acc * DT;
+          const env = Math.pow(ui, 0.8) * breathe * lift; // zero at the pole, full at the free edge
+          const billow = P.drape * Math.sin(ui * Math.PI * 0.6) * Math.sin(vj * Math.PI) - P.drape * 0.4;
+          z[j * NODES + i] = P.amplitude * env * (main + flutter + sway) + billow;
+          // A quarter wave behind the height, as a rippling flag rises into each crest.
+          dy[j * NODES + i] = P.ripple * env * Math.cos(TAU * (P.waves * ui + P.slant * vj - P.hz * t));
         }
       }
-      for (let k = 0; k < N; k++) h[k] += v[k] * DT;
-      // Top and bottom rows follow their neighbours (free hem); the pole column stays at rest.
-      for (let i = 0; i < NODES; i++) { h[i] = h[NODES + i]; h[SEG * NODES + i] = h[(SEG - 1) * NODES + i]; }
-      for (let j = 0; j < NODES; j++) { h[j * NODES] = 0; v[j * NODES] = 0; }
-      t += DT;
     };
 
-    const z = new Float32Array(N);
+    const rowRun = new Float32Array(NODES);
     const composeVertices = () => {
+      shapeCloth();
       const cx = CW / SEG, cy = CH / SEG;
       for (let j = 0; j < NODES; j++) {
-        const vj = j / SEG;
-        for (let i = 0; i < NODES; i++) {
-          const ui = i / SEG;
-          const hang = Math.sin(ui * Math.PI * 0.5) * Math.sin(vj * Math.PI); // billow, zero at the pole
-          z[j * NODES + i] = P.amplitude * Math.tanh(h[j * NODES + i]) + P.drape * hang * (0.3 + 0.7 * gust) - P.drape * 0.3;
-        }
-      }
-      for (let j = 0; j < NODES; j++) {
-        // Foreshortening: a folded row covers less width than its rest length (arc length).
+        // Foreshortening: a sloped stretch of cloth covers less width than its rest length (arc
+        // length), so the texture bunches on the folds. Each row is then stretched back to its rest
+        // width so the free edge never pulls in and opens a gap at the frame's right side.
         let run = 0;
+        rowRun[0] = 0;
+        for (let i = 1; i < NODES; i++) {
+          const dz = z[j * NODES + i] - z[j * NODES + i - 1];
+          run += Math.sqrt(Math.max(cx * cx - dz * dz, cx * cx * 0.25));
+          rowRun[i] = run;
+        }
+        const stretch = (SEG * cx) / run;
         for (let i = 0; i < NODES; i++) {
           const k = j * NODES + i;
-          if (i > 0) { const dz = z[k] - z[k - 1]; run += Math.sqrt(Math.max(cx * cx - dz * dz, cx * cx * 0.25)); }
-          offset[k * 2] = run - i * cx;
-          offset[k * 2 + 1] = 0;
+          offset[k * 2] = rowRun[i] * stretch - i * cx;
+          offset[k * 2 + 1] = dy[k];
           const l = z[j * NODES + Math.max(i - 1, 0)], r = z[j * NODES + Math.min(i + 1, SEG)];
           const up = z[Math.max(j - 1, 0) * NODES + i], dn = z[Math.min(j + 1, SEG) * NODES + i];
           let nx = -(r - l) / (2 * cx), ny = (dn - up) / (2 * cy);
@@ -360,40 +361,43 @@ export function MarylandFlag({ className }: { className?: string }) {
       gl.bindVertexArray(null);
     };
 
+    // The first drawn frame uncovers the canvas top to bottom (umd.css). Leaving the screen clears
+    // data-ready, so the reveal slides again each time the section comes back (Andrew 2026-10-07:
+    // "always slides when you get to it so that it doesn't look like it glitches into the flag").
+    const reveal = () => { if (!('ready' in canvas.dataset)) canvas.dataset.ready = ''; };
+
     resize();
 
     if (reduced) {
-      // One still frame: let the breeze shape a few gentle folds, then draw once.
-      gustAt = 1e9;
-      for (let s = 0; s < 600; s++) stepSim();
+      // One still frame of the same wave, at a moment where its folds sit evenly across the flag.
+      t = 1.1;
       render();
+      reveal();
       const ro = new ResizeObserver(() => { resize(); render(); });
       ro.observe(host);
       return () => { ro.disconnect(); destroy(); };
     }
 
     // ---------- The loop ----------
-    let raf = 0, last = 0, acc = 0, onScreen = false;
+    let raf = 0, last = 0, onScreen = false;
     const frame = (now: number) => {
       raf = 0;
       const dt = Math.min((now - (last || now)) / 1000, 0.05);
       last = now;
-      const follow = 1 - Math.exp(-dt * 12);
-      const px = pointer.sx;
+      // The cursor's effect trails it softly and fades in and out over about half a second.
+      const follow = 1 - Math.exp(-dt * 4);
       pointer.sx += (pointer.x - pointer.sx) * follow; pointer.sy += (pointer.y - pointer.sy) * follow;
-      pointer.speed = dt > 0 ? Math.abs(pointer.sx - px) / dt : 0;
-      acc += dt * P.speed;
-      let steps = 0;
-      while (acc >= DT && steps < 8) { stepSim(); acc -= DT; steps++; }
-      if (steps === 8) acc = 0;
+      pointer.k += ((pointer.inside ? 1 : 0) - pointer.k) * (1 - Math.exp(-dt * 3));
+      t += dt;
       render();
+      reveal();
       schedule();
     };
     const schedule = () => { if (!raf && onScreen && !document.hidden) raf = requestAnimationFrame(frame); };
     // last = 0 makes the first frame after a pause count as zero time, so the cloth does not jump.
     const pause = () => { if (raf) cancelAnimationFrame(raf); raf = 0; last = 0; };
 
-    const io = new IntersectionObserver(([entry]) => { onScreen = entry.isIntersecting; if (onScreen) schedule(); else pause(); });
+    const io = new IntersectionObserver(([entry]) => { onScreen = entry.isIntersecting; if (onScreen) schedule(); else { pause(); delete canvas.dataset.ready; } });
     io.observe(canvas);
     const onVisibility = () => (document.hidden ? pause() : schedule());
     document.addEventListener('visibilitychange', onVisibility);
@@ -412,6 +416,7 @@ export function MarylandFlag({ className }: { className?: string }) {
       gl.deleteBuffer(gridBuf); gl.deleteBuffer(dataBuf); gl.deleteBuffer(offBuf); gl.deleteBuffer(ibo);
       gl.deleteVertexArray(vao); gl.deleteTexture(tex);
       gl.deleteProgram(prog); gl.deleteShader(vs); gl.deleteShader(fs);
+      gl.getExtension('WEBGL_lose_context')?.loseContext(); // free the context now, not at garbage collection
     }
 
     return () => {
@@ -422,7 +427,7 @@ export function MarylandFlag({ className }: { className?: string }) {
     };
   }, [reduced]);
 
-  return <canvas ref={ref} className={className} aria-hidden="true" />;
+  return <canvas ref={ref} />;
 }
 
 export default MarylandFlag;

@@ -6,30 +6,22 @@
    and the object labels are ink on --card (17.1:1). The bar is ink on --card (17.1:1).
    --fs is the name's font size. hero.client.tsx measures the name in the display face once the
    fonts are loaded and sets --fs-js so the name fills the stage on one line, capped so the band
-   and the room for the bar and tape above the seam fit the first screen on a stage 640px and wider. */
+   and the room for the bar above the seam fit the first screen on a stage 640px and wider. */
 
 .hero {
   --elastic:cubic-bezier(.34,1.56,.64,1);
-  /* A full screen of sky. The bar and the tape (.hero-cross) sit on the seam with the UMD
-     section, half over each, so the hero is one screen less the bar's lower half: on arrival the
-     whole bar shows at the foot of the screen and the flag starts right under it. The bottom
-     padding is the room the cross takes above the seam (the bottom tape's tilted left end, --tan
-     over half its width, plus its half height, plus --raise), so the tape runs just under the
-     résumé button and never covers it or the objects. --raise lifts the bottom tape off the seam
-     by one and a half times its 52px height (Andrew 2026-10-06) on a screen 900px tall or more,
-     less on a shorter one and none at 720px: every pixel of it comes out of the name's size.
-     --w is the cross's width, the screen plus 48px a side. --tilt is the tape's angle and --tan
-     its tangent: 8deg, and 12deg on a narrow screen, where a shallow angle over 486px would lay
-     the tape almost exactly over the bar. */
-  --w:calc(100vw + 96px); --tilt:8deg; --tan:.14; --raise:clamp(0px, calc((100svh - 720px) * .43), 78px);
+  /* A full screen of sky. The bar (.hero-strip) sits on the seam with the UMD section, half over
+     each, so the hero is one screen less the bar's lower half: on arrival the whole bar shows at
+     the foot of the screen and the flag starts right under it. The bottom padding is the bar's
+     upper half plus a gap, so it never covers the résumé button or the objects. */
   min-height:calc(100svh - 27px);
   display:flex; flex-direction:column; justify-content:flex-start;
-  padding:calc(var(--header-h) + 12px) var(--gutter) calc(var(--w) * var(--tan) / 2 + 28px + var(--raise));
-  position:relative; /* the offset parent HeroFit measures against, and the cross hangs from */
-  z-index:2; /* above the UMD section, so the cross's lower half lies over the flag */
+  padding:calc(var(--header-h) + 12px) var(--gutter) 60px;
+  position:relative; /* the offset parent HeroFit measures against, and the bar hangs from */
+  z-index:2; /* above the UMD section, so the bar's lower half lies over the flag */
   isolation:isolate; /* the sky's z-index 0 stays inside the hero */
   color:var(--ink);
-  overflow-x:clip; /* nothing in the hero may widen the page (the tilted tape, an object) */
+  overflow-x:clip; /* nothing in the hero may widen the page (an object) */
 }
 @supports (transition-timing-function:linear(0,1)) {
   /* Slush's spring (slush skill, --ease-elastic): overshoots to 1.14 at a quarter, settles */
@@ -40,14 +32,13 @@
 
 .hero .hero-band {
   position:relative; z-index:1;
-  width:100%; max-width:1440px; margin:0 auto;
+  /* auto block margins centre the band in the sky between the header and the bar, on every
+     screen, so the name, card and objects sit on the screen's middle with even room above and below */
+  width:100%; max-width:1440px; margin:auto;
   --on:var(--ink); --on-2:var(--ink-2); --kw:var(--berry);
 }
 /* Wide: room above the stage so the top objects' labels clear the fixed header's buttons */
 @media (min-width:760px) { .hero .hero-band { padding-top:32px; } }
-/* Narrow: the content is shorter than the screen, so the band sits in the middle of the free sky
-   above the bar instead of leaving a bare stretch under the résumé button */
-@media (max-width:759px) { .hero .hero-band { margin-block:auto; } .hero { --tilt:12deg; --tan:.213; } }
 /* The sky fills the whole hero, full bleed, under the band and the bar */
 .hero .hero-sky { position:absolute; inset:0; z-index:0; }
 
@@ -70,8 +61,8 @@
 /* ---------- The glass card (Andrew 2026-10-06: "still want the glass background") ----------
    Frosted glass over the sky: a light white tint, blurred and a little more saturated behind,
    a 1.5px white rim, a bright line along the top edge and a soft drop. The name, the objects and
-   the button sit in it; the objects hang over its edges (they are positioned on the name), and
-   the tapes and the bar draw over its foot at the seam. The tint is 38% white, so the brightest
+   the button sit in it; the objects hang over its edges (they are positioned on the name). It
+   keeps inside the gutters, so the screen's edges show the same strip of sky on both sides. The tint is 38% white, so the brightest
    thing behind it is white cloud (#fff) and the darkest the sky (#87ceeb): the glass reads from
    #b9e1f2 to #fff. Ink on #b9e1f2 is 13.6:1, berry (LIU, display size) 5.6:1 and ink on white 18:1.
    Without backdrop-filter, a translucent paper fill instead. */
@@ -82,8 +73,6 @@
   background:rgb(251 248 241 / .82);
   box-shadow:inset 0 1.5px 0 rgb(255 255 255 / .85), inset 0 24px 40px -28px rgb(255 255 255 / .7), 0 24px 60px -24px rgb(18 20 43 / .28);
 }
-/* a wide screen: the card reaches 32px into the gutters, so the name inside it stays as wide as the stage */
-@media (min-width:720px) { .hero .hero-card { margin-inline:calc(-1 * min(var(--gutter), 32px)); } }
 @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
   .hero .hero-card { background:rgb(255 255 255 / .38); -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4); }
 }
@@ -142,71 +131,34 @@ html[data-motion="reduced"] .hero .hero-liu-track { transition:none; }
 .hero .hero-about { display:grid; gap:14px; justify-items:center; }
 .hero .hero-portrait { width:min(100%,220px); rotate:-3deg; }
 
-/* ---------- The cross: the bar and the caution tape in an X, on the seam ----------
+/* ---------- The bar: full bleed, cream, level on the seam ----------
    Andrew: the bar level and on the seam with the UMD flag, "so it looks like a cleaner
-   transition", the tape crossing it at an angle. Both sit in one grid cell, so their centres line
-   up; the tape turns --tilt about its middle and is lifted --raise, so it crosses the bar right of
-   centre and runs just under the résumé button on the left.
-   Wider than the screen by 48px a side, so the tilted ends hang past it; .hero clips them. */
-.hero .hero-cross {
-  position:absolute; z-index:2; left:-48px; right:-48px; top:100%;
-  transform:translateY(-50%); /* centred on the seam; the entrance's rise uses translate, not this */
-  display:grid; align-items:center;
-}
-.hero .hero-cross > * { grid-area:1 / 1; }
-.hero .hero-cross > .hero-tape { translate:0 calc(-1 * var(--raise)); } /* lifted off the seam; it still crosses the bar toward the right */
-
-/* ---------- The bar: full bleed, cream, level on the seam, short true facts ---------- */
+   transition"; 2026-10-07: no yellow tape ("the yellow is too catchy"), the white bar instead gets
+   a caution border and the caution lines as small boxes. Hung from the hero's foot and centred on
+   the seam (transform); the entrance's rise uses translate, not this.
+   Edges: a 5px hazard stripe inside each 1px ink rule, ink at 35% on cream, so it reads as a
+   caution edge without shouting. The facts and the boxes are ink on --card (17:1). */
 .hero .hero-strip {
-  position:relative; z-index:1;
-  display:flex; align-items:center; min-width:0; min-height:52px;
-  background:var(--card); color:var(--ink); border-block:1px solid var(--ink);
+  --hazard:repeating-linear-gradient(-45deg,rgb(18 20 43 / .35) 0 5px,transparent 5px 10px);
+  position:absolute; z-index:2; left:0; right:0; top:100%;
+  transform:translateY(-50%);
+  display:flex; align-items:center; min-width:0; min-height:62px; padding-block:5px;
+  background:var(--hazard) top / 100% 5px no-repeat, var(--hazard) bottom / 100% 5px no-repeat, var(--card);
+  color:var(--ink); border-block:1px solid var(--ink);
   overflow:clip;
 }
 .hero .hero-mq { flex:1 1 auto; min-width:0; overflow-x:clip; }
 .hero .hero-mq-item { display:inline-flex; align-items:center; gap:22px; padding-right:22px; white-space:nowrap; font:700 14px/50px var(--mono); letter-spacing:.06em; text-transform:uppercase; font-variant-ligatures:none; }
 .hero .hero-mq-dot { width:9px; height:9px; fill:var(--berry); }
+/* A caution box: outlined in ink, a short hazard stripe down its left end, cream inside */
+.hero .hero-mq-box { padding:0 10px 0 18px; border:1.5px solid var(--ink); border-radius:4px; line-height:30px;
+  background:var(--hazard) left / 8px 100% no-repeat, var(--card); }
+.hero .hero-mq-code { text-transform:none; letter-spacing:0; }
 /* Reduced motion: no scroll; the list wraps, centred, and reads once */
 html[data-motion="reduced"] .hero .hero-mq .mq { overflow:visible; }
 html[data-motion="reduced"] .hero .hero-mq .mq-track { flex-shrink:1; flex-wrap:wrap; justify-content:center; padding:8px calc(var(--gutter) + 48px); }
 html[data-motion="reduced"] .hero .hero-mq .mq-item { flex-shrink:1; }
-html[data-motion="reduced"] .hero .hero-mq-item { line-height:32px; }
-
-/* ---------- The caution tape: yellow, black hazard stripes on both edges, scrolling right ----------
-   Black on #ffd200 is 13:1; the CAUTION box is the same pair reversed. */
-.hero .hero-tape {
-  --tape:#ffd200; --tape-ink:#111;
-  --hazard:repeating-linear-gradient(-45deg,var(--tape-ink) 0 8px,var(--tape) 8px 16px);
-  position:relative; z-index:2;
-  display:flex; align-items:center; min-width:0;
-  padding-block:8px; /* the stripes */
-  background:var(--hazard) top / 100% 8px no-repeat, var(--hazard) bottom / 100% 8px no-repeat, var(--tape);
-  color:var(--tape-ink);
-  rotate:var(--tilt); overflow:clip; /* about its middle, so it crosses the bar mid-screen */
-  box-shadow:0 6px 0 rgb(18 20 43 / .18); /* a flat drop, so the tape reads as lying over the bar */
-}
-.hero .hero-tape-mq { flex:1 1 auto; min-width:0; overflow-x:clip; }
-.hero .hero-tape-item { display:inline-flex; align-items:center; gap:14px; padding-right:28px; white-space:nowrap; font:700 15px/36px var(--mono); letter-spacing:.06em; text-transform:uppercase; font-variant-ligatures:none; }
-.hero .hero-tape-code { text-transform:none; letter-spacing:0; }
-.hero .hero-tape-word { padding:0 10px; background:var(--tape-ink); color:var(--tape); line-height:28px; letter-spacing:.14em; }
-/* Reduced motion: still (the Marquee drops its copy and its scroll); the tape still crosses the bar */
-
-/* ---------- The right tape: a second run of the tape, in from the right edge, down to the left ----------
-   Andrew: "comes in from the right side around the bottom of the flashcard icon ... crosses
-   through the bottom caution tape (this one the text goes the opposite direction)". It turns
-   -12deg (-22deg on a phone) about its right end, which sits 48px past the screen's edge at
-   --tape-y, set by HeroFit (hero.client.tsx) from the measured objects, labels and button so it
-   passes under all of them.
-   The clip box is the hero itself, so the tape ends at the seam, under the cream bar, and never
-   reaches the UMD section; z-index 1 before the band in the page order, so the band (the name, the
-   chip, the objects, the button) draws over it, and the cross (z-index 2) does too. */
-.hero .hero-tape-clip { position:absolute; inset:0; z-index:1; overflow:clip; pointer-events:none; }
-.hero .hero-tape-right {
-  position:absolute; right:-48px; top:var(--tape-y, 72%); width:calc(100vw + 160px);
-  translate:0 -50%; rotate:-12deg; transform-origin:100% 50%;
-}
-/* a phone: steeper, or over 390px it would never reach the bottom tape */
-@media (max-width:759px) { .hero .hero-tape-right { rotate:-22deg; } }
+html[data-motion="reduced"] .hero .hero-mq-item { line-height:36px; }
 
 /* ---------- Entrance (Slush motion, gated on the loader's html.is-loaded) ---------- */
 .hero .hero-c { transition:opacity .3s linear calc(.1s + var(--i) * 30ms),transform .65s var(--elastic) calc(.1s + var(--i) * 30ms); }

@@ -42,7 +42,8 @@ function buildPanels(): PanelView[] {
     const summary = total !== null
       ? copy.summary({ total, first: String(points[0].x), last: String(points[points.length - 1].x) })
       : null;
-    const hero = total !== null && primary ? { value: total, title: primary.title, unit: primary.unit, shownUnit: primary.shownUnit } : null;
+    const heroTitle = copy.hero ?? primary?.title ?? '';
+    const hero = total !== null && primary ? { value: total, title: heroTitle, unit: primary.unit, shownUnit: unitFor(heroTitle, primary.unit) } : null;
 
     // Counts by kind are parts of one whole, so they draw as a unit grid (one square per
     // memory) beside the big number instead of as one more chart tab.

@@ -1,10 +1,11 @@
 'use client';
 import type { CSSProperties } from 'react';
-import { ArrowUpRight } from 'lucide-react';
-import { EXPERIENCE_HEAD, JOBS, MICROCOPY, RESUME, sectionAttrs } from '@/lib/site';
+import { ArrowDown } from 'lucide-react';
+import { EXPERIENCE_HEAD, JOBS, MICROCOPY, sectionAttrs } from '@/lib/site';
 import { FlipHeading } from '@/components/site/flip-heading';
 import { PillFaces } from '@/components/site/pill-faces';
 import { useHorizontalScroll } from '@/components/site/use-horizontal-scroll';
+import { AutoplayButton, EscHint } from '@/components/site/strip-autoplay';
 import './experience.css';
 import { CornerStickers } from '@/components/site/corner-stickers/corner-stickers';
 
@@ -18,6 +19,13 @@ import { CornerStickers } from '@/components/site/corner-stickers/corner-sticker
 // on an ink chip, then the role, the organisation and its JOBS line. Above each card, on the
 // track, a dot and the month it started, derived from JOBS[].sort (yyyymm), so no date is typed
 // twice. Under reduced motion or on phones it is a plain vertical list.
+//
+// The way through (2026-10-07): while the strip pins, the Esc hint and the red/green auto-play
+// button (components/site/strip-autoplay.tsx) sit under the progress bar. The hook does the gliding.
+//
+// The hand-off to Contact (2026-10-07): Contact's ground is ink, this one berry-deep. A soft
+// gradient toward ink grows in along the frame's foot as the strip runs (experience.css), so the
+// change of ground arrives prepared, not as a hard edge.
 //
 // A client component ('use client'): the hook reads the scroll position. The server still
 // renders the whole list.
@@ -33,7 +41,7 @@ const started = (sort: number) => {
 };
 
 export default function Experience() {
-  const { runwayRef, trackRef } = useHorizontalScroll<HTMLOListElement>();
+  const { runwayRef, trackRef, pinned } = useHorizontalScroll<HTMLOListElement>();
 
   return (
     <section {...sectionAttrs('experience')} ref={runwayRef} className="experience" aria-labelledby="experience-title">
@@ -44,9 +52,13 @@ export default function Experience() {
             <span className="eyebrow">{EXPERIENCE_HEAD.eyebrow}</span>
             <FlipHeading id="experience-title" text={EXPERIENCE_HEAD.headline} fit={false} className="display xp-title" />
           </div>
-          <div className="xp-meter" aria-hidden="true">
-            <span className="xp-hint">{EXPERIENCE_HEAD.hint}</span>
-            <span className="xp-bar"><span className="xp-bar-fill" /></span>
+          <div className="xp-side">
+            <div className="xp-meter" aria-hidden="true">
+              <span className="xp-hint">{EXPERIENCE_HEAD.hint}</span>
+              <span className="xp-bar"><span className="xp-bar-fill" /></span>
+            </div>
+            {/* Only while the strip pins: the Esc hint and the auto-play button (strip-autoplay.tsx). */}
+            {pinned && <div className="xp-ctl"><EscHint /><AutoplayButton /></div>}
           </div>
         </div>
         <ol className="xp-track" ref={trackRef}>
@@ -63,8 +75,8 @@ export default function Experience() {
             </li>
           ))}
           <li className="xp-item xp-end" data-hs-item="">
-            <a className="pill pill-berry xp-resume" href={RESUME} target="_blank" rel="noreferrer">
-              <PillFaces>{MICROCOPY.resume} <ArrowUpRight size={18} aria-hidden="true" /></PillFaces>
+            <a className="pill pill-berry xp-resume" href="#resume">
+              <PillFaces>{MICROCOPY.resumeShort} <ArrowDown size={18} aria-hidden="true" /></PillFaces>
             </a>
           </li>
         </ol>

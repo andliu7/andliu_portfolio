@@ -15,16 +15,16 @@ import './umd.css';
 // card that tilts and magnifies on hover, and an original cartoon terrapin deadlifting (no
 // Testudo; its shirt carries an original slab M) who sweats when pressed (sweaty-terrapin.tsx).
 //
-// The pin is plain CSS (umd.css): the section is one viewport plus a runway, and its stage is
-// position: sticky, so the stage holds the frame while the runway scrolls by, with a gold
-// "Contents below" pill pointing on; then it releases into #contents. Reduced motion drops the
-// runway and the arrow's bounce. A server component: the flag, the tilts, the terrapin button and
-// the gradient card are the client islands inside it.
+// One screen tall and not pinned (Andrew 2026-10-07: "don't make the umd page stick"); a gold
+// "Contents below" pill with a bobbing arrow sits at its foot. Reduced motion stills the arrow.
+// A server component: the flag, the tilts, the terrapin button and the gradient card are the
+// client islands inside it.
 
 export default function Umd() {
   return (
     <section {...sectionAttrs('umd')} className="umd" aria-labelledby="umd-title">
       <div className="umd-stage">
+        {/* The flag starts its WebGL after the loader lifts and only near the viewport (flag.tsx) */}
         <MarylandFlag className="umd-flag" />
         <div className="umd-shade" aria-hidden="true" />
         <div className="umd-grid">

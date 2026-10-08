@@ -27,19 +27,6 @@ const Calendar = () => (
   <svg viewBox="0 0 48 48"><rect x="6" y="9" width="36" height="33" rx="5" fill="#fbf8f1" {...S} /><path d="M6 14a5 5 0 0 1 5-5h26a5 5 0 0 1 5 5v5H6z" fill="#916BBF" {...S} />
     <path d="M15 5v8M33 5v8" fill="none" {...S} strokeWidth={3} /><rect x="13" y="25" width="6" height="5" rx="1" fill="#FFD98A" /><rect x="22" y="25" width="6" height="5" rx="1" fill={INK} opacity=".25" /><rect x="31" y="25" width="6" height="5" rx="1" fill={INK} opacity=".25" /><rect x="13" y="33" width="6" height="5" rx="1" fill={INK} opacity=".25" /></svg>
 );
-// The clock knocked off its hinges: the face swung down on one hinge, the other pin popped out
-// and falling, the hands askew, a spring sticking out of the gap
-const OffClock = () => (
-  <svg viewBox="0 0 48 48">
-    <path d="M30 9c3-1 5 2 3 4s0 4 3 3 4 2 2 4" fill="none" {...S} />
-    <g className="toc-ic-swing">
-      <circle cx="21" cy="27" r="15" fill="#FFD98A" {...S} /><circle cx="21" cy="27" r="10.5" fill="#fbf8f1" {...S} />
-      <path d="M21 27l-5-6M21 27l7 3" fill="none" {...S} strokeWidth={2.5} />
-      <circle cx="11" cy="14" r="2.6" fill="#F4A7B9" {...S} />
-    </g>
-    <circle cx="40" cy="38" r="2.6" fill="#F4A7B9" {...S} /><path d="M37 33l2 1M42 32l-1 2" fill="none" {...S} />
-  </svg>
-);
 const Hand = () => (
   <svg viewBox="0 0 48 48"><g className="toc-ic-wave">
     <path d="M14 26V12a3 3 0 0 1 6 0v10V8a3 3 0 0 1 6 0v14V10a3 3 0 0 1 6 0v14-8a3 3 0 0 1 6 0v14c0 9-6 14-13 14-6 0-9-3-12-7l-6-8a3 3 0 0 1 5-4z" fill="#FFCF98" {...S} />
@@ -56,7 +43,6 @@ export const ROW_ICONS: Record<string, () => JSX.Element> = {
   '#work': Folder,
   '#impact': Bars,
   '#experience': Calendar,
-  '#offclock': OffClock,
   '#contact': Hand,
   '#island': Controller,
 };

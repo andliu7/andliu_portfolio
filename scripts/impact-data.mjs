@@ -277,11 +277,57 @@ async function ffPanel() {
   return { id: 'guide', series };
 }
 
+// Every repo Andrew authors in, for the contribution skyline. dashboard/reference/* are other
+// people's projects cloned for study, so they are not listed.
+const OWN_REPOS = ['andliu-portfolio', 'blueberry_game', 'dashboard', 'ff_technical_instructions/repo2', 'grignard/flashcard-template', 'grignard/grignard-app-source', 'mechanism_trainer', 'second-brain'];
+// His commit addresses: school, personal and the GitHub noreply one. Matched, never written out.
+const OWN_EMAIL = /^(andliu@terpmail\.umd\.edu|zeus\.andrewliu@gmail\.com|\d+\+andliu7@users\.noreply\.github\.com)$/i;
+
+/** Commits per day across OWN_REPOS, at most the 53 weeks up to his latest commit. */
+function allPanel() {
+  const byHash = new Map();
+  const found = [];
+  for (const repo of OWN_REPOS) {
+    const dir = join(projects, repo);
+    if (!existsSync(join(dir, '.git'))) { skip(`all.days ${repo}`, 'not a git checkout'); continue; }
+    const out = execFileSync('git', ['-C', dir, 'log', '--branches', '--format=%H %ad %ae', '--date=short'], { encoding: 'utf8' });
+    for (const line of out.split('\n')) {
+      const [hash, date, email] = line.trim().split(' ');
+      if (hash && OWN_EMAIL.test(email ?? '')) byHash.set(hash, date); // a hash in two repos counts once
+    }
+    found.push(repo);
+  }
+  const dates = [...byHash.values()].sort();
+  if (!dates.length) { skip('all.days, all.streak', 'no commits by Andrew in any listed repo'); return { id: 'all', series: [] }; }
+
+  // Columns are weeks starting Monday, so the window starts on a Monday: the later of his first
+  // commit's week and 52 weeks before his latest commit's week. It ends on the latest commit day.
+  const last = dates[dates.length - 1];
+  const start = toDate(Math.max(toMs(monday(dates[0])), toMs(monday(last)) - 52 * 7 * DAY));
+  const perDay = new Map();
+  for (const d of dates) if (d >= start) perDay.set(d, (perDay.get(d) ?? 0) + 1);
+  const points = [];
+  for (let ms = toMs(start); ms <= toMs(last); ms += DAY) points.push({ x: toDate(ms), y: perDay.get(toDate(ms)) ?? 0 });
+
+  let streak = 0;
+  let run = 0;
+  for (const p of points) { run = p.y > 0 ? run + 1 : 0; streak = Math.max(streak, run); }
+
+  const src = `git log --branches in ${found.length} of my repos, my own addresses only, deduped by hash`;
+  return {
+    id: 'all',
+    series: [
+      { id: 'all.days', kind: 'days', unit: 'commits', dim: 'date', points, source: `${src}, counted per day` },
+      { id: 'all.streak', kind: 'stat', unit: 'days', value: streak, source: `${src}: the longest run of days with a commit` },
+    ],
+  };
+}
+
 // ---------- build, guard, write or check ----------
 
 async function build() {
   const titles = [];
-  const panels = [await brainPanel(titles), blueberryPanel(), await ffPanel()].filter(p => p.series.length);
+  const panels = [await brainPanel(titles), blueberryPanel(), await ffPanel(), allPanel()].filter(p => p.series.length);
   const data = { generated: new Date().toISOString(), panels };
   const json = `${JSON.stringify(data, null, 1)}\n`;
 

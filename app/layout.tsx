@@ -39,7 +39,8 @@ export const metadata: Metadata = {
 //  - html[data-mascot="off"]: the visitor turned the following berry off in the menu.
 //  - html[data-loader="skip"]: the URL has a hash, or the loader already played in this tab.
 //    Storage reads are in try/catch; a throw means "not seen", so the loader shows.
-//  - is-loaded after 4s regardless, in case nothing else ever sets it.
+//  - is-loaded after 5s regardless, in case nothing else ever sets it (the loader lifts by 5s at
+//    the latest: its 3.5s cap plus a 1.5s timer for a tab that gets no animation frames).
 //  - reveal-off after 6s if the director never started (its bundle failed): every hidden
 //    [data-reveal] start state is gated on its absence, so the text can never stay invisible.
 const BOOT = `(function(){var d=document.documentElement;d.classList.add('js');
@@ -50,7 +51,7 @@ var k=null;try{k=localStorage.getItem('${PREFS.mascot}')}catch(e){}
 if(k==='off')d.setAttribute('data-mascot','off');
 var s=false;try{s=!!sessionStorage.getItem('${PREFS.seen}')}catch(e){}
 if(location.hash||s)d.setAttribute('data-loader','skip');
-setTimeout(function(){d.classList.add('is-loaded')},4000);
+setTimeout(function(){d.classList.add('is-loaded')},5000);
 setTimeout(function(){if(!d.classList.contains('motion-ready'))d.classList.add('reveal-off')},6000);})();`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

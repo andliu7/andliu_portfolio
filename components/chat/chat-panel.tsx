@@ -70,7 +70,7 @@ const EXTRAS: Record<string, Extra> = {
   education: { images: [], links: [about] },
   dental: { images: [], links: [about] },
   skills: { images: [], links: [about] },
-  personal: { images: [], links: [jump('offclock')] },
+  personal: { images: [], links: [jump('island')] },
   contact: { images: [], links: CONTACT.links },
 };
 

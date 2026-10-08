@@ -1,0 +1,51 @@
+/* The contribution skyline (contribution-skyline.tsx). It takes .impact-chart's height, so it
+   swaps in for the Impact placeholder with no layout jump, and .impact-tip for its tooltip.
+   Ramp: --card mixed toward --berry-2 and on to --berry-deep, picked for even steps of about
+   1.6:1 between neighbours. On --card: 1 is 3.09:1, 2 is 4.99, 3 is 7.99, 4 is 12.37, so every
+   commit day passes 3:1 (WCAG 1.4.11). An empty day (0) is a --paper slot with a 1px edge at
+   3.24:1, told apart from day 1 by shape as well as lightness. The canvas reads these same
+   properties, so the legend and the drawing cannot drift. The legend's words are --ink-2 on
+   --card (10.40:1). */
+
+.skyline {
+  --sk-0:var(--paper); --sk-edge:#8d898e; --sk-1:#7989db; --sk-2:#5264c3; --sk-3:#394790; --sk-4:#232c60;
+  display:grid; grid-template-rows:minmax(0,1fr) auto; gap:6px; font-family:var(--display);
+}
+.skyline-stage { position:relative; min-height:0; }
+.skyline-canvas { position:absolute; inset:0; display:block; font-family:var(--display); cursor:default; touch-action:pan-y; border-radius:8px; }
+.skyline-canvas:focus-visible { outline:3px solid var(--ring, var(--berry)); outline-offset:2px; }
+.skyline-tip { position:absolute; left:0; top:0; z-index:1; pointer-events:none; white-space:nowrap; }
+.skyline-tip[hidden] { display:none; }
+
+.skyline-bar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 16px; }
+.skyline-legend { display:inline-flex; align-items:center; gap:4px; margin:0; font:500 13px/1 var(--display); color:var(--ink-2); }
+.skyline-legend :first-child { margin-left:4px; }
+.skyline-key { width:12px; height:12px; border-radius:3px; background:var(--k); }
+.skyline-key:last-of-type { margin-right:4px; }
+.skyline-key[data-l="0"] { --k:var(--sk-0); box-shadow:inset 0 0 0 1px var(--sk-edge); }
+.skyline-key[data-l="1"] { --k:var(--sk-1); }
+.skyline-key[data-l="2"] { --k:var(--sk-2); }
+.skyline-key[data-l="3"] { --k:var(--sk-3); }
+.skyline-key[data-l="4"] { --k:var(--sk-4); }
+
+/* 2D / 3D: one pill, a sliding berry thumb with Blueberry's ledge (paper on berry 6.55:1, the
+   same pressed look as the selected .impact-tab). Each half is a 44px target. */
+.skyline-toggle { position:relative; display:inline-grid; grid-template-columns:1fr 1fr; border:2px solid var(--line); border-radius:var(--r-pill); background:var(--card); }
+.skyline-thumb { position:absolute; inset:0 auto 0 0; width:50%; border-radius:var(--r-pill); background:var(--berry); box-shadow:0 3px 0 var(--berry-deep); transition:translate var(--dur-enter) var(--ease-spring); }
+.skyline-toggle[data-mode="3d"] .skyline-thumb { translate:100% 0; }
+.skyline-toggle button {
+  position:relative; min-width:var(--hit); min-height:var(--hit); padding:0 14px; border:0; border-radius:var(--r-pill); background:none;
+  font:700 14px/1 var(--display); color:var(--ink-2); cursor:pointer; transition:color var(--dur-ui) var(--ease-ui),transform var(--dur-press) var(--ease-ui);
+}
+.skyline-toggle button[aria-pressed="true"] { color:var(--paper); }
+.skyline-toggle button:active { transform:translateY(2px); }
+@media (hover:hover) and (pointer:fine) {
+  .skyline-toggle button[aria-pressed="false"]:hover { color:var(--berry); }
+}
+
+/* Reduced motion: the thumb jumps, nothing presses (the canvas skips its morph in JS). */
+html[data-motion="reduced"] :is(.skyline-thumb, .skyline-toggle button) { transition:none; }
+html[data-motion="reduced"] .skyline-toggle button:active { transform:none; }
+@media (prefers-reduced-motion:reduce) {
+  :is(.skyline-thumb, .skyline-toggle button) { transition:none; }
+}

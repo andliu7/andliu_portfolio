@@ -126,6 +126,16 @@
 .impact .impact-fig-title { margin:0; font:600 18px/1.3 var(--display); color:var(--ink); }
 .impact .impact-fig-cap { margin:0; font:400 15px/1.4 var(--body); color:var(--ink-2); max-width:62ch; }
 .impact .impact-chart { width:100%; height:260px; min-height:220px; }
+.impact .impact-chart-days { height:500px; } /* the contribution skyline, legend and toggle included: tall enough for 60px days, so 11 weeks fill the stage */
+/* The skyline panel (data-wide, 2026-10-07): one column. The number and the tiles share one row
+   on top, the skyline takes the full width under them, so the left column no longer stands about
+   400px taller than its content next to a 500px chart. The streak tile sits right beside the
+   number. The skyline is shorter here too: about 38px days flat instead of 60, and the whole card
+   fits one screen at 1440x900. */
+.impact .impact-card[data-wide] { grid-template-columns:minmax(0,1fr); gap:16px; }
+.impact .impact-card[data-wide] .impact-side { flex-direction:row; flex-wrap:wrap; align-items:flex-end; justify-content:flex-start; gap:12px 48px; }
+.impact .impact-card[data-wide] .impact-stats { flex:0 1 auto; grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:minmax(150px,auto); }
+.impact .impact-card[data-wide] .impact-chart-days { height:420px; }
 .impact .impact-chart-ph { border-radius:12px; background:color-mix(in srgb, var(--line) 35%, transparent); }
 .impact .impact-chart-wrap { display:grid; gap:6px; }
 .impact .impact-chart :is(svg, .recharts-surface):focus { outline:none; }
@@ -194,6 +204,10 @@ html.js:not([data-motion="reduced"]) .impact .impact-card[data-live] .impact-sta
   /* The caption stays for screen readers; the title names the chart on a phone. */
   .impact .impact-fig-cap { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
   .impact .impact-chart { height:220px; }
+  .impact .impact-chart-days { height:260px; }
+  .impact .impact-card[data-wide] .impact-side { flex-direction:column; align-items:stretch; }
+  .impact .impact-card[data-wide] .impact-stats { grid-auto-flow:row; grid-template-columns:repeat(3, minmax(0,1fr)); }
+  .impact .impact-card[data-wide] .impact-chart-days { height:260px; }
   .impact .impact-h .roll-row { flex-wrap:wrap; row-gap:4px; padding:8px 0; }
   .impact .roll-meta { flex-basis:100%; }
   .impact .impact-summary { display:block; text-align:left; font-size:15px; }

@@ -13,14 +13,11 @@
 .hob {
   --h:calc(var(--fs) * .7);
   position:absolute; left:var(--x); width:calc(var(--h) * var(--ar)); height:var(--h);
-  /* --t (travel.tsx) slides it out by its own side of the screen: 0 home, 1 gone, turning as it goes */
-  transform:translate(-50%,-50%) translateX(calc(var(--side) * var(--t, 0) * 75vw)) rotate(calc(var(--side) * var(--t, 0) * 40deg));
+  transform:translate(-50%,-50%);
   rotate:var(--r); pointer-events:auto;
   display:block; color:var(--ink); text-decoration:none; border-radius:16px;
-  transition:translate .45s var(--ease-elastic),rotate .45s var(--ease-elastic),transform .6s var(--ease-elastic);
+  transition:translate .45s var(--ease-elastic),rotate .45s var(--ease-elastic);
 }
-.hob-pencil, .hob-phone { --side:-1; }
-.hob-laptop, .hob-card { --side:1; }
 .hob-pencil, .hob-laptop { top:calc(var(--pt) + var(--fs) * .17 - var(--h) / 2); }
 .hob-phone, .hob-card { top:calc(var(--pt) + var(--fs) * var(--low, .7) + var(--h) / 2); }
 
@@ -28,19 +25,20 @@
    pencil top left, laptop top right, phone bottom left, cards bottom right, each over the outer
    edge of the first or last letter, so the letters' middles stay clear. A little smaller than
    before relative to the name, which grew (Andrew: "make my name larger too"), so the top two and
-   their labels stay under the header and the bottom two above the tapes. */
-.hob-pencil { --ar:.4167; --h:calc(var(--fs) * .8); --x:7%; --r:-14deg; }
-.hob-laptop { --ar:1.375; --h:calc(var(--fs) * .66); --x:90%; --r:6deg; }
-.hob-phone  { --ar:.5833; --h:calc(var(--fs) * .76); --x:6%; --r:-8deg; }
+   their labels stay under the header and the bottom two above the tape. Each pair sits the same
+   distance from the name's middle on both sides (Andrew 2026-10-07: "center ... icons a bit more"). */
+.hob-pencil { --ar:.4167; --h:calc(var(--fs) * .8); --x:9%; --r:-14deg; }
+.hob-laptop { --ar:1.375; --h:calc(var(--fs) * .66); --x:91%; --r:6deg; }
+.hob-phone  { --ar:.5833; --h:calc(var(--fs) * .76); --x:8%; --r:-8deg; }
 .hob-card   { --ar:1.0833; --h:calc(var(--fs) * .64); --x:92%; --r:8deg; }
 
 /* A narrow stage (a phone): the name is small, so the objects keep a floor size, sit a little
    further from the letters' middles, and their labels show only on keyboard focus */
 @container hero (max-width:759px) {
-  .hob-pencil { --h:max(94px, calc(var(--fs) * 1.04)); --x:10%; }
-  .hob-laptop { --h:max(78px, calc(var(--fs) * .88)); --x:82%; }
-  .hob-phone  { --h:max(91px, calc(var(--fs) * .96)); --x:12%; }
-  .hob-card   { --h:max(78px, calc(var(--fs) * .83)); --x:84%; }
+  .hob-pencil { --h:max(94px, calc(var(--fs) * 1.04)); --x:12%; }
+  .hob-laptop { --h:max(78px, calc(var(--fs) * .88)); --x:84%; }
+  .hob-phone  { --h:max(91px, calc(var(--fs) * .96)); --x:13%; }
+  .hob-card   { --h:max(78px, calc(var(--fs) * .83)); --x:85%; }
   .hob-phone, .hob-card { --low:.82; }
   .hob-label { opacity:0; pointer-events:none; }
   .hob:focus-visible .hob-label { opacity:1; }
@@ -98,33 +96,3 @@ html.js.is-loaded:not([data-motion="reduced"]) .hob-art {
 }
 html.js.is-loaded:not([data-motion="reduced"]) .hob-label { animation:hob-label-in .3s ease-out calc(1.55s + var(--k) * 120ms) backwards; }
 html[data-motion="reduced"] :is(.hob,.hob-label) { transition:none; }
-html[data-motion="reduced"] .hob { transform:translate(-50%,-50%); }
-
-/* ---------- The flying set (travel.tsx, ObjectsFly) ----------
-   A fixed layer over the page that takes no pointer. travel.tsx gives each object its stop
-   (--fx, --fy: the centre, in screen px, set through `translate` with no transition so it rides
-   with its row) and how far in it is (--p, 0 away, 1 landed). --p drives the hero entrance's
-   spin-fall: from off its own side and above, turning one and a half times about its vertical
-   axis, tilted; a springy transition on `transform` lands it with an overshoot. --sx and --dy say
-   where it comes from (a side and above, or straight down from over the top of the screen), --sc
-   its size at that stop, and --o 0 hides it where it stands. Away (--p near 0) it is transparent. A fixed size: --fs here is not the name's. */
-.hob-fly { position:fixed; inset:0; z-index:50; pointer-events:none; --fs:104px; }
-.hob-fly .hob {
-  left:0; top:0; pointer-events:none;
-  translate:var(--fx, -999px) var(--fy, -999px);
-  transform:translate(-50%,-50%) perspective(600px)
-    translateX(calc(var(--sx, var(--side)) * (1 - var(--p, 0)) * 70vw)) translateY(calc((1 - var(--p, 0)) * var(--dy, -40vh)))
-    rotateY(calc((1 - var(--p, 0)) * 540deg)) rotate(calc(var(--side) * (1 - var(--p, 0)) * 25deg));
-  scale:var(--sc, 1);
-  opacity:clamp(0, calc(var(--p, 0) * 6 * var(--o, 1)), 1);
-  transition:transform .7s var(--ease-elastic),opacity .2s linear,scale .5s var(--ease-elastic);
-}
-.hob-fly .hob[data-landed] { pointer-events:auto; }
-/* the hover lift goes on the art here, since `translate` holds the object's place */
-@media (hover:hover) and (pointer:fine) { .hob-fly .hob:hover { translate:var(--fx) var(--fy); } .hob-fly .hob:hover .hob-art { translate:0 -8px; } }
-.hob-fly .hob:focus-visible { translate:var(--fx) var(--fy); }
-/* labels: small, under every object (they sit beside rows of text), on hover and focus only */
-.hob-fly .hob-label { top:calc(100% + 6px); bottom:auto; opacity:0; transition:opacity .2s ease-out; }
-.hob-fly .hob:is(:hover,:focus-visible) .hob-label { opacity:1; }
-@media (max-width:699px) { .hob-fly { --fs:54px; } }
-html[data-motion="reduced"] .hob-fly .hob { transform:translate(-50%,-50%); opacity:var(--o, 1); transition:none; }

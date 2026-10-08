@@ -60,25 +60,27 @@ html[data-motion="reduced"] .contents .toc-row .toc-arrow { transition:none; tra
    (blueberry.client.tsx), so the button must stand clear of the first of that swing */
 @media (min-width:700px) { .contents .toc-cta { margin-bottom:clamp(80px,14svh,140px); } }
 .contents .toc-cta-line { margin:0; max-inline-size:40ch; font:500 18px/1.5 var(--body); color:var(--on-2); }
+/* The call to action (Andrew 2026-10-07: "make the resume button much bigger"): the hero's
+   FlowButton at one and a half times its size, 132px tall with 39px caps and a 6px ledge, and on
+   a phone 108px with 30px caps, which fits 390px with room to spare. Same berry face and flow. */
+.contents .toc-cta .flow-btn { --flow-h:132px; --flow-fs:39px; --flow-pad:84px; --flow-arr:40px; --flow-edge:32px; --flow-fill:720px; --lip:6px; }
+@media (max-width:479px) { .contents .toc-cta .flow-btn { --flow-h:108px; --flow-fs:30px; --flow-pad:44px; --flow-arr:34px; --flow-edge:16px; } }
 
 /* ---------- Row icons (contents-icons.tsx) ----------
-   44px on a wide screen, 36px on a phone. The hand waves (three rocks about the wrist) and the
-   off-its-hinges clock swings on its one hinge, on row hover and keyboard focus; the hand also
+   44px on a wide screen, 36px on a phone. The hand waves (three rocks about the wrist) on row
+   hover and keyboard focus; it also
    waves once when the section first comes into view (data-seen, contents.client.tsx). The rest
    hop a little. Reduced motion: still. */
 .contents .toc-ic { display:block; width:44px; height:44px; }
 .contents .toc-ic svg { display:block; width:100%; height:100%; overflow:visible; }
 .contents .toc-ic-wave { transform-origin:60% 90%; transform-box:view-box; }
-.contents .toc-ic-swing { transform-origin:30% 30%; transform-box:view-box; rotate:14deg; }
 @keyframes toc-wave { 0%,100% { rotate:0deg; } 15%,55% { rotate:-16deg; } 35%,75% { rotate:14deg; } }
-@keyframes toc-wobble { 0%,100% { rotate:14deg; } 25% { rotate:28deg; } 50% { rotate:6deg; } 75% { rotate:20deg; } }
 .contents .toc-ic { transition:translate .3s var(--ease-spring); }
 html:not([data-motion="reduced"]) .contents .toc-row:is(:hover,:focus-visible) .toc-ic { translate:0 -3px; }
 html:not([data-motion="reduced"]) .contents[data-seen] .toc-ic-wave { animation:toc-wave .9s ease-in-out .9s; }
 /* a second name, so a hover after the first wave starts it again */
 @keyframes toc-wave-h { 0%,100% { rotate:0deg; } 15%,55% { rotate:-16deg; } 35%,75% { rotate:14deg; } }
 html:not([data-motion="reduced"]) .contents .toc-row:is(:hover,:focus-visible) .toc-ic-wave { animation:toc-wave-h .9s ease-in-out; }
-html:not([data-motion="reduced"]) .contents .toc-row:is(:hover,:focus-visible) .toc-ic-swing { animation:toc-wobble .8s ease-in-out; }
 @media (max-width:900px) { .contents .toc-ic { width:36px; height:36px; } }
 
 /* ---------- The compass (contents.client.tsx, CompassSpin) ----------

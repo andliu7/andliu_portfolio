@@ -11,7 +11,7 @@ import './flow-button.css';
 
 export function FlowButton({ href, text, className = '' }: { href: string; text: string; className?: string }) {
   return (
-    <a className={`pill pill-berry flow-btn ${className}`} href={href} target="_blank" rel="noreferrer">
+    <a className={`pill pill-berry flow-btn ${className}`} href={href} {...(href.startsWith('#') ? {} : { target: '_blank', rel: 'noreferrer' })}>
       <ArrowRight className="flow-arr flow-arr-in" aria-hidden="true" />
       <span className="flow-text">{text}</span>
       <span className="flow-circle" aria-hidden="true" />

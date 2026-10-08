@@ -27,10 +27,14 @@ section.contact { padding-top:24px; overflow-x:clip; }
 }
 /* The address itself, set in display type inside the card (Slush's crushed type on a saturated
    card), as the mailto link; Copy email sits beside it. Kept lowercase: it is an address. */
-.contact .ct-email { display:flex; flex-wrap:wrap; align-items:center; gap:12px 18px; margin-top:24px; }
+.contact .ct-email { display:flex; flex-wrap:wrap; align-items:center; gap:12px 18px; margin-top:16px; }
 .contact .ct-mail { font-size:clamp(16px,2.6cqi,32px); /* 24 Fira characters at .6em each: small enough to stay on one line from 320px up */ line-height:1.1; text-transform:none; overflow-wrap:anywhere; text-decoration:underline; text-decoration-thickness:3px; text-underline-offset:.16em; text-decoration-color:var(--berry); }
 .contact .ct-mail:hover { color:var(--berry); }
 .contact .ct-note { margin-top:8px; font:500 17px/1.5 var(--body); color:var(--on-2); }
+/* The invitation under the headline, first person, at reading width (ink on apricot 12.6:1). */
+.contact .ct-invite { max-inline-size:52ch; margin:-8px 0 0; font:500 clamp(19px,1.7cqi,24px)/1.45 var(--body); color:var(--on); }
+/* "Email me" (the berry primary, white on berry 8.1:1) and Copy email, under the address. */
+.contact .ct-actions { margin-top:14px; }
 
 /* About only: the pill back home, at the card's bottom left. */
 .contact .ct-home { margin:0 clamp(24px,3.2vw,48px) clamp(24px,3.2vw,48px); }
@@ -54,3 +58,99 @@ section.contact { padding-top:24px; overflow-x:clip; }
 .contact .ct-pill:has(.ct-social) { padding:0; }
 .contact .ct-social { min-height:var(--hit); padding:.16em .42em; color:inherit; font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:-.03em; }
 .contact .ct-social .sbtn-icon { width:.8em; height:.8em; }
+
+/* ---------- The page pins (Andrew 2026-10-07: "the let's compare notes page is meant to be
+   sticky, not the card"). The frame (card, stack band and toys) is one screen tall and sticks to
+   the top of the screen while the section scrolls a short runway under it (the ::after spacer:
+   position:sticky only moves within the section's content box, so the runway has to be content,
+   not padding), then lets go into the island finale. No JavaScript. Only where the whole frame
+   fits on screen, and never under reduced motion, where it is a plain stack. ---------- */
+.contact .ct-frame { position:relative; }
+@media (min-width:900px) and (min-height:760px) {
+  html:not([data-motion="reduced"]) section#contact { padding-top:0; }
+  html:not([data-motion="reduced"]) section#contact .ct-frame { position:sticky; top:0; display:flex; flex-direction:column; justify-content:center; min-height:100svh; padding-top:16px; }
+  html:not([data-motion="reduced"]) section#contact::after { content:''; flex:none; height:clamp(220px,36svh,380px); }
+  html:not([data-motion="reduced"]) section#contact .ct-mq { margin-block:28px 24px; }
+  section#contact .ct-mq { position:relative; z-index:1; }
+}
+
+/* ---------- The toys (app/sections/contact.client.tsx): the envelope and the paper plane in the
+   card's empty right side. They bob (as the corner stickers do), dance once per hover, and play a
+   scene on click. Reduced motion: still, no dance, no scene. ---------- */
+.contact .ct-toys { position:absolute; inset:0; z-index:1; pointer-events:none; }
+.contact .ct-toy { position:absolute; display:block; width:var(--s); height:var(--s); padding:0; border:0; background:none; cursor:pointer; pointer-events:auto; rotate:var(--r); touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+.contact .ct-toy-art { position:relative; display:block; width:100%; height:100%; }
+.contact .ct-toy svg { display:block; width:100%; height:100%; overflow:visible; }
+.contact .ct-envelope { --s:84px; --r:-8deg; --k:0; right:11%; top:306px; }
+.contact .ct-plane { --s:64px; --r:14deg; --k:1; right:4.5%; top:266px; }
+@media (max-width:699px) {
+  .contact .ct-envelope { display:none; }
+  .contact .ct-plane { --s:52px; right:6%; top:46px; }
+}
+@keyframes ct-bob { from { translate:0 0; rotate:calc(var(--r) - 3deg); } to { translate:0 -8px; rotate:calc(var(--r) + 3deg); } }
+html:not([data-motion="reduced"]) .contact .ct-toy { animation:ct-bob calc(4.6s + var(--k) * .9s) ease-in-out calc(var(--k) * -1.7s) infinite alternate; }
+
+/* The dance: a wiggle-hop, once each time the pointer arrives (the animation runs while :hover
+   holds and restarts on the next hover). The card's other icons dance with them: the GitHub and
+   LinkedIn marks, the mail and copy icons. */
+@keyframes ct-dance {
+  0% { transform:none; }
+  20% { transform:translateY(-10px) rotate(-12deg) scale(1.06); }
+  40% { transform:translateY(0) rotate(10deg); }
+  60% { transform:translateY(-5px) rotate(-6deg); }
+  80% { transform:rotate(3deg); }
+  100% { transform:none; }
+}
+html:not([data-motion="reduced"]) .contact .ct-toy:not([data-play]):hover .ct-toy-art,
+html:not([data-motion="reduced"]) .contact :is(.ct-social, .ct-cta, .copy-email):is(:hover, :focus-visible) svg { animation:ct-dance .7s ease-in-out; }
+
+/* The envelope's scene, 1.9s: a stamp thunks on (the envelope squashes under it), a wind-up, it
+   is shipped off up and to the right past the page edge, and a fresh, unstamped one drops back in. */
+.contact .ct-stamp { position:absolute; right:12%; top:27%; width:24%; aspect-ratio:1; border:2px dashed var(--ink); border-radius:3px; background:var(--apricot); outline:3px solid var(--apricot); opacity:0; rotate:-8deg; }
+@keyframes ct-stamp {
+  0% { opacity:0; transform:scale(2.6) rotate(-24deg); }
+  14% { opacity:1; transform:scale(.9) rotate(-4deg); }
+  20%, 58% { opacity:1; transform:none; }
+  62%, 100% { opacity:0; transform:none; }
+}
+@keyframes ct-ship {
+  0%, 10% { transform:none; }
+  15% { transform:translateY(5px) scale(1.08,.86); }
+  24% { transform:none; }
+  38% { transform:translateX(-14px) rotate(-8deg); animation-timing-function:cubic-bezier(.5,0,.9,.4); }
+  58% { opacity:1; transform:translate(60vw,-26vh) rotate(24deg); }
+  62% { opacity:0; transform:translate(70vw,-30vh) rotate(28deg); }
+  63% { opacity:0; transform:translateY(-48px) scale(.5); }
+  80% { opacity:1; transform:translateY(6px) scale(1.04); }
+  90% { transform:translateY(-3px); }
+  100% { opacity:1; transform:none; }
+}
+html:not([data-motion="reduced"]) .contact .ct-envelope[data-play] .ct-toy-art { animation:ct-ship 1.9s ease-in-out both; }
+html:not([data-motion="reduced"]) .contact .ct-envelope[data-play] .ct-stamp { animation:ct-stamp 1.9s ease-out both; }
+
+/* The plane's scene, 1.7s: a wind-up, off up and to the right along a curve, then back in from
+   the far side of the page, gliding home. */
+@keyframes ct-fly {
+  0% { transform:none; }
+  14% { transform:translate(-12px,8px) rotate(-10deg); }
+  32% { transform:translate(12vw,-14vh) rotate(-20deg); }
+  48% { opacity:1; transform:translate(30vw,-32vh) rotate(-28deg); }
+  52% { opacity:0; transform:translate(36vw,-38vh) rotate(-30deg); }
+  53% { opacity:0; transform:translate(-100vw,14vh) rotate(4deg); }
+  58% { opacity:1; transform:translate(-90vw,12vh) rotate(2deg); }
+  82% { transform:translate(-14vw,-3vh) rotate(-6deg); }
+  100% { opacity:1; transform:none; }
+}
+html:not([data-motion="reduced"]) .contact .ct-plane[data-play] .ct-toy-art { animation:ct-fly 1.7s ease-in-out both; }
+
+/* ---------- The confetti from Copy email (app/copy-email.tsx): each piece flies out on its own
+   direction and spin (CSS variables set at click time) and falls away, then is removed. Ink
+   outlined, in the site's fills. Never rendered under reduced motion. ---------- */
+.contact .copy-wrap { position:relative; display:inline-flex; }
+.contact .ct-confetti { position:absolute; left:50%; top:50%; z-index:2; pointer-events:none; }
+.contact .ct-confetti i { position:absolute; left:0; top:0; width:var(--w); height:calc(var(--w) * .6); margin:calc(var(--w) * -.3) 0 0 calc(var(--w) / -2); border:1.5px solid var(--ink); border-radius:2px; background:var(--c); animation:ct-confetti 1.1s cubic-bezier(.2,.7,.4,1) forwards; }
+@keyframes ct-confetti {
+  0% { opacity:1; transform:translate(0,0) rotate(0) scale(.4); }
+  50% { opacity:1; transform:translate(var(--dx),var(--dy)) rotate(calc(var(--r) * .5)) scale(1); }
+  100% { opacity:0; transform:translate(calc(var(--dx) * 1.25),calc(var(--dy) + 90px)) rotate(var(--r)); }
+}

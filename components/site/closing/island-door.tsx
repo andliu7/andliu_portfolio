@@ -4,14 +4,14 @@ import { ISLAND, MICROCOPY } from '@/lib/site';
 import { getLenis } from '@/app/smooth';
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
-// The island poster as a door (Andrew 2026-10-06): clicking it asks before leaving the page.
-// It is a real link to the game (ISLAND.src), so without JavaScript it simply goes there; with
-// JavaScript the click opens a confirm popup instead. The popup is components/ui/alert-dialog.tsx
-// (Base UI): it traps focus inside, closes on Esc, and hands focus back to the poster on close.
+// The island poster as a door (Andrew 2026-10-06), in the island finale (app/sections/island.tsx):
+// clicking it asks before leaving the page. It is a real link to the game (ISLAND.src), so without
+// JavaScript it simply goes there; with JavaScript the click opens a confirm popup instead. The popup
+// is components/ui/alert-dialog.tsx (Base UI): it traps focus inside, closes on Esc, and hands focus
+// back to the poster on close. Styles are in app/sections/island.css.
 // Pattern: a controlled dialog. `open` lives here in state; the dialog reports Esc through
 // onOpenChange and the "stay" button sets it false, so this component stays the one source of truth.
-// Pattern: children through a client component. island.tsx (a server component) renders the <img>
-// and passes it in as children, so the image markup is still built on the server.
+// Pattern: children as a slot. The caller passes the <img> in as children, so this stays a door.
 
 export function IslandDoor({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);

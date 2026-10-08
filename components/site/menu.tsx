@@ -3,15 +3,14 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { flushSync } from 'react-dom';
 import {
   A11Y, ABOUT, CONTACT, EXPERIENCE_HEAD, GITHUB, IMPACT, IMPACT_HEAD, ISLAND, JOBS, LINKEDIN,
-  MICROCOPY, NAV, PROJECTS, RESUME, WORK_HEAD,
+  MICROCOPY, NAV, PROJECTS, WORK_HEAD,
 } from '@/lib/site';
 import { FlipLink } from '@/components/ui/flip-links';
 import { freezeScroll } from '@/app/smooth';
 import { Switch } from './switch';
-import { PillFaces } from './pill-faces';
 import { Portrait } from './portrait';
 import { TwoVoice } from './type';
-import { EVENTS, PREFS, emit, readPref, writePref } from './handoffs';
+import { EVENTS, PREFS, on, readPref, writePref } from './handoffs';
 import { useReducedMotion } from './use-reduced-motion';
 import { useFinePointer } from './use-fine-pointer';
 import { SocialButton } from './social-button';
@@ -114,14 +113,15 @@ export function Menu({ onClose, home }: Props) {
       if (event.key === 'Escape') { event.preventDefault(); requestClose(true); return; }
       if (event.key !== 'Tab') return;
       // The focus trap: Tab past the last control wraps to the first, Shift+Tab the other way.
-      const items = Array.from(panel.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'));
+      // The header's Résumé, which stays beside the close button, comes first (it is first in the DOM).
+      const items = Array.from(document.querySelectorAll<HTMLElement>('.site-header .header-resume, #site-menu a[href], #site-menu button:not([disabled])'));
       if (!items.length) return;
       const first = items[0];
       const last = items[items.length - 1];
       if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     };
-    // Links in the menu, and in the header that stays above it (the wordmark, Visit Blueberry).
+    // Links in the menu, and in the header that stays above it (Résumé).
     const onLinkClick = (event: MouseEvent) => {
       const link = (event.target as Element | null)?.closest('a');
       if (!link || !(panel.contains(link) || link.closest('.site-header'))) return;
@@ -158,13 +158,14 @@ export function Menu({ onClose, home }: Props) {
     writePref(PREFS.mascot, on ? 'on' : 'off');
   };
 
-  // Straight to the chat, no circle: the chat panel opens at once and takes focus, and a menu
-  // still shrinking over it would hold its focus trap a moment longer.
-  const ask = () => {
+  // Ask hides while the menu is open, but the chat can still be asked for (EVENTS.chatRequest). When it opens,
+  // close the menu straight away (no circle): the chat panel takes focus, and a menu still
+  // shrinking over it would hold its focus trap a moment longer. on() returns its unsubscribe, which
+  // is this effect's cleanup.
+  useEffect(() => on(EVENTS.chatOpen, () => {
     closingRef.current = true;
     onClose(false);
-    emit(EVENTS.chatRequest);
-  };
+  }), [onClose]);
 
   return (
     <div ref={panelRef} id="site-menu" className="menu" role="dialog" aria-modal="true" aria-label={A11Y.menuDialog} data-ground="berry-deep">
@@ -183,8 +184,8 @@ export function Menu({ onClose, home }: Props) {
           ))}
         </nav>
         <div className="menu-small">
-          <a className="pill pill-berry" href={RESUME} target="_blank" rel="noreferrer"><PillFaces>{MICROCOPY.resume}</PillFaces></a>
-          <button type="button" className="pill pill-light" onClick={ask}><PillFaces>{MICROCOPY.ask}</PillFaces></button>
+          {/* Résumé and Ask stay in the header's top right while the menu is open (Andrew, 2026-10-07),
+              so the menu no longer repeats them here. */}
           <SocialButton className="pill pill-light" href={GITHUB} label="GitHub" kind="github" />
           <SocialButton className="pill pill-light" href={LINKEDIN} label="LinkedIn" kind="linkedin" />
         </div>

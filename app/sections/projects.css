@@ -1,57 +1,59 @@
-/* Projects (SITE-PLAN.md 4.5), style pass 2026-10-06. Every selector starts with .work, the
-   section root. Ground berry-deep: --on paper (12.58:1), --on-2 berry-soft (9.54:1), --kw apricot.
-   Spreads and cards are saturated sticker-fill panels (the Stage tile tokens) with a 1.5px ink
-   outline (Slush: outlines, no shadows). Each carries data-ground="paper" (berry buttons) and
-   then every text role inside is re-pointed to ink, because berry and paper both fail on these
-   fills: ink on tile-teal 5.52, tile-pink 5.43, tile-gold 7.54, tile-leaf 6.75, tile-apricot
-   7.11:1 (all AA). Body text stops at 48ch (Karla runs about 1.3 characters per ch: 60 to 64 per line, measured). Display type is Fira Code 700
-   (--display), small labels --mono.
-   Reduced motion is html[data-motion="reduced"] (see app/globals.css). */
+/* Projects (SITE-PLAN.md 4.5), rebuilt 2026-10-07 as an index and a fan of cards. Every selector
+   starts with .work, the section root. Ground berry-deep: --on paper (12.58:1), --on-2 berry-soft
+   (9.54:1), --kw apricot. The cards are saturated sticker fills with a 1.5px ink outline and an
+   ink ledge; each carries data-ground="paper" and re-points every text role to ink, because berry
+   and paper both fail on these fills: ink on tile-teal 5.52, tile-pink 5.43, tile-gold 7.54,
+   tile-leaf 6.75, tile-apricot 7.11:1 (all AA). The caption is card with ink text (17.06:1).
+   Display type is Fira Code 700 (--display), small labels --mono.
+   Reduced motion is html[data-motion="reduced"] (see app/globals.css); the fan itself switches to
+   data-mode="row" then (components/ui/project-fan.tsx). */
 
 .work {
   --ease-elastic: cubic-bezier(.34,1.56,.64,1);
   --tile-line: 1.5px solid var(--ink);
-  display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(56px, 7cqi, 112px);
-  padding: clamp(48px, 6cqi, 96px) var(--gutter) clamp(72px, 8cqi, 128px);
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(40px, 5cqi, 80px);
+  padding: clamp(48px, 6cqi, 96px) var(--gutter) clamp(24px, 3cqi, 40px);
   color: var(--on);
   overflow-x: clip;
+}
+/* The seam with the Blueberry chapter (blueberry.css, the hand-off): this section starts under the
+   chapter's rounded foot (pulled up by the corner's size) instead of rising on its own curved
+   edge, and its top pad clears the stack strip that hangs over the seam. */
+.work {
+  margin-top: calc(-1 * var(--work-tuck));
+  padding-top: calc(var(--work-tuck) + 38px + clamp(40px, 5cqi, 80px));
+  background-color: var(--ground);
+  --work-tuck: clamp(40px, 6cqi, 96px);
 }
 @supports (transition-timing-function: linear(0, 1)) {
   .work { --ease-elastic: linear(0, .5737 7.6%, .8382 11.87%, .9463 14.19%, 1.0292 16.54%, 1.0886 18.97%, 1.1258 21.53%, 1.137 22.97%, 1.1424 24.48%, 1.1423 26.1%, 1.1366 27.86%, 1.1165 31.01%, 1.0507 38.62%, 1.0219 42.57%, .9995 46.99%, .9872 51.63%, .9842 58.77%, 1.0011 81.26%, 1); }
 }
-.work [data-fill="sky"] { background: var(--sky); }
-.work [data-fill="apricot"] { background: var(--apricot); }
-.work [data-fill="berry-soft"] { background: var(--berry-soft); }
-.work [data-fill="card"] { background: var(--card); }
 .work [data-fill="tile-teal"] { background: var(--tile-teal); }
 .work [data-fill="tile-gold"] { background: var(--tile-gold); }
 .work [data-fill="tile-pink"] { background: var(--tile-pink); }
 .work [data-fill="tile-leaf"] { background: var(--tile-leaf); }
 .work [data-fill="tile-apricot"] { background: var(--tile-apricot); }
-.work :is(.wk-spread, .wk-card) { --on: var(--ink); --on-2: var(--ink); --kw: var(--ink); --ring: var(--ink); }
+.work :is(.wk-fc, .wk-cap-in) { --on: var(--ink); --on-2: var(--ink); --kw: var(--ink); --ring: var(--ink); }
 
 .work .wk-head { display: grid; gap: 10px; }
 /* With the display title gone the head is one eyebrow, so it sits close over the index instead of a
    whole section gap away (no bare ground). */
-.work .wk-head + .wk-index { margin-top: calc(20px - clamp(56px, 7cqi, 112px)); }
+.work .wk-head + .wk-index { margin-top: calc(20px - clamp(40px, 5cqi, 80px)); }
 /* The section's height floor (SECTIONS budget) would otherwise stretch every row, the head too. */
 .work { align-content: start; }
+/* No floor at all (Andrew 2026-10-07: "cut the screen so that the impact is right after the
+   carousel"). The 4.2-screen floor (section[data-budget="floor"] in app/globals.css) left screens of
+   bare ground under the fan. The fan's pile, fan and gather read the cards' own place on screen
+   (components/ui/project-fan.tsx), not this section's height, so they play the same without it. */
+.work[data-budget="floor"] { min-height: 0; }
 
-/* ---------- the "hover!" sticker (components/site/work/hover-hint.tsx): a tilted apricot tag
-   (ink on apricot 12.6:1) with an ink arrow curling down to row 01's empty middle, so it covers
-   no title, number or kind label (and stays clear of both row ends). It bobs, and fades away for
-   good after the first row hover. Only where hovering exists; still under reduced motion. ---------- */
-.work .wk-head { position: relative; }
-.work .wk-hint { display: none; }
-@media (hover: hover) and (pointer: fine) {
-  .work .wk-hint { position: absolute; z-index: 3; left: 44%; bottom: -46px; display: flex; align-items: flex-start; pointer-events: none; transition: opacity .4s ease, translate .5s var(--ease-elastic); }
-  .work .wk-hint[data-done] { opacity: 0; translate: 0 -10px; }
-}
-.work .wk-hint-tag { order: 2; padding: 7px 14px 8px; border: 1.5px solid var(--ink); border-radius: 14px 14px 14px 4px; background: var(--apricot); color: var(--ink); font: 700 18px/1 var(--display); letter-spacing: -.02em; font-variant-ligatures: none; rotate: -7deg; animation: wk-bob 2.4s ease-in-out infinite; }
-.work .wk-hint-arrow { order: 1; width: 46px; height: 38px; margin: 18px -4px 0 0; fill: none; stroke: var(--apricot); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; animation: wk-bob 2.4s ease-in-out infinite; animation-delay: -.3s; }
-@keyframes wk-bob { 50% { transform: translateY(-5px); } }
-html[data-motion="reduced"] .work :is(.wk-hint-tag, .wk-hint-arrow) { animation: none; }
-html[data-motion="reduced"] .work .wk-hint { transition: none; }
+/* ---------- letters and words that rise (components/site/work/rise.tsx) ----------
+   Each word is a mask; its letters rise out of it on the spring, staggered. The eyebrow plays when
+   the director marks it .is-in; the card titles when the fan first comes up (data-in). The mask's
+   padding is room for the spring's overshoot, so no letter is cut while it bounces. */
+.work .wk-rw { display: inline-block; overflow: hidden; padding: .2em 0 .12em; margin: -.2em 0 -.12em; vertical-align: bottom; white-space: nowrap; }
+.work .wk-ch { display: inline-block; transition: transform .8s var(--ease-elastic) calc(var(--i) * 24ms + var(--rise-delay, 0ms)); }
+html.js:not([data-motion="reduced"]):not(.reveal-off) .work :is(.split:not(.is-in), .wk-fan:not([data-in])) .wk-ch { transform: translateY(115%); }
 
 /* ---------- the index ---------- */
 .work .wk-index { display: grid; padding: 0; margin: 0; list-style: none; }
@@ -77,70 +79,173 @@ html[data-motion="reduced"] .work .wk-hint { transition: none; }
   .work .wk-index .roll-aside { display: none; }
 }
 
-/* ---------- shared: the window, the sticker, the words ---------- */
-.work .wk-visual { min-width: 0; }
-.work .wk-window { overflow: hidden; border: var(--tile-line); border-radius: 20px; background: var(--card); }
-.work .wk-chrome { display: flex; align-items: center; gap: 7px; min-width: 0; padding: 10px 14px; border-bottom: var(--tile-line); }
-.work .wk-chrome i { flex: 0 0 auto; width: 11px; height: 11px; border: var(--tile-line); border-radius: 50%; background: var(--apricot); }
+/* ---------- the Carousel | Desk switch (components/site/work/views.tsx) ---------- */
+.work .wk-views { display: grid; gap: clamp(8px, 1.4cqi, 16px); }
+.work .wk-views-bar { position: relative; z-index: 3; display: flex; justify-content: flex-end; align-items: center; }
+.work .wk-switch { display: inline-flex; gap: 4px; padding: 4px; border: 2px solid var(--on); border-radius: var(--r-pill); }
+.work .wk-switch button { min-height: var(--hit); padding: 0 18px; border: 0; border-radius: var(--r-pill); background: transparent; color: var(--on); font: 600 13px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; font-variant-ligatures: none; cursor: pointer; transition: background-color var(--dur-ui) var(--ease-ui), color var(--dur-ui) var(--ease-ui); }
+/* The chosen view: ink on apricot (12.6:1); the other is paper on the ground (12.58:1). */
+.work .wk-switch button[aria-pressed="true"] { background: var(--apricot); color: var(--ink); }
+.work .wk-switch button:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+
+/* ---------- the "hover!" sticker (components/site/work/hover-hint.tsx): a tilted apricot tag
+   (ink on apricot 12.6:1) in the bar over the fan, its apricot arrow curling down onto the fan's
+   centre card. On a wide screen it sits just right of centre with the arrow on its left; on a
+   phone the switch fills the bar's right half, so it sits at the left with the arrow mirrored.
+   It says "hover!" where hovering exists and "tap!" elsewhere. It bobs, and tucks away for good
+   after the first hover or tap on a card; still under reduced motion. ---------- */
+.work .wk-index-wrap { position: relative; }
+.work .wk-hint { position: absolute; z-index: 3; right: var(--gutter); top: -52px; display: flex; align-items: flex-start; pointer-events: none; transition: opacity .4s ease, translate .5s var(--ease-elastic); }
+.work .wk-hint[data-done] { opacity: 0; translate: 0 -10px; }
+.work .wk-hint-tap { display: none; }
+@media not ((hover: hover) and (pointer: fine)) {
+  .work .wk-hint-hover { display: none; }
+  .work .wk-hint-tap { display: inline; }
+}
+.work .wk-hint-tag { order: 2; padding: 7px 14px 8px; border: 1.5px solid var(--ink); border-radius: 14px 14px 14px 4px; background: var(--apricot); color: var(--ink); font: 700 18px/1 var(--display); letter-spacing: -.02em; font-variant-ligatures: none; rotate: -7deg; animation: wk-bob 2.4s ease-in-out infinite; }
+.work .wk-hint-arrow { order: 1; width: 48px; height: 52px; margin: 18px -4px 0 0; fill: none; stroke: var(--apricot); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; animation: wk-bob 2.4s ease-in-out infinite; animation-delay: -.3s; }
+@keyframes wk-bob { 50% { transform: translateY(-5px); } }
+html[data-motion="reduced"] .work :is(.wk-hint-tag, .wk-hint-arrow) { animation: none; }
+html[data-motion="reduced"] .work .wk-hint { transition: none; }
+
+/* ---------- the fan (components/ui/project-fan.tsx) ----------
+   The frame runs the full width of the screen and fades out at both edges (a mask), so the fan
+   reads as part of a longer row. It reaches --room above and below its place (negative margins,
+   so the layout does not move) because the mask also hides whatever leaves its box: the pile
+   rising from below and a hovered card lifting must stay inside it. The frame takes no pointer
+   (it overlaps the index above); the cards do. JavaScript writes each card's transform. */
+.work .wk-fan { --card-w: clamp(260px, 22cqi, 330px); --card-h: calc(var(--card-w) * 1.35); --room: 25vh; display: grid; gap: clamp(18px, 2.6cqi, 30px); justify-items: center; }
+@container (max-width: 699px) { .work .wk-fan { --card-w: min(68cqi, 280px); --card-h: calc(var(--card-w) * 1.45); } }
+.work .wk-fan-frame {
+  position: relative; z-index: 1; justify-self: stretch;
+  margin: calc(-1 * var(--room)) calc(-1 * var(--gutter)); padding: var(--room) 0;
+  overflow: clip; pointer-events: none; outline: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent);
+}
+@container (max-width: 699px) {
+  .work .wk-fan-frame { -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent); mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent); }
+}
+.work .wk-fan-track { position: relative; height: calc(var(--card-h) + var(--card-w) * .26); margin: 0; padding: 0; list-style: none; }
+.work .wk-fan-frame:focus-visible .wk-fan-track { outline: 3px solid var(--ring); outline-offset: 12px; border-radius: var(--r-tile); }
+.work .wk-fan-card {
+  position: absolute; left: 50%; top: calc(var(--card-w) * .08); width: var(--card-w); height: var(--card-h); margin-left: calc(var(--card-w) / -2);
+  pointer-events: auto; touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: grab;
+  transform-origin: 50% 85%; will-change: transform; scroll-margin-top: calc(var(--header-h) + 16px);
+}
+.work .wk-fan-card:active { cursor: grabbing; }
+.work .wk-fan-card img { -webkit-user-drag: none; }
+/* the card titles rise one card after another */
+.work .wk-fan-card:nth-child(2) { --rise-delay: 70ms; }
+.work .wk-fan-card:nth-child(3) { --rise-delay: 140ms; }
+.work .wk-fan-card:nth-child(4) { --rise-delay: 210ms; }
+.work .wk-fan-card:nth-child(5) { --rise-delay: 280ms; }
+
+/* ---------- a card's face ---------- */
+.work .wk-fc { display: flex; flex-direction: column; gap: 12px; height: 100%; padding: 16px 18px 18px; border: var(--tile-line); border-radius: var(--r-tile); color: var(--ink); box-shadow: 0 8px 0 var(--ink); transition: box-shadow .5s var(--ease-elastic); }
+.work .wk-fan-card[data-hover] .wk-fc { box-shadow: 0 16px 0 var(--ink); }
+.work .wk-fc-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.work .wk-num { font: 700 calc(var(--card-w) * .15)/.8 var(--display); letter-spacing: -.05em; color: transparent; -webkit-text-stroke: 1.5px var(--ink); font-variant-ligatures: none; }
+.work .wk-fc-kind { max-width: 60%; padding-top: 4px; font: 600 11px/1.35 var(--mono); letter-spacing: .08em; text-transform: uppercase; text-align: right; font-variant-ligatures: none; }
+.work .wk-fc-title { margin: auto 0 0; font: 700 calc(var(--card-w) * .077)/1 var(--display); letter-spacing: -.03em; text-transform: uppercase; font-variant-ligatures: none; text-wrap: balance; }
+/* The title links to its own card (#work-<id>): the hero icons and the index find it by that
+   href; in the fan a click on it brings the card round. At least a 44px target. */
+.work .wk-fc-title a { display: flex; align-items: flex-end; min-height: var(--hit); color: inherit; text-decoration: none; border-radius: var(--r-control); }
+/* right of the centre a card's left edge is under its neighbour, so its title sits right */
+.work .wk-fan[data-mode="fan"] .wk-fan-card[data-side="right"] .wk-fc-title { text-align: right; }
+.work .wk-fan[data-mode="fan"] .wk-fan-card[data-side="right"] .wk-fc-title a { justify-content: flex-end; }
+.work .wk-fc-title a:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+/* Picture-led: the picture in a small browser window, the sticker on its corner. */
+.work .wk-fc-pic { position: relative; }
+.work .wk-window { overflow: hidden; border: var(--tile-line); border-radius: 16px; background: var(--card); }
+.work .wk-chrome { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 7px 10px; border-bottom: var(--tile-line); }
+.work .wk-chrome i { flex: 0 0 auto; width: 9px; height: 9px; border: var(--tile-line); border-radius: 50%; background: var(--apricot); }
 .work .wk-chrome i:nth-child(2) { background: var(--sky); }
 .work .wk-chrome i:nth-child(3) { background: var(--berry-soft); }
-.work .wk-url { min-width: 0; margin-left: 8px; padding: 4px 12px; overflow: hidden; border-radius: var(--r-pill); background: var(--paper); font: 500 11px/1.2 var(--mono); letter-spacing: .02em; color: var(--ink-2); white-space: nowrap; text-overflow: ellipsis; font-variant-ligatures: none; }
-.work .wk-media > :is(img, svg, video) { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; }
-/* Every picture grows a little inside its window on hover, on the spring (transform only; the
-   window's overflow clips it, so the frame never moves). Reduced motion: it stays put. */
+.work .wk-url { min-width: 0; margin-left: 6px; padding: 3px 10px; overflow: hidden; border-radius: var(--r-pill); background: var(--paper); font: 500 10px/1.2 var(--mono); letter-spacing: .02em; color: var(--ink-2); white-space: nowrap; text-overflow: ellipsis; font-variant-ligatures: none; }
+/* A fixed 16:10 window; the picture fills it by cropping (object-fit), never by stretching. */
 .work .wk-media { overflow: hidden; }
-.work .wk-media > * { transition: transform .6s var(--ease-elastic); }
-@media (hover: hover) and (pointer: fine) {
-  .work .wk-visual:hover .wk-media > * { transform: scale(1.05); }
-}
+.work .wk-media > :is(img, svg, video) { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; transition: transform .6s var(--ease-elastic); }
+.work .wk-fan-card[data-hover] .wk-media > * { transform: scale(1.05); }
 html[data-motion="reduced"] .work .wk-media > * { transition: none; transform: none; }
-/* The sticker rides the front layer, overlapping the window's lower right corner. Its overhang
-   (14px) is less than the panel's padding, so it is never clipped. */
-.work .wk-visual .tilt-layer:last-child { position: relative; pointer-events: none; }
-.work .wk-sticker { position: absolute; right: -14px; bottom: -14px; width: clamp(60px, 8cqi, 104px); rotate: 9deg; }
+.work .wk-sticker { position: absolute; right: -12px; bottom: -16px; width: calc(var(--card-w) * .2); rotate: 9deg; pointer-events: none; }
 .work .wk-sticker svg { width: 100%; height: auto; }
 
-.work .wk-text { display: grid; gap: 14px; justify-items: start; max-inline-size: 48ch; color: var(--ink); }
-.work .wk-num { font: 700 clamp(56px, 6cqi, 104px)/.8 var(--display); letter-spacing: -.05em; color: transparent; -webkit-text-stroke: 1.5px var(--ink); font-variant-ligatures: none; }
-.work .wk-title { font: 700 clamp(30px, 3.4cqi, 52px)/.95 var(--display); letter-spacing: -.035em; text-transform: uppercase; font-variant-ligatures: none; }
-/* The title is a link to itself (FlipHeading): at least a 44px target even on one short line. */
-.work .wk-title .flip-head { min-height: var(--hit); }
-.work .wk-kind { color: var(--ink); }
-.work .wk-lines { display: grid; gap: 12px; }
-.work .wk-lines p { font: 400 clamp(18px, 1.35cqi, 20px)/1.55 var(--body); color: var(--ink); }
-.work .wk-note { display: inline-block; padding: 8px 16px; border: var(--tile-line); border-radius: 18px; background: var(--paper); font: 400 17px/1.35 var(--body); rotate: -1.5deg; }
-.work .wk-tags { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0; list-style: none; }
-.work .wk-tag { display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border: var(--tile-line); border-radius: var(--r-pill); background: color-mix(in srgb, var(--paper) 70%, transparent); font: 500 12px/1 var(--mono); letter-spacing: .04em; text-transform: uppercase; font-variant-ligatures: none; }
-.work .wk-actions { margin-top: 6px; }
+/* Text-led (the animation pipeline): the title comes first and the steps fill the card, tile,
+   name and line per step, running down. The spec line is the caption's second line. */
+.work .wk-fc[data-led="text"] .wk-fc-title { order: 1; margin-top: 4px; }
+.work .wk-fc-flow { order: 2; margin-top: auto; overflow: hidden; border: var(--tile-line); border-radius: 16px; }
+.work .wk-fc-flow .pl-in { gap: 0; padding: 12px 14px; }
+.work .wk-fc-flow .pl-steps { gap: 12px; }
+.work .wk-fc-flow .pl-step { column-gap: 12px; }
+.work .wk-fc-flow .pl-tile { width: 32px; height: 32px; border-radius: 9px; }
+.work .wk-fc-flow .pl-tile-sm { width: 22px; height: 22px; border-radius: 7px; }
+.work .wk-fc-flow .pl-steps .pl-step:not(:last-child)::after { bottom: -12px; left: 9px; width: 14px; height: 12px; }
+.work .wk-fc-flow .pl-name { font-size: 11px; }
+.work .wk-fc-flow .pl-line { font-size: 13px; line-height: 1.3; }
+.work .wk-fc-flow .pl-spec { display: none; }
+/* .pl is its own size container; on a phone-sized card the steps keep only their names. */
+@container (max-width: 249px) { .work .wk-fc-flow .pl-line { display: none; } }
 
-/* ---------- the feature spreads ---------- */
-.work .wk-spreads, .work .wk-cards { padding: 0; margin: 0; list-style: none; }
-.work .wk-spreads { display: grid; gap: clamp(28px, 4cqi, 56px); }
-.work .wk-spread { display: grid; gap: clamp(24px, 3cqi, 40px); align-items: center; padding: clamp(20px, 3.4cqi, 52px); border: var(--tile-line); border-radius: 40px; scroll-margin-top: calc(var(--header-h) + 16px); }
-@container (max-width: 599px) { .work .wk-spread { border-radius: var(--r-tile); } }
-/* The picture takes about 22% more of the row than it did (Andrew 2026-10-06: the hoverable
-   images larger at rest); the words keep their 48ch cap, so they only wrap a little sooner. */
-@container (min-width: 900px) {
-  .work .wk-spread { grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); column-gap: clamp(32px, 4.5cqi, 72px); }
-  .work .wk-spread:nth-child(even) { grid-template-columns: minmax(0, 1fr) minmax(0, 1.9fr); }
-  .work .wk-spread:nth-child(even) .wk-visual { order: 2; }
+/* ---------- the arrows: Duolingo's 3D press in the site's colours. An apricot face (the primary
+   on this ground; the previous arrow is outlined, see below) with an ink outline on a solid apricot-deep lip; a press sinks it onto the lip
+   in 60ms, release springs back. 56 by 52px. They are grid items of .wk-fan: on a wide screen they
+   flank the caption, under the fan, so a fanned, pushed or row card is never under one; on a phone
+   they sit over the faded side strips of the fan, centred on the cards, so they cost no height and
+   never cover the centre card. ---------- */
+.work .wk-fan { grid-template-columns: 1fr minmax(0, 820px) 1fr; }
+.work .wk-fan-stage { grid-area: 1 / 1 / 2 / -1; justify-self: stretch; display: grid; }
+.work .wk-caps { grid-area: 2 / 2; }
+.work .wk-arrow { position: relative; z-index: 2; }
+.work .wk-arrow-prev { grid-area: 2 / 1; justify-self: end; }
+.work .wk-arrow-next { grid-area: 2 / 3; justify-self: start; }
+@container (max-width: 699px) {
+  .work .wk-fan { grid-template-columns: minmax(0, 1fr); }
+  .work .wk-caps { grid-area: 2 / 1; }
+  .work .wk-arrow-prev { grid-area: 1 / 1; justify-self: start; margin-left: calc(4px - var(--gutter)); }
+  .work .wk-arrow-next { grid-area: 1 / 1; justify-self: end; margin-right: calc(4px - var(--gutter)); }
 }
+/* Next is the filled primary (Andrew 2026-10-07: "shade in the right arrow so they are more
+   likely to click it"): apricot face, ink arrow (12.6:1), apricot-deep ledge. Previous is the
+   outlined secondary: the ground colour as its fill (so it stays legible where it overlaps a card on a phone), a 2px paper outline and paper arrow on the berry-deep ground
+   (12.58:1), a paper-tinted ledge. --lip-c is each one's ledge colour. */
+.work .wk-arrow { --lip-c: var(--apricot-deep); align-self: center; display: grid; place-items: center; width: 56px; height: 52px; padding: 0; border: 2px solid var(--ink); border-radius: 16px; background: var(--apricot); color: var(--ink); cursor: pointer; box-shadow: 0 6px 0 var(--lip-c); touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: transform var(--dur-release) var(--ease-spring), box-shadow var(--dur-release) var(--ease-spring); }
+.work .wk-arrow-prev { --lip-c: color-mix(in srgb, var(--paper) 40%, transparent); border-color: var(--paper); background: var(--berry-deep); color: var(--paper); }
+@media (hover: hover) { .work .wk-arrow:hover { transform: translateY(-2px); box-shadow: 0 8px 0 var(--lip-c); } }
+.work .wk-arrow:active { transform: translateY(6px); box-shadow: 0 0 0 var(--lip-c); transition-duration: var(--dur-press); transition-timing-function: ease-out; }
+.work .wk-arrow:focus-visible { outline: 3px solid var(--ring); outline-offset: 4px; }
 
-/* ---------- the other three, as sticker cards: two up, the odd one out runs full width with
-   its picture beside the words. Title is the hero; each card is as tall as its own content. ---------- */
-.work .wk-cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(20px, 2.6cqi, 36px); align-items: start; }
-.work .wk-card { display: grid; align-content: start; gap: clamp(20px, 2.4cqi, 32px); padding: clamp(20px, 2.6cqi, 40px); border: var(--tile-line); border-radius: clamp(28px, 3cqi, 40px); scroll-margin-top: calc(var(--header-h) + 16px); }
-.work .wk-card .wk-num { font-size: clamp(44px, 4cqi, 64px); }
-.work .wk-card .wk-title { font-size: clamp(30px, 3.6cqi, 56px); }
-.work .wk-card .wk-lines p { font-size: clamp(18px, 1.35cqi, 20px); }
-@container (min-width: 900px) {
-  .work .wk-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .work .wk-card:last-child:nth-child(odd) { grid-column: 1 / -1; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); column-gap: clamp(32px, 4.5cqi, 72px); align-items: center; }
+/* ---------- the caption: the shown card's number, title, first line and links on a card panel,
+   kept short so the fan and its words fit one screen. All five sit in one grid cell (the box is
+   as tall as the longest), only the shown one visible. Its parts rise in on the spring each time
+   it is shown, the line word by word. ---------- */
+.work .wk-caps { display: grid; width: min(100%, 820px); min-width: 0; }
+.work .wk-cap { grid-area: 1 / 1; visibility: hidden; }
+.work .wk-cap[data-on] { visibility: visible; }
+.work .wk-cap-in { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(14px, 2cqi, 24px); height: 100%; padding: clamp(16px, 1.8cqi, 22px) clamp(16px, 2.2cqi, 28px); border: var(--tile-line); border-radius: var(--r-tile); background: var(--card); color: var(--ink); box-shadow: 0 8px 0 var(--ink); }
+.work .wk-cap-num { display: grid; place-items: center; align-self: start; width: clamp(52px, 5cqi, 68px); aspect-ratio: 1; border: var(--tile-line); border-radius: 18px; font: 700 clamp(24px, 2.4cqi, 32px)/1 var(--display); letter-spacing: -.04em; rotate: -4deg; font-variant-ligatures: none; }
+.work .wk-cap-text { display: grid; gap: 8px; justify-items: start; align-content: start; max-inline-size: 62ch; }
+.work .wk-cap-title { margin: 0; font: 700 clamp(22px, 2cqi, 28px)/1 var(--display); letter-spacing: -.03em; text-transform: uppercase; font-variant-ligatures: none; }
+.work .wk-cap-line { margin: 0; font: 400 clamp(17px, 1.25cqi, 18px)/1.5 var(--body); color: var(--ink); }
+.work .wk-cap-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.work .wk-note { display: inline-block; margin: 0; padding: 6px 14px; border: var(--tile-line); border-radius: 18px; background: var(--paper); font: 400 16px/1.35 var(--body); rotate: -1.5deg; }
+.work .wk-actions { margin-top: 0; }
+/* phone: the number becomes a sticker on the panel's top corner, so the words get the full width */
+@container (max-width: 599px) {
+  .work .wk-cap-in { position: relative; grid-template-columns: minmax(0, 1fr); }
+  .work .wk-cap-num { position: absolute; top: -12px; right: 14px; width: 44px; border-radius: 12px; font-size: 20px; }
+  .work .wk-cap-title { padding-right: 48px; }
 }
+@keyframes wk-up { from { opacity: 0; transform: translateY(.8em); } }
+.work .wk-cw { display: inline-block; }
+.work .wk-cap[data-on] .wk-cw { animation: wk-up .6s var(--ease-elastic) both; animation-delay: calc(min(var(--i), 40) * 12ms + 80ms); }
+.work .wk-cap[data-on] :is(.wk-cap-num, .wk-cap-title) { animation: wk-up .55s var(--ease-elastic) both; }
+.work .wk-cap[data-on] .wk-cap-foot { animation: wk-up .6s var(--ease-elastic) .3s both; }
+html[data-motion="reduced"] .work .wk-cap * { animation: none !important; }
 
-/* ---------- Entrances (Slush motion on the director's .is-in): panels spring in from behind ---------- */
-@keyframes wk-card { from { opacity: 0; transform: perspective(1200px) translate3d(2.5em, 0, 10em) rotateY(-16deg) scale(.86); } }
-.work :is(.wk-spread, .wk-card).is-in { animation: wk-card .85s var(--ease-elastic) both; }
-.work .wk-card:nth-child(2).is-in { animation-delay: 90ms; }
-.work .wk-card:nth-child(3).is-in { animation-delay: 180ms; }
-html[data-motion="reduced"] .work :is(.wk-spread, .wk-card) { animation: none !important; }
+/* ---------- reduced motion: no fan, a row that scrolls sideways and snaps a card to the middle.
+   The arrows step through it. ---------- */
+.work .wk-fan[data-mode="row"] .wk-fan-frame { margin: 0 calc(-1 * var(--gutter)); padding: 12px calc(50% + var(--gutter) - var(--card-w) / 2) 28px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; pointer-events: auto; }
+.work .wk-fan[data-mode="row"] .wk-fan-track { display: flex; gap: 20px; width: max-content; height: auto; }
+.work .wk-fan[data-mode="row"] .wk-fan-card { position: relative; left: auto; top: auto; flex: 0 0 var(--card-w); margin: 0; scroll-snap-align: center; cursor: auto; touch-action: auto; will-change: auto; }

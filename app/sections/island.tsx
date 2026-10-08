@@ -1,21 +1,19 @@
 import { Play } from 'lucide-react';
-import { IMAGES, ISLAND, MICROCOPY, sectionAttrs } from '@/lib/site';
-import { IslandDoor } from './island.client';
-import './island.css';
+import { IMAGES, ISLAND, MICROCOPY, OFF_CLOCK, sectionAttrs } from '@/lib/site';
+import { IslandDoor } from '@/components/site/closing/island-door';
+import { EveningReel } from '@/components/site/closing/evening-reel';
 import { CornerStickers } from '@/components/site/corner-stickers/corner-stickers';
+import './island.css';
 
-// The island finale (SITE-PLAN.md 4.10), the static version. One wide berry window standing on
-// its own under the footer's marquee band: the title and tagline on the left, the island poster
-// on the right, and "Go to the game?" as a real button. After it comes only the site footer
-// (components/site/footer.tsx), which holds the copyright and credits.
-// The NOTCH_TO_ISLAND tab and stem were removed in round 2 (they read as a glitch).
+// The island finale, the page's last section (rebuilt 2026-10-07). It absorbed Off the clock:
+// Andrew dropped that pinned strip ("we already have a horizontal scroll") but kept its round
+// characters, which now act out his evening in a small carousel (EveningReel) under the button.
 //
-// The button is a plain link to the game's own page (ISLAND.src): the visitor chooses to go, the
-// browser's Back brings them home, and nothing on this page loads the game until they click.
-// The scroll-scrubbed window and the live preview in the plan are not built here; the game in
-// island/ and public/island is untouched.
-// The poster is a link too: island.client.tsx asks "Head to the island?" in a popup first.
-// section#island is deliberately not a size container (app/globals.css, plan 2.3).
+// One wide berry window: the title, the tagline and "Go to the game?" (a plain link to the game's
+// own page, ISLAND.src) and the evening reel on the left, the island poster on the right. The poster
+// is a link too, but it asks "Head to the island?" first (IslandDoor). After this
+// comes only the site footer (components/site/footer.tsx), which the page slides up off.
+// A server component: the door and the reel are the client pieces inside it.
 
 const poster = IMAGES[ISLAND.poster];
 
@@ -34,6 +32,12 @@ export default function Island() {
           <a className="pill pill-light pill-big il-go" href={ISLAND.src}>
             <Play size={18} aria-hidden="true" /> {MICROCOPY.prompt}
           </a>
+          {/* Off the clock, small, under the button in the left column, with a small title in the
+              display font like FOR REAL (Andrew 2026-10-07). */}
+          <div className="il-evening">
+            <h3 className="il-evening-title">{OFF_CLOCK.title}</h3>
+            <EveningReel />
+          </div>
         </div>
         <figure className="il-shot">
           <IslandDoor>

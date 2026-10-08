@@ -5,6 +5,8 @@ import './social-button.css';
 // the buttons in Andrew's Focus Family guide (ff_technical_instructions, .xbtn / .xlbl). The word
 // is real text the whole time (only clipped to zero width), so screen readers read "GitHub" even
 // while it is hidden. On touch screens there is no hover, so the word always shows.
+// `extra` (optional) is more text after the word, such as the handle, so the button opens wider
+// (Andrew 2026-10-07: "make the linked in and github buttons expand further out").
 // `className` carries the look of the place it sits in (a pill on the contact card, the dark
 // footer button in the footer); this component only adds the expanding behaviour.
 
@@ -17,11 +19,11 @@ export function socialKind(href: string): Kind | null {
   return null;
 }
 
-export function SocialButton({ href, label, kind, className = '' }: { href: string; label: string; kind: Kind; className?: string }) {
+export function SocialButton({ href, label, kind, extra, className = '' }: { href: string; label: string; kind: Kind; extra?: string; className?: string }) {
   return (
     <a className={`sbtn ${className}`} href={href} target="_blank" rel="noreferrer">
       {kind === 'github' ? <GitHubIcon /> : <LinkedInIcon />}
-      <span className="sbtn-label">{label}</span>
+      <span className="sbtn-label">{label}{extra && <span className="sbtn-extra"> {extra}</span>}</span>
     </a>
   );
 }

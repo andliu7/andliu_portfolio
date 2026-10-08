@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowUpRight } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Mail } from 'lucide-react';
 import { BB_HEAD, CONTACT, MICROCOPY, RESUME, STACK, sectionAttrs } from '@/lib/site';
 import { FlipHeading } from '@/components/site/flip-heading';
 import { FlipLink } from '@/components/ui/flip-links';
@@ -8,12 +8,13 @@ import { StackChip } from '@/components/site/stack-logos';
 import { ContactForm } from '@/components/site/contact-form';
 import CopyEmail from '../copy-email';
 import './contact.css';
-import { CornerStickers } from '@/components/site/corner-stickers/corner-stickers';
+import { ContactToys } from './contact.client';
 
 // The footer card (SITE-PLAN.md 4.9) in the Slush look: one flat apricot card (no gradient),
-// the headline crushed giant, GitHub and LinkedIn as big outlined pills, the email address itself
-// in display type as the mailto link, and the résumé as the one berry button so it is the first
-// thing a recruiter finds. The sitemap and copyright live in the site footer
+// the headline crushed giant over a one-line invitation, GitHub and LinkedIn as big outlined pills
+// (they open wider on hover to show the handle), the email address itself in display type as the
+// mailto link, and "Email me" as the one berry button (Andrew 2026-10-07: "make it more of a
+// contact me", "the second CTA so very important"); the résumé is the light pill beside the eyebrow. The sitemap and copyright live in the site footer
 // (components/site/footer.tsx), not here. Each link appears
 // once in the card. Under the card, the STACK runs as a full-bleed sky band of logo chips that
 // slides (components/ui/infinite-slider.tsx) and slows on hover.
@@ -31,16 +32,18 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
     // A fragment (<>...</>): the card and the band are two siblings in the section, no wrapper.
     <>
     <div className="ct-card" data-ground="apricot">
+      {variant === 'home' && <ContactToys />}
       <div className="ct-body">
         <div className="ct-top">
           <span className="eyebrow">{CONTACT.eyebrow}</span>
           {resume && (
-            <a className="pill pill-berry press pill-big ct-resume" href={resume.href} target="_blank" rel="noreferrer">
+            <a className="pill pill-light press ct-resume" href={resume.href} target="_blank" rel="noreferrer">
               {resume.label} <ArrowUpRight size={18} aria-hidden="true" />
             </a>
           )}
         </div>
         <FlipHeading id="contact-title" text={CONTACT.headline} max={170} />
+        <p className="ct-invite">{CONTACT.invite}</p>
         <div className="ct-row">
           <div className="ct-reach">
             <ul className="ct-links">
@@ -49,7 +52,7 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
                 return (
                   <li key={link.label} className="ct-pill">
                     {kind
-                      ? <SocialButton className="ct-social" href={link.href} label={link.label} kind={kind} />
+                      ? <SocialButton className="ct-social" href={link.href} label={link.label} kind={kind} extra={CONTACT.handles[kind]} />
                       : <FlipLink href={link.href} external={link.external}>{link.label}</FlipLink>}
                   </li>
                 );
@@ -57,8 +60,13 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
             </ul>
             <p className="ct-email">
               <a className="display ct-mail" href={mail?.href ?? `mailto:${CONTACT.email}`}>{CONTACT.email}</a>
-              <CopyEmail email={CONTACT.email} />
             </p>
+            <div className="row-actions ct-actions">
+              <a className="pill pill-berry press pill-big ct-cta" href={mail?.href ?? `mailto:${CONTACT.email}`}>
+                {CONTACT.emailCta} <Mail size={20} aria-hidden="true" />
+              </a>
+              <CopyEmail email={CONTACT.email} />
+            </div>
             <p className="ct-note">{CONTACT.emailNote}</p>
             {/* Renders nothing unless the Worker URL is set at build time (worker/CONTACT.md). */}
             <ContactForm />
@@ -81,8 +89,10 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
 export default function Contact() {
   return (
     <section {...sectionAttrs('contact')} className="contact" aria-labelledby="contact-title">
-      <CornerStickers set="contact" />
-      <FooterCard variant="home" />
+      {/* The frame is the page that pins (contact.css): the card and the stack band together. */}
+      <div className="ct-frame">
+        <FooterCard variant="home" />
+      </div>
     </section>
   );
 }

@@ -89,10 +89,9 @@ const OBJECTS = [
   { key: 'card', Art: NoteCard },
 ] as const;
 
-// `className` marks the second, flying set (hob-fly); see travel.tsx.
-export function HeroObjects({ className = '' }: { className?: string }) {
+export function HeroObjects() {
   return (
-    <div className={`hob-layer ${className}`}>
+    <div className="hob-layer">
       {OBJECTS.map(({ key, Art }, k) => {
         const { label, href } = HERO.objects[key];
         return (

@@ -1,5 +1,5 @@
 import { ArrowRight } from 'lucide-react';
-import { CONTENTS, MICROCOPY, RESUME, sectionAttrs } from '@/lib/site';
+import { CONTENTS, MICROCOPY, sectionAttrs } from '@/lib/site';
 import { ContainerScroll } from '@/components/ui/container-scroll-animation';
 import { FlipHeading } from '@/components/site/flip-heading';
 import { FlowButton } from '@/components/ui/flow-button';
@@ -18,8 +18,6 @@ import './contents.css';
 // and once when it scrolls into view (FlipOnView). Under the card, a second résumé button (the
 // hero's FlowButton) with a short line over it. In the top left corner, a compass sticker that
 // spins when pressed (CompassSpin).
-// The flashcards and laptop of the hero land beside rows 01 and 02 while this section is on
-// screen (components/site/hero-objects/travel.tsx reads the rows' positions; nothing here).
 // A server component: the scroll effect and the roll on view are the client pieces; the hover
 // nudge is CSS.
 
@@ -62,7 +60,8 @@ export default function Contents() {
       </ContainerScroll>
       <div className="toc-cta">
         <p className="toc-cta-line">{CONTENTS.resumeLine}</p>
-        <FlowButton href={RESUME} text={MICROCOPY.resume} />
+        {/* Scrolls to the résumé preview rather than opening the PDF: a softer first step (Andrew 2026-10-07). */}
+<FlowButton href="#resume" text={MICROCOPY.resumeShort} />
       </div>
     </section>
   );

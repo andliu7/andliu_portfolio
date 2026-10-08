@@ -4,10 +4,11 @@ import { useEffect, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useReducedMotion } from "@/components/site/use-reduced-motion";
 
-// Andrew's pasted Cloudscape, kept as given (both shaders byte-identical). Three site additions,
+// Andrew's pasted Cloudscape, kept as given (both shaders byte-identical). Four site additions,
 // each marked "site:": it pauses when the tab is hidden or the canvas is off screen, it draws one
-// still frame under reduced motion, and the host carries a CSS gradient of the same three colours
-// so the sky still shows where WebGL is missing (the canvas then stays transparent).
+// still frame under reduced motion, the host carries a CSS gradient of the same three colours
+// so the sky still shows where WebGL is missing (the canvas then stays transparent), and the
+// context skips antialiasing, which a single full-canvas quad never uses.
 
 const vertexShaderGLSL = `
 attribute vec2 position;
@@ -138,7 +139,10 @@ const Cloudscape = ({
       return;
     }
 
-    const gl = canvas.getContext("webgl", { antialias: true, alpha: true });
+    // site: antialias off. It only smooths triangle edges, and the one quad covers the whole
+    // canvas, so it changes no pixel; it did cost a multisampled copy of the canvas (4x the pixels
+    // at up to 2x DPR) resolved every frame.
+    const gl = canvas.getContext("webgl", { antialias: false, alpha: true });
     if (!gl) {
       console.error("WebGL not supported");
       return;
@@ -302,6 +306,8 @@ const Cloudscape = ({
       gl.uniform1f(speedUniformLocation, settings.speed);
 
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      // site: the first drawn frame fades the clouds in over the gradient, instead of popping in
+      if (canvas.style.opacity !== "1") canvas.style.opacity = "1";
 
       if (running) animationFrameId = requestAnimationFrame(render);
     };
@@ -368,7 +374,7 @@ const Cloudscape = ({
         ref={canvasRef}
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 h-full w-full"
-        style={{ width: "100%", height: "100%", display: "block" }}
+        style={{ width: "100%", height: "100%", display: "block", opacity: 0, transition: reduced ? "none" : "opacity 1.4s ease-out" }}
       />
       {children}
     </div>

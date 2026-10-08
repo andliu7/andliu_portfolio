@@ -18,6 +18,11 @@ import './polaroid-line-carousel.css';
  *   - reduced motion (html[data-motion="reduced"]): no swing, no sway, no autoplay, and the line
  *     jumps to the chosen print instead of springing
  *   - labels come in as props (lib/site.ts holds every word), styles live in the .css beside it
+ *   - the line loops (2026-10-07, after a critic found bare string at either end): the offset runs
+ *     on past the last print and each print is drawn at its copy nearest the centre, so there is
+ *     always a print either side of the front one and neither arrow is ever disabled. A print
+ *     jumps sides only half a loop away from the centre, which is off screen with four or more
+ *   - a slide may carry a `crop`, a zoom on the moment its caption names
  *
  * Pattern: the physics runs in a requestAnimationFrame loop that writes transforms straight to
  * the DOM through refs, so sixty frames a second never re-render React. React state holds only
@@ -36,7 +41,16 @@ export type Slide = {
   /** A link under the caption (the live route), with its visible text. */
   href?: string;
   linkText?: string;
+  /** Zoom into the part of the shot the caption names: scale (1 = whole shot) about the point
+      x% y% of the shot, which stays put, so 0 0 keeps the top left corner and 100 100 the bottom
+      right. The shot is cropped, never stretched. */
+  crop?: { x: number; y: number; scale: number };
 };
+
+// The crop as inline styles for the shot's img and video.
+function cropStyle(crop: Slide['crop']): React.CSSProperties | undefined {
+  return crop ? { transform: `scale(${crop.scale})`, transformOrigin: `${crop.x}% ${crop.y}%` } : undefined;
+}
 
 export type PolaroidLineCarouselProps = {
   slides: Slide[];
@@ -83,9 +97,10 @@ export function swingStep(a: number, w: number, lineVel: number, dt: number, gai
   return [clamp(a + nw * dt, -0.6, 0.6), nw];
 }
 
-/** Index of the print nearest the centre for a line offset. */
+/** Index of the print nearest the centre for a line offset. The line loops, so the offset runs on
+    past the last print and the index wraps back to 0. */
 export function nearestAt(off: number, spacing: number, n: number): number {
-  return clamp(Math.round(off / spacing), 0, Math.max(0, n - 1));
+  return ((Math.round(off / spacing) % n) + n) % n;
 }
 
 export function pad2(n: number): string {
@@ -129,14 +144,17 @@ export default function PolaroidLineCarousel({
   opts.current = { sag, swing, reduced };
 
   const spacing = size.cw * 1.08;
+  // i is a position on the looping line, not wrapped: from the last print, n is the next one (print 0).
   const goTo = React.useCallback(
     (i: number) => {
       const S = sim.current;
-      S.target = clamp(i, 0, n - 1) * spacing;
+      S.target = i * spacing;
       if (opts.current.reduced) { S.off = S.target; S.vel = 0; }
     },
-    [n, spacing],
+    [spacing],
   );
+  // The position the line is heading for.
+  const heading = React.useCallback(() => Math.round(sim.current.target / spacing), [spacing]);
 
   // Measure the box; prints are as large as fit (4:3 shots, so a print is about 0.9 of its width tall).
   React.useEffect(() => {
@@ -144,7 +162,7 @@ export default function PolaroidLineCarousel({
     if (!root) return;
     const ro = new ResizeObserver(() => {
       const r = root.getBoundingClientRect();
-      const cw = Math.round(Math.max(180, Math.min(cardWidth, r.width * (r.width < 640 ? 0.74 : 0.42), r.height * 0.56)));
+      const cw = Math.round(Math.max(180, Math.min(cardWidth, r.width * (r.width < 640 ? 0.74 : 0.48), r.height * 0.62)));
       setSize({ w: r.width, h: r.height, cw });
     });
     ro.observe(root);
@@ -172,6 +190,7 @@ export default function PolaroidLineCarousel({
     if (!root) return;
     let raf = 0;
     let prev = performance.now();
+    let lineD = ''; // the string's path as last written: rewritten only when it changes
     const S = sim.current;
     const frame = (now: number) => {
       raf = 0;
@@ -194,10 +213,13 @@ export default function PolaroidLineCarousel({
       }
       const g = o.reduced ? 0 : o.swing;
       const near = nearestAt(S.off, spacing, n);
+      const loop = n * spacing;
       for (let i = 0; i < n; i++) {
         const el = cards.current[i];
         if (!el) continue;
-        const x = w / 2 + i * spacing - S.off;
+        let d = i * spacing - S.off;
+        d -= loop * Math.round(d / loop); // the copy of print i nearest the centre
+        const x = w / 2 + d;
         if (x < -cw * 1.5 || x > w + cw * 1.5) {
           el.style.visibility = 'hidden';
           continue;
@@ -212,9 +234,12 @@ export default function PolaroidLineCarousel({
         S.w[i] = av;
         const y = stringY(x, w, y0, o.sag) - 6;
         el.style.transform = 'translate(' + (x - cw / 2).toFixed(1) + 'px,' + y.toFixed(1) + 'px) rotate(' + a.toFixed(4) + 'rad)';
-        el.style.zIndex = String(i === near ? n + 1 : n - Math.abs(i - near));
+        el.style.zIndex = String(i === near ? n + 1 : n - Math.round(Math.abs(d) / spacing));
       }
-      pathRef.current?.setAttribute('d', 'M0 ' + y0 + ' Q' + w / 2 + ' ' + (y0 + 2 * o.sag) + ' ' + w + ' ' + y0);
+      // Setting an SVG path's d re-parses and repaints it even when the value is the same, so skip
+      // the write on the (almost every) frame where the line has not moved.
+      const path = 'M0 ' + y0 + ' Q' + w / 2 + ' ' + (y0 + 2 * o.sag) + ' ' + w + ' ' + y0;
+      if (path !== lineD) { lineD = path; pathRef.current?.setAttribute('d', path); }
       if (near !== activeRef.current) {
         activeRef.current = near;
         setActive(near);
@@ -236,17 +261,18 @@ export default function PolaroidLineCarousel({
     };
   }, [size, spacing, n]);
 
-  // Autoplay, back to the first print after the last. Off under reduced motion, paused off screen,
-  // while someone is interacting, and while the front print's video has not yet played through.
+  // Autoplay, on along the loop (after the last print comes the first). Off under reduced motion,
+  // paused off screen, while someone is interacting, and while the front print's video has not
+  // yet played through.
   React.useEffect(() => {
     if (!autoplay || n < 2 || reduced) return;
     const t = window.setInterval(() => {
       if (document.hidden || !visibleRef.current || drag.current || !videoDone.current) return;
       if (performance.now() - lastTouch.current < autoplay) return;
-      goTo(activeRef.current >= n - 1 ? 0 : activeRef.current + 1);
+      goTo(heading() + 1);
     }, autoplay);
     return () => window.clearInterval(t);
-  }, [autoplay, n, goTo, reduced]);
+  }, [autoplay, n, goTo, heading, reduced]);
 
   // The front print's video plays only while the carousel is on screen.
   const playing = !reduced && onScreen;
@@ -283,11 +309,7 @@ export default function PolaroidLineCarousel({
     d.v = 0.7 * ((e.clientX - d.lx) / dt) + 0.3 * d.v;
     d.lx = e.clientX;
     d.lt = e.timeStamp;
-    const max = (n - 1) * spacing;
-    let off = d.off - dx;
-    if (off < 0) off *= 0.35;
-    if (off > max) off = max + (off - max) * 0.35;
-    sim.current.off = off;
+    sim.current.off = d.off - dx; // no ends to resist at: the line loops
   };
   const onUp = (e: React.PointerEvent) => {
     const d = drag.current;
@@ -297,15 +319,19 @@ export default function PolaroidLineCarousel({
     if (d.moved) {
       setDragging(false);
       sim.current.vel = -d.v * 1000;
-      goTo(nearestAt(sim.current.off - d.v * 180, spacing, n));
+      goTo(Math.round((sim.current.off - d.v * 180) / spacing));
       return;
     }
     const card = (e.target as HTMLElement).closest('[data-i]');
-    if (card) goTo(Number(card.getAttribute('data-i')));
+    if (!card) return;
+    // The clicked print's distance from the front one, the short way round the loop.
+    let delta = (((Number(card.getAttribute('data-i')) - nearestAt(sim.current.target, spacing, n)) % n) + n) % n;
+    if (delta > n / 2) delta -= n;
+    goTo(heading() + delta);
   };
   const step = (dir: number) => {
     lastTouch.current = performance.now();
-    goTo(clamp(activeRef.current + dir, 0, n - 1));
+    goTo(heading() + dir);
   };
   const onKey = (e: React.KeyboardEvent) => {
     if (e.target !== e.currentTarget) return; // the bar's buttons and link keep their own keys
@@ -351,11 +377,12 @@ export default function PolaroidLineCarousel({
               <img
                 src={sl.sm ?? sl.image}
                 srcSet={sl.sm ? `${sl.sm} 800w, ${sl.image} 1600w` : undefined}
-                sizes={`${size.cw}px`}
+                sizes={`${Math.round(size.cw * (sl.crop?.scale ?? 1))}px`}
                 alt={sl.alt}
                 draggable={false}
-                loading={Math.abs(i - start) > 1 ? 'lazy' : undefined}
+                loading="lazy"
                 decoding="async"
+                style={cropStyle(sl.crop)}
               />
               {sl.video && i === active && !reduced ? (
                 <video
@@ -365,9 +392,10 @@ export default function PolaroidLineCarousel({
                   muted
                   loop
                   playsInline
-                  preload="metadata"
+                  preload="none"
                   aria-hidden="true"
                   onTimeUpdate={onVideoTime}
+                  style={cropStyle(sl.crop)}
                 />
               ) : null}
             </div>
@@ -384,15 +412,16 @@ export default function PolaroidLineCarousel({
             <a className="pl-link" href={s.href} target="_blank" rel="noreferrer">{s.linkText ?? s.href}</a>
           ) : null}
         </div>
-        <span className="pl-count" aria-hidden="true">
-          <b>{pad2(active + 1)}</b> / {pad2(n)}
-        </span>
-        <button type="button" className="square-btn pl-btn" aria-label={prevLabel} onClick={() => step(-1)} disabled={active === 0}>
+        {/* Arrows either side of the count, the same row as PolaroidMini's. */}
+        <button type="button" className="square-btn pl-btn" aria-label={prevLabel} onClick={() => step(-1)}>
           <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.8" />
           </svg>
         </button>
-        <button type="button" className="square-btn pl-btn" aria-label={nextLabel} onClick={() => step(1)} disabled={active === n - 1}>
+        <span className="pl-count" aria-hidden="true">
+          <b>{pad2(active + 1)}</b> / {pad2(n)}
+        </span>
+        <button type="button" className="square-btn pl-btn" aria-label={nextLabel} onClick={() => step(1)}>
           <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true">
             <path d="m6 3 5 5-5 5" stroke="currentColor" strokeWidth="1.8" />
           </svg>
@@ -400,6 +429,161 @@ export default function PolaroidLineCarousel({
       </div>
       <div className="pl-sr" aria-live="polite">
         {`${active + 1} / ${n}: ${s?.title ?? ''}. ${s?.caption ?? ''}`}
+      </div>
+    </div>
+  );
+}
+
+export type PolaroidMiniProps = {
+  slides: Slide[];
+  /** ms per print; 0 turns autoplay off. */
+  autoplay?: number;
+  className?: string;
+  label: string;
+  prevLabel: string;
+  nextLabel: string;
+};
+
+/*
+ * The small one (Andrew, 2026-10-07: "a small like carousel in the bottom left"): one pegged print
+ * at a time, about 220px wide, with its own arrows and a caption. No string and no physics; the
+ * prints are stacked in one spot and the front one tilts in while the others fade out.
+ *   - autoplay loops, and pauses while hovered, while focus is inside, and while off screen;
+ *     a video print holds it until the video has played through once
+ *   - a slide's video plays only while that print is in front and the carousel is on screen
+ *   - reduced motion: no autoplay, no tilt, no fade
+ *   - the caption is a live region, quiet while autoplay is turning (so it does not talk over the
+ *     page every few seconds) and polite once it stops (the WAI carousel pattern)
+ */
+export function PolaroidMini({ slides, autoplay = 5200, className, label, prevLabel, nextLabel }: PolaroidMiniProps) {
+  const n = slides.length;
+  const reduced = useReducedMotion();
+  const [active, setActive] = React.useState(0);
+  const [onScreen, setOnScreen] = React.useState(false);
+  const [held, setHeld] = React.useState(false); // hovered or focused
+  const rootRef = React.useRef<HTMLDivElement | null>(null);
+  const videoRef = React.useRef<HTMLVideoElement | null>(null);
+  const videoDone = React.useRef(true);
+
+  React.useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const io = new IntersectionObserver(([e]) => setOnScreen(e.isIntersecting));
+    io.observe(root);
+    return () => io.disconnect();
+  }, []);
+
+  React.useEffect(() => {
+    videoDone.current = !slides[active]?.video;
+  }, [active, slides]);
+
+  const turning = !!autoplay && n > 1 && !reduced && onScreen && !held;
+  React.useEffect(() => {
+    if (!turning) return;
+    const t = window.setInterval(() => {
+      if (document.hidden || !videoDone.current) return;
+      setActive(a => (a + 1) % n); // the updater form reads the latest index, not the one this effect saw
+    }, autoplay);
+    return () => window.clearInterval(t);
+  }, [turning, autoplay, n]);
+
+  const playing = !reduced && onScreen;
+  React.useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (playing) v.play().catch(() => { videoDone.current = true; });
+    else v.pause();
+  }, [playing, active]);
+
+  const onVideoTime = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const v = e.currentTarget;
+    if (v.currentTime < Number(v.dataset.t || 0)) videoDone.current = true;
+    v.dataset.t = String(v.currentTime);
+  };
+
+  const step = (dir: number) => setActive(a => (a + dir + n) % n);
+  const onKey = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowRight') step(1);
+    else if (e.key === 'ArrowLeft') step(-1);
+    else return;
+    e.preventDefault();
+  };
+  // Focus leaving the region entirely (not just moving between its buttons) releases the hold.
+  const onBlur = (e: React.FocusEvent) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setHeld(false);
+  };
+
+  return (
+    <div
+      ref={rootRef}
+      className={['plm-root', className].filter(Boolean).join(' ')}
+      role="region"
+      aria-roledescription="carousel"
+      aria-label={label}
+      onKeyDown={onKey}
+      onPointerEnter={() => setHeld(true)}
+      onPointerLeave={() => setHeld(false)}
+      onFocus={() => setHeld(true)}
+      onBlur={onBlur}
+    >
+      <div className="plm-stage">
+        {slides.map((sl, i) => (
+          <div
+            key={sl.image}
+            className="plm-card"
+            data-on={i === active ? '1' : '0'}
+            data-side={i === active ? undefined : (i - active + n) % n === 1 ? 'next' : 'prev'}
+            role="group"
+            aria-roledescription="slide"
+            aria-label={`${i + 1} / ${n}`}
+            aria-hidden={i === active ? undefined : true}
+          >
+            <div className="pl-print plm-print">
+              <div className="pl-shot">
+                <img
+                  src={sl.sm ?? sl.image}
+                  srcSet={sl.sm ? `${sl.sm} 800w, ${sl.image} 1600w` : undefined}
+                  sizes={`${Math.round(300 * (sl.crop?.scale ?? 1))}px`}
+                  alt={sl.alt}
+                  draggable={false}
+                  loading="lazy"
+                  decoding="async"
+                  style={cropStyle(sl.crop)}
+                />
+                {sl.video && i === active && !reduced ? (
+                  <video ref={videoRef} src={sl.video} poster={sl.image} muted loop playsInline preload="none" aria-hidden="true" onTimeUpdate={onVideoTime} style={cropStyle(sl.crop)} />
+                ) : null}
+              </div>
+              <div className="plm-note" />
+            </div>
+            <div className="pl-peg plm-peg" />
+          </div>
+        ))}
+      </div>
+      {/* Every caption sits in the same grid cell, so the block is as tall as the longest one and
+          nothing below it jumps when the print changes. Only the front one is shown. */}
+      <div className="plm-caps" aria-live={turning ? 'off' : 'polite'}>
+        {slides.map((sl, i) => (
+          <div key={sl.image} className="plm-cap" data-on={i === active ? '1' : '0'} aria-hidden={i === active ? undefined : true}>
+            <span className="plm-title">{sl.title}</span>
+            {sl.caption ? <span className="plm-sub">{sl.caption}</span> : null}
+          </div>
+        ))}
+      </div>
+      <div className="plm-bar">
+        <button type="button" className="square-btn" aria-label={prevLabel} onClick={() => step(-1)}>
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M10 3 5 8l5 5" stroke="currentColor" strokeWidth="1.8" />
+          </svg>
+        </button>
+        <span className="pl-count" aria-hidden="true">
+          <b>{pad2(active + 1)}</b> / {pad2(n)}
+        </span>
+        <button type="button" className="square-btn" aria-label={nextLabel} onClick={() => step(1)}>
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="m6 3 5 5-5 5" stroke="currentColor" strokeWidth="1.8" />
+          </svg>
+        </button>
       </div>
     </div>
   );

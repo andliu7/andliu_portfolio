@@ -33,11 +33,38 @@
 .pl-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @keyframes pl-in { from { transform: translateY(100%); opacity: 0; } to { transform: none; opacity: 1; } }
 
-/* Phones: the count drops; the caption takes the row and the arrows sit at its end. */
+/* Phones: the caption takes the full width and the arrows and count wrap to a row under it,
+   the same row as PolaroidMini's, so the two carousels work the same way. */
 @media (max-width: 639px) {
-  .pl-count { display: none; }
-  .pl-bar { align-items: flex-end; }
+  .pl-bar { flex-wrap: wrap; row-gap: 6px; }
+  .pl-cap { flex-basis: 100%; }
 }
 
 html[data-motion="reduced"] .pl-cap > * { animation: none; }
 html[data-motion="reduced"] .pl-print { transition: none; }
+
+/* ---------- PolaroidMini: the small carousel. One pegged print at a time, the same paper print
+   and apricot peg at about 220px, the front one tilted, the caption below in Fira caps and
+   Karla, square-btn arrows (44px) either side of the count. ---------- */
+.plm-root { display: grid; justify-items: center; gap: 12px; width: 100%; max-width: 240px; color: var(--ink); }
+.plm-stage { display: grid; width: 100%; padding-top: 4px; }
+/* All prints share one grid cell; the front one tilts in, the others fade back toward their side. */
+.plm-card { grid-area: 1 / 1; position: relative; transform-origin: 50% 0; transition: opacity .35s ease, rotate .7s var(--ease-elastic, cubic-bezier(.34,1.56,.64,1)), translate .5s cubic-bezier(.2,.7,.2,1); }
+.plm-card[data-on='1'] { z-index: 1; rotate: -2.5deg; }
+.plm-card[data-on='0'] { opacity: 0; pointer-events: none; }
+.plm-card[data-side='next'] { rotate: 9deg; translate: 24px 0; }
+.plm-card[data-side='prev'] { rotate: -9deg; translate: -24px 0; }
+.plm-print { padding: 7px 7px 0; border-radius: 10px; box-shadow: 0 4px 0 var(--ledge); }
+.plm-print .pl-shot { border-radius: 6px; }
+.plm-note { height: 18px; }
+.plm-peg { height: 22px; }
+.plm-caps { display: grid; width: 100%; }
+.plm-cap { grid-area: 1 / 1; display: grid; align-content: start; gap: 4px; transition: opacity .3s ease; }
+.plm-cap[data-on='0'] { opacity: 0; visibility: hidden; }
+.plm-title { font: 700 15px/1.15 var(--display); letter-spacing: -.01em; text-transform: uppercase; font-variant-ligatures: none; }
+.plm-sub { font: 400 15px/1.45 var(--body); color: var(--ink-2); }
+.plm-bar { display: flex; align-items: center; gap: 14px; }
+.plm-bar .pl-count { display: inline; }
+
+html[data-motion="reduced"] :is(.plm-card, .plm-cap) { transition: none; }
+html[data-motion="reduced"] .plm-card { rotate: none; translate: none; }

@@ -1,0 +1,10 @@
+/* InfiniteSlider's loop (infinite-slider.tsx): the row slides by half its own width, one copy
+   plus one gap, then restarts at 0. A transform animation, so the compositor runs it without the
+   main thread. Reduced motion renders the static branch, which has no .islider-row; the rule at
+   the end covers the server markup until the page hydrates. */
+.islider-row { animation:islider-x var(--islider-dur, 25s) linear infinite; }
+.islider-row[data-dir="vertical"] { animation-name:islider-y; }
+.islider-row[data-reverse] { animation-direction:reverse; }
+@keyframes islider-x { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+@keyframes islider-y { from { transform:translateY(0); } to { transform:translateY(-50%); } }
+html[data-motion="reduced"] .islider-row { animation:none; }

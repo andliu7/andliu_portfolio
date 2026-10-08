@@ -111,19 +111,16 @@ export const HERO_BAR = [
   'RDKit.js grading in the browser', // [R] Blueberry highlights
 ] as const;
 
-// 4.1 The caution tape crossing the bar: "CAUTION" then a dry warning (Andrew 2026-10-06: "CAUTION
-// [INSERT WARNING HERE] ... be a little creative"). The tape sets text in caps; `code: true`
-// keeps a line's own case, because it is code. All [UI], signed off by Andrew 2026-10-06.
-export const HERO_CAUTION = {
-  word: 'CAUTION', // [UI] signed off 2026-10-06
-  warnings: [
-    { text: 'RECRUITERS, PROCEED WITH CAUTION: MAY CAUSE INTERVIEWS' }, // [UI] signed off 2026-10-06
-    { text: '// TODO: SCHEDULE THE INTERVIEW' }, // [UI] signed off 2026-10-06
-    { text: 'WARNING: MERGES CLEANLY' }, // [UI] signed off 2026-10-06
-    { text: 'try { interview(andrew) } catch { /* unreachable */ }', code: true }, // [UI] signed off 2026-10-06
-    { text: 'WRITES TESTS BEFORE BEING ASKED' }, // [UI] signed off 2026-10-06; the tape's CAUTION box supplies the "CAUTION:" so it is not doubled
-  ],
-} as const;
+// 4.1 The caution boxes mixed into the hero's cream bar between the HERO_BAR facts (Andrew
+// 2026-10-07: "give the white marquee a caution border and include the try catch and warning and
+// the schedule the interview and shorten the recruiters one to just may cause interviews"). Set
+// in caps; `code: true` keeps a line's own case, because it is code. All [UI], his wording.
+export const HERO_CAUTION = [
+  { text: 'try { interview(andrew) } catch { /* unreachable */ }', code: true }, // [UI] signed off 2026-10-06
+  { text: 'WARNING: MERGES CLEANLY' }, // [UI] signed off 2026-10-06
+  { text: '// TODO: SCHEDULE THE INTERVIEW' }, // [UI] signed off 2026-10-06
+  { text: 'MAY CAUSE INTERVIEWS' }, // [UI] Andrew 2026-10-07, shortened from the recruiters line
+] as const;
 
 // 4.1 The rotating "currently:" line (prefix MICROCOPY.currently). Assembled from inventory
 // phrases; needs Andrew's sign-off (plan 2.4).
@@ -149,18 +146,6 @@ export const TICKET = {
 
 // 4.2 The manifesto band was removed 2026-10-06 (Andrew: "remove the orange page and go directly
 // into the from flashcards to a platform page"); its sentence still runs in the hero's marquee.
-
-// 4.2 The ON / OFF fork. The on-side line is MICROCOPY.forkCounts (derived from the data).
-export const FORK = {
-  on: { voice: 'on', head: 'THE CLOCK', href: '#work', cta: 'See the work' }, // [P][Z yard] "Off the Clock" pairs with "on"; cta [UI] (needs sign-off)
-  off: {
-    voice: 'off', // [Z yard]
-    head: 'THE CLOCK', // [Z yard]
-    line: 'Cooking, lifting, and faith.', // [plan 2.4] the OFF_CLOCK keywords as a line
-    href: '#offclock',
-    cta: 'See the rest of the week', // [UI] (needs sign-off) after OFF_CLOCK.headline [P]
-  },
-} as const;
 
 // 4.4 The Blueberry chapter (the dive section before it was removed 2026-10-06 at Andrew's request)
 export const BLUEBERRY_CHAPTER = {
@@ -189,19 +174,27 @@ export const BB_FACTS: readonly { id: string; value?: number; label: string }[] 
   { id: 'deckCards', label: 'cards in his first deck' }, // [B] value = lib/bb-deck.json count
 ] as const;
 
-// 4.4 Seven real screens, each a feature mid-use (Andrew, 2026-10-06: "the functional ones";
-// 2026-10-07: "grab like 3 more images. the tetris game maybe. include a quick demo video of the
-// aldol addition"). They hang as prints on a string (components/ui/polaroid-line-carousel.tsx).
+// 4.4 The screens. Four from the app hang as prints on a string beside FOR REAL! (Andrew,
+// 2026-10-07: "i wanted to keep it four because for is a pun in that case ... the main part would
+// be the app and the side view is the website images. also yeah include the animations of the
+// arrow pushing"). The small carousel under it shows the website around the app (BB_SITE). Both
+// are in components/ui/polaroid-line-carousel.tsx.
 // `route` is the literal route each capture was taken on; `title` is the feature's own name in
 // the app; `caption` restates what the capture shows (its IMAGES alt), nothing more.
 export const BB_SCREENS = [
+  { image: 'bbAldol', title: 'Arrow pushing', caption: 'The aldol addition in two steps: hydroxide makes the enolate, then its carbon attacks formaldehyde. Six curved arrows, drawn in the trainer.', route: '#/app/trainer?sequence=seq-aldol', href: `${BB_LIVE}#/app/trainer?sequence=seq-aldol` }, // [S] game demo/sequences.ts seq-aldol, recorded 2026-10-07 (title needs sign-off)
   { image: 'bbFlashcards', title: 'Flashcards', caption: 'A card flipped to its answer, then rated Again, Hard, Good or Easy.', route: '#/app/cards', href: `${BB_LIVE}#/app/cards` }, // [S] game routes.ts tab "cards"
-  { image: 'bbAldol', title: 'Aldol addition, 2 steps', caption: 'Hydroxide makes the enolate, then its carbon attacks formaldehyde: six arrows, drawn in the trainer.', route: '#/app/trainer?sequence=seq-aldol', href: `${BB_LIVE}#/app/trainer?sequence=seq-aldol` }, // [S] game demo/sequences.ts seq-aldol, recorded 2026-10-07
   { image: 'bbArrows', title: 'Mechanism trainer', caption: "A curved arrow mid-drag, pushing the allyl cation's pi bond toward the empty carbon.", route: '#/app/trainer', href: `${BB_LIVE}#/app/trainer` }, // [S] game routes.ts tab "trainer"; [R] "curved-arrow mechanism trainer"
   { image: 'bbPathway', title: 'Pathway', caption: 'Organic Chemistry II, Unit 1, as a column of lesson nodes.', route: '#/app/pathway', href: `${BB_LIVE}#/app/pathway` }, // [S]
-  { image: 'bbLessonAldol', title: 'Aldol lesson', caption: 'Two acetaldehydes give 3-hydroxybutanal, with the conditions stage by stage.', route: '#/lessons/enolate/aldol-addition', href: `${BB_LIVE}#/lessons/enolate/aldol-addition` }, // [S] App.tsx route lessons/<section>/<reaction>; data/reactions.ts aldol-addition
-  { image: 'bbMolecules', title: 'Draw the product', caption: 'A Grignard addition: the starting material beside a molecule editor.', route: '#/draw/grignard-addition-ketone', href: `${BB_LIVE}#/draw/grignard-addition-ketone` }, // [S] App.tsx route draw/<reaction id>
-  { image: 'bbTetris', title: 'Break: Tetris', caption: 'The focus timer offers Tetris on a break, and only on a break.', route: '#/lessons', href: `${BB_LIVE}#/lessons` }, // [S] lib/featureIndex.ts "Break: Tetris and sound"; components/ui/break-room.tsx
+] as const;
+
+// 4.4 The website around the app, in the small carousel. Captured from the live site 2026-10-07;
+// each caption says what its page shows.
+export const BB_SITE = [
+  { image: 'bbSiteHome', title: 'Home', caption: 'Organic chemistry that actually sticks: the front door, one Get Started button.' }, // [S] live site home h1 and CTA (needs sign-off)
+  { image: 'bbSiteDecks', title: 'Study decks', caption: 'The deck library, with the mechanism trainer offered at the top.' }, // [S] live #/study-decks (needs sign-off)
+  { image: 'bbSiteLessons', title: 'Lessons', caption: 'CHEM241 in the order the course takes it, a section list down the side.' }, // [S] live #/lessons, "12 sections, 43 checked reactions" (needs sign-off)
+  { image: 'bbTetris', title: 'Break: Tetris', caption: 'The focus timer offers Tetris on a break. Four rows stacked, an I piece over the well.' }, // [S] components/ui/break-room.tsx, tetris.tsx; played with scripted keys 2026-10-07 (needs sign-off)
 ] as const;
 
 // The carousel's own labels (screen readers and the arrow buttons).
@@ -209,6 +202,7 @@ export const BB_CAROUSEL = {
   label: 'Blueberry screens', // [UI] (needs sign-off)
   prev: 'Previous screen', // [UI] (needs sign-off)
   next: 'Next screen', // [UI] (needs sign-off)
+  more: 'Blueberry website screens', // [UI] the small carousel's region label (needs sign-off)
 } as const;
 
 // 4.4 The engineering claims, one sentence each, and the stack as tags.
@@ -226,7 +220,8 @@ export const BB_ENGINEERING = {
 // 2026-10-06). This headline tells the story's arc; the product slogan's own section was removed.
 export const BB_HEAD = {
   headline: 'FROM FLASHCARDS\nTO A *platform.*', // [P] BLUEBERRY_CHAPTER.story, "What began as flashcards ... learning platform"
-  screens: 'Seven real screens', // [plan 4.4] count follows BB_SCREENS (seven since 2026-10-07; needs sign-off)
+  screens: 'Four real screens', // [plan 4.4] the four app screens on the line; "four" is Andrew's pun on FOR REAL! (2026-10-07) (needs sign-off)
+  site: 'And the website', // [UI] label over the small carousel of BB_SITE (needs sign-off)
   forReal: 'FOR\nREAL!', // [UI] Andrew 2026-10-07: "make a for real exclamation on the side" (needs sign-off)
   stack: 'The stack', // [UI] label over BB_ENGINEERING.stack (needs sign-off)
 } as const;
@@ -298,8 +293,8 @@ export const PROJECTS = [
     ],
     note: 'Now folded into Blueberry.', // [S] the game moved in at #/app
     tags: ['React', 'TypeScript', 'Ketcher'], // [P]
-    links: [{ kind: 'live', href: `${BB_LIVE}#/app/trainer` }, { kind: 'source', href: 'https://github.com/andliu7/mechanism_trainer' }], // [P][S]
-    url: 'andliu7.github.io/blueberry/#/app/trainer', // [S]
+    links: [{ kind: 'live', href: 'https://andliu7.github.io/mechanism_trainer/' }, { kind: 'source', href: 'https://github.com/andliu7/mechanism_trainer' }], // [P][S] live link: Andrew 2026-10-07 ("mechanism trainer should take you to andliu7.github.io/mechanism_trainer")
+    url: 'andliu7.github.io/mechanism_trainer', // [P] as the live link
     image: 'mechanismTrainer', imageApproved: null,
   },
   {
@@ -383,7 +378,31 @@ export const WORK_HEAD = {
   eyebrow: '02 / Selected work', // [P]
   headline: 'SELECTED *work.*', // [P]
   label: 'Selected work', // [P] as headline, plain, for the Projects section's visually hidden heading
-  hint: 'hover!', // [UI] Andrew 2026-10-06 ("add a little 'hover!' icon"); the sticker over the index (needs sign-off)
+  hint: 'hover!', // [UI] Andrew 2026-10-06 ("add a little 'hover!' icon"); the sticker over the project fan (needs sign-off)
+  hintTouch: 'tap!', // [UI] the same sticker on touch screens, which have no hover (needs sign-off)
+  // The fan of projects 02 to 06 and its Carousel / Desk switch (Andrew 2026-10-07: "maybe 2
+  // through 6 can be a carousel too"; "toggle a view so that you can turn off the carousel")
+  fan: 'Projects, one card each', // [UI] the carousel's accessible name (needs sign-off)
+  prev: 'Previous project', // [UI] arrow button name (needs sign-off)
+  next: 'Next project', // [UI] arrow button name (needs sign-off)
+  slideOf: (n: number, total: number) => `${n} of ${total}`, // [UI] each card's position, read with its title
+  views: 'Layout', // [UI] the switch's group name (needs sign-off)
+  carousel: 'Carousel', // [UI] Andrew's word for the fan (needs sign-off)
+  desk: 'Desk', // [UI] the floating tabs view (needs sign-off)
+} as const;
+
+// The projects as floating windows (components/site/work/floating-tabs.tsx), Andrew 2026-10-07:
+// "floating tabs you can drag around and minimize and change the size of ... it shows you text
+// saying click to flip with a curved arrow". All [UI], needs sign-off.
+export const FLOAT_TABS = {
+  label: 'Projects as windows', // [UI] the desk's accessible name (needs sign-off)
+  flip: 'click to flip', // [UI] Andrew 2026-10-07, his words; the hover hint (needs sign-off)
+  tidy: 'Tidy up', // [UI] re-stacks the windows in a grid (needs sign-off)
+  keys: 'Enter flips the window. Arrow keys move it. Shift and an arrow key resizes it.', // [UI] keyboard help, read by screen readers (needs sign-off)
+  dock: 'Minimized windows', // [UI] the dock row's accessible name (needs sign-off)
+  minimize: (title: string) => `Minimize ${title}`, // [UI] title bar button (needs sign-off)
+  reset: (title: string) => `Put ${title} back where it started`, // [UI] title bar button: first size, place and side (needs sign-off)
+  open: (title: string) => `Open ${title}`, // [UI] a dock chip (needs sign-off)
 } as const;
 
 export const EXPERIENCE_HEAD = {
@@ -409,10 +428,12 @@ export type ImpactSummary = { total: number; first: string; last: string };
 export type ImpactSeriesCopy = { id: string; title: string; unit: string; caption?: string };
 
 export const IMPACT: readonly {
-  id: 'brain' | 'blueberry' | 'guide';
+  id: 'brain' | 'blueberry' | 'guide' | 'all';
   title: string;
   primary: string;
   summary: (s: ImpactSummary) => string;
+  /** The big number's title, when the primary series' title would repeat the chart title under it. */
+  hero?: string;
   series: readonly ImpactSeriesCopy[];
 }[] = [
   {
@@ -452,7 +473,27 @@ export const IMPACT: readonly {
       { id: 'ff.sections', title: 'Sections', unit: 'sections' }, // [D]
     ],
   },
+  {
+    id: 'all', title: 'Every repo', primary: 'all.days', // [D] the repos scripts/impact-data.mjs reads (needs sign-off)
+    summary: s => `${s.total} commits across my repos, day by day`, // [D] (needs sign-off)
+    hero: 'Commits I authored', // [D] from the all.days caption, so the big number does not repeat the chart title (needs sign-off)
+    series: [
+      { id: 'all.days', title: 'Commits, day by day', unit: 'commits', caption: 'Every commit I authored, in every repo, one block per day.' }, // [D] (needs sign-off)
+      { id: 'all.streak', title: 'Longest streak', unit: 'days' }, // [D] (needs sign-off)
+    ],
+  },
 ];
+
+/** The contribution skyline's controls and spoken lines (components/ui/contribution-skyline.tsx). */
+export const SKYLINE = {
+  view: 'View', // [UI] the 2D / 3D toggle's group name (needs sign-off)
+  flat: '2D', // [UI] (needs sign-off)
+  city: '3D', // [UI] (needs sign-off)
+  less: 'Less', // [UI] legend end (needs sign-off)
+  more: 'More', // [UI] legend end (needs sign-off)
+  day: (n: number, unit: string, date: string) => `${n} ${unit} on ${date}`, // [D] tooltip and live line
+  label: (total: number, unit: string, first: string, last: string) => `${total} ${unit} from ${first} to ${last}, one block per day. Arrow keys move between days.`, // [D][UI] the chart's accessible name (needs sign-off)
+} as const;
 
 // ---------------------------------------------------------------------------------------------
 // Off the clock (4.8). Gardening goes with cooking [Andrew 2026-10-06]: "the garden fuels the cooking."
@@ -464,7 +505,7 @@ const GARDEN_LINE = 'I love the UMD garden. Someday, a garden of my own, with sp
 const FAITH_LINE = 'Quietly, it is why the guides I write for my campus community matter to me as much as the code.'; // [P]
 
 export const OFF_CLOCK = {
-  eyebrow: '05 / The rest of the week', // [P][Z yard] renumbered after Impact
+  eyebrow: '06 / The rest of the week', // [P][Z yard] renumbered after Impact, then after Contact moved up (2026-10-07)
   title: 'OFF THE CLOCK', // [P][Z yard]
   keywords: ['Cooking', 'Lifting', 'Faith'], // [P][Z yard]
   headline: 'The rest of the week.', // [P][Z yard]
@@ -486,18 +527,17 @@ export const OFF_CLOCK = {
   sky: 'skyCloudSea', // IMAGES key
 } as const;
 
-// The evening strip (app/sections/offclock.tsx, rebuilt 2026-10-06): Andrew's evening in the
+// The evening reel in the island finale (components/site/closing/evening-reel.tsx; the pinned
+// strip it replaced was removed 2026-10-07): Andrew's evening in the
 // order he gave it ("usually I like to get work done in the morning ... after work or classes gym
 // and then cook and then eat and then I lead bible studies"). No clock times on purpose: he gave
 // an order, not times. `big` is the scene's display word, `voice` its line with keywords in
 // *asterisks*, `sub` a smaller line or null. COOK carries the garden (it fuels the cooking,
 // [Andrew 2026-10-06]) and SOMEDAY keeps landscape design. All of it needs Andrew's sign-off.
 export const EVENING = {
-  intro: 'Mornings are for *work*. Here is the *evening*.', // [Andrew 2026-10-06 via lead brief] (needs sign-off)
-  hint: 'Scroll through the evening', // [UI] (needs sign-off)
-  skip: 'Skip the evening', // [UI] Andrew 2026-10-06 asked for a way out of the strip (needs sign-off)
-  slider: 'Time of evening', // [UI] the sun and moon handle's accessible name (needs sign-off)
-  clock: 'THE CLOCK', // [Z yard] as FORK.on.head
+  label: 'My evening', // [UI] the carousel's accessible name (needs sign-off)
+  prev: 'Previous scene', // [UI] (needs sign-off)
+  next: 'Next scene', // [UI] (needs sign-off)
   scenes: [
     { id: 'after', when: 'After work or classes', big: 'CLOCK OUT', voice: 'Work or *classes* at UMD come first.', sub: null }, // [Andrew 2026-10-06][R] (needs sign-off)
     { id: 'gym', when: 'Then the gym', big: 'GYM', voice: 'Lifting with the *UMD Barbell Club*.', sub: null }, // [Andrew 2026-10-06 via lead brief] (needs sign-off)
@@ -506,15 +546,6 @@ export const EVENING = {
     { id: 'study', when: 'Then Bible study', big: 'BIBLE STUDY', voice: 'I lead *Focus Family* at Kharis Campus Ministry.', sub: FAITH_LINE }, // [R][P] (needs sign-off)
     { id: 'someday', when: 'Someday', big: 'SOMEDAY', voice: 'Landscape design: the interest that keeps *growing*.', sub: null }, // [P] the garden line moved to COOK [Andrew 2026-10-06]
   ],
-  // One small framed shot from the island game per scene that has one, keyed by scene id: the
-  // IMAGES key and the caption under it (Andrew 2026-10-06: "more images of the game").
-  shots: {
-    gym: { image: 'islandGym', caption: 'The Home Gym on my island.' }, // [Z yard] the room's own name (needs sign-off)
-    cook: { image: 'islandKitchen', caption: 'The Kitchen on my island, with the pan on the stove.' }, // [Z yard] the room's own name and its pan (needs sign-off)
-    eat: { image: 'islandTable', caption: 'The table in the Kitchen on my island.' }, // [Z yard] (needs sign-off)
-    study: { image: 'islandFocusFamily', caption: 'Focus Family Circle, inside the chapel on my island.' }, // [Z chapel] the room's own name (needs sign-off)
-    someday: { image: 'islandPlaza', caption: 'The plaza where my island starts.' }, // [Z] the spawn plaza (needs sign-off)
-  },
 } as const;
 
 // ---------------------------------------------------------------------------------------------
@@ -522,8 +553,12 @@ export const EVENING = {
 // ---------------------------------------------------------------------------------------------
 
 export const CONTACT = {
-  eyebrow: '06 / Say hi', // [P][Z contact]
+  eyebrow: '05 / Contact me', // [UI] Andrew 2026-10-07 ("make it more of a contact me"; was 'Say hi') (needs sign-off)
   headline: "LET'S COMPARE *notes.*", // [P]
+  invite: 'Hiring, building something, or stuck on a mechanism? Email me.', // [UI] Andrew 2026-10-07, the one-line invitation under the headline (needs sign-off)
+  emailCta: 'Email me', // [UI] the primary button, a mailto link (needs sign-off)
+  // Shown beside the word when the GitHub and LinkedIn pills open on hover (components/site/social-button.tsx)
+  handles: { github: '@andliu7', linkedin: 'Andrew Liu' }, // [UI] from GITHUB's address and his name (needs sign-off)
   links: [
     { label: 'GitHub', href: GITHUB, external: true }, // [P]
     { label: 'LinkedIn', href: LINKEDIN, external: true }, // [P]
@@ -571,7 +606,7 @@ export const FOOTER_SKIP = {
     { q: 'Where has he worked?', a: 'Timeline', href: '#experience', icon: 'experience', external: false }, // [UI] (needs sign-off)
     { q: 'I need his résumé.', a: 'Résumé (PDF)', href: RESUME, icon: 'resume', external: true }, // [UI][P] (needs sign-off)
     { q: 'How do I reach him?', a: 'Email', href: `mailto:${EMAIL}`, icon: 'email', external: false }, // [UI][P] (needs sign-off)
-    { q: 'What does he do for fun?', a: 'Off the clock', href: '#offclock', icon: 'fun', external: false }, // [UI][P] (needs sign-off)
+    { q: 'What does he do for fun?', a: 'Off the clock', href: '#island', icon: 'fun', external: false }, // [UI][P] (needs sign-off)
   ],
   blurb: IDENTITY.line, // [P]
   copyright: '© 2026 Andrew Liu', // [P] moved here from the island's end card
@@ -584,8 +619,27 @@ export const FOOTER_SKIP = {
 // The AND/LIU mark (header and footer): his handle, andliu, set over two lines.
 export const MARK = { top: IDENTITY.first.slice(0, 3), bottom: IDENTITY.last } as const; // [P] derived: "AND" over "LIU"
 
+// The résumé preview between Contact and the island (app/sections/resume.tsx). The image is page
+// one of RESUME, rendered offline (the command is in resume.tsx).
+export const RESUME_PREVIEW = {
+  title: 'Résumé', // [P] same word as MICROCOPY.resumeShort
+  line: 'Everything above on one page: Blueberry, my internship and tutoring, two projects, and UMD.', // [R] (needs sign-off)
+  open: 'Open PDF', // [UI] (needs sign-off)
+  download: 'Download', // [UI] (needs sign-off)
+  enlarge: 'Read the résumé full size', // [UI] the page image button's name (needs sign-off)
+  close: 'Close', // [UI]
+  noInline: 'This browser cannot show the PDF here, so this is the page as an image.', // [UI] (needs sign-off)
+  file: 'andrew-liu-resume.pdf', // [plan] the Download file name
+  image: {
+    src: '/images/resume/resume-p1.webp', w: 880, h: 1139, // [plan] 2x the card's display width
+    small: '/images/resume/resume-p1-sm.webp', smallW: 440, // [plan]
+    alt: "Page one of Andrew Liu's résumé: experience at Blueberry, Minnodi and Education One, projects, skills, UMD, and leadership.", // [R] (needs sign-off)
+  },
+} as const;
+
+// The island, project 07: the page's finale (app/sections/island.tsx).
 export const ISLAND = {
-  eyebrow: '07 / The island', // [P] renumbered after Impact
+  eyebrow: '07 / The island', // [P] numbered as its row in PROJECTS
   titleTop: 'THE RÉSUMÉ', // [inventory 2.4]
   titleBottom: 'ISLAND', // [inventory 2.4]
   tagline: 'Every place on the island is one line of the résumé.', // [Z]
@@ -701,6 +755,14 @@ export const UMD = {
 
 // The contents rows: each points at a section that exists on the page. Titles are the footer's
 // skip-ahead answers and the section names; the lines under them are derived from the data.
+// The two pinned horizontal strips (Experience's timeline, Off the clock's evening) share these:
+// the Esc hint and the auto-play button's two states (components/site/strip-autoplay.tsx).
+export const STRIP = {
+  esc: 'Esc to skip', // [UI] Andrew 2026-10-07 asked for Esc to pass both strips (needs sign-off)
+  autoOn: 'Auto: on, tap to stop', // [UI] Andrew 2026-10-07: animates through by default, a red button turns it off (needs sign-off)
+  autoOff: 'Auto: off, tap to play', // [UI] the same button once off, green (needs sign-off)
+} as const;
+
 export const CONTENTS = {
   eyebrow: '00 / Contents', // [UI] from the approved design (needs sign-off)
   title: 'WHERE TO?', // [UI] from the approved design (needs sign-off)
@@ -715,9 +777,9 @@ export const CONTENTS = {
     { href: '#work', title: FOOTER_SKIP.links[0].a, sub: PROJECTS.slice(0, 4).map(p => p.title).join(', '), meta: `${PROJECTS.length} projects` }, // [UI] derived from FOOTER_SKIP and PROJECTS
     { href: '#impact', title: FOOTER_SKIP.links[1].a, sub: IMPACT.map(p => p.title).join(', '), meta: `${IMPACT.length} panels` }, // [UI] derived from FOOTER_SKIP and IMPACT
     { href: '#experience', title: FOOTER_SKIP.links[2].a, sub: JOBS.map(j => j.org).join(', '), meta: `${JOBS.length} roles` }, // [UI] derived from FOOTER_SKIP and JOBS
-    { href: '#offclock', title: FOOTER_SKIP.links[5].a, sub: OFF_CLOCK.headline, meta: null }, // [P] derived
     { href: '#contact', title: 'Say hi', sub: CONTACT.links.map(l => l.label).join(', '), meta: null }, // [P][Z contact] as CONTACT.eyebrow, links derived
-    { href: '#island', title: 'The island', sub: ISLAND.tagline, meta: null }, // [P] as ISLAND.eyebrow, [Z] tagline
+    // One row for the island finale, which also holds Off the clock's evening reel (2026-10-07).
+    { href: '#island', title: ISLAND.previewTitle, sub: ISLAND.tagline, meta: OFF_CLOCK.title }, // [plan 4.10][Z] tagline; meta [P][Z yard] as OFF_CLOCK.title
   ],
 } as const;
 
@@ -735,22 +797,22 @@ export const GROUND_LUMINANCE: Record<Ground, number> = {
 
 // `label` is the header's centre pill (null hides it); `budget` is in viewports of the 1440x900
 // reference; `kind` says whether it is a cap or a floor; `project` counts toward the project share;
-// `texture` isolates the section as a stacking context (app/globals.css, section[data-texture]); the contour lines it once drew were removed 2026-10-06.
-// The island has none: its root must not become a stacking context,
-// or the game's full-screen overlay inside it could not rise above the header.
+// `texture` isolates the section as a stacking context (app/globals.css, section[data-texture]); on berry-deep sections only, components/site/contour-bg.tsx paints contour lines inside that context (2026-10-07).
+// The island finale is the last section; Off the clock's evening lives inside it (2026-10-07).
 export const SECTIONS = [
   { id: 'top', ground: 'paper', gradient: 'paper-apricot', label: null, budget: 1.0, kind: 'cap', project: false, pinned: false, texture: true },
   // umd paints its own UMD red (umd.css); 'apricot' only sets ink text and a light-ground header.
-  // budget 1.7 = one sticky viewport plus a 0.7 viewport runway (0 under reduced motion).
-  { id: 'umd', ground: 'apricot', gradient: null, label: null, budget: 1.7, kind: 'cap', project: false, pinned: true, texture: true },
+  { id: 'umd', ground: 'apricot', gradient: null, label: null, budget: 1.7, kind: 'cap', project: false, pinned: false, texture: true },
   { id: 'contents', ground: 'berry-deep', gradient: null, label: null, budget: 1.0, kind: 'cap', project: false, pinned: false, texture: true },
   { id: 'blueberry', ground: 'berry', gradient: 'berry-deep', label: 'Blueberry', budget: 3.6, kind: 'floor', project: true, pinned: true, texture: true },
   { id: 'work', ground: 'berry-deep', gradient: null, label: 'Projects', budget: 4.2, kind: 'floor', project: true, pinned: false, texture: true },
   { id: 'impact', ground: 'berry-deep', gradient: null, label: 'Impact', budget: 1.3, kind: 'cap', project: true, pinned: false, texture: true },
   { id: 'experience', ground: 'berry-deep', gradient: null, label: 'Experience', budget: 1.0, kind: 'cap', project: false, pinned: false, texture: true },
-  { id: 'offclock', ground: 'ink', gradient: null, label: 'Off the clock', budget: 1.15, kind: 'cap', project: false, pinned: false, texture: true },
+  // Contact sits between the two horizontal strips (Andrew 2026-10-07: "two horizontal scrolls is a lot").
   { id: 'contact', ground: 'ink', gradient: null, label: 'Contact', budget: 0.75, kind: 'cap', project: false, pinned: false, texture: true },
-  { id: 'island', ground: 'ink', gradient: null, label: 'Island', budget: 1.85, kind: 'cap', project: false, pinned: true, texture: false },
+  // The résumé preview, between Contact and the island (2026-10-07); no Contents row on purpose.
+  { id: 'resume', ground: 'ink', gradient: null, label: 'Résumé', budget: 0.9, kind: 'cap', project: false, pinned: false, texture: true },
+  { id: 'island', ground: 'ink', gradient: null, label: 'Island', budget: 1.3, kind: 'cap', project: false, pinned: false, texture: true },
 ] as const satisfies readonly {
   id: string; ground: Ground; gradient: Gradient | null; label: string | null;
   budget: number; kind: 'cap' | 'floor'; project: boolean; pinned: boolean; texture: boolean;
@@ -813,19 +875,21 @@ export const IMAGES = {
   bbLesson: { src: '/images/work/blueberry-lesson.webp', w: 1600, h: 1000, sm: '/images/work/blueberry-lesson-800.webp', smW: 800, alt: "The twelve sections of Blueberry's CHEM241 course", owner: 'capture', sections: ['blueberry'] },
   // Captured 2026-10-06 from the live site in headless Chrome (SwiftShader), 2x, each mid-use: a
   // card flipped to its rating buttons (800x600 viewport, the review run is full width), the
-  // pathway, a curved arrow held mid-drag in the trainer, and the draw page with its starting
-  // material loaded into Ketcher. Cropped 4:3 to the readable region.
+  // pathway, and a curved arrow held mid-drag in the trainer. Cropped 4:3 to the readable region.
   bbFlashcards: { src: '/images/work/bb-flashcards.webp', w: 1600, h: 1200, sm: '/images/work/bb-flashcards-800.webp', smW: 800, alt: 'A Blueberry flashcard flipped to its answer: acetophenone and methylamine give an N-methyl imine, with Again, Hard, Good and Easy buttons below', owner: 'capture', sections: ['blueberry'] },
   bbPathway: { src: '/images/work/bb-pathway.webp', w: 1600, h: 1200, sm: '/images/work/bb-pathway-800.webp', smW: 800, alt: "The Blueberry pathway for Organic Chemistry II, Unit 1: a column of lesson nodes starting at allylic and resonance delocalization", owner: 'capture', sections: ['blueberry'] },
   bbArrows: { src: '/images/work/bb-arrows.webp', w: 1600, h: 1200, sm: '/images/work/bb-arrows-800.webp', smW: 800, alt: "A curved arrow being drawn in Blueberry's trainer, pushing the allyl cation's pi bond toward the empty carbon", owner: 'capture', sections: ['blueberry'] },
-  bbMolecules: { src: '/images/work/bb-molecules.webp', w: 1600, h: 1200, sm: '/images/work/bb-molecules-800.webp', smW: 800, alt: "Blueberry's draw-the-product page for a Grignard addition: the starting material and conditions beside a molecule editor holding acetophenone", owner: 'capture', sections: ['blueberry'] },
   // Captured 2026-10-07 the same way (SwiftShader, 2x, onboarding skipped). bbAldol is a recording
   // of the trainer's seq-aldol solved arrow by arrow at 800x600, cropped 4:3 to the step text and
-  // canvas; its still is step 2 with all three arrows drawn, before Check. bbTetris is the focus
-  // timer's break with a few pieces dropped; bbLessonAldol the lesson with its product shown.
+  // canvas; its still is step 2 with all three arrows drawn, before Check.
   bbAldol: { src: '/images/work/bb-aldol.webp', w: 1200, h: 900, sm: '/images/work/bb-aldol-800.webp', smW: 800, video: '/media/work/bb-aldol.webm', alt: "Blueberry's trainer solving the aldol addition in two steps: hydroxide takes an alpha hydrogen from acetone to make the enolate, then the enolate's carbon attacks formaldehyde, each step drawn as three curved arrows", owner: 'capture', sections: ['blueberry'] },
-  bbLessonAldol: { src: '/images/work/bb-lesson-aldol.webp', w: 1600, h: 1200, sm: '/images/work/bb-lesson-aldol-800.webp', smW: 800, alt: "Blueberry's aldol addition lesson: two acetaldehydes give 3-hydroxybutanal, above the conditions, dilute sodium hydroxide in cold water", owner: 'capture', sections: ['blueberry'] },
-  bbTetris: { src: '/images/work/bb-tetris.webp', w: 1600, h: 1200, sm: '/images/work/bb-tetris-800.webp', smW: 800, alt: "The Tetris game in Blueberry's focus timer break card, a few pieces stacked on its ten by eighteen board", owner: 'capture', sections: ['blueberry'] },
+  // The website, captured 2026-10-07 at 2x from the live site (1200x900 viewport), each cropped
+  // 4:3 to its heading. bbTetris is the focus timer's break game, played with scripted keys on a
+  // seeded piece order (scratchpad r2/tetris.mjs): four flat rows, the well open, an I over it.
+  bbSiteHome: { src: '/images/work/bb-site-home.webp', w: 1200, h: 900, sm: '/images/work/bb-site-home-800.webp', smW: 800, alt: "Blueberry's home page: the headline Organic chemistry that actually sticks, a line on lessons, mechanisms and flashcards, and a Get Started button", owner: 'capture', sections: ['blueberry'] },
+  bbSiteDecks: { src: '/images/work/bb-site-decks.webp', w: 1200, h: 900, sm: '/images/work/bb-site-decks-800.webp', smW: 800, alt: "Blueberry's Study Decks page: the heading, then a card offering the mechanism trainer, above the deck search", owner: 'capture', sections: ['blueberry'] },
+  bbSiteLessons: { src: '/images/work/bb-site-lessons.webp', w: 1200, h: 900, sm: '/images/work/bb-site-lessons-800.webp', smW: 800, alt: "Blueberry's CHEM241 lessons page: the course heading and its introduction above the section list", owner: 'capture', sections: ['blueberry'] },
+  bbTetris: { src: '/images/work/bb-tetris.webp', w: 1200, h: 900, sm: '/images/work/bb-tetris-800.webp', smW: 800, alt: "Tetris in Blueberry's focus timer break: four flat rows filled in checkered orange and purple, the right column left open as a well, and a straight piece falling toward it", owner: 'capture', sections: ['blueberry'] },
   mechanismTrainer: { src: '/images/work/mechanism-trainer.webp', w: 1600, h: 1000, sm: '/images/work/mechanism-trainer-800.webp', smW: 800, alt: 'The Mechanism Trainer', owner: 'capture', sections: ['work'] },
   // Re-captured 2026-10-07 at Andrew's request ("make the ff_tech... an animated slide with the
   // new fire animation and the marquee"): the live guide in headless SwiftShader Chrome at
@@ -838,18 +902,6 @@ export const IMAGES = {
   // globe, every label and panel hidden, stepped to 300 frames and played as a 15s seamless loop
   // (scratchpad brain-video.mjs). The still is the loop's own frame, shown under reduced motion.
   secondBrain: { src: '/images/work/second-brain-globe.webp', w: 1200, h: 750, alt: 'The Second Brain globe turning: every file on my machine as one node per folder and kind on the surface of a sphere, linked by the references between them as lines that curve through the inside of the sphere', owner: 'capture', sections: ['work'], gated: 'secondBrainShot', srcset: [{ src: '/images/work/second-brain-globe-800.webp', w: 800 }, { src: '/images/work/second-brain-globe.webp', w: 1200 }], video: '/media/work/second-brain-globe.webm' },
-  // Captured 2026-10-06 from the island game (island/src/interiors/chapel.js, room "circle") in
-  // headless SwiftShader Chrome via window.__island.enterInterior('chapel') and room.go('circle').
-  // Re-captured 2026-10-06 with the gold leader in the middle hidden (Andrew: it read as a cult).
-  // Shown small in #offclock's Bible study scene (Andrew asked for it there, 2026-10-06).
-  islandFocusFamily: { src: '/images/work/island-focus-family.webp', w: 1600, h: 1000, sm: '/images/work/island-focus-family-800.webp', smW: 800, alt: 'The Focus Family Circle room from my island game: advisors, officers and leaders seated in a ring, and two rows of students behind them', owner: 'capture', sections: ['offclock'] }, // [Z chapel] alt (needs sign-off)
-  // Captured 2026-10-06 the same way at 3x (2x for the plaza) and cropped 16:10, HUD hidden: the
-  // yard's Home Gym and Kitchen (island/src/interiors/yard.js, rooms "gym" and "kitchen"), and the
-  // spawn plaza outdoors. Each sits small in its #offclock scene.
-  islandGym: { src: '/images/work/island-gym.webp', w: 1600, h: 1000, sm: '/images/work/island-gym-800.webp', smW: 800, alt: 'The Home Gym from my island game: a round green friend beside a yellow one squatting a barbell in a red rack, a plate tree, kettlebells and a bench', owner: 'capture', sections: ['offclock'] }, // [Z yard] alt (needs sign-off)
-  islandKitchen: { src: '/images/work/island-kitchen.webp', w: 1600, h: 1000, sm: '/images/work/island-kitchen-800.webp', smW: 800, alt: 'The Kitchen from my island game: a red pot and a pan of vegetables on the stove, a chalkboard that says toss it 4 times, and an island counter with stools', owner: 'capture', sections: ['offclock'] }, // [Z yard] alt (needs sign-off)
-  islandTable: { src: '/images/work/island-table.webp', w: 1600, h: 1000, sm: '/images/work/island-table-800.webp', smW: 800, alt: 'The kitchen table from my island game: a plate, a bowl of fruit and three stools, with a yellow friend on one of them', owner: 'capture', sections: ['offclock'] }, // [Z yard] alt (needs sign-off)
-  islandPlaza: { src: '/images/work/island-plaza.webp', w: 1600, h: 1000, sm: '/images/work/island-plaza-800.webp', smW: 800, alt: 'The plaza outdoors on my island game: a sign with my name, letter blocks spelling Andrew Liu, a garage, roads and little round people', owner: 'capture', sections: ['offclock'] }, // [Z] alt (needs sign-off)
   islandS3: {
     src: '/media/island/s3-3840.webp', w: 3840, h: 2160,
     srcset: [
@@ -930,7 +982,7 @@ export const MICROCOPY = {
   resting: 'Live chat is resting; here is what I know.', // research 3.5
   tooFast: "You're asking faster than my budget allows. Try again in a minute, or email Andrew.", // research 3.5
   resume: 'Résumé (PDF)', // [P]
-  resumeShort: 'Résumé', // header pill; the same [P] link as the footer's "Résumé" (opens the PDF in a new tab)
+  resumeShort: 'Résumé', // [P] the header pill and the big résumé buttons, which glide to the résumé preview (#resume)
   credits: 'Photographs from Unsplash', // Blueberry footer pattern [S site-footer]
   backHome: 'Back to andliu.dev', // About footer tab (same words as `back`)
   domain: 'andliu.dev', // [P] public/CNAME; shown in caps beside the header's centre berry on hover (needs sign-off)
