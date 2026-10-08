@@ -55,8 +55,10 @@ export function ResumeCard() {
               <X size={20} aria-hidden="true" />
             </DialogClose>
           </div>
+          {/* tabIndex -1 on the frame: focus inside a browser PDF viewer swallows Esc and Shift+Tab
+              (calibrate F2); keyboard users have Open PDF and Download. */}
           {inline ? (
-            <iframe className="rs-frame" src={RESUME} title={RESUME_PREVIEW.title} />
+            <iframe className="rs-frame" src={RESUME} title={RESUME_PREVIEW.title} tabIndex={-1} />
           ) : (
             <div className="rs-fallback">
               <p className="rs-note">{RESUME_PREVIEW.noInline}</p>

@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-08T01:01:56.283Z",
+ "generated": "2026-10-08T04:07:32.809Z",
  "panels": [
   {
    "id": "brain",
@@ -60,7 +60,7 @@
       },
       {
        "x": "2026-10-07",
-       "y": 66
+       "y": 67
       }
      ],
      "source": "second-brain/second-brain/memories/*.md: every \"## [date] kind |\" heading; dates only, running total by day"
@@ -73,7 +73,7 @@
      "points": [
       {
        "x": "decision",
-       "y": 36
+       "y": 37
       },
       {
        "x": "pref",
@@ -181,7 +181,7 @@
      "id": "brain.rows",
      "kind": "stat",
      "unit": "rows",
-     "value": 62266,
+     "value": 62267,
      "source": "second-brain/second-brain/index.tsv: data rows after the header, streamed"
     },
     {
@@ -437,7 +437,7 @@
      "id": "bb.tests",
      "kind": "stat",
      "unit": "files",
-     "value": 199,
+     "value": 200,
      "source": "grignard/grignard-app-source: *.test.* files under src/ and packages/, node_modules excluded"
     },
     {
@@ -810,7 +810,7 @@
       },
       {
        "x": "2026-10-07",
-       "y": 5
+       "y": 6
       }
      ],
      "source": "git log --branches in 8 of my repos, my own addresses only, deduped by hash, counted per day"

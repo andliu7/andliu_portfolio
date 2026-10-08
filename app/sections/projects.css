@@ -38,7 +38,7 @@
 .work .wk-head { display: grid; gap: 10px; }
 /* With the display title gone the head is one eyebrow, so it sits close over the index instead of a
    whole section gap away (no bare ground). */
-.work .wk-head + .wk-index { margin-top: calc(20px - clamp(40px, 5cqi, 80px)); }
+.work .wk-head + .wk-index-wrap { margin-top: calc(20px - clamp(40px, 5cqi, 80px)); }
 /* The section's height floor (SECTIONS budget) would otherwise stretch every row, the head too. */
 .work { align-content: start; }
 /* No floor at all (Andrew 2026-10-07: "cut the screen so that the impact is right after the

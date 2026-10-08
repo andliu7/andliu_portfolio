@@ -139,7 +139,7 @@ export function SiteFooter() {
               <a className="ft-mark flip-head" href={home ? '#top' : '/'} aria-label={A11Y.home}><Mark /></a>
             </Flame>
             <p className="ft-blurb">{FOOTER_SKIP.blurb}</p>
-            <p className="ft-meta">{FOOTER_SKIP.copyright}<br />{MICROCOPY.credits}</p>
+            <p className="ft-meta">{FOOTER_SKIP.copyright}</p>
             <div className="ft-social">
               {FOOTER_SKIP.social.map(link => (
                 <SocialButton key={link.href} className="ft-btn" href={link.href} label={link.label} kind={link.icon} />

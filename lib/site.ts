@@ -125,7 +125,7 @@ export const HERO_CAUTION = [
 // 4.1 The rotating "currently:" line (prefix MICROCOPY.currently). Assembled from inventory
 // phrases; needs Andrew's sign-off (plan 2.4).
 export const CURRENTLY = [
-  'building Blueberry with a team of four', // [R] team size corrected by Andrew 2026-10-06 (the PDF still says five)
+  'building Blueberry with a team of four', // [Andrew 2026-10-06] team size from Andrew; the résumé PDF still says five
   'CS and pre-dental at UMD, expected May 2027', // [R]
   'leading Focus Family at Kharis Campus Ministry', // [R]
   'keeping one home for notes, food, workouts and goals', // [Z now]
@@ -639,7 +639,7 @@ export const RESUME_PREVIEW = {
 
 // The island, project 07: the page's finale (app/sections/island.tsx).
 export const ISLAND = {
-  eyebrow: '07 / The island', // [P] numbered as its row in PROJECTS
+  eyebrow: '06 / The island', // [P] numbered as its Contents row, like every other eyebrow (calibrate F1, 2026-10-08)
   titleTop: 'THE RÉSUMÉ', // [inventory 2.4]
   titleBottom: 'ISLAND', // [inventory 2.4]
   tagline: 'Every place on the island is one line of the résumé.', // [Z]
@@ -983,7 +983,6 @@ export const MICROCOPY = {
   tooFast: "You're asking faster than my budget allows. Try again in a minute, or email Andrew.", // research 3.5
   resume: 'Résumé (PDF)', // [P]
   resumeShort: 'Résumé', // [P] the header pill and the big résumé buttons, which glide to the résumé preview (#resume)
-  credits: 'Photographs from Unsplash', // Blueberry footer pattern [S site-footer]
   backHome: 'Back to andliu.dev', // About footer tab (same words as `back`)
   domain: 'andliu.dev', // [P] public/CNAME; shown in caps beside the header's centre berry on hover (needs sign-off)
 } as const;

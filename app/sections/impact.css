@@ -110,7 +110,7 @@
    chart's own title, right under them, says which one is on. */
 .impact .impact-tabs { display:flex; flex-wrap:wrap; gap:8px; }
 .impact .impact-tab {
-  min-width:var(--hit); min-height:40px; padding:0 10px; border:2px solid var(--line); border-radius:var(--r-control); background:var(--card); color:var(--ink-2);
+  min-width:var(--hit); min-height:var(--hit); padding:0 10px; border:2px solid var(--line); border-radius:var(--r-control); background:var(--card); color:var(--ink-2);
   font:700 14px/1 var(--display); letter-spacing:.02em; font-variant-numeric:tabular-nums; cursor:pointer;
   transition:background-color var(--dur-ui) var(--ease-ui),color var(--dur-ui) var(--ease-ui),border-color var(--dur-ui) var(--ease-ui),transform var(--dur-press) var(--ease-ui);
 }
@@ -153,11 +153,11 @@
 /* One source disclosure and one table toggle per panel, left-aligned under the chart. */
 .impact .impact-foot { display:flex; flex-wrap:wrap; align-items:flex-start; gap:4px 24px; }
 .impact .impact-how { flex:1 1 260px; min-width:0; }
-.impact .impact-how summary { display:inline-flex; align-items:center; min-height:32px; cursor:pointer; font:600 12px/1.2 var(--display); letter-spacing:.06em; text-transform:uppercase; color:var(--ink-2); }
+.impact .impact-how summary { display:inline-flex; align-items:center; min-height:var(--hit); cursor:pointer; font:600 12px/1.2 var(--display); letter-spacing:.06em; text-transform:uppercase; color:var(--ink-2); }
 .impact .impact-src { display:grid; gap:6px; margin:4px 0 0; font:500 12px/1.5 var(--display); color:var(--muted); overflow-wrap:anywhere; }
 .impact .impact-src dt { color:var(--ink-2); }
 .impact .impact-src dd { margin:0; }
-.impact .impact-show { min-height:32px; padding:0; border:0; background:none; cursor:pointer; font:600 12px/1.2 var(--display); letter-spacing:.06em; text-transform:uppercase; color:var(--berry); text-decoration:underline; text-decoration-color:var(--apricot-deep); text-underline-offset:5px; }
+.impact .impact-show { min-height:var(--hit); padding:0; border:0; background:none; cursor:pointer; font:600 12px/1.2 var(--display); letter-spacing:.06em; text-transform:uppercase; color:var(--berry); text-decoration:underline; text-decoration-color:var(--apricot-deep); text-underline-offset:5px; }
 
 .impact .impact-table-box { max-height:220px; overflow:auto; border:1px solid var(--line); border-radius:12px; overscroll-behavior:contain; }
 .impact .impact-table { width:100%; border-collapse:collapse; font:500 13px/1.4 var(--display); font-variant-numeric:tabular-nums; color:var(--ink); }

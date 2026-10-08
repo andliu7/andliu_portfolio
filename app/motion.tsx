@@ -96,6 +96,7 @@ function reveals() {
     splits.push(SplitText.create(el, {
       type: byWords ? 'words' : 'lines',
       mask: byWords ? 'words' : 'lines',
+      aria: 'hidden', // not 'auto': aria-label on a <p> is an axe violation (calibrate F4)
       autoSplit: true,
       onSplit(self) {
         el.classList.add('is-split');
