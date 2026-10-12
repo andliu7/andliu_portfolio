@@ -1,8 +1,11 @@
 // Touch controls and tap-to-interact.
-//  - Phones (pointer: coarse): a pad at the bottom right, [◀] [▲ over ▼] [▶], with a row of
-//    context buttons above it (Honk while driving; Run and Jump on foot). Every finger is tracked
-//    by pointerId, so ▲ and ◀ can be held together. It writes ctx.input.keys exactly as input.js
-//    does for the keyboard.
+//  - Phones (pointer: coarse): two thumbsticks (Andrew, 2026-10-11, replacing the arrow pad).
+//    The left one moves: it writes an analog ctx.input.stick { x, y, on } that car.js and
+//    character.js read, and also the plain ctx.input.keys (up/down/left/right past a third of the
+//    way), so everything that only knows keys (the drone, games) still works. The right one looks
+//    around, as a drag on the screen does (camera.js orbitPx). A row of context buttons sits above
+//    the right stick (Honk while driving; Run and Jump on foot). Every finger is tracked by
+//    pointerId, so both sticks and a button can be held at once.
 //  - Everywhere (phone and desktop): a quick tap or click on the canvas (under 8 px of movement
 //    and 350 ms) acts on what it hits, so camera drags never trigger anything:
 //      driver or own car while driving -> hop out     car on foot -> get in (called over first if far)
@@ -21,17 +24,16 @@ export const CAR_R = 3.4, PICK_R = 1.6;        // character.js reach for getting
 // moved = the farthest the pointer got from where it went down, in CSS px; ms = how long it was down.
 export function isTap(moved, ms){ return moved < TAP_MOVE && ms < TAP_MS; }
 
-// The pad: three columns, ▲ stacked over ▼ in the middle. Rects are in px inside the pad box.
-// Narrow phones (under 360 px wide) get 54 px buttons so the hotbar keeps a slot or two.
-export function padLayout(W = 390, gap = 8){
-  const s = W < 360 ? 54 : 60, colH = s*2 + gap;
-  return {
-    size:s, gap, w:s*3 + gap*2, h:colH,
-    left:  { x:0,            y:0,       w:s, h:colH },
-    up:    { x:s + gap,      y:0,       w:s, h:s },
-    down:  { x:s + gap,      y:s + gap, w:s, h:s },
-    right: { x:(s + gap)*2,  y:0,       w:s, h:colH },
-  };
+// A thumbstick: the finger's offset (dx, dy in CSS px, screen y down) from the stick's centre,
+// over the throw radius R, clamped to the unit circle, with a dead zone near the centre that the
+// rest of the throw is stretched over (so just past the dead zone is a crawl, not a jump).
+// Returns { x, y } in screen axes (y down) with length 0..1.
+export const STICK_DEAD = 0.14;
+export function stickVec(dx, dy, R, dead = STICK_DEAD){
+  const len = Math.hypot(dx, dy)/R;
+  if(!(len > dead)) return { x:0, y:0 };
+  const k = Math.min(1, (len - dead)/(1 - dead))/(len*R);
+  return { x:dx*k, y:dy*k };
 }
 
 // Ray against a building footprint collider { x, z, ang, hw, hd } extruded from y = 0 to h.
@@ -108,6 +110,8 @@ const GLYPH = {
   talk: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4.5h16a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-9l-5 4v-4H4A1.5 1.5 0 0 1 2.5 15V6A1.5 1.5 0 0 1 4 4.5z" fill="currentColor"/><circle cx="8" cy="10.5" r="1.3" fill="#5b6fd6"/><circle cx="12" cy="10.5" r="1.3" fill="#5b6fd6"/><circle cx="16" cy="10.5" r="1.3" fill="#5b6fd6"/></svg>',
   out:  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5.5A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20H10M14 7.5l4.5 4.5-4.5 4.5M18.5 12H9" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
+const MOVE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l3 3.5H9zM12 21l-3-3.5h6zM3 12l3.5-3v6zM21 12l-3.5 3V9z" fill="currentColor"/></svg>';
+const EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></svg>';
 const ICON_LABEL = { car:'Get in the car', door:'Go through the door', talk:'Talk', out:'Hop out' };
 
 const CSS = `
@@ -119,13 +123,28 @@ const CSS = `
   #char-prompt .k,#talk-prompt .k,#pet-prompt .k,#inv-prompt .k{display:none}
   #char-prompt,#talk-prompt,#pet-prompt,#inv-prompt{padding-left:12px}
 }
-/* narrow phones: the zone card spans the width, so it sits above the pad instead of under it */
-@media (pointer:coarse) and (max-width:600px){#card{bottom:calc(214px + env(safe-area-inset-bottom,0px))}}
+/* the zone card clears the sticks; on a narrow phone it spans the width, so it sits above the
+   right stick and its button row instead */
+@media (pointer:coarse){#card{bottom:calc(150px + env(safe-area-inset-bottom,0px))}}
+@media (pointer:coarse) and (max-width:600px){#card{bottom:calc(206px + env(safe-area-inset-bottom,0px))}}
 #touch2 .ctxrow{display:flex;gap:8px;min-height:46px;align-items:flex-end}
-#touch2 .pad{position:relative}
+/* The sticks: a soft paper ring (the throw) and a knob that follows the thumb. The left one is
+   fixed bottom left, outside #touch2, so it can sit in its own corner. */
+.stick{position:relative;width:124px;height:124px;border-radius:50%;background:#fffaf066;box-shadow:inset 0 0 0 3px #fffaf0,0 5px 0 #0000001f;
+  pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.stick .knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:#fffaf0;box-shadow:0 4px 0 #0000002a;
+  display:grid;place-items:center;color:#1f2a44;pointer-events:none;will-change:transform}
+.stick .knob svg{width:26px;height:26px;opacity:.55}
+.stick.on .knob{background:#5b6fd6;color:#fffaf0}
+.stick.on .knob svg{opacity:.9}
+#stickL{position:fixed;z-index:5;left:calc(14px + env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));display:none}
+@media (pointer:coarse){#stickL{display:block}}
+#touch2{right:calc(14px + env(safe-area-inset-right,0px))}
+/* the drone's Up / Down / Land pad (player/drone.js) sits bottom left too: lift it over the stick */
+@media (pointer:coarse){body #drone-pad{bottom:calc(152px + env(safe-area-inset-bottom,0px));left:calc(14px + env(safe-area-inset-left,0px))}}
+@media (max-width:359px){.stick{width:108px;height:108px}.stick .knob{width:50px;height:50px;margin:-25px 0 0 -25px}}
 #touch2 button{appearance:none;border:0;margin:0;padding:0;pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;cursor:pointer;
   color:#1f2a44;background:#fffaf0;box-shadow:0 5px 0 #0000001f;transition:transform .06s,box-shadow .06s,background .06s}
-#touch2 .pad button{position:absolute;border-radius:20px;font:700 22px/1 Fredoka,system-ui,sans-serif}
 #touch2 .ctxrow button{height:46px;padding:0 16px;border-radius:999px;font:600 14px/1 Fredoka,system-ui,sans-serif;letter-spacing:.02em}
 #touch2 .ctxrow button[data-k="honk"]{background:#ffd98a}
 #touch2 .ctxrow button[data-k="boost"]{background:#e98a5a;color:#fffaf0}
@@ -176,24 +195,13 @@ export function init(ctx){
       <button type="button" data-k="boost" aria-label="Run">Run</button>
       <button type="button" data-k="brake" aria-label="Jump">Jump</button>
     </div>
-    <div class="pad">
-      <button type="button" data-k="left" aria-label="Left">◀</button>
-      <button type="button" data-k="up" aria-label="Forward">▲</button>
-      <button type="button" data-k="down" aria-label="Back">▼</button>
-      <button type="button" data-k="right" aria-label="Right">▶</button>
-    </div>`;
+    <div class="stick" id="stickR" role="img" aria-label="Look around stick"><i class="knob">${EYE}</i></div>`;
   document.body.appendChild(root);
-  const pad = root.querySelector('.pad');
-  function sizePad(){
-    const l = padLayout(innerWidth);
-    pad.style.width = l.w + 'px'; pad.style.height = l.h + 'px';
-    for(const k of ['left', 'up', 'down', 'right']){
-      const b = pad.querySelector(`[data-k="${k}"]`), r = l[k];
-      Object.assign(b.style, { left:r.x + 'px', top:r.y + 'px', width:r.w + 'px', height:r.h + 'px' });
-    }
-  }
-  sizePad();
-  bus.on('resize', sizePad); addEventListener('resize', sizePad);
+  // .hud: hidden with the rest of the HUD on the start screen
+  const stickL = document.createElement('div'); stickL.id = 'stickL'; stickL.className = 'stick hud';
+  stickL.setAttribute('role', 'img'); stickL.setAttribute('aria-label', 'Move stick');
+  stickL.innerHTML = `<i class="knob">${MOVE}</i>`;
+  document.body.appendChild(stickL);
 
   // held: pointerId -> key. A key stays down while any finger still holds its button.
   const held = new Map();
@@ -203,7 +211,7 @@ export function init(ctx){
     held.delete(id);
     if(!isHeld(k)){ keys[k] = false; root.querySelector(`[data-k="${k}"]`)?.classList.remove('on'); }
   }
-  function releaseAll(){ for(const id of [...held.keys()]) release(id); }
+  function releaseAll(){ for(const id of [...held.keys()]) release(id); for(const st of sticks) st.end(); }
   for(const b of root.querySelectorAll('button[data-k]')){
     const k = b.dataset.k;
     b.addEventListener('pointerdown', e => {
@@ -217,10 +225,66 @@ export function init(ctx){
     b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('lostpointercapture', up);
     b.addEventListener('contextmenu', e => e.preventDefault());   // a long press must not open the menu
   }
+  // The sticks. Each tracks one finger (captured, so sliding off the ring keeps it), measures from
+  // the ring's centre, and moves its knob up to the ring's edge.
+  const stick = input.stick;                     // the move stick's analog intent, y up (input.js)
+  const look = { x:0, y:0, on:false };           // the look stick, screen axes
+  const DIRS = ['up', 'down', 'left', 'right'];
+  let lastMove = { x:0, y:0 };                    // screen axes, kept to re-apply after input.clear()
+  function setMove(v){
+    lastMove = { x:v.x, y:v.y };
+    stick.x = v.x; stick.y = -v.y; stick.on = v.on;
+    const t = 0.34;
+    const want = { up:v.on && stick.y > t, down:v.on && stick.y < -t, left:v.on && stick.x < -t, right:v.on && stick.x > t };
+    for(const k of DIRS) if(!isHeld(k)) keys[k] = want[k];
+  }
+  function makeStick(el, onVec){
+    const knob = el.querySelector('.knob');
+    let id = null, cx = 0, cy = 0, R = 1;
+    const put = (dx, dy) => {
+      const len = Math.hypot(dx, dy), k = len > R ? R/len : 1;
+      knob.style.transform = `translate(${(dx*k).toFixed(1)}px, ${(dy*k).toFixed(1)}px)`;
+      onVec({ ...stickVec(dx, dy, R), on:true });
+    };
+    const end = () => {
+      if(id === null) return;
+      id = null; el.classList.remove('on'); knob.style.transform = '';
+      onVec({ x:0, y:0, on:false });
+    };
+    el.addEventListener('pointerdown', e => {
+      if(id !== null) return;
+      e.preventDefault();
+      const r = el.getBoundingClientRect();
+      id = e.pointerId; cx = r.left + r.width/2; cy = r.top + r.height/2; R = r.width*0.42;
+      try { el.setPointerCapture(e.pointerId); } catch(err){}
+      el.classList.add('on');
+      put(e.clientX - cx, e.clientY - cy);
+    });
+    el.addEventListener('pointermove', e => { if(e.pointerId === id) put(e.clientX - cx, e.clientY - cy); });
+    const up = e => { if(e.pointerId === id) end(); };
+    el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); el.addEventListener('lostpointercapture', up);
+    el.addEventListener('contextmenu', e => e.preventDefault());
+    return { end, active: () => id !== null };
+  }
+  const sticks = [
+    makeStick(stickL, setMove),
+    makeStick(root.querySelector('#stickR'), v => { look.x = v.x; look.y = v.y; look.on = v.on; }),
+  ];
+  // Look: turn at up to about 2.3 rad/s, fed to the camera as the drag it would have been
+  // (order 89, just before camera.js moves the camera at 90).
+  ctx.onUpdate((dt) => {
+    if(!look.on || !state.started || (!look.x && !look.y)) return;
+    ctx.modules.camera?.orbitPx?.(look.x*420*dt, look.y*300*dt);
+  }, 89);
+
   addEventListener('blur', releaseAll);
   document.addEventListener('visibilitychange', () => { if(document.hidden) releaseAll(); });
   // Core's setMode / enterInterior call input.clear(); a finger still on the pad keeps its key down.
-  ctx.onUpdate(() => { for(const k of held.values()) keys[k] = true; }, 5);
+  // The move stick is put back too (input.clear() zeroes it with the keys).
+  ctx.onUpdate(() => {
+    for(const k of held.values()) keys[k] = true;
+    if(sticks[0].active()) setMove({ ...lastMove, on:true });
+  }, 5);
 
   // Context row: Honk while driving, Run and Jump on foot (and inside rooms).
   const ctxBtn = k => root.querySelector(`.ctxrow [data-k="${k}"]`);
@@ -462,7 +526,8 @@ export function init(ctx){
     pick: (x, y) => { const t = resolve(x, y); return t ? { kind:t.kind, id:t.id ?? null, t:+t.t.toFixed(2) } : null; },
     icon: () => icon,
     held: () => [...new Set(held.values())],
-    layout: () => padLayout(innerWidth),
+    stick: () => ({ ...stick }),
+    release: releaseAll,                    // let go of every pad button and stick (games that take over the controls)
     coarse: () => coarse.matches,
   };
   ctx.expose('touch', api);

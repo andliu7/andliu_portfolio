@@ -39,7 +39,7 @@ body{margin:0;background:var(--sky);color:var(--ink);font:15px/1.5 Nunito,system
 .dot{width:9px;height:9px;border-radius:50%;background:#9aa3b8}
 #sound[aria-pressed="true"] .dot{background:var(--leaf)}
 #menu-root{display:contents}
-#card{left:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(380px,calc(100% - 24px));background:var(--paper);border-radius:22px;box-shadow:0 6px 0 #0000001f;padding:18px 20px;opacity:0;transform:translateY(16px);transition:opacity .25s,transform .25s;pointer-events:none}
+#card{box-sizing:border-box;left:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(380px,calc(100% - 24px));background:var(--paper);border-radius:22px;box-shadow:0 6px 0 #0000001f;padding:18px 20px;opacity:0;transform:translateY(16px);transition:opacity .25s,transform .25s;pointer-events:none}
 #card.on{opacity:1;transform:none;pointer-events:auto}
 #card .eyebrow{font:600 11px/1 Fredoka,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);display:flex;gap:8px;align-items:center}
 #card .eyebrow i{width:10px;height:10px;border-radius:3px;display:inline-block}
@@ -47,11 +47,28 @@ body{margin:0;background:var(--sky);color:var(--ink);font:15px/1.5 Nunito,system
 #card .role{color:var(--ink-2);font-weight:600;margin:0 0 8px}
 #card ul{margin:0;padding-left:18px;display:grid;gap:5px;font-size:14px}
 #card .links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+#card .x{appearance:none;position:absolute;top:10px;right:10px;width:36px;height:36px;border:0;border-radius:50%;background:#f1e9d8;color:var(--ink);
+  font:700 22px/1 Fredoka,system-ui,sans-serif;cursor:pointer;touch-action:manipulation;display:grid;place-items:center;padding:0 0 2px}
+#card .x:active{transform:translateY(2px)}
+#card .x:focus-visible{outline:3px solid var(--berry-2);outline-offset:2px}
+#card h2{padding-right:34px}
 #card .links a{font:600 12px/1 Fredoka,system-ui,sans-serif;color:var(--paper);background:var(--berry);padding:9px 12px;border-radius:999px;text-decoration:none}
 #hint{left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));font:500 12px/1.4 Fredoka,system-ui,sans-serif;color:var(--ink);background:#fffaf0cc;padding:8px 14px;border-radius:999px;white-space:nowrap}
 #hint kbd{font:600 11px/1 Fredoka,system-ui,sans-serif;background:var(--ink);color:var(--paper);border-radius:6px;padding:3px 6px}
 @media (pointer:coarse){#hint{display:none}#card{bottom:calc(96px + env(safe-area-inset-bottom,0px))}}
 @media (max-width:600px){#map{width:104px;height:104px}#name{font-size:15px}}
+/* A phone on its side (Andrew, 2026-10-11): little height, so the map shrinks and the zone card
+   sits at the bottom just right of the move stick (the top left is the tracker chip and its
+   toasts), and scrolls if it runs long. The hotbar steps aside for it (inventory.js layoutBar). */
+@media (pointer:coarse) and (max-height:500px){
+  #map{width:92px;height:92px}
+  #topleft,#topright{top:calc(10px + env(safe-area-inset-top,0px))}
+  #topleft{left:calc(12px + env(safe-area-inset-left,0px))}
+  #topright{right:calc(12px + env(safe-area-inset-right,0px))}
+  body #card{left:calc(152px + env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(380px,calc(100% - 320px));max-height:calc(100% - 124px);overflow:auto;padding:14px 16px}
+  #card h2{font-size:20px}
+  #card ul{font-size:13px}
+}
 /* Start screen: the lit island itself, held on a slow diorama shot of the car (art.js), with the
    title over the sky end and the three choices on a paper dock at the bottom. Until the world is
    ready a warm gradient covers it; body.world-ready fades that away. */

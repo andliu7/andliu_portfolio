@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import { ArrowDown } from 'lucide-react';
 import { EXPERIENCE_HEAD, JOBS, MICROCOPY, sectionAttrs } from '@/lib/site';
 import { FlipHeading } from '@/components/site/flip-heading';
+import { TextBlockAnimation } from '@/components/ui/text-block-animation';
 import { PillFaces } from '@/components/site/pill-faces';
 import { useHorizontalScroll } from '@/components/site/use-horizontal-scroll';
 import { AutoplayButton, EscHint } from '@/components/site/strip-autoplay';
@@ -18,7 +19,7 @@ import { CornerStickers } from '@/components/site/corner-stickers/corner-sticker
 // Each role is a card filled with a pastel of the role's own tile colour (JOBS[].dot), its dates
 // on an ink chip, then the role, the organisation and its JOBS line. Above each card, on the
 // track, a dot and the month it started, derived from JOBS[].sort (yyyymm), so no date is typed
-// twice. Under reduced motion or on phones it is a plain vertical list.
+// twice. Under reduced motion it is a plain vertical list; phones pin too (2026-10-11).
 //
 // The way through (2026-10-07): while the strip pins, the Esc hint and the red/green auto-play
 // button (components/site/strip-autoplay.tsx) sit under the progress bar. The hook does the gliding.
@@ -49,7 +50,7 @@ export default function Experience() {
         <CornerStickers set="experience" />
         <div className="xp-head">
           <div className="xp-head-text">
-            <span className="eyebrow">{EXPERIENCE_HEAD.eyebrow}</span>
+            <TextBlockAnimation as="span" className="eyebrow" blockColor="var(--berry-soft)">{EXPERIENCE_HEAD.eyebrow}</TextBlockAnimation>
             <FlipHeading id="experience-title" text={EXPERIENCE_HEAD.headline} fit={false} className="display xp-title" />
           </div>
           <div className="xp-side">

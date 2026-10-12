@@ -340,7 +340,7 @@ export function init(ctx){
     [K('L'), 'Night'], [K('M'), 'Map'], [K('T'), 'Tour'], [K('N B'), 'Tour next and back'],
     [K('I') + ' or ' + K('Tab'), 'Bag'], [K('R'), 'Reset to the spawn plaza'], [K('Esc'), 'Leave a room, or close this menu'],
     ['<kbd>Wheel</kbd>', 'Zoom the camera in and out'],
-    ['<kbd>Touch</kbd>', 'On a phone, the pad sits bottom right. Tap things to use them'],
+    ['<kbd>Touch</kbd>', 'On a phone, the left stick moves and the right stick looks around. Tap things to use them'],
   ];
   panels.keys.innerHTML = `<h3>Controls</h3><p>Drive into things to knock them over. Nothing breaks for real.</p>
     <div class="keys">${keyRows.map(([k, t]) => `<div class="key"><div class="k">${k}</div><span>${t}</span></div>`).join('')}</div>

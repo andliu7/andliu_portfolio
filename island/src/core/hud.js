@@ -19,15 +19,21 @@ export function createHud(ctx){
   $('go-sound').addEventListener('click', () => begin(true));
   $('go-quiet').addEventListener('click', () => begin(false));
 
-  /* Zone card */
+  /* Zone card. Its x closes it (Andrew, 2026-10-11: on a phone it covers the view). Closing only
+     hides it: state.activeZone stays, so it comes back once you leave that zone and return. */
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;' }[c]));
   function showZone(z){
     if(z === state.activeZone) return; state.activeZone = z;
     bus.emit('zone', { zone:z });
     if(!z){ cardEl.classList.remove('on'); return; }
-    cardEl.innerHTML = `<div class="eyebrow"><i style="background:${z.color}"></i>${esc(z.eyebrow)}</div><h2>${esc(z.title)}</h2><p class="role">${esc(z.role)}</p><ul>${z.bullets.map(b => `<li>${esc(b)}</li>`).join('')}</ul>${z.links.length ? `<div class="links">${z.links.map(([t,u]) => `<a href="${u}" target="_blank" rel="noreferrer">${esc(t)}</a>`).join('')}</div>` : ''}`;
+    cardEl.innerHTML = `<button type="button" class="x" aria-label="Close">×</button><div class="eyebrow"><i style="background:${z.color}"></i>${esc(z.eyebrow)}</div><h2>${esc(z.title)}</h2><p class="role">${esc(z.role)}</p><ul>${z.bullets.map(b => `<li>${esc(b)}</li>`).join('')}</ul>${z.links.length ? `<div class="links">${z.links.map(([t,u]) => `<a href="${u}" target="_blank" rel="noreferrer">${esc(t)}</a>`).join('')}</div>` : ''}`;
     cardEl.classList.add('on');
   }
+  cardEl.addEventListener('click', e => {
+    if(!e.target.closest('.x')) return;
+    cardEl.classList.remove('on');
+    ctx.renderer.domElement.focus?.({ preventScroll:true });
+  });
 
   /* Hint line, one per mode. Modules may replace a mode's hint with setHint(mode, html). */
   const hints = { drive: hintEl.innerHTML, walk: '<kbd>WASD</kbd> walk', interior: '<kbd>Esc</kbd> leave' };

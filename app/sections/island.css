@@ -10,6 +10,19 @@
 .island .il-tagline { max-inline-size:30ch; font:500 clamp(19px,1.6vw,23px)/1.45 var(--body); color:var(--on); }
 .island .il-go { margin-top:8px; }
 
+/* A light stick before the footer (Andrew, 2026-10-12: "make the island screen stick ... it's a
+   light stick though"; then "center the resume island screen ... with a bit more of the
+   background upper margin"). The window sits in .il-stick, a box one screen tall that centres
+   it (grid, align-content), and that box is sticky inside a section 35svh taller than itself: it
+   holds for that short stretch, then the page lifts off the footer as before. Centred, the window
+   gets an even band of the page's ground above and below it. CSS only. Only where the window
+   fits on one screen (wide and 900px tall or more; a stacked phone layout would have its foot
+   hidden while stuck) and with motion on; elsewhere .il-stick is a plain block. */
+@media (min-width:900px) and (min-height:900px) {
+  html:not([data-motion="reduced"]) .island { min-height:calc(100svh + 35svh); }
+  html:not([data-motion="reduced"]) .island .il-stick { position:sticky; top:0; display:grid; align-content:center; min-height:100svh; }
+}
+
 /* The poster, framed as a sticker print: 2px ink outline, a slight turn. */
 .island .il-shot { margin:0; min-width:0; }
 .island .il-shot img { width:100%; height:auto; aspect-ratio:16 / 9; object-fit:cover; border-radius:20px; border:2px solid var(--ink); rotate:1.5deg; transition:rotate .6s var(--ease-spring); }

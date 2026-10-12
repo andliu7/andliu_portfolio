@@ -5,6 +5,7 @@ import { SweatyTerrapin } from '@/components/site/umd/sweaty-terrapin';
 import { LavaCard } from '@/components/site/umd/lava-card';
 import { MarylandFlag } from '@/components/site/umd/flag';
 import { MarylandIcon } from '@/components/site/umd/maryland-icon';
+import { TextBlockAnimation } from '@/components/ui/text-block-animation';
 import './umd.css';
 
 // College Park (the approved Umd design, fp/project/Umd.dc.html), right after the hero. Behind
@@ -29,11 +30,13 @@ export default function Umd() {
         <div className="umd-shade" aria-hidden="true" />
         <div className="umd-grid">
           <span className="umd-chip">{UMD.chip}</span>
+          {/* Block-wipe entrances (2026-10-12) in the flag's own colours: gold over the white
+              lines, red over the gold one. One component per fit-line, the second 0.1s behind. */}
           <h2 id="umd-title" className="display umd-title">
-            <span className="fit-line">{UMD.titleTop}</span>{' '}
-            <span className="fit-line"><span className="umd-gold">{UMD.titleBottom}</span></span>
+            <TextBlockAnimation as="span" className="fit-line" blockColor="var(--umd-gold)">{UMD.titleTop}</TextBlockAnimation>{' '}
+            <TextBlockAnimation as="span" className="fit-line" blockColor="var(--umd-red)" delay={0.1}><span className="umd-gold">{UMD.titleBottom}</span></TextBlockAnimation>
           </h2>
-          <p className="umd-degree">{UMD.degree}</p>
+          <TextBlockAnimation as="p" className="umd-degree" blockColor="var(--umd-gold)" delay={0.2}>{UMD.degree}</TextBlockAnimation>
           <ul className="umd-tags">
             {UMD.tags.map(tag => <li key={tag}>{tag}</li>)}
           </ul>

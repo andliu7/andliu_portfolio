@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { parseTwoVoice } from './type';
+import { FlipReveal } from '@/components/ui/text-block-animation';
 
 // FlipHeading (SITE-PLAN.md 2.2, A3): every section's display header is a link to its own
 // section, and its two voices trade places when you touch it. Built from the mechanics of
@@ -17,6 +18,11 @@ import { parseTwoVoice } from './type';
 //
 // A server component: plain markup, the motion is CSS. Screen readers read the sr-only text once;
 // the letter stage is aria-hidden.
+//
+// Entrance (2026-10-12): FlipReveal (components/ui/text-block-animation.tsx), the client piece
+// after the link, wipes a colour block across each visual line and fades the letter cells in
+// under it. It adds no wrapper: one aria-hidden layer as the heading's last child. `reveal={false}`
+// leaves it out; `revealColor` overrides the block's var(--kw).
 
 type Level = 'h1' | 'h2' | 'h3';
 
@@ -76,7 +82,7 @@ export function plainText(text: string) {
   return text.split('\n').map(line => parseTwoVoice(line).map(part => part.text).join('')).join(' ').replace(/\s+/g, ' ').trim();
 }
 
-export function FlipHeading({ id, text, as: Tag = 'h2', href, max, fit = true, className = '' }: {
+export function FlipHeading({ id, text, as: Tag = 'h2', href, max, fit = true, className = '', reveal = true, revealColor }: {
   /** The heading's id; the link targets `#id` unless `href` says otherwise. */
   id: string;
   /** Two-voice text from lib/site.ts, keywords in *asterisks*, "\n" for a line break. */
@@ -88,6 +94,10 @@ export function FlipHeading({ id, text, as: Tag = 'h2', href, max, fit = true, c
   /** Size the longest line to the column (.fit). Off for small headings such as card titles. */
   fit?: boolean;
   className?: string;
+  /** The block-wipe entrance. On for every section heading. */
+  reveal?: boolean;
+  /** The entrance block's colour, a site token. Defaults to the ground's --kw. */
+  revealColor?: string;
 }) {
   const plain = plainText(text);
   const longest = Math.max(1, ...text.split('\n').map(line => plainText(line).length));
@@ -98,6 +108,7 @@ export function FlipHeading({ id, text, as: Tag = 'h2', href, max, fit = true, c
         <span className="sr-only">{plain}</span>
         <FlipStage text={text} />
       </a>
+      {reveal && <FlipReveal blockColor={revealColor} />}
     </Tag>
   );
 }

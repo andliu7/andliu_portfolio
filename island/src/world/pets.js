@@ -1,6 +1,7 @@
 // Pets: walk up to a blueberry and press F to adopt it. Up to five follow you in a little line,
-// hopping along your own footsteps (so they go where you could go), keep a polite gap, pop back
-// in beside you after a drive or a teleport, paddle when the path crosses water, and look around,
+// hopping along your own footsteps (so they go where you could go), keep a polite gap, sit in the
+// car behind you while you drive, pop back in beside you after a teleport, paddle when the path
+// crosses water, and look around,
 // sit, then doze with a Zzz when you stand still. F on a pet gives a heart and a short line.
 // Robots refuse: F on one lights a screen face that goes angry, neutral, then happy, and it stays.
 //
@@ -180,10 +181,14 @@ export function init(ctx){
   function target(){
     if(!state.started || state.mode !== 'walk') return null;
     const P = state.player; let best = null, bd = 1e9;
+    // Beside the car, your own pets step out of F's way so F gets in (Andrew, 2026-10-12: they
+    // follow at your heels, so patting one kept winning over the car). Adopting still works.
+    const car = ctx.modules.car?.car, carNear = !!car && Math.hypot(car.x - P.x, car.z - P.z) <= 3.4;
     for(const c of ctx.chars){
       const d = Math.hypot(c.x - P.x, c.z - P.z);
       if(d >= bd) continue;
       const pet = pets.find(p => p.c === c);
+      if(pet && carNear) continue;
       if(pet && d < REACH){ best = { kind: 'pet', c, pet }; bd = d; }
       else if(!pet && d < REACH && isBerry(c)){ best = { kind: 'berry', c }; bd = d; }
       else if(d < ROBOT_REACH && isRobot(c)){ best = { kind: 'robot', c }; bd = d; }
@@ -224,10 +229,31 @@ export function init(ctx){
   const wetAt = (x, z) => { const L = Lay(); return !!L?.landAt && !L.landAt(x, z) && !((L.roadDistAt?.(x, z) ?? 9) < 4.5); };
   let still = 0, broken = false;
 
+  // Riding: while you drive, the pets sit in the car behind the seat, small and squashed into a
+  // sit, facing forward (Andrew, 2026-10-12: "make them sit"). Seat-local spots, so they bounce
+  // with the body. On the way out they hop off and walk back to the line.
+  const RIDE = [[-0.32, 0, -0.75], [0.32, 0, -0.75], [0, 0, -1.3], [-0.42, 0, -1.3], [0.42, 0, -1.3]];
+  const rv = new THREE.Vector3();
+  function ridePets(seat, t){
+    const h = ctx.modules.car?.car?.heading || 0;
+    seat.updateWorldMatrix(true, false);
+    pets.forEach((p, i) => {
+      const c = p.c, [lx, ly, lz] = RIDE[i % RIDE.length];
+      seat.localToWorld(rv.set(lx, ly, lz));
+      c.x = rv.x; c.z = rv.z; c.y = 0; c.vy = 0; c.yaw = h; p.idle = 0; p.wet = false;
+      c.g.position.copy(rv);
+      c.g.rotation.set(0, h + (state.reduced ? 0 : Math.sin(t*1.7 + i)*0.15), 0, 'YXZ');
+      c.g.scale.set(0.5*1.08, 0.5*0.86, 0.5*1.08);
+      p.zzz.visible = false;
+    });
+  }
+
   function stepPets(dt, t){
     const P = state.player, moving = Math.abs(P.speed || 0) > 0.3, R = state.reduced;
     still = moving ? 0 : still + dt;
     recordTrail();
+    const seat = state.mode === 'drive' ? ctx.modules.car?.seat : null;
+    if(seat){ ridePets(seat, t); return; }
     pets.forEach((p, i) => {
       const c = p.c, s = along(slotDist(i));
       let dx = s.x - c.x, dz = s.z - c.z, d = Math.hypot(dx, dz);

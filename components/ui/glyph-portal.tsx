@@ -117,7 +117,10 @@ export default function GlyphPortal({
     const marks = section.querySelector<SVGGElement>("[data-gp-marks]")!;
     const choices = section.querySelector<HTMLElement>("[data-gp-choices]")!;
     const buttons = Array.from(choices.querySelectorAll<HTMLButtonElement>("button"));
-    const picker = section.querySelector<HTMLSelectElement>("[data-gp-select]")!;
+    // The tag-name overload, not querySelector<HTMLSelectElement>: @cloudflare/workers-types (for
+    // worker/) declares a global Element whose remove() returns Element, so the generic fails its
+    // constraint (2026-10-12). There is one <select> in this component.
+    const picker = section.querySelector("select")!;
     const root = scrollParent(section);
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const canvas = document.createElement("canvas");

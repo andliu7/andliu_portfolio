@@ -2,8 +2,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { SocialButton } from './social-button';
 import { usePathname } from 'next/navigation';
-import { Briefcase, ChartColumn, Coffee, FileText, LayoutGrid, Mail } from 'lucide-react';
-import { A11Y, FOOTER_SKIP, MICROCOPY } from '@/lib/site';
+import { Briefcase, ChartColumn, Check, Coffee, Copy, FileText, LayoutGrid, Mail } from 'lucide-react';
+import { A11Y, CONTACT, FOOTER_SKIP, MICROCOPY, RESUME } from '@/lib/site';
 import { getLenis } from '@/app/smooth';
 import { Flame } from './flame/flame';
 import { Mark } from './mark';
@@ -44,6 +44,16 @@ export function SiteFooter() {
   const footRef = useRef<HTMLElement>(null);
   const [fits, setFits] = useState(false);
   const [revealed, setRevealed] = useState(false);
+  const [copied, setCopied] = useState(false); // the copy button reads "Copied" for two seconds
+  const copyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(CONTACT.email);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.location.href = `mailto:${CONTACT.email}`; // no clipboard access: open the mail app instead
+    }
+  };
 
   // Does the whole footer fit in the window? Re-measured when the window or the footer resizes
   // (a ResizeObserver fires when the element's own box changes, e.g. the font swap).
@@ -144,6 +154,16 @@ export function SiteFooter() {
               {FOOTER_SKIP.social.map(link => (
                 <SocialButton key={link.href} className="ft-btn" href={link.href} label={link.label} kind={link.icon} />
               ))}
+              {/* Copy email and the résumé, the same expanding icon buttons (Andrew 2026-10-12):
+                  the .sbtn classes (social-button.css) give them the icon-then-word opening. */}
+              <button type="button" className="sbtn ft-btn" onClick={copyEmail} aria-live="polite">
+                {copied ? <Check className="sbtn-icon" size={18} aria-hidden="true" /> : <Copy className="sbtn-icon" size={18} aria-hidden="true" />}
+                <span className="sbtn-label">{copied ? MICROCOPY.copied : MICROCOPY.copyEmail}</span>
+              </button>
+              <a className="sbtn ft-btn" href={RESUME} target="_blank" rel="noreferrer">
+                <FileText className="sbtn-icon" size={18} aria-hidden="true" />
+                <span className="sbtn-label">{MICROCOPY.resumeShort}</span>
+              </a>
             </div>
           </div>
         </div>

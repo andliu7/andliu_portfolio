@@ -130,6 +130,7 @@ jolt(x, z, r)                                make characters within r hop (the h
 
 ```
 keys                { up, down, left, right, brake, boost }  movement intent, read every frame
+stick               { x, y, on }  the phone move stick (ui/touch.js): analog, x right, y forward, -1..1; car.js and character.js prefer it while on
 isDown(code)        any key by KeyboardEvent.code
 on(action, fn) -> off
 trigger(action)     fire an action without a key

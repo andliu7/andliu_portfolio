@@ -1,8 +1,8 @@
 /* Experience, the timeline (app/sections/experience.tsx). Every selector starts at .experience.
    Two layouts, as in Off the clock:
-     pinned  .experience[data-pin] (components/site/use-horizontal-scroll.ts, 700px and up, full
-             motion): a sticky 100svh frame; the head row stays, the track of cards slides left.
-     stack   phones, reduced motion, before JavaScript: the head, then the cards one per row. */
+     pinned  .experience[data-pin] (components/site/use-horizontal-scroll.ts, full motion, phones
+             too since 2026-10-11): a sticky 100svh frame; the head row stays, the cards slide left.
+     stack   reduced motion, before JavaScript: the head, then the cards one per row. */
 
 .experience { background-color:var(--ground); color:var(--on); }
 .experience .xp-frame { display:grid; grid-template-columns:minmax(0,1fr); gap:28px; align-content:start; padding:calc(var(--header-h) + 12px) var(--gutter) 64px; }
@@ -57,6 +57,26 @@
 .experience[data-pin] .xp-tick { display:block; position:relative; padding:0 0 24px 2px; font:500 13px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--on-2); font-variant-ligatures:none; }
 .experience[data-pin] .xp-tick::after { content:''; position:absolute; left:0; top:24px; width:14px; height:14px; border:2px solid var(--ink); border-radius:50%; background:var(--dot); }
 .experience[data-pin] .xp-end { width:auto; grid-template-rows:none; align-content:center; padding:44px 24px 0 8px; }
+/* The résumé pill at the end of the strip, much bigger (Andrew, 2026-10-12: "make the CTA resume
+   button on the horizontal scroll much bigger"): it is where the timeline ends, so it reads as
+   the next step rather than a footnote. The arrow scales with the type. */
+.experience .xp-resume { --pill-pad:clamp(32px,3.4vw,52px); min-height:clamp(72px,7vw,96px); font-size:clamp(20px,2.2vw,30px); gap:.5em; }
+.experience .xp-resume > :is(.pill-face,.pill-back) { min-height:clamp(72px,7vw,96px); }
+.experience .xp-resume svg { width:1.1em; height:1.1em; }
+/* Pinned on a phone: one card a little narrower than the screen, so the next one peeks in from the
+   right, and type a step smaller so the head row and a whole card fit in one 100svh frame. Esc
+   means nothing without a keyboard, so its hint goes. */
+@media (max-width:699px) {
+  .experience[data-pin] .xp-title { font-size:clamp(44px,13vw,56px); }
+  .experience[data-pin] .xp-track { gap:16px; }
+  .experience[data-pin] .xp-item { width:82vw; }
+  .experience[data-pin] .xp-card { padding:20px 22px 22px; }
+  .experience[data-pin] .xp-role { font-size:24px; }
+  .experience[data-pin] .xp-org { font-size:16px; margin-bottom:8px; }
+  .experience[data-pin] .xp-line { font-size:16px; line-height:1.5; }
+  .experience[data-pin] .xp-bar { width:140px; }
+  .experience[data-pin] .sa-esc { display:none; }
+}
 
 /* ---------- Motion ----------
    Each card tips up from a slight turn as it comes on screen (.hs-in from the hook); its dot pops.
@@ -77,7 +97,7 @@ html[data-motion="reduced"] .experience :is(.xp-card,.xp-tick) { transition:none
    Contact, next, sits on ink; this ground is berry-deep. A gradient from clear through berry-deep
    to ink lies along the frame's foot. Pinned, it grows in with the strip's progress (--p, from
    use-horizontal-scroll.ts): opacity and a scaleY from the foot, nothing that lays out again. In
-   the stack (phones, reduced motion) there is no progress, so it sits there at full strength.
+   the stack (reduced motion) there is no progress, so it sits there at full strength.
    z-index -1 inside the frame keeps it under the cards and over the contour lines. */
 .experience .xp-frame { position:relative; isolation:isolate; }
 .experience .xp-frame::after { content:''; position:absolute; z-index:-1; left:0; right:0; bottom:0; height:clamp(160px,32svh,320px); pointer-events:none;

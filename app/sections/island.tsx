@@ -3,6 +3,7 @@ import { IMAGES, ISLAND, MICROCOPY, OFF_CLOCK, sectionAttrs } from '@/lib/site';
 import { IslandDoor } from '@/components/site/closing/island-door';
 import { EveningReel } from '@/components/site/closing/evening-reel';
 import { CornerStickers } from '@/components/site/corner-stickers/corner-stickers';
+import { TextBlockAnimation } from '@/components/ui/text-block-animation';
 import './island.css';
 
 // The island finale, the page's last section (rebuilt 2026-10-07). It absorbed Off the clock:
@@ -21,21 +22,25 @@ export default function Island() {
   return (
     <section {...sectionAttrs('island')} className="island" aria-labelledby="island-title">
       <CornerStickers set="island" />
+      {/* .il-stick: a one-screen box that holds the window centred while it sticks (island.css). */}
+      <div className="il-stick">
       <div className="il-window" data-ground="berry">
         <div className="il-text">
-          <span className="eyebrow">{ISLAND.eyebrow}</span>
+          {/* Block-wipe entrances (2026-10-12): berry-soft on the eyebrow, --kw (apricot) on the
+              title, one component per fit-line so they stagger, paper on the tagline. */}
+          <TextBlockAnimation as="span" className="eyebrow" blockColor="var(--berry-soft)">{ISLAND.eyebrow}</TextBlockAnimation>
           <h2 id="island-title" className="display il-title">
-            <span className="fit-line">{ISLAND.titleTop}</span>
-            <span className="fit-line">{ISLAND.titleBottom}</span>
+            <TextBlockAnimation as="span" className="fit-line">{ISLAND.titleTop}</TextBlockAnimation>
+            <TextBlockAnimation as="span" className="fit-line" delay={0.1}>{ISLAND.titleBottom}</TextBlockAnimation>
           </h2>
-          <p className="il-tagline">{ISLAND.tagline}</p>
+          <TextBlockAnimation as="p" className="il-tagline" blockColor="var(--paper)" delay={0.2}>{ISLAND.tagline}</TextBlockAnimation>
           <a className="pill pill-light pill-big il-go" href={ISLAND.src}>
             <Play size={18} aria-hidden="true" /> {MICROCOPY.prompt}
           </a>
           {/* Off the clock, small, under the button in the left column, with a small title in the
               display font like FOR REAL (Andrew 2026-10-07). */}
           <div className="il-evening">
-            <h3 className="il-evening-title">{OFF_CLOCK.title}</h3>
+            <TextBlockAnimation as="h3" className="il-evening-title">{OFF_CLOCK.title}</TextBlockAnimation>
             <EveningReel />
           </div>
         </div>
@@ -50,6 +55,7 @@ export default function Island() {
             />
           </IslandDoor>
         </figure>
+      </div>
       </div>
     </section>
   );

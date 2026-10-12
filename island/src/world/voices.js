@@ -38,8 +38,13 @@ export const CHATS = {
       'You draw curved arrows, and RDKit.js grades your mechanism right in the browser.',
       'Here, a molecule, just like our custom SVG renderer draws them.'], give:'molecule',
       given:['You already have our molecule!', 'Push some electrons for us.'] },
-    joke: { lines:['Why did the berry ace organic chemistry?', 'It always knew where the electrons were going. Curved arrows!'],
-      choices:[['Okay, the pitch', 'pitch'], ['Ha! Bye.', null]] },
+    // Puns, three in a row (Andrew, 2026-10-12: "the blueberry jokes need to be punny").
+    joke: { lines:['Why did the blueberry ace organic chemistry?', 'It was berry good at pushing electrons.'],
+      choices:[['Another!', 'joke2'], ['Okay, the pitch', 'pitch'], ['Ha! Bye.', null]] },
+    joke2: { lines:['Why did the blueberry book a tutoring session?', 'It was feeling a little blue about resonance.'],
+      choices:[['One more!', 'joke3'], ['Okay, the pitch', 'pitch'], ['Ha! Bye.', null]] },
+    joke3: { lines:['Why do blueberries make the best lab partners?', 'When a reaction goes wrong, they stick together in a jam.'],
+      choices:[['Okay, the pitch', 'pitch'], ['Berry funny. Bye!', null]] },
     bye: { lines:['Come back for the pitch any time!'] },
   },
   tooth: {

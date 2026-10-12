@@ -1,12 +1,41 @@
 // Skills Alley bowling: five rolls at the ten skill pins map.js stands at the end of the lane.
 // setup() finds those pins (knockable props), adds a pin-count scoreboard and a start mat.
 // Scoring is simple on purpose: every pin down is a point, a strike is all ten in one roll.
+//
+// A roll (Andrew, 2026-10-12, replacing "drive into the ball"): first a spin bar you toggle
+// between Hook left, Straight and Hook right (A / D, or tap), then a direction bar whose needle
+// sweeps like the fishing tension bar. F (or Throw) stops it: the green middle sends the ball at
+// the head pin, the edges angle it off by up to AIM radians. The ball is launched down the lane
+// and the spin pushes it sideways while it rolls, so a hook from the edge can curve back in.
 import { kit, best } from './ui.js';
 
 export const meta = { title: 'Skills Alley Bowling', zoneId: 'skills', kind: 'world' };
 
 const ROLLS = 5;
+const AIM = 0.1;          // the bar's edge turns the throw this far off the head pin (radians)
+const GREEN = 0.16;       // width of the green on the direction bar (0..1 of the bar)
+const SWEEP = 2.6;        // needle speed (rad/s of its sine sweep; one pass is about 1.2 s)
+const THROW = 13;         // ball speed off the hand (m/s)
+const HOOK = 2.6;         // sideways push from full spin while the ball rolls (m/s^2)
+const SPINS = [['Hook left', -1], ['Straight', 0], ['Hook right', 1]];
 let B = null;
+
+const CSS = `
+.bw-ui{position:absolute;left:50%;bottom:calc(64px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(400px,calc(100% - 40px));display:grid;gap:10px;justify-items:center;
+  font:700 13px/1 Fredoka,system-ui,sans-serif;color:#1f2a44}
+@media (pointer:coarse){.bw-ui{bottom:calc(150px + env(safe-area-inset-bottom,0px))}}
+.bw-ui > span{display:inline-block;background:#fffaf0;border:3px solid #1f2a44;border-radius:999px;padding:5px 12px;box-shadow:0 3px 0 #0000002a}
+.bw-spin{display:flex;width:100%;border:3px solid #1f2a44;border-radius:999px;background:#fffaf0;box-shadow:0 5px 0 #0000002a;overflow:hidden}
+.bw-spin button{appearance:none;flex:1;border:0;background:none;padding:11px 6px;font:700 14px/1 Fredoka,system-ui,sans-serif;color:#1f2a44;cursor:pointer;touch-action:manipulation}
+.bw-spin button + button{border-left:3px solid #1f2a44}
+.bw-spin button.on{background:#e98a5a;color:#fffaf0}
+.bw-track{position:relative;width:100%;height:30px;border:3px solid #1f2a44;border-radius:999px;background:repeating-linear-gradient(90deg,#fffaf0 0 18px,#f4ecdc 18px 36px);box-shadow:0 5px 0 #0000002a;overflow:hidden}
+.bw-zone{position:absolute;top:0;bottom:0;background:#06d6a0;border-left:3px solid #1f2a44;border-right:3px solid #1f2a44}
+.bw-needle{position:absolute;top:-3px;bottom:-3px;width:8px;margin-left:-4px;background:#1f2a44;border-radius:4px}
+.bw-ui .gm-btn{font-size:17px;padding:14px 26px}
+/* the phone's sticks would drive the car off the lane while you aim */
+body.bw-aim :is(#stickL,#stickR){visibility:hidden}
+`;
 
 const ICON = `<svg viewBox="0 0 40 40" width="40" height="40"><path d="M20 4c3 0 4 3 3.4 6-.4 2 .6 3.4 2 6 2.6 5 2.6 12-1 18H15.6c-3.6-6-3.6-13-1-18 1.4-2.6 2.4-4 2-6C16 7 17 4 20 4z" fill="#fff" stroke="#1f2a44" stroke-width="2"/><path d="M16.8 12.5h6.4M16.3 15h7.4" stroke="#e5484d" stroke-width="2"/></svg>`;
 
@@ -85,9 +114,60 @@ export function start(ctx, api){
     K.card({ icon: ICON, color: '#e98a5a', eyebrow: 'Skills Alley', title: 'The pins wandered off', body: 'This alley has no pins right now. Try again after a reload.', secondary: ['Close', () => api.stop()] });
     return { stop(){ K.destroy(); }, state: () => ({ phase: 'unavailable' }) };
   }
-  const S = { phase: 'intro', roll: 0, settle: 0, cap: 0, wait: 0, total: 0, strikes: 0, grace: 0 };
+  const S = { phase: 'intro', roll: 0, settle: 0, cap: 0, wait: 0, total: 0, strikes: 0, grace: 0, spin: 0, t: 0, needle: 0.5, aim: 0 };
   const { zone, f, pins, ball } = B;
   const offs = [];
+
+  /* ---------- the aim panel: spin toggle, direction bar, Throw ---------- */
+  if(!document.getElementById('bw-css')){ const st = document.createElement('style'); st.id = 'bw-css'; st.textContent = CSS; document.head.append(st); }
+  const ui = document.createElement('div'); ui.className = 'bw-ui'; ui.hidden = true;
+  ui.innerHTML = `<span>Pick a spin, then stop the needle in the green <kbd>F</kbd></span>
+    <div class="bw-spin" role="radiogroup" aria-label="Spin">${SPINS.map(([l, v]) => `<button type="button" role="radio" data-s="${v}">${l}</button>`).join('')}</div>
+    <div class="bw-track"><div class="bw-zone"></div><div class="bw-needle"></div></div>
+    <button type="button" class="gm-btn primary on">Throw <kbd>F</kbd></button>`;
+  K.el.append(ui);
+  const zoneEl = ui.querySelector('.bw-zone'), needleEl = ui.querySelector('.bw-needle');
+  zoneEl.style.left = ((0.5 - GREEN/2)*100) + '%'; zoneEl.style.width = (GREEN*100) + '%';
+  const spinBtns = [...ui.querySelectorAll('.bw-spin button')];
+  function setSpin(v){
+    S.spin = Math.max(-1, Math.min(1, v));
+    spinBtns.forEach(b => { const on = +b.dataset.s === S.spin; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); });
+  }
+  spinBtns.forEach(b => b.addEventListener('click', () => { setSpin(+b.dataset.s); K.sfx.tick(); }));
+  ui.querySelector('.gm-btn').addEventListener('click', () => { throwBall(); ctx.renderer.domElement.focus?.({ preventScroll: true }); });
+  setSpin(0);
+  const aimKeys = (code, down) => {
+    if(!down) return;
+    if(code === 'KeyF' || code === 'Enter' || code === 'Space') throwBall();
+    else if(code === 'KeyA' || code === 'ArrowLeft') { setSpin(S.spin - 1); K.sfx.tick(); }
+    else if(code === 'KeyD' || code === 'ArrowRight') { setSpin(S.spin + 1); K.sfx.tick(); }
+    else if(code === 'Escape') api.stop();
+  };
+  function aiming(on){
+    ui.hidden = !on;
+    document.body.classList.toggle('bw-aim', on);
+    // the Skills zone card would sit under the panel: close it, as its x would (it returns on the next visit)
+    if(on){ ctx.modules.touch?.release?.(); ctx.hud?.card?.classList.remove('on'); K.capture(aimKeys); } else K.capture(null);
+  }
+  // The lane's direction, from the ball toward the middle of the pins.
+  function laneDir(){
+    const cx = pins.reduce((a, q) => a + q.p.home[0], 0)/pins.length, cz = pins.reduce((a, q) => a + q.p.home[2], 0)/pins.length;
+    const [ox, oz] = ball ? [ball.home[0], ball.home[2]] : f.w(0, 3.5);
+    let dx = cx - ox, dz = cz - oz; const l = Math.hypot(dx, dz) || 1;
+    return { x: dx/l, z: dz/l };
+  }
+  function throwBall(){
+    if(S.phase !== 'aim' || !ball) return;
+    S.aim = (S.needle - 0.5)*2*AIM;
+    const d = laneDir(), c = Math.cos(S.aim), sn = Math.sin(S.aim);
+    const vx = d.x*c - d.z*sn, vz = d.x*sn + d.z*c;
+    const b = ball.body; b.wakeUp(); b.velocity.set(vx*THROW, 0, vz*THROW); b.angularVelocity.set(vz*THROW/0.6, 0, -vx*THROW/0.6);
+    const inGreen = Math.abs(S.needle - 0.5) <= GREEN/2;
+    K.toast(inGreen ? 'Right down the middle!' : S.needle < 0.5 ? 'A little left' : 'A little right', inGreen ? 'good' : undefined);
+    K.sfx.pop?.();
+    aiming(false); B.down.clear(); hud();
+    S.phase = 'rolling'; S.settle = 0; S.cap = 0;
+  }
 
   function resetLane(placeCar){
     pins.forEach(q => resetProp(q.p)); if(ball) resetProp(ball);
@@ -105,9 +185,9 @@ export function start(ctx, api){
     S.phase = 'intro'; K.hud.show(false); B.live = false;
     const b = best.get('bowling');
     K.card({ icon: ICON, color: '#e98a5a', eyebrow: 'Skills Alley', title: 'Knock down the skills',
-      body: `Five rolls at ten skill pins. Shove the big blue ball down the lane, or bump into the pins yourself. Every pin down is a point.`,
+      body: `Five rolls at ten skill pins. Pick a spin, then stop the needle in the green to send the ball straight at the head pin. A hook can curve a wide throw back in. Every pin down is a point.`,
       stats: [['Best', b?.total != null ? `${b.total}/50` : 'none yet'], ['Rolls', String(ROLLS)]],
-      keys: '<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> drive · <kbd>Esc</kbd> quit',
+      keys: '<kbd>A</kbd><kbd>D</kbd> spin · <kbd>F</kbd> throw · <kbd>Esc</kbd> quit',
       primary: ['Bowl', go], secondary: ['Not now', () => api.stop()] });
   }
   function go(){
@@ -117,14 +197,18 @@ export function start(ctx, api){
     K.hud.chips([['roll', 'Roll', true], ['down', 'Pins down'], ['total', 'Score']]); K.hud.show(true);
     ready();
   }
-  function ready(){ resetLane(true); S.phase = 'ready'; S.settle = 0; S.cap = 0; S.grace = 0.8; hud(); K.big(`Roll ${S.roll + 1}`, true); K.hint('Drive into the ball or the pins · <kbd>Esc</kbd> quit'); }
+  function ready(){
+    resetLane(true); S.phase = 'aim'; S.settle = 0; S.cap = 0; S.grace = 0.8; S.t = 0; hud();
+    K.big(`Roll ${S.roll + 1}`, true); K.hint('<kbd>A</kbd><kbd>D</kbd> spin · <kbd>F</kbd> throw · <kbd>Esc</kbd> quit');
+    aiming(true);
+  }
   function result(){
     const n = B.down.size; B.rolls.push(n); S.total += n; if(n === pins.length) S.strikes++;
     S.phase = 'result'; S.wait = 2.2; hud(); B.redraw();
     if(n === pins.length){ K.big('STRIKE!'); K.sfx.win(); K.confetti(50); } else if(n === 0){ K.big('Gutter ball', true); K.sfx.bad(); } else { K.big(`${n} pin${n > 1 ? 's' : ''}`, true); K.sfx.good(n); }
   }
   function end(){
-    S.phase = 'done'; K.hint(null); B.live = false; K.hud.show(false);
+    S.phase = 'done'; K.hint(null); B.live = false; K.hud.show(false); aiming(false);
     const old = best.get('bowling'); const isBest = !S.test && S.total > 0 && (old?.total == null || S.total > old.total);
     if(isBest) best.set('bowling', { total: S.total, strikes: S.strikes });
     B.redraw(); if(isBest) K.confetti(70);
@@ -140,6 +224,19 @@ export function start(ctx, api){
   intro();
   return {
     update(dt){
+      if(S.phase === 'aim'){
+        // The needle sweeps the direction bar; freshly reset pins wobble, so nothing they do counts yet.
+        S.t += dt; S.needle = 0.5 + 0.5*Math.sin(S.t*SWEEP - Math.PI/2);
+        needleEl.style.left = (S.needle*100) + '%';
+        if(B.down.size){ B.down.clear(); hud(); B.redraw(); }
+        return;
+      }
+      if(S.phase === 'rolling' && S.spin && ball && S.cap < 3){
+        // Spin: push the rolling ball sideways (to its right for a right hook) while it still has pace.
+        const v = ball.body.velocity, sp = Math.hypot(v.x, v.z);
+        // screen right of the travel direction (ux, uz) is (-uz, ux), the same as character.js moveIntent
+        if(sp > 2){ const ux = v.x/sp, uz = v.z/sp; v.x += -uz*S.spin*HOOK*dt; v.z += ux*S.spin*HOOK*dt; }
+      }
       if(S.phase === 'ready' || S.phase === 'rolling'){
         const P = ctx.state.player;
         // Workaround: the car's kinematic body can fall asleep while parked, and a sleeping body
@@ -163,11 +260,15 @@ export function start(ctx, api){
         if(S.wait <= 0){ S.roll++; if(S.roll >= ROLLS) end(); else ready(); }
       }
     },
-    stop(){ offs.forEach(o => o?.()); B.live = false; if(S.phase !== 'intro') resetLane(false); B.rolls = []; B.redraw(); K.destroy(); },
-    state: () => ({ phase: S.phase, roll: S.roll + 1, rolls: B.rolls.slice(), down: B.down.size, total: S.total, pins: pins.length }),
+    stop(){ offs.forEach(o => o?.()); aiming(false); B.live = false; if(S.phase !== 'intro') resetLane(false); B.rolls = []; B.redraw(); K.destroy(); },
+    state: () => ({ phase: S.phase, roll: S.roll + 1, rolls: B.rolls.slice(), down: B.down.size, total: S.total, pins: pins.length, spin: S.spin, needle: +S.needle.toFixed(3), aim: +S.aim.toFixed(3) }),
     debug(cmd){
       if(cmd !== 'start') S.test = true;
       if(cmd === 'start' && (S.phase === 'intro' || S.phase === 'done')){ K.closeCard(); go(); return S.phase; }
+      // throw:<needle 0..1>:<spin -1|0|1>, a test hook that sets the bar and throws
+      if(typeof cmd === 'string' && cmd.startsWith('throw') && S.phase === 'aim'){
+        const [, n, sp] = cmd.split(':'); setSpin(+(sp || 0)); S.needle = n === undefined ? 0.5 : +n; throwBall(); return 'thrown';
+      }
       if(cmd === 'knock' && (S.phase === 'ready' || S.phase === 'rolling')){
         // A test hook: shove every pin as if the ball came straight down the lane.
         const dx = -Math.sin(f.ang), dz = -Math.cos(f.ang);

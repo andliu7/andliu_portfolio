@@ -13,7 +13,13 @@ section.contact { padding-top:24px; overflow-x:clip; }
 .contact .ct-body .flip-heading { margin-block:4px; }
 @container (max-width:560px) { .contact .ct-body .flip-heading { font-size:48px; } }
 
-.contact .ct-row { display:grid; grid-template-columns:minmax(0,1fr); gap:32px; }
+.contact .ct-row { display:grid; grid-template-columns:minmax(0,1fr); gap:24px 32px; }
+/* A wide card: the address and its buttons left, GitHub and LinkedIn stacked on the right, top
+   aligned, so the card ends with the buttons instead of a tall empty foot (2026-10-12). */
+@container (min-width:760px) {
+  .contact .ct-row { grid-template-columns:minmax(0,1fr) auto; align-items:start; }
+  .contact .ct-row .ct-links { flex-direction:column; align-items:flex-end; }
+}
 
 /* The links: each a big outlined pill (Slush's 2px ink outline), letters rolling on hover. The
    roll is FlipLink's own (.flip in globals.css); the two rules below extend it to the whole pill
@@ -27,7 +33,7 @@ section.contact { padding-top:24px; overflow-x:clip; }
 }
 /* The address itself, set in display type inside the card (Slush's crushed type on a saturated
    card), as the mailto link; Copy email sits beside it. Kept lowercase: it is an address. */
-.contact .ct-email { display:flex; flex-wrap:wrap; align-items:center; gap:12px 18px; margin-top:16px; }
+.contact .ct-email { display:flex; flex-wrap:wrap; align-items:center; gap:12px 18px; margin:0; }
 .contact .ct-mail { display:inline-flex; align-items:center; min-height:var(--hit); font-size:clamp(16px,2.6cqi,32px); /* 24 Fira characters at .6em each: small enough to stay on one line from 320px up */ line-height:1.1; text-transform:none; overflow-wrap:anywhere; text-decoration:underline; text-decoration-thickness:3px; text-underline-offset:.16em; text-decoration-color:var(--berry); }
 .contact .ct-mail:hover { color:var(--berry); }
 .contact .ct-note { margin-top:8px; font:500 17px/1.5 var(--body); color:var(--on-2); }
@@ -59,33 +65,45 @@ section.contact { padding-top:24px; overflow-x:clip; }
 .contact .ct-social { min-height:var(--hit); padding:.16em .42em; color:inherit; font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:-.03em; }
 .contact .ct-social .sbtn-icon { width:.8em; height:.8em; }
 
-/* ---------- The page pins (Andrew 2026-10-07: "the let's compare notes page is meant to be
-   sticky, not the card"). The frame (card, stack band and toys) is one screen tall and sticks to
-   the top of the screen while the section scrolls a short runway under it (the ::after spacer:
-   position:sticky only moves within the section's content box, so the runway has to be content,
-   not padding), then lets go into the island finale. No JavaScript. Only where the whole frame
-   fits on screen, and never under reduced motion, where it is a plain stack. ---------- */
-.contact .ct-frame { position:relative; }
-@media (min-width:900px) and (min-height:760px) {
-  html:not([data-motion="reduced"]) section#contact { padding-top:0; }
-  html:not([data-motion="reduced"]) section#contact .ct-frame { position:sticky; top:0; display:flex; flex-direction:column; justify-content:center; min-height:100svh; padding-top:16px; }
-  html:not([data-motion="reduced"]) section#contact::after { content:''; flex:none; height:clamp(220px,36svh,380px); }
-  html:not([data-motion="reduced"]) section#contact .ct-mq { margin-block:28px 24px; }
-  section#contact .ct-mq { position:relative; z-index:1; }
+/* ---------- The frame: the card, the stack band and the cue in one column. It used to pin
+   (2026-10-07, "the let's compare notes page is meant to be sticky"); Andrew took that back on
+   2026-10-12 ("don't make the let's compare notes page sticky"), so it scrolls like any page. A
+   flex column so the band and the cue can each sit at their own side. ---------- */
+.contact .ct-frame { position:relative; display:flex; flex-direction:column; }
+section#contact .ct-mq { position:relative; z-index:1; }
+/* Room under the frame for the tilted tape's low left end, which hangs below its own box; without
+   it the résumé page, next, would paint over the end of the strip. */
+html:not([data-motion="reduced"]) section#contact { padding-bottom:clamp(60px,12vw,180px); }
+
+/* ---------- The stack band as a strip of tape (Andrew 2026-10-12): turned 14 degrees (8 at
+   first; "longer, steeper angle ... and faster", the same day; the speed is the slider's duration
+   in contact.tsx) and lifted
+   over the card's lower right corner. Its right end stops just inside the gutter, so it never
+   runs off the screen; both ends are torn like real tape (the zigzag clip-path) and the chips
+   fade out before them (the mask), so the strip reads as finished rather than cut off wherever
+   the screen ends. Static: it does not slide or ride out as you scroll. Reduced motion keeps the
+   plain full-bleed band above (its chips stand still in wrapped rows, too tall for a strip). */
+html:not([data-motion="reduced"]) section#contact .ct-mq { position:relative; z-index:2; align-self:flex-end; width:min(1080px,78%);
+  margin:90px calc(-.5 * var(--gutter)) 40px auto; padding-inline:18px; rotate:-14deg; box-shadow:0 6px 0 rgb(0 0 0 / .18);
+  clip-path:polygon(0 0.00%, 9px 6.25%, 0 12.50%, 9px 18.75%, 0 25.00%, 9px 31.25%, 0 37.50%, 9px 43.75%, 0 50.00%, 9px 56.25%, 0 62.50%, 9px 68.75%, 0 75.00%, 9px 81.25%, 0 87.50%, 9px 93.75%, 0 100.00%, calc(100% - 0px) 100.00%, calc(100% - 9px) 93.75%, calc(100% - 0px) 87.50%, calc(100% - 9px) 81.25%, calc(100% - 0px) 75.00%, calc(100% - 9px) 68.75%, calc(100% - 0px) 62.50%, calc(100% - 9px) 56.25%, calc(100% - 0px) 50.00%, calc(100% - 9px) 43.75%, calc(100% - 0px) 37.50%, calc(100% - 9px) 31.25%, calc(100% - 0px) 25.00%, calc(100% - 9px) 18.75%, calc(100% - 0px) 12.50%, calc(100% - 9px) 6.25%, calc(100% - 0px) 0.00%); }
+html:not([data-motion="reduced"]) section#contact .ct-mq .islider { -webkit-mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); }
+@media (max-width:640px) {
+  html:not([data-motion="reduced"]) section#contact .ct-mq { width:100%; margin:28px calc(-.5 * var(--gutter)) 72px auto; padding-block:12px; }
 }
 
-/* ---------- The toys (app/sections/contact.client.tsx): the envelope and the paper plane in the
-   card's empty right side. They bob (as the corner stickers do), dance once per hover, and play a
+/* ---------- The toys (app/sections/contact.client.tsx): the envelope and the paper plane, big,
+   over the right end of the headline (Andrew 2026-10-12: "larger and over the let's compare
+   notes text"; they used to float in the card's empty right side). They bob (as the corner stickers do), dance once per hover, and play a
    scene on click. Reduced motion: still, no dance, no scene. ---------- */
 .contact .ct-toys { position:absolute; inset:0; z-index:1; pointer-events:none; }
 .contact .ct-toy { position:absolute; display:block; width:var(--s); height:var(--s); padding:0; border:0; background:none; cursor:pointer; pointer-events:auto; rotate:var(--r); touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
 .contact .ct-toy-art { position:relative; display:block; width:100%; height:100%; }
 .contact .ct-toy svg { display:block; width:100%; height:100%; overflow:visible; }
-.contact .ct-envelope { --s:84px; --r:-8deg; --k:0; right:11%; top:306px; }
-.contact .ct-plane { --s:64px; --r:14deg; --k:1; right:4.5%; top:266px; }
+.contact .ct-envelope { --s:clamp(96px,9vw,130px); --r:-8deg; --k:0; right:13%; top:clamp(70px,7vw,104px); }
+.contact .ct-plane { --s:clamp(76px,7vw,100px); --r:14deg; --k:1; right:3%; top:clamp(150px,13vw,190px); }
 @media (max-width:699px) {
   .contact .ct-envelope { display:none; }
-  .contact .ct-plane { --s:52px; right:6%; top:46px; }
+  .contact .ct-plane { --s:64px; right:6%; top:46px; }
 }
 @keyframes ct-bob { from { translate:0 0; rotate:calc(var(--r) - 3deg); } to { translate:0 -8px; rotate:calc(var(--r) + 3deg); } }
 html:not([data-motion="reduced"]) .contact .ct-toy { animation:ct-bob calc(4.6s + var(--k) * .9s) ease-in-out calc(var(--k) * -1.7s) infinite alternate; }
@@ -153,4 +171,18 @@ html:not([data-motion="reduced"]) .contact .ct-plane[data-play] .ct-toy-art { an
   0% { opacity:1; transform:translate(0,0) rotate(0) scale(.4); }
   50% { opacity:1; transform:translate(var(--dx),var(--dy)) rotate(calc(var(--r) * .5)) scale(1); }
   100% { opacity:0; transform:translate(calc(var(--dx) * 1.25),calc(var(--dy) + 90px)) rotate(var(--r)); }
+}
+
+/* ---------- "Résumé below" (contact.tsx .ct-cue, 2026-10-12): UMD's "Contents below" cue, the
+   same pill and bobbing arrow, in the card's apricot. It sits at the left under the card: the
+   tilted tape sweeps through the middle and up across the right corner. ---------- */
+.contact .ct-cue { position:relative; z-index:2; align-self:flex-start; display:flex; flex-direction:column; align-items:center; gap:4px; margin:-150px 0 28px clamp(24px,3.2vw,48px); }
+.contact .ct-down { --face:var(--apricot); --face-on:var(--ink); --roll:var(--card); --roll-on:var(--ink); }
+.contact .ct-arrow { display:block; overflow:visible; animation:ct-nudge 1.4s var(--ease-spring) infinite; }
+@keyframes ct-nudge { 0%, 100% { transform:translateY(0); } 50% { transform:translateY(10px); } }
+html[data-motion="reduced"] .contact .ct-arrow { animation:none; }
+html[data-motion="reduced"] .contact .ct-cue { margin-top:0; }
+@media (max-width:640px) {
+  .contact .ct-cue { align-self:center; margin:-40px 0 24px; }
+  .contact .ct-arrow { width:28px; height:34px; }
 }

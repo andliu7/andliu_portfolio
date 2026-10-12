@@ -16,6 +16,26 @@ html[data-chat] .chat-launcher { visibility:hidden; }
 @media (hover:hover) { .chat-launcher:hover .chat-glyph { transform:rotate(-12deg) scale(1.08); } }
 html[data-motion="reduced"] .chat-launcher .chat-glyph { transition:none; transform:none; }
 
+/* ---------- Pull to ask (phones, chat-dock.tsx usePullToAsk) ----------
+   A pill above the top edge that the pull drags down into view; it turns berry once letting go
+   would open the chat. chat-dock.tsx writes its transform and opacity on every touch move. */
+.chat-pull { position:fixed; z-index:70; left:50%; top:calc(env(safe-area-inset-top,0px) + 12px); display:flex; align-items:center; gap:8px; padding:6px 16px 6px 8px;
+  border:1px solid var(--ink); border-radius:var(--r-pill); background:var(--paper); color:var(--ink); box-shadow:0 4px 0 var(--ink);
+  font:700 15px/1 var(--body); white-space:nowrap; pointer-events:none; opacity:0; transform:translate(-50%, -60px); transition:background-color 160ms, color 160ms; }
+.chat-pull[data-ready] { background:var(--berry); color:var(--paper); }
+@media (pointer:fine) { .chat-pull { display:none; } }
+/* The reload offer: a chat opened by a pull asks whether you meant the browser's pull-to-refresh,
+   which the pull replaced. Over the sheet, under its header row, so it covers neither the close
+   button nor the box. */
+.chat-reload { position:fixed; z-index:270; left:50%; top:calc(env(safe-area-inset-top,0px) + 176px); transform:translateX(-50%); display:flex; align-items:center; gap:10px;
+  width:max-content; max-width:calc(100% - 32px); padding:8px 8px 8px 16px; border:1px solid var(--ink); border-radius:var(--r-pill); background:var(--paper); color:var(--ink);
+  box-shadow:0 4px 0 var(--ink); font:700 14px/1.2 var(--body); animation:chat-reload-in 320ms var(--ease-spring) both; }
+.chat-reload button { min-height:44px; border:1px solid var(--ink); border-radius:var(--r-pill); font:700 14px/1 var(--body); cursor:pointer; touch-action:manipulation; }
+.chat-reload-go { padding:0 14px; background:var(--berry); color:var(--paper); }
+.chat-reload-x { width:44px; padding:0; background:var(--paper); color:var(--ink); font-size:20px; }
+@keyframes chat-reload-in { from { opacity:0; transform:translate(-50%, -10px) scale(.9); } to { opacity:1; transform:translateX(-50%); } }
+html[data-motion="reduced"] .chat-reload { animation:none; }
+
 /* ---------- The berry (chat-berry.tsx) ----------
    One face, five moods. Open eyes blink every few seconds; happy and shy close them into kind
    arcs with blush; thinking looks up with a small "o"; reading looks down toward the box. */

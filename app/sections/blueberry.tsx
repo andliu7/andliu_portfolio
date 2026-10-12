@@ -1,5 +1,6 @@
 import { BB_CAROUSEL, BB_ENGINEERING, BB_FACTS, BB_HEAD, BB_SCREENS, BB_SITE, BLUEBERRY_CHAPTER, IMAGES, PROJECTS, sectionAttrs, type ImageEntry } from '@/lib/site';
 import { FlipHeading } from '@/components/site/flip-heading';
+import { TextBlockAnimation } from '@/components/ui/text-block-animation';
 import { InfiniteSlider } from '@/components/ui/infinite-slider';
 import { StackChip } from '@/components/site/stack-logos';
 import { BlueberrySticker, FlashcardSticker } from '@/components/site/stickers/stickers';
@@ -86,7 +87,8 @@ export default function Blueberry() {
 
         <div className="bb-band bb-screens" data-ground="paper">
           <div className="bb-real">
-            <span className="eyebrow">{BB_HEAD.screens}</span>
+            {/* Block-wipe entrances (2026-10-12): --kw on the paper bands, berry-soft on the berry ground */}
+            <TextBlockAnimation as="span" className="eyebrow">{BB_HEAD.screens}</TextBlockAnimation>
             <p className="bb-real-word" data-reveal>
               {/* A closing "!" gets its own span, so CSS can tuck the monospace glyph's wide side
                   bearing back against the letter before it. */}
@@ -105,7 +107,7 @@ export default function Blueberry() {
             nextLabel={BB_CAROUSEL.next}
           />
           <div className="bb-more">
-            <span className="eyebrow">{BB_HEAD.site}</span>
+            <TextBlockAnimation as="span" className="eyebrow">{BB_HEAD.site}</TextBlockAnimation>
             <PolaroidMini
               slides={SITE}
               label={BB_CAROUSEL.more}
@@ -116,7 +118,7 @@ export default function Blueberry() {
         </div>
 
         <div className="bb-stack">
-          <span className="eyebrow">{BB_HEAD.stack}</span>
+          <TextBlockAnimation as="span" className="eyebrow" blockColor="var(--berry-soft)">{BB_HEAD.stack}</TextBlockAnimation>
           <div className="bb-strip">
             <InfiniteSlider label={BB_HEAD.stack} gap={14} duration={40} durationOnHover={110}>
               {BAND.map((tag, i) => <StackChip key={i} name={tag} repeat={i >= BB_ENGINEERING.stack.length} className="bb-pill" />)}

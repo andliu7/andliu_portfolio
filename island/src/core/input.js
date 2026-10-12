@@ -19,6 +19,9 @@ export function codeOf(e){
 
 export function createInput({ state, bus }){
   const keys = { up:false, down:false, left:false, right:false, brake:false, boost:false };
+  // The phone's move stick (ui/touch.js): analog intent, x right and y forward, each -1..1, on while
+  // a thumb holds it. car.js and character.js prefer it over the four movement keys when on.
+  const stick = { x:0, y:0, on:false };
   const held = new Set();
   const typing = t => t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
 
@@ -34,7 +37,7 @@ export function createInput({ state, bus }){
       bus.emit('key', { code, down:false, repeat:false });
     }
   }
-  function clear(){ for(const k in keys) keys[k] = false; held.clear(); }
+  function clear(){ for(const k in keys) keys[k] = false; stick.x = stick.y = 0; stick.on = false; held.clear(); }
 
   addEventListener('keydown', e => { if(!state.started || typing(e.target)) return; press(codeOf(e), true, e.repeat, e); });
   addEventListener('keyup', e => { press(codeOf(e), false); });
@@ -44,6 +47,7 @@ export function createInput({ state, bus }){
 
   return {
     keys,                                   // movement intent, read every frame
+    stick,                                  // analog movement intent from the phone stick, see above
     isDown: code => held.has(code),         // any key by KeyboardEvent.code
     on: (action, fn) => bus.on('action:' + action, fn),   // 'honk' | 'reset' | 'interact' | 'exit' | 'signalLeft' | 'signalRight' | 'talk' | anything you emit
     trigger: action => bus.emit('action:' + action, { code:'synthetic' }),

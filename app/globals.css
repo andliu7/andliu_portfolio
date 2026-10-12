@@ -124,6 +124,9 @@
    could otherwise widen the page sideways. Clip, not hidden, so sticky positioning still works.
    font-synthesis none: Antic ships one weight, and a faux bold of it is a smear. */
 html { scroll-padding-top:var(--header-h); -webkit-text-size-adjust:100%; overflow-x:clip; font-synthesis:none; }
+/* Touch screens: no browser pull-to-refresh, since pulling down at the top opens the chat there
+   (components/chat/chat-dock.tsx usePullToAsk). */
+@media (pointer:coarse) { html { overscroll-behavior-y:none; } }
 /* The page background follows the section under the 55% line (it shows wherever no section
    paints, such as the island). <html> keeps a plain, fixed background: any style change on the
    root element costs a whole-page restyle (about 70ms measured), so the changing colour lives on
@@ -531,6 +534,19 @@ html[data-island="active"] .chat-launcher { display:none; }
 .fh-kw .fh-b { font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:-.04em; color:var(--on); }
 .flip-head:is(:focus-visible,[data-flipped]) .fh-roll { transform:translateY(-100%); }
 @media (hover:hover) and (pointer:fine) { .flip-head:hover .fh-roll { transform:translateY(-100%); } }
+
+/* ---------- Block-wipe line reveal (components/ui/text-block-animation.tsx, 2026-10-12). Nothing
+   here hides text: gsap sets opacity only once its timeline exists, so JS off or a failed bundle
+   leaves every line visible. The line wrapper is as wide as its text (so is its block) and has no
+   overflow clip, which would cut the accents on tight display line heights; the block only ever
+   shrinks inside it. FlipHeading's blocks sit in .tba-layer, placed in px by the component.
+   :where() keeps the heading's position:relative at zero specificity, so a section's own wins. */
+.tba-line { position:relative; display:block; width:fit-content; max-width:100%; }
+.tba-block, .tba-layer { position:absolute; pointer-events:none; }
+.tba-line > .tba-block { inset:0; }
+.tba-layer { inset:0; z-index:1; }
+:where(.flip-heading.tba-on) { position:relative; }
+html[data-motion="reduced"] :is(.tba-block,.tba-layer) { display:none; }
 
 /* ---------- Highlight (components/ui/hover-link-animation.tsx, plan 2.2, A2): a bar .12em tall
    under the word rises to its full height on hover or focus, and the word turns --hl-on. ---------- */

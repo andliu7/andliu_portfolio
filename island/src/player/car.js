@@ -363,18 +363,33 @@ export function init(ctx){
     c.scale.set(1 + s, 1 - s*1.4, 1 + s);
   }
 
+  // The phone stick drives toward where it points, seen from the camera (push right and the car
+  // turns to head screen-right), as Bruno Simon's does: throttle is how far it is pushed, steering
+  // turns the nose toward that heading. Same screen-to-world mapping as character.js moveIntent.
+  const camDir = new THREE.Vector3();
+  function stickIntent(){
+    const s = input.stick, m = Math.min(1, Math.hypot(s.x, s.y));
+    if(m < 1e-3) return { thr:0, steer:0 };
+    ctx.camera.getWorldDirection(camDir);
+    const l = Math.hypot(camDir.x, camDir.z) || 1, fx = camDir.x/l, fz = camDir.z/l;
+    const mx = fx*s.y - fz*s.x, mz = fz*s.y + fx*s.x;
+    let d = Math.atan2(mx, mz) - car.heading; d = Math.atan2(Math.sin(d), Math.cos(d));
+    return { thr:m, steer:Math.max(-1, Math.min(1, d*2.2)) };
+  }
+
   // ai: { thr, steer } from the call autopilot instead of the keys (thr and steer in -1..1), plus
   // optional max / accel / brake overrides and a skip(collider) filter for resolveCar.
   function stepCar(dt, ai = null){
     const v0 = car.speed;
     const boost = !ai && keys.boost;
-    const thr = ai ? ai.thr : (keys.up ? 1 : 0) - (keys.down ? 1 : 0);
+    const st = !ai && input.stick.on ? stickIntent() : null;
+    const thr = ai ? ai.thr : st ? st.thr : (keys.up ? 1 : 0) - (keys.down ? 1 : 0);
     const max = ai?.max ?? (boost ? V.boost : V.max);
     if(thr !== 0){ const opposing = thr * car.speed < 0; car.speed += thr * (opposing ? (ai?.brake ?? V.brake) : (ai?.accel ?? V.accel)) * dt; }
     else car.speed *= Math.exp(-V.coast*dt);
     if(!ai && keys.brake) car.speed *= Math.exp(-V.hand*dt);
     car.speed = Math.max(-V.rev, Math.min(max, car.speed));
-    const steerIn = ai ? ai.steer : (keys.left ? 1 : 0) - (keys.right ? 1 : 0);
+    const steerIn = ai ? ai.steer : st ? st.steer : (keys.left ? 1 : 0) - (keys.right ? 1 : 0);
     car.steer += (steerIn - car.steer) * Math.min(1, dt*10);
     car.heading += car.steer * V.turn * dt * Math.max(-1, Math.min(1, car.speed/6));
     const fx = Math.sin(car.heading), fz = Math.cos(car.heading);

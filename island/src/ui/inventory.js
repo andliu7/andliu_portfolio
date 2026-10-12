@@ -98,8 +98,8 @@ function iconCanvas(key, px, silhouette){
 // - Bottom centre, as asked. On a desktop the controls hint is a centred pill at the very bottom,
 //   so the bar sits 8 px above the hint rather than beside it: the hint text changes per mode and
 //   can be wide, and stacking never collides however long it gets.
-// - On touch screens the hint is hidden and the touch pad owns the bottom right, so the bar drops
-//   to the bottom edge and keeps left of the pad, showing fewer slots if a phone is narrow.
+// - On touch screens the hint is hidden and the two sticks own the bottom corners, so the bar drops
+//   to the bottom edge between them, showing fewer slots if a phone is narrow.
 // - The zone card owns the bottom left: when it is up the bar slides right to clear it, and if
 //   there is no room it hides until the card goes.
 // - While the talk box is open the bar hides (see dialog.js for why).
@@ -394,7 +394,7 @@ export function init(ctx){
   const rectOf = el => { if(!el) return null; const r = el.getBoundingClientRect(); if(r.width < 2 || r.height < 2) return null; const cs = getComputedStyle(el); return cs.display === 'none' || cs.visibility === 'hidden' ? null : r; };
   function layoutBar(){
     const W = innerWidth, H = innerHeight;
-    const hint = rectOf(ctx.hud?.hint || document.getElementById('hint')), touch = rectOf(document.getElementById('touch2'));
+    const hint = rectOf(ctx.hud?.hint || document.getElementById('hint')), touch = rectOf(document.getElementById('touch2')), stickL = rectOf(document.getElementById('stickL'));
     const cardEl = ctx.hud?.card || document.getElementById('card'), card = cardEl?.classList.contains('on') ? rectOf(cardEl) : null;
     bar.style.bottom = hint ? `${Math.round(H - hint.top + 8)}px` : '';
     const bottom = parseFloat(getComputedStyle(bar).bottom) || 14, top = H - bottom - (bar.offsetHeight || 60);
@@ -403,6 +403,7 @@ export function init(ctx){
     const fitIn = (a, b) => Math.max(0, Math.min(SLOTS, Math.floor((b - a - fixed)/s)));
     let lo = 8, hi = W - 8;
     if(over(touch)) hi = Math.min(hi, touch.left - 8);
+    if(over(stickL)) lo = Math.max(lo, stickL.right + 8);
     let n = fitIn(lo, hi); shy = false;
     if(over(card)){ const lo2 = Math.max(lo, card.right + 8), n2 = fitIn(lo2, hi); if(n2 >= Math.min(3, n)){ lo = lo2; n = n2; } else shy = true; }
     n = Math.max(1, n);

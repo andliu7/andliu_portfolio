@@ -1,6 +1,6 @@
 'use client';
 import dynamic from 'next/dynamic';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type RefObject } from 'react';
 import { createPortal, flushSync } from 'react-dom';
 import { MICROCOPY } from '@/lib/site';
 import { EVENTS, emit, on } from '@/components/site/handoffs';
@@ -27,6 +27,11 @@ import './chat.css';
 //  - html[data-chat] is written only here ("open" or "docked"), so foundation CSS can react.
 //  - chat:open / chat:close are emitted for the mascot; chat:request (the menu's "Ask about
 //    Andrew") opens; island:active closes, because the game takes the whole screen.
+//  - Phones: pulling down at the very top of the page, or swiping down on the header anywhere,
+//    opens the panel (Andrew, 2026-10-11). A pill follows the finger and reads "Let go to ask"
+//    once the pull is far enough. globals.css turns the browser's own pull-to-refresh off on
+//    touch screens so the two never fight, and so a chat opened by a pull asks "Did you mean to
+//    reload?" with a Reload page button (Andrew, 2026-10-12). See usePullToAsk below.
 //  - The launcher lives in the header's right group (an empty #hdr-ask slot that header.tsx
 //    renders), not floating over the page, so it never covers content; it hides and returns with
 //    the header's pills as you scroll.
@@ -55,6 +60,63 @@ function markOrigin(launcher: HTMLElement | null) {
   const box = launcher?.getBoundingClientRect();
   root.style.setProperty('--chat-ox', box ? `${Math.round(box.left + box.width / 2)}px` : '100%');
   root.style.setProperty('--chat-oy', box ? `${Math.round(box.top + box.height / 2)}px` : '100%');
+}
+
+// How far, in px, the finger has to pull before letting go opens the chat.
+const PULL = 72;
+
+/**
+ * Pull down to ask, on touch screens. A pull counts when it starts at the very top of the page
+ * (scrollY 0) or on the header, moves mostly downward, and nothing else is open (the menu, the
+ * chat, the island). It writes the pill's position straight to its style each move, so no React
+ * render per frame, and calls `open` on release past PULL.
+ */
+function usePullToAsk(pillRef: RefObject<HTMLDivElement | null>, open: () => void, openRef: RefObject<boolean>) {
+  useEffect(() => {
+    const pill = pillRef.current;
+    if (!pill || !window.matchMedia('(pointer: coarse)').matches) return;
+    const root = document.documentElement;
+    const label = pill.querySelector<HTMLElement>('.chat-pull-label');
+    let start: { x: number; y: number } | null = null;
+    let pull = 0;
+    const draw = (px: number) => {
+      pull = px;
+      const k = Math.min(1, px / PULL);
+      pill.style.transform = `translate(-50%, ${Math.round(Math.min(px, PULL * 1.4) * 0.8 - 60)}px)`;
+      pill.style.opacity = px > 4 ? String(Math.min(1, k * 1.5)) : '0';
+      pill.toggleAttribute('data-ready', px >= PULL);
+      if (label) label.textContent = px >= PULL ? MICROCOPY.pullAskGo : MICROCOPY.pullAsk;
+    };
+    const onStart = (event: TouchEvent) => {
+      start = null;
+      if (event.touches.length !== 1 || openRef.current || root.dataset.island || document.querySelector('.site-header[data-menu-open], [aria-modal="true"]')) return;
+      const onHeader = (event.target as Element | null)?.closest('.site-header');
+      if (window.scrollY > 0 && !onHeader) return;
+      start = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+    };
+    const onMove = (event: TouchEvent) => {
+      if (!start) return;
+      const dx = event.touches[0].clientX - start.x, dy = event.touches[0].clientY - start.y;
+      if (pull === 0 && (dy < 0 || Math.abs(dx) > dy)) { if (Math.abs(dx) > 8 || dy < -8) start = null; return; } // sideways or up: not a pull
+      event.preventDefault(); // the page must not scroll (or rubber-band) under the pull
+      draw(Math.max(0, dy));
+    };
+    const onEnd = () => {
+      if (start && pull >= PULL) open();
+      start = null;
+      draw(0);
+    };
+    window.addEventListener('touchstart', onStart, { passive: true });
+    window.addEventListener('touchmove', onMove, { passive: false }); // not passive: it may preventDefault
+    window.addEventListener('touchend', onEnd, { passive: true });
+    window.addEventListener('touchcancel', onEnd, { passive: true });
+    return () => {
+      window.removeEventListener('touchstart', onStart);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onEnd);
+      window.removeEventListener('touchcancel', onEnd);
+    };
+  }, [pillRef, open, openRef]);
 }
 
 export default function ChatDock() {
@@ -141,6 +203,11 @@ export default function ChatDock() {
 
   const closeFromPanel = useCallback(() => closeChat(true), [closeChat]);
 
+  const pullRef = useRef<HTMLDivElement>(null);
+  const [pulled, setPulled] = useState(false); // this open came from a pull: offer the reload it replaced
+  usePullToAsk(pullRef, useCallback(() => { setPulled(true); void openChat(); }, [openChat]), openRef);
+  useEffect(() => { if (!open) setPulled(false); }, [open]);
+
   const toggleDock = useCallback((next: boolean) => {
     preserveAnchor(() => flushSync(() => setDocked(next)));
   }, []);
@@ -197,6 +264,17 @@ export default function ChatDock() {
         </PillFaces>
       </button>,
       slot)}
+      <div className="chat-pull" ref={pullRef} aria-hidden="true">
+        <ChatBerry mood="rest" className="chat-glyph" />
+        <span className="chat-pull-label">{MICROCOPY.pullAsk}</span>
+      </div>
+      {pulled && open && (
+        <div className="chat-reload" role="status">
+          <span>{MICROCOPY.pullReload}</span>
+          <button type="button" className="chat-reload-go" onClick={() => window.location.reload()}>{MICROCOPY.pullReloadGo}</button>
+          <button type="button" className="chat-reload-x" aria-label={MICROCOPY.pullReloadDismiss} onClick={() => setPulled(false)}>×</button>
+        </div>
+      )}
       {sweep && <div className="chat-sweep" aria-hidden="true" onAnimationEnd={() => setSweep(false)} />}
       {mounted && (
         <ChatPanel

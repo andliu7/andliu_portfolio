@@ -481,13 +481,17 @@ export function init(ctx){
   const f2 = new THREE.Vector3();
   // First person on foot (camera.js, V): A / D turn him and the view instead of strafing.
   const firstPerson = () => state.mode === 'walk' && !!ctx.modules.camera?.firstPerson?.();
+  // m: how hard to move, 0..1. 1 for keys; the phone stick (input.stick) gives any direction and a
+  // gentle push walks slowly.
   function moveIntent(cam){
-    const up = (keys.up ? 1 : 0) - (keys.down ? 1 : 0), rt = firstPerson() ? 0 : (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+    const s = input.stick, fp = firstPerson();
+    const up = s.on ? s.y : (keys.up ? 1 : 0) - (keys.down ? 1 : 0), rt = fp ? 0 : s.on ? s.x : (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
     if(!up && !rt) return null;
+    const m = s.on ? Math.min(1, Math.hypot(up, rt)) : 1;
     let fx = 0, fz = -1;
     if(cam){ cam.getWorldDirection(f2); const l = Math.hypot(f2.x, f2.z); if(l > 1e-3){ fx = f2.x/l; fz = f2.z/l; } }
     let mx = fx*up - fz*rt, mz = fz*up + fx*rt; const l = Math.hypot(mx, mz); mx /= l; mz /= l;
-    return { mx, mz };
+    return { mx, mz, m };
   }
 
   // Run-start dust: a tiny pool of puffs kicked back from his heels, never allocated per frame.
@@ -519,7 +523,7 @@ export function init(ctx){
     const it = state.started ? moveIntent(cam) : null;
     const wading = island && !swim.on && !swim.deck && swim.depth > 0.25;
     const top = swim.on ? (keys.boost ? SWIM_FAST : SWIM) : (keys.boost ? RUN : WALK)*(wading ? 0.65 : 1);
-    const tx = it ? it.mx*top : 0, tz = it ? it.mz*top : 0;
+    const tx = it ? it.mx*top*it.m : 0, tz = it ? it.mz*top*it.m : 0;
     const k = Math.min(1, dt*(it ? 15 : 14));           // rate 15: about 95% of top speed in 0.2 s
     ch.vx += (tx - ch.vx)*k; ch.vz += (tz - ch.vz)*k;
     ch.x += ch.vx*dt; ch.z += ch.vz*dt;

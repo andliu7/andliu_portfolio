@@ -6,6 +6,8 @@ import { SocialButton, socialKind } from '@/components/site/social-button';
 import { InfiniteSlider } from '@/components/ui/infinite-slider';
 import { StackChip } from '@/components/site/stack-logos';
 import { ContactForm } from '@/components/site/contact-form';
+import { TextBlockAnimation } from '@/components/ui/text-block-animation';
+import { PillFaces } from '@/components/site/pill-faces';
 import CopyEmail from '../copy-email';
 import './contact.css';
 import { ContactToys } from './contact.client';
@@ -16,8 +18,9 @@ import { ContactToys } from './contact.client';
 // mailto link, and "Email me" as the one berry button (Andrew 2026-10-07: "make it more of a
 // contact me", "the second CTA so very important"); the résumé is the light pill beside the eyebrow. The sitemap and copyright live in the site footer
 // (components/site/footer.tsx), not here. Each link appears
-// once in the card. Under the card, the STACK runs as a full-bleed sky band of logo chips that
-// slides (components/ui/infinite-slider.tsx) and slows on hover.
+// once in the card. Under the card, the STACK runs as a sky band of logo chips that
+// slides (components/ui/infinite-slider.tsx) and slows on hover; on the home page it is a strip of
+// tape across the card's lower right corner (contact.css, 2026-10-12).
 //
 // FooterCard is exported for About; its signature is fixed:
 //   variant 'home'   the card, then the marquee band. The NOTCH_TO_ISLAND tab is gone (round 2:
@@ -35,7 +38,7 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
       {variant === 'home' && <ContactToys />}
       <div className="ct-body">
         <div className="ct-top">
-          <span className="eyebrow">{CONTACT.eyebrow}</span>
+          <TextBlockAnimation as="span" className="eyebrow">{CONTACT.eyebrow}</TextBlockAnimation>
           {resume && (
             <a className="pill pill-light press ct-resume" href={resume.href} target="_blank" rel="noreferrer">
               {resume.label} <ArrowUpRight size={18} aria-hidden="true" />
@@ -43,21 +46,11 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
           )}
         </div>
         <FlipHeading id="contact-title" text={CONTACT.headline} max={170} />
-        <p className="ct-invite">{CONTACT.invite}</p>
+        <TextBlockAnimation as="p" className="ct-invite" delay={0.2}>{CONTACT.invite}</TextBlockAnimation>
+        {/* Two columns from a wide card up (Andrew 2026-10-12: "too much empty space"): the address
+            and its buttons on the left, GitHub and LinkedIn on the right. One column on a phone. */}
         <div className="ct-row">
           <div className="ct-reach">
-            <ul className="ct-links">
-              {links.map(link => {
-                const kind = socialKind(link.href);
-                return (
-                  <li key={link.label} className="ct-pill">
-                    {kind
-                      ? <SocialButton className="ct-social" href={link.href} label={link.label} kind={kind} extra={CONTACT.handles[kind]} />
-                      : <FlipLink href={link.href} external={link.external}>{link.label}</FlipLink>}
-                  </li>
-                );
-              })}
-            </ul>
             <p className="ct-email">
               <a className="display ct-mail" href={mail?.href ?? `mailto:${CONTACT.email}`}>{CONTACT.email}</a>
             </p>
@@ -71,6 +64,18 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
             {/* Renders nothing unless the Worker URL is set at build time (worker/CONTACT.md). */}
             <ContactForm />
           </div>
+          <ul className="ct-links">
+              {links.map(link => {
+                const kind = socialKind(link.href);
+                return (
+                  <li key={link.label} className="ct-pill">
+                    {kind
+                      ? <SocialButton className="ct-social" href={link.href} label={link.label} kind={kind} extra={CONTACT.handles[kind]} />
+                      : <FlipLink href={link.href} external={link.external}>{link.label}</FlipLink>}
+                  </li>
+                );
+              })}
+          </ul>
         </div>
       </div>
       {variant === 'about' && (
@@ -78,10 +83,21 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
       )}
     </div>
     <div className="ct-mq">
-      <InfiniteSlider label={BB_HEAD.stack} gap={16} duration={55} durationOnHover={140}>
+      <InfiniteSlider label={BB_HEAD.stack} gap={16} duration={30} durationOnHover={110}>
         {STACK.map(item => <StackChip key={item} name={item} className="ct-mq-item" />)}
       </InfiniteSlider>
     </div>
+    {/* "Résumé below", the cue under the card: UMD's "Contents below" (umd.tsx), same pill and
+        bobbing arrow, in the card's apricot. Home only; About has no résumé under it. */}
+    {variant === 'home' && (
+      <div className="ct-cue">
+        <a className="pill ct-down" href="#resume"><PillFaces>{CONTACT.down}</PillFaces></a>
+        <svg className="ct-arrow" width="36" height="44" viewBox="0 0 36 44" aria-hidden="true">
+          <path d="M18 2 V38 M4 26 L18 40 L32 26" fill="none" stroke="var(--apricot)" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M18 2 V38 M4 26 L18 40 L32 26" fill="none" stroke="var(--ink)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+    )}
     </>
   );
 }
@@ -89,7 +105,7 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
 export default function Contact() {
   return (
     <section {...sectionAttrs('contact')} className="contact" aria-labelledby="contact-title">
-      {/* The frame is the page that pins (contact.css): the card and the stack band together. */}
+      {/* The frame: the card, the stack band and the cue together (contact.css). */}
       <div className="ct-frame">
         <FooterCard variant="home" />
       </div>

@@ -1,0 +1,31 @@
+/* The night sky (components/ui/stars.tsx). Fills its positioned parent, behind the content.
+   Every selector starts with .stars. Reduced motion: the stars stand still and no effect plays. */
+.stars { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+.stars-lean { position:absolute; inset:-40px; will-change:transform; }
+/* One layer: a 2000px tile of stars (and its repeat below, drawn by the same box-shadow) that
+   drifts up by exactly one tile and loops. */
+.stars-layer { position:absolute; left:0; top:0; width:100%; height:2000px; animation:stars-drift linear infinite; will-change:transform; }
+.stars-dots { position:absolute; left:0; top:0; border-radius:50%; background:transparent; }
+@keyframes stars-drift { from { transform:translate3d(0,0,0); } to { transform:translate3d(0,-2000px,0); } }
+.stars[data-off] .stars-layer { animation-play-state:paused; }
+html[data-motion="reduced"] .stars-layer { animation:none; }
+
+.stars-fx { position:absolute; inset:0; }
+/* A shooting star: a bright head with a fading tail, turned to --a, that streaks along its own
+   length and fades. */
+.stars-shoot { position:absolute; width:var(--len); height:2px; border-radius:2px; transform-origin:100% 50%;
+  background:linear-gradient(90deg, rgb(255 250 240 / 0), rgb(255 250 240 / .9)); box-shadow:0 0 6px rgb(255 250 240 / .6);
+  rotate:var(--a); animation:stars-shoot 1.2s cubic-bezier(.3,.6,.4,1) forwards; }
+@keyframes stars-shoot {
+  0% { opacity:0; transform:translateX(-40px) scaleX(.2); }
+  15% { opacity:1; }
+  70% { opacity:1; }
+  100% { opacity:0; transform:translateX(260px) scaleX(1); }
+}
+/* A supernova pop: a white point flares, a ring in --c opens around it, both fade. */
+.stars-pop { position:absolute; width:var(--s); height:var(--s); margin:calc(var(--s) / -2) 0 0 calc(var(--s) / -2); border-radius:50%;
+  background:radial-gradient(circle, #fff 0 18%, var(--c) 40%, transparent 70%); animation:stars-pop 1.6s ease-out forwards; }
+.stars-pop::after { content:''; position:absolute; inset:-60%; border-radius:50%; border:2px solid var(--c); opacity:0; animation:stars-ring 1.6s ease-out forwards; }
+@keyframes stars-pop { 0% { opacity:0; transform:scale(.2); } 18% { opacity:1; transform:scale(1.3); } 45% { opacity:.9; transform:scale(1); } 100% { opacity:0; transform:scale(.6); } }
+@keyframes stars-ring { 0% { opacity:0; transform:scale(.3); } 20% { opacity:.9; } 100% { opacity:0; transform:scale(2.4); } }
+html[data-motion="reduced"] .stars-fx { display:none; }

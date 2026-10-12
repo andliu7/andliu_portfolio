@@ -47,6 +47,7 @@ export default function Motion() {
       pauseAway(),
       linkDelegate(),
       flipTaps(),
+      remeasure(),
     ];
     // Tells the BOOT failsafe (app/layout.tsx) that the director is running.
     document.documentElement.classList.add('motion-ready');
@@ -56,6 +57,27 @@ export default function Motion() {
   }, [reduced]);
 
   return null;
+}
+
+// Re-measures every trigger when the page's height changes after the first measure (Experience's
+// runway is set after mount, lazy images and fonts land late). Without it the section lines stay
+// where the shorter page put them, and the header label ran one section ahead from Contact down
+// (found 2026-10-12). Debounced, and only on a real height change, so a refresh that moves
+// nothing never triggers another.
+function remeasure() {
+  let last = document.body.scrollHeight;
+  let timer = 0;
+  const ro = new ResizeObserver(() => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => {
+      const h = document.body.scrollHeight;
+      if (Math.abs(h - last) < 2) return;
+      last = h;
+      ScrollTrigger.refresh();
+    }, 200);
+  });
+  ro.observe(document.body);
+  return () => { ro.disconnect(); window.clearTimeout(timer); };
 }
 
 // Lenis eases the real document scroll, so ScrollTrigger and native anchors keep working.

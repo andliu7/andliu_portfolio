@@ -3,6 +3,7 @@ import { CONTENTS, MICROCOPY, sectionAttrs } from '@/lib/site';
 import { ContainerScroll } from '@/components/ui/container-scroll-animation';
 import { FlipHeading } from '@/components/site/flip-heading';
 import { FlowButton } from '@/components/ui/flow-button';
+import { TextBlockAnimation } from '@/components/ui/text-block-animation';
 import { CompassSpin, FlipOnView } from './contents.client';
 import { ROW_ICONS } from './contents-icons';
 import './contents.css';
@@ -27,13 +28,14 @@ export default function Contents() {
       <CompassSpin label={CONTENTS.spin} />
       <FlipOnView id="contents-title" />
       {/* ContainerScroll (components/ui/container-scroll-animation.tsx): the title rises and the
-          card of rows tilts from 20deg to flat as the section scrolls up (flat under reduced
-          motion). It is a client component; this section stays a server component around it. */}
+          card of rows tilts from 48deg back (and a little twisted and low) to flat as the section
+          scrolls up (Andrew 2026-10-12: a stronger angle; flat under reduced motion). It is a
+          client component; this section stays a server component around it. */}
       <ContainerScroll className="toc-scroll" titleComponent={(
         <div className="toc-intro">
-          <span className="eyebrow">{CONTENTS.eyebrow}</span>
+          <TextBlockAnimation as="span" className="eyebrow" blockColor="var(--berry-soft)">{CONTENTS.eyebrow}</TextBlockAnimation>
           <FlipHeading id="contents-title" text={CONTENTS.title} href="#contents" fit={false} className="display toc-title" />
-          <p className="toc-note">{CONTENTS.note}</p>
+          <TextBlockAnimation as="p" className="toc-note" delay={0.2}>{CONTENTS.note}</TextBlockAnimation>
         </div>
       )}>
         <nav className="toc-nav" aria-label={CONTENTS.label}>

@@ -550,6 +550,8 @@ export function init(ctx){
 
   const api = {
     update,
+    // orbitPx(dx, dy): turn the view as a drag of that many CSS px would (the phone's look stick, ui/touch.js).
+    orbitPx(dx, dy){ if(state.started) orbitBy(dx, dy); },
     setTarget(t){ target = t || null; },
     setMode(m){ return setPreset(m, false); },          // 'follow' | 'god' | 'overview' | 'cinematic' | 'chase'
     get mode(){ return preset; },

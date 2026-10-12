@@ -1,5 +1,6 @@
 import { IMAGES, IMPACT, IMPACT_HEAD, MICROCOPY, PROJECTS, sectionAttrs, type ImageKey } from '@/lib/site';
 import { FlipHeading } from '@/components/site/flip-heading';
+import { TextBlockAnimation } from '@/components/ui/text-block-animation';
 import { Marquee } from '@/components/site/marquee';
 import impact from '@/lib/impact.json';
 import { ImpactAccordion, type PanelView, type SeriesData, type SeriesView } from './impact.client';
@@ -93,7 +94,8 @@ export default function Impact() {
     <section {...sectionAttrs('impact')} className="impact" aria-labelledby="impact-title">
       <CornerStickers set="impact" />
       <header className="impact-head">
-        <span className="eyebrow">{IMPACT_HEAD.eyebrow}</span>
+        {/* The block-wipe entrance (2026-10-12): berry-soft here, the heading's own is --kw */}
+        <TextBlockAnimation as="span" className="eyebrow" blockColor="var(--berry-soft)">{IMPACT_HEAD.eyebrow}</TextBlockAnimation>
         <FlipHeading id="impact-title" text={IMPACT_HEAD.headline} max={150} />
       </header>
       {ticker.length > 0 && (

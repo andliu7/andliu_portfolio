@@ -556,6 +556,7 @@ export const CONTACT = {
   eyebrow: '05 / Contact me', // [UI] Andrew 2026-10-07 ("make it more of a contact me"; was 'Say hi') (needs sign-off)
   headline: "LET'S COMPARE *notes.*", // [P]
   invite: 'Hiring, building something, or stuck on a mechanism? Email me.', // [UI] Andrew 2026-10-07, the one-line invitation under the headline (needs sign-off)
+  down: 'Résumé below', // [UI] the bobbing cue under the card, like UMD's "Contents below" (Andrew 2026-10-12, needs sign-off)
   emailCta: 'Email me', // [UI] the primary button, a mailto link (needs sign-off)
   // Shown beside the word when the GitHub and LinkedIn pills open on hover (components/site/social-button.tsx)
   handles: { github: '@andliu7', linkedin: 'Andrew Liu' }, // [UI] from GITHUB's address and his name (needs sign-off)
@@ -977,11 +978,18 @@ export const MICROCOPY = {
   ask: 'Ask about Andrew', // research 3.1
   send: 'Send', // chat send button name (needs sign-off)
   askShort: 'Ask', // chat launcher label, plan 6.2 (needs sign-off)
+  pullAsk: 'Pull to ask', // the phone pull-down pill at the top of the page (2026-10-11, needs sign-off)
+  pullAskGo: 'Let go to ask', // the same pill once the pull is far enough (needs sign-off)
+  pullReload: 'Did you mean to reload?', // shown over the chat when a pull opened it, since the pull replaced pull-to-refresh (2026-10-12, needs sign-off)
+  pullReloadGo: 'Reload page', // its button (needs sign-off)
+  pullReloadDismiss: 'No, keep the chat', // its close button's name (needs sign-off)
   live: 'Live', // research 3.1
   offline: 'Offline answers', // research 3.1
   resting: 'Live chat is resting; here is what I know.', // research 3.5
   tooFast: "You're asking faster than my budget allows. Try again in a minute, or email Andrew.", // research 3.5
   resume: 'Résumé (PDF)', // [P]
+  copyEmail: 'Copy email', // the footer's expanding copy button (Andrew 2026-10-12, needs sign-off)
+  copied: 'Copied', // the same button for two seconds after a copy (needs sign-off)
   resumeShort: 'Résumé', // [P] the header pill and the big résumé buttons, which glide to the résumé preview (#resume)
   backHome: 'Back to andliu.dev', // About footer tab (same words as `back`)
   domain: 'andliu.dev', // [P] public/CNAME; shown in caps beside the header's centre berry on hover (needs sign-off)

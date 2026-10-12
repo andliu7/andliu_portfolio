@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { getLenis, scrollToY } from '@/app/smooth';
 import { useReducedMotion } from './use-reduced-motion';
 import { autoplayOn, subscribeAutoplay } from './strip-autoplay';
@@ -21,8 +21,9 @@ import { autoplayOn, subscribeAutoplay } from './strip-autoplay';
 // sits in view. The frame uses overflow:clip, not hidden, so the browser never scrolls the frame
 // sideways on its own (a clip box is not a scroll container).
 //
-// Fallback: under reduced motion, or under 700px wide, nothing pins. data-pin stays off, the CSS
-// lays the cards out as a plain vertical stack, and the page scrolls like any other section.
+// Fallback: under reduced motion nothing pins. data-pin stays off, the CSS lays the cards out as a
+// plain vertical stack, and the page scrolls like any other section. Phones pin too (Andrew,
+// 2026-10-11: "keep the horizontal scroll on phone screens"); before that, under 700px stacked.
 //
 // Items: children of the track marked data-hs-item get the class hs-in as they come on screen
 // (from the right while pinned, from below in the stack), which the section CSS uses to pop them.
@@ -46,8 +47,6 @@ import { autoplayOn, subscribeAutoplay } from './strip-autoplay';
 // Pattern: a custom hook. It returns refs for the caller to attach (ref={runwayRef}); a ref is a
 // box React fills with the real DOM element after render, which the effect then reads.
 
-const WIDE = '(min-width: 700px)';
-
 const activeStrips = new Set<HTMLElement>();
 function markActive(runway: HTMLElement, active: boolean) {
   if (active) activeStrips.add(runway); else activeStrips.delete(runway);
@@ -61,20 +60,11 @@ export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>(onPr
   const runwayRef = useRef<HTMLElement>(null);
   const trackRef = useRef<T>(null);
   const reduced = useReducedMotion();
-  const [wide, setWide] = useState(false);
-  const pinned = wide && !reduced;
+  const pinned = !reduced;
 
   // Keep the latest callback without restarting the scroll effect on every render.
   const progressRef = useRef(onProgress);
   useEffect(() => { progressRef.current = onProgress; });
-
-  useEffect(() => {
-    const mq = window.matchMedia(WIDE);
-    const sync = () => setWide(mq.matches);
-    sync();
-    mq.addEventListener('change', sync);
-    return () => mq.removeEventListener('change', sync);
-  }, []);
 
   useEffect(() => {
     const runway = runwayRef.current;
