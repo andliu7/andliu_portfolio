@@ -107,7 +107,7 @@ export const HERO_BAR = [
   `${BLUEBERRY_ROLE} of Blueberry, a team of four`, // [R] four per Andrew 2026-10-06
   'Browser Use docs used by 200+ contributors', // [R] Minnodi line
   'SAT students up 100 to 300 points', // [R] Education One line
-  'Mentoring 25+ students at Kharis', // [R] Kharis line
+  'Mentoring 25+ students at KCM ← (Kharis Campus Ministry, see timeline!)', // [R] Kharis line; KCM spelled out once here, explained in JOBS kcm [Andrew 2026-10-17]
   'RDKit.js grading in the browser', // [R] Blueberry highlights
 ] as const;
 
@@ -127,7 +127,7 @@ export const HERO_CAUTION = [
 export const CURRENTLY = [
   'building Blueberry with a team of four', // [Andrew 2026-10-06] team size from Andrew; the résumé PDF still says five
   'CS and pre-dental at UMD, expected May 2027', // [R]
-  'leading Focus Family at Kharis Campus Ministry', // [R]
+  'leading Focus Family at KCM', // [R] KCM per Andrew 2026-10-17
   'keeping one home for notes, food, workouts and goals', // [Z now]
 ] as const;
 
@@ -153,7 +153,7 @@ export const BLUEBERRY_CHAPTER = {
   headline: 'ORGANIC CHEMISTRY THAT *actually sticks.*', // [S] HERO.headline
   headlinePlain: 'Organic chemistry that actually sticks.', // [S] HERO.headline
   sell: 'Lessons that explain it properly, mechanisms you draw yourself, and flashcards that hunt down the one thing you keep getting wrong.', // [S] HERO.sell
-  story: 'What began as flashcards for classmates is becoming an organic chemistry learning platform. I lead product direction and learning design for a team of four, connecting study decks, visual pathways, and mechanism practice.', // [P]
+  story: 'It started as flashcards for my classmates. Now it is an organic chemistry platform, and I lead product and learning design for a team of four.', // [P] shortened 2026-10-17 (Andrew: "make the text more concise") from the longer [P] line
   cardHeading: 'Organic chemistry that actually sticks.', // [S] the phone's heading
   // The phone's three tabs along the frame. Labels are the saved cinematic-landing-hero's own;
   // the routes are real.
@@ -368,7 +368,8 @@ export const JOBS = [
     dot: 'tile-apricot', sort: 202506.5,
   },
   {
-    id: 'kcm', when: 'Jan 2025 to now', role: 'Focus Family Leader', org: 'Kharis Campus Ministry', place: 'College Park, MD', // [P][R]
+    id: 'kcm', when: 'Jan 2025 to now', role: 'Focus Family Leader', org: 'Kharis Campus Ministry (KCM)', place: 'College Park, MD', // [P][R]
+    gloss: 'Kharis means grace in Greek! Grace is being given something you do not deserve. A ministry of 100+ members.', // [Andrew 2026-10-17] his words
     line: 'The link between advisors, officers and leaders. Mentoring 25+ students, writing the guides that let other leaders run events without help, and a weekly digest email that reads the master calendar and summarizes shared folders with the Gemini API.', // [P][R]
     dot: 'tile-gold', sort: 202501,
   },
@@ -543,7 +544,7 @@ export const EVENING = {
     { id: 'gym', when: 'Then the gym', big: 'GYM', voice: 'Lifting with the *UMD Barbell Club*.', sub: null }, // [Andrew 2026-10-06 via lead brief] (needs sign-off)
     { id: 'cook', when: 'Then I cook', big: 'COOK', voice: 'The *garden* fuels the *cooking*.', sub: GARDEN_LINE }, // [Andrew 2026-10-06] his words, plus the UMD garden line [Z yard] (needs sign-off)
     { id: 'eat', when: 'Then we eat', big: 'EAT', voice: 'A *kitchen*, and people at the *table*.', sub: null }, // [P] OFF_CLOCK.notes[0].voice
-    { id: 'study', when: 'Then Bible study', big: 'BIBLE STUDY', voice: 'I lead *Focus Family* at Kharis Campus Ministry.', sub: FAITH_LINE }, // [R][P] (needs sign-off)
+    { id: 'study', when: 'Then Bible study', big: 'BIBLE STUDY', voice: 'I lead *Focus Family* at KCM.', sub: FAITH_LINE }, // [R][P] (needs sign-off)
     { id: 'someday', when: 'Someday', big: 'SOMEDAY', voice: 'Landscape design: the interest that keeps *growing*.', sub: null }, // [P] the garden line moved to COOK [Andrew 2026-10-06]
   ],
 } as const;
@@ -631,9 +632,16 @@ export const RESUME_PREVIEW = {
   close: 'Close', // [UI]
   noInline: 'This browser cannot show the PDF here, so this is the page as an image.', // [UI] (needs sign-off)
   file: 'andrew-liu-resume.pdf', // [plan] the Download file name
+  // The small framed photo at the text block's bottom right (Andrew 2026-10-17), cropped square
+  // from his Golden Gate photo at full resolution (700) and lightly sharpened, so the tilt has
+  // detail to resample; the caption sits in the frame's foot, the place as an Instagram-style tag
+  photo: { src: '/images/me/golden-gate.webp', srcSm: '/images/me/golden-gate-sm.webp', w: 700, h: 700, alt: 'Andrew at the Golden Gate Bridge, smiling with two thumbs up', caption: '(me)', place: '@Golden Gate Bridge' }, // [Andrew 2026-10-17]
+  clickHere: 'click here!', // [Andrew 2026-10-17] the note pointing at the page card
   image: {
-    src: '/images/resume/resume-p1.webp', w: 880, h: 1139, // [plan] 2x the card's display width
-    small: '/images/resume/resume-p1-sm.webp', smallW: 440, // [plan]
+    // 2026-10-17: sharper (Andrew: "much clearer to look at"). 1600 covers the 520px card grown
+    // 15% on hover at 2x; 800 is the 1x size. Rendered at 400 dpi, q=88.
+    src: '/images/resume/resume-p1.webp', w: 1600, h: 2071,
+    small: '/images/resume/resume-p1-sm.webp', smallW: 800,
     alt: "Page one of Andrew Liu's résumé: experience at Blueberry, Minnodi and Education One, projects, skills, UMD, and leadership.", // [R] (needs sign-off)
   },
 } as const;
@@ -665,7 +673,7 @@ export const ABOUT = {
     { title: 'Chemistry tooling', line: 'RDKit.js grading, an SVG molecule renderer, the mechanism trainer.' }, // [R][P]
     { title: 'AI workflows', line: 'Browser Use docs adopted by 200+ contributors, fixes checked against live agent runs.' }, // [R]
     { title: 'Teaching', line: 'Anatomy to physics at Education One, SAT gains of 100 to 300 points.' }, // [R]
-    { title: 'Community', line: 'Focus Family at Kharis Campus Ministry, 25+ students mentored.' }, // [R]
+    { title: 'Community', line: 'Focus Family at KCM, 25+ students mentored.' }, // [R]
   ],
   stats: [
     { value: 2000, suffix: '+', label: 'Browser Use users' }, // [R]
@@ -747,7 +755,7 @@ export const UMD = {
   titleTop: 'COLLEGE', // [R] College Park, MD
   titleBottom: 'PARK, MD.', // [R]
   degree: 'B.S. Computer Science on the pre-dental track at the University of Maryland, College Park. Expected May 2027.', // [R] as CHAT_FALLBACK education
-  tags: ['UMD Barbell Club', 'Focus Family at Kharis', 'The UMD garden'], // [Andrew 2026-10-06 via lead brief, as EVENING gym][R][Z yard] (needs sign-off)
+  tags: ['UMD Barbell Club', 'Focus Family at KCM', 'The UMD garden'], // [Andrew 2026-10-06 via lead brief, as EVENING gym][R][Z yard] (needs sign-off)
   courseworkLabel: EDUCATION.courseworkLabel, // [R]
   coursework: EDUCATION.coursework.join(', '), // [R][Z umd]
   sweat: 'Make the terrapin sweat', // [Andrew 2026-10-06 via lead] the terrapin button's name (needs sign-off)

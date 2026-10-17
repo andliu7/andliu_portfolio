@@ -11,6 +11,7 @@ import { PillFaces } from '@/components/site/pill-faces';
 import CopyEmail from '../copy-email';
 import './contact.css';
 import { ContactToys } from './contact.client';
+import { StarsBackground } from '@/components/ui/stars';
 
 // The footer card (SITE-PLAN.md 4.9) in the Slush look: one flat apricot card (no gradient),
 // the headline crushed giant over a one-line invitation, GitHub and LinkedIn as big outlined pills
@@ -83,7 +84,7 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
       )}
     </div>
     <div className="ct-mq">
-      <InfiniteSlider label={BB_HEAD.stack} gap={16} duration={30} durationOnHover={110}>
+      <InfiniteSlider label={BB_HEAD.stack} gap={16} duration={55} durationOnHover={140}>
         {STACK.map(item => <StackChip key={item} name={item} className="ct-mq-item" />)}
       </InfiniteSlider>
     </div>
@@ -105,6 +106,9 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
 export default function Contact() {
   return (
     <section {...sectionAttrs('contact')} className="contact" aria-labelledby="contact-title">
+      {/* The résumé's night sky, carried up behind the card (Andrew 2026-10-17: "basically the same
+          background"). No fade here, so it runs on into the résumé's sky without a jump. */}
+      <StarsBackground fade={false} />
       {/* The frame: the card, the stack band and the cue together (contact.css). */}
       <div className="ct-frame">
         <FooterCard variant="home" />

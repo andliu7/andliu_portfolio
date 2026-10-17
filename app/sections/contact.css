@@ -4,8 +4,10 @@
    padding (the header hides on scroll down, and html's scroll-padding-top still clears it on a
    jump) and clips sideways so the full-bleed band can never widen the page. */
 section.contact { padding-top:24px; overflow-x:clip; }
+/* The stars (contact.tsx) fill the home section; the frame comes after them, so it paints on top. */
+section#contact { position:relative; }
 
-.contact .ct-card { position:relative; border-radius:var(--card-r); background:var(--ground); color:var(--on); }
+.contact .ct-card { position:relative; container-type:inline-size; border-radius:var(--card-r); background:var(--ground); color:var(--on); }
 .contact .ct-body { display:grid; gap:24px; padding:clamp(24px,3.2vw,48px); container-type:inline-size; }
 .contact .ct-top { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; }
 /* The headline keeps .fit's sizing against the card, except in a narrow card, where .fit would
@@ -17,8 +19,9 @@ section.contact { padding-top:24px; overflow-x:clip; }
 /* A wide card: the address and its buttons left, GitHub and LinkedIn stacked on the right, top
    aligned, so the card ends with the buttons instead of a tall empty foot (2026-10-12). */
 @container (min-width:760px) {
-  .contact .ct-row { grid-template-columns:minmax(0,1fr) auto; align-items:start; }
-  .contact .ct-row .ct-links { flex-direction:column; align-items:flex-end; }
+  /* 2026-10-17: GitHub and LinkedIn moved left, beside the address column, so the tape can lie
+     across the card's bottom right corner without covering them */
+  .contact .ct-row { grid-template-columns:auto auto; justify-content:start; align-items:center; gap:24px 56px; }
 }
 
 /* The links: each a big outlined pill (Slush's 2px ink outline), letters rolling on hover. The
@@ -78,13 +81,16 @@ html:not([data-motion="reduced"]) section#contact { padding-bottom:clamp(60px,12
 /* ---------- The stack band as a strip of tape (Andrew 2026-10-12): turned 14 degrees (8 at
    first; "longer, steeper angle ... and faster", the same day; the speed is the slider's duration
    in contact.tsx) and lifted
-   over the card's lower right corner. Its right end stops just inside the gutter, so it never
+   over the card's lower right corner. On 2026-10-17 it went flatter and longer (7 degrees, see
+   below) and back to the slower 55s loop, since the long strip shows every chip anyway. Its right end stops just inside the gutter, so it never
    runs off the screen; both ends are torn like real tape (the zigzag clip-path) and the chips
    fade out before them (the mask), so the strip reads as finished rather than cut off wherever
    the screen ends. Static: it does not slide or ride out as you scroll. Reduced motion keeps the
    plain full-bleed band above (its chips stand still in wrapped rows, too tall for a strip). */
-html:not([data-motion="reduced"]) section#contact .ct-mq { position:relative; z-index:2; align-self:flex-end; width:min(1080px,78%);
-  margin:90px calc(-.5 * var(--gutter)) 40px auto; padding-inline:18px; rotate:-14deg; box-shadow:0 6px 0 rgb(0 0 0 / .18);
+html:not([data-motion="reduced"]) section#contact .ct-mq { position:relative; z-index:2; align-self:flex-end; width:min(1700px,97%);
+  /* 2026-10-17, second pass: flatter (-14 to -7deg) and nearly the card's width, so it spans the
+     card and crosses the buttons a little, its right end higher over the corner */
+  margin:-110px calc(-.5 * var(--gutter)) 40px auto; padding-inline:18px; rotate:-7deg; box-shadow:0 6px 0 rgb(0 0 0 / .18);
   clip-path:polygon(0 0.00%, 9px 6.25%, 0 12.50%, 9px 18.75%, 0 25.00%, 9px 31.25%, 0 37.50%, 9px 43.75%, 0 50.00%, 9px 56.25%, 0 62.50%, 9px 68.75%, 0 75.00%, 9px 81.25%, 0 87.50%, 9px 93.75%, 0 100.00%, calc(100% - 0px) 100.00%, calc(100% - 9px) 93.75%, calc(100% - 0px) 87.50%, calc(100% - 9px) 81.25%, calc(100% - 0px) 75.00%, calc(100% - 9px) 68.75%, calc(100% - 0px) 62.50%, calc(100% - 9px) 56.25%, calc(100% - 0px) 50.00%, calc(100% - 9px) 43.75%, calc(100% - 0px) 37.50%, calc(100% - 9px) 31.25%, calc(100% - 0px) 25.00%, calc(100% - 9px) 18.75%, calc(100% - 0px) 12.50%, calc(100% - 9px) 6.25%, calc(100% - 0px) 0.00%); }
 html:not([data-motion="reduced"]) section#contact .ct-mq .islider { -webkit-mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent); }
 @media (max-width:640px) {
@@ -99,8 +105,11 @@ html:not([data-motion="reduced"]) section#contact .ct-mq .islider { -webkit-mask
 .contact .ct-toy { position:absolute; display:block; width:var(--s); height:var(--s); padding:0; border:0; background:none; cursor:pointer; pointer-events:auto; rotate:var(--r); touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
 .contact .ct-toy-art { position:relative; display:block; width:100%; height:100%; }
 .contact .ct-toy svg { display:block; width:100%; height:100%; overflow:visible; }
-.contact .ct-envelope { --s:clamp(96px,9vw,130px); --r:-8deg; --k:0; right:13%; top:clamp(70px,7vw,104px); }
-.contact .ct-plane { --s:clamp(76px,7vw,100px); --r:14deg; --k:1; right:3%; top:clamp(150px,13vw,190px); }
+/* 2026-10-17: off the word, not on it. "notes." spans about 67% to 94% of the card's width (the
+   headline is fitted to the card), so both are placed in cqw of the card: the envelope just
+   overlaps the bottom left of the N, the plane the top right of the full stop. */
+.contact .ct-envelope { --s:clamp(96px,9vw,130px); --r:-8deg; --k:0; left:calc(66.5cqw - var(--s) * .7); top:calc(56px + 8cqw); }
+.contact .ct-plane { --s:clamp(76px,7vw,100px); --r:14deg; --k:1; right:6.5cqw; top:calc(58px + 2cqw); } /* on the top of NOTES (2026-10-17) */
 @media (max-width:699px) {
   .contact .ct-envelope { display:none; }
   .contact .ct-plane { --s:64px; right:6%; top:46px; }
@@ -176,8 +185,9 @@ html:not([data-motion="reduced"]) .contact .ct-plane[data-play] .ct-toy-art { an
 /* ---------- "Résumé below" (contact.tsx .ct-cue, 2026-10-12): UMD's "Contents below" cue, the
    same pill and bobbing arrow, in the card's apricot. It sits at the left under the card: the
    tilted tape sweeps through the middle and up across the right corner. ---------- */
-.contact .ct-cue { position:relative; z-index:2; align-self:flex-start; display:flex; flex-direction:column; align-items:center; gap:4px; margin:-150px 0 28px clamp(24px,3.2vw,48px); }
-.contact .ct-down { --face:var(--apricot); --face-on:var(--ink); --roll:var(--card); --roll-on:var(--ink); }
+.contact .ct-cue { position:relative; z-index:3; align-self:center; display:flex; flex-direction:column; align-items:center; gap:4px; margin:44px 0 28px; } /* clear of the tape and the card (2026-10-17) */
+/* Brighter face, an ink outline and a dark ledge so it reads over the sky tape (2026-10-17) */
+.contact .ct-down { --face:var(--card); --face-on:var(--ink); --roll:var(--apricot); --roll-on:var(--ink); border:2px solid var(--ink); box-shadow:0 5px 0 rgb(0 0 0 / .45); }
 .contact .ct-arrow { display:block; overflow:visible; animation:ct-nudge 1.4s var(--ease-spring) infinite; }
 @keyframes ct-nudge { 0%, 100% { transform:translateY(0); } 50% { transform:translateY(10px); } }
 html[data-motion="reduced"] .contact .ct-arrow { animation:none; }

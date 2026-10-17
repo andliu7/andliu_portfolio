@@ -18,28 +18,35 @@
   display:block; color:var(--ink); text-decoration:none; border-radius:16px;
   transition:translate .45s var(--ease-elastic),rotate .45s var(--ease-elastic);
 }
-.hob-pencil, .hob-laptop { top:calc(var(--pt) + var(--fs) * .17 - var(--h) / 2); }
-.hob-phone, .hob-card { top:calc(var(--pt) + var(--fs) * var(--low, .7) + var(--h) / 2); }
+/* 2026-10-17: a little further onto the letters (top row's lower edge .17em to .26em, bottom
+   row's upper edge .7em to .6em) */
+.hob-phone, .hob-laptop { top:calc(var(--pt) + var(--fs) * .26 - var(--h) / 2); }
+.hob-pencil, .hob-card { top:calc(var(--pt) + var(--fs) * var(--low, .6) + var(--h) / 2); }
 
 /* On the name's four corners (Andrew 2026-10-06: "the icons should be in the corners of my name"):
-   pencil top left, laptop top right, phone bottom left, cards bottom right, each over the outer
+   (since 2026-10-17: phone top left, laptop top right, pencil by ANDREW's last letter, cards bottom
+   right) each over the outer
    edge of the first or last letter, so the letters' middles stay clear. A little smaller than
    before relative to the name, which grew (Andrew: "make my name larger too"), so the top two and
    their labels stay under the header and the bottom two above the tape. Each pair sits the same
    distance from the name's middle on both sides (Andrew 2026-10-07: "center ... icons a bit more"). */
-.hob-pencil { --ar:.4167; --h:calc(var(--fs) * .8); --x:9%; --r:-14deg; }
+/* 2026-10-17 (Andrew): the phone moved to the top left, and the pencil to the bottom right of
+   ANDREW, in the gap before LIU, pointing down to the left. It is also the pencil that writes the
+   name on load (components/site/hero-write.tsx), and --r is the angle it writes at. */
+.hob-pencil { --ar:.4167; --h:calc(var(--fs) * .8); --x:59%; --r:30deg; --low:.42; } /* up and left, off the W (Andrew 2026-10-17) */
 .hob-laptop { --ar:1.375; --h:calc(var(--fs) * .66); --x:91%; --r:6deg; }
-.hob-phone  { --ar:.5833; --h:calc(var(--fs) * .76); --x:8%; --r:-8deg; }
+.hob-phone  { --ar:.5833; --h:calc(var(--fs) * .76); --x:4%; --r:-8deg; } /* only its corner over the A's left side */
 .hob-card   { --ar:1.0833; --h:calc(var(--fs) * .64); --x:92%; --r:8deg; }
 
 /* A narrow stage (a phone): the name is small, so the objects keep a floor size, sit a little
    further from the letters' middles, and their labels show only on keyboard focus */
 @container hero (max-width:759px) {
-  .hob-pencil { --h:max(94px, calc(var(--fs) * 1.04)); --x:12%; }
+  .hob-pencil { --h:max(94px, calc(var(--fs) * 1.04)); --x:62%; }
   .hob-laptop { --h:max(78px, calc(var(--fs) * .88)); --x:84%; }
-  .hob-phone  { --h:max(91px, calc(var(--fs) * .96)); --x:13%; }
+  .hob-phone  { --h:max(91px, calc(var(--fs) * .96)); --x:12%; }
   .hob-card   { --h:max(78px, calc(var(--fs) * .83)); --x:85%; }
-  .hob-phone, .hob-card { --low:.82; }
+  .hob-pencil, .hob-card { --low:.82; }
+  .hob-pencil { --low:.6; }
   .hob-label { opacity:0; pointer-events:none; }
   .hob:focus-visible .hob-label { opacity:1; }
 }
@@ -53,7 +60,7 @@
   white-space:nowrap; padding:3px 10px; border:1px solid var(--ink); border-radius:var(--r-pill);
   background:var(--card); color:var(--ink); font:600 13px/1.3 var(--body);
 }
-.hob-pencil .hob-label, .hob-laptop .hob-label { top:auto; bottom:calc(100% + 8px); }
+.hob-phone .hob-label, .hob-laptop .hob-label, .hob-pencil .hob-label { top:auto; bottom:calc(100% + 8px); } /* the pencil's above it, clear of the résumé button */
 
 .hob:focus-visible { outline:3px solid var(--berry); outline-offset:4px; }
 @media (hover:hover) and (pointer:fine) {

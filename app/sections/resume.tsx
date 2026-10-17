@@ -19,7 +19,7 @@ import { StarsBackground } from '@/components/ui/stars';
 //
 // The images are rendered once, offline, from the PDF. Re-run this from the repo root (Python
 // with PyMuPDF and Pillow) whenever public/andrew-liu-resume.pdf changes; it is a one-page résumé:
-//   python -c "import pymupdf,io;from PIL import Image;p=pymupdf.open('public/andrew-liu-resume.pdf')[0];im=Image.open(io.BytesIO(p.get_pixmap(dpi=300).tobytes('png'))).convert('RGB');[im.resize((w,round(w*11/8.5)),Image.LANCZOS).save(f'public/images/resume/resume-p1{s}.webp',quality=82,method=6) for w,s in ((880,''),(440,'-sm'))]"
+//   python -c "import pymupdf,io;from PIL import Image;p=pymupdf.open('public/andrew-liu-resume.pdf')[0];im=Image.open(io.BytesIO(p.get_pixmap(dpi=400).tobytes('png'))).convert('RGB');[im.resize((w,round(w*11/8.5)),Image.LANCZOS).save(f'public/images/resume/resume-p1{s}.webp',quality=88,method=6) for w,s in ((1600,''),(800,'-sm'))]"
 
 export default function Resume() {
   return (
@@ -31,8 +31,22 @@ export default function Resume() {
           <div className="rs-text">
             <h2 id="resume-title" className="display rs-title">{RESUME_PREVIEW.title}</h2>
             <p className="rs-line">{RESUME_PREVIEW.line}</p>
+            {/* A small photo of Andrew in a paper frame, pinned at the block's bottom right (resume.css) */}
+            <figure className="rs-photo">
+              <img src={RESUME_PREVIEW.photo.src} srcSet={`${RESUME_PREVIEW.photo.srcSm} 320w, ${RESUME_PREVIEW.photo.src} 700w`} sizes="(max-width: 760px) 160px, 320px"
+                width={RESUME_PREVIEW.photo.w} height={RESUME_PREVIEW.photo.h} alt={RESUME_PREVIEW.photo.alt} loading="lazy" decoding="async" />
+              <figcaption className="rs-photo-cap">{RESUME_PREVIEW.photo.caption}</figcaption>
+              <span className="rs-photo-place">{RESUME_PREVIEW.photo.place}</span>
+            </figure>
           </div>
-          <div className="rs-card-cell"><ResumeCard /></div>
+          <div className="rs-card-cell">
+            <ResumeCard />
+            {/* A hand-drawn note pointing at the card: it opens on click (resume.css .rs-click) */}
+            <span className="rs-click" aria-hidden="true">
+              {RESUME_PREVIEW.clickHere}
+              <svg viewBox="0 0 90 70" focusable="false"><path d="M8 8 C 30 6, 62 14, 74 52" /><path d="M62 46 L 75 56 L 82 40" /></svg>
+            </span>
+          </div>
           <div className="rs-actions">
             <a className="pill pill-berry pill-big" href={RESUME} target="_blank" rel="noreferrer">
               {RESUME_PREVIEW.open} <ArrowUpRight size={18} aria-hidden="true" />

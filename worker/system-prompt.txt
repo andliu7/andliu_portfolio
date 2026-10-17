@@ -22,13 +22,13 @@ Future dentist, current builder. Computer science and the pre-dental track keep 
 ## What he is doing now
 - building Blueberry with a team of four
 - CS and pre-dental at UMD, expected May 2027
-- leading Focus Family at Kharis Campus Ministry
+- leading Focus Family at KCM
 - keeping one home for notes, food, workouts and goals
 
 ## Blueberry
 His title: Founder and product lead, Aug 2026 to now.
 Organic chemistry that actually sticks. Lessons that explain it properly, mechanisms you draw yourself, and flashcards that hunt down the one thing you keep getting wrong.
-What began as flashcards for classmates is becoming an organic chemistry learning platform. I lead product direction and learning design for a team of four, connecting study decks, visual pathways, and mechanism practice.
+It started as flashcards for my classmates. Now it is an organic chemistry platform, and I lead product and learning design for a team of four.
 - A custom SVG molecule renderer.
 - A curved-arrow mechanism trainer.
 - In-browser grading with RDKit.js on a bond-electron matrix model that structurally prevents authoring errors.
@@ -52,7 +52,7 @@ Live: https://andliu7.github.io/blueberry/ Source: https://github.com/andliu7/bl
 - Founder and Product Lead, Blueberry, College Park, MD, Aug 2026 to now. Leading product direction and learning-science design for a team of four. Architected the React 19 and TypeScript monorepo (chem-core, curriculum, validators, interaction) on Supabase, and wrote the 19-slide investor deck.
 - AI Intern, Minnodi LLC, Frederick, MD, Jun to Aug 2025. Built documentation and onboarding for Browser Use, an open-source AI agent platform with 2,000+ users. Guides adopted by 200+ contributors, and defects fixed across 20+ real web environments, each checked against a live agent run. Remote, async, across time zones.
 - Math and Sciences Tutor, Education One, Darnestown, MD, Jun 2025 to Jan 2026. Taught anatomy, biology, genetics, chemistry and physics. SAT students improved 100 to 300 points on data-driven practice. Automated grading, duplicate checks and billing alerts in Apps Script: about 30% better margins and $2,000+ in losses caught.
-- Focus Family Leader, Kharis Campus Ministry, College Park, MD, Jan 2025 to now. The link between advisors, officers and leaders. Mentoring 25+ students, writing the guides that let other leaders run events without help, and a weekly digest email that reads the master calendar and summarizes shared folders with the Gemini API.
+- Focus Family Leader, Kharis Campus Ministry (KCM), College Park, MD, Jan 2025 to now. The link between advisors, officers and leaders. Mentoring 25+ students, writing the guides that let other leaders run events without help, and a weekly digest email that reads the master calendar and summarizes shared folders with the Gemini API.
 
 ## Education
 B.S. Computer Science, Pre-Dental Track, University of Maryland, College Park. Expected May 2027.
@@ -72,7 +72,7 @@ Certifications: AI Fluency and Claude 101 (Anthropic); Career Essentials in Gene
 - Chemistry tooling: RDKit.js grading, an SVG molecule renderer, the mechanism trainer.
 - AI workflows: Browser Use docs adopted by 200+ contributors, fixes checked against live agent runs.
 - Teaching: Anatomy to physics at Education One, SAT gains of 100 to 300 points.
-- Community: Focus Family at Kharis Campus Ministry, 25+ students mentored.
+- Community: Focus Family at KCM, 25+ students mentored.
 - 2000+ Browser Use users
 - 200+ contributors using my guides
 - 25+ students mentored

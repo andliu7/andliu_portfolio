@@ -9,6 +9,7 @@ import { useHorizontalScroll } from '@/components/site/use-horizontal-scroll';
 import { AutoplayButton, EscHint } from '@/components/site/strip-autoplay';
 import './experience.css';
 import { CornerStickers } from '@/components/site/corner-stickers/corner-stickers';
+import { BlobPerson, type PersonTone } from '@/components/site/closing/stickers';
 
 // Experience, the timeline (rebuilt 2026-10-06 from the approved design, Timeline.dc.html).
 // The section pins and vertical scroll slides the four roles left past a dated track, oldest to
@@ -30,6 +31,17 @@ import { CornerStickers } from '@/components/site/corner-stickers/corner-sticker
 //
 // A client component ('use client'): the hook reads the scroll position. The server still
 // renders the whole list.
+
+// The island's round people standing on each card's top edge (Andrew 2026-10-17: "little
+// characters from the island game"), the same BlobPerson the evening reel uses, in the tones of
+// that job's island zone. Blueberry's team of four; one person for the remote internship; a tutor
+// with a book and two students; a small Focus Family circle.
+const CROWD: Record<(typeof JOBS)[number]['id'], { tone: PersonTone; tall?: boolean; extra?: 'book' }[]> = {
+  blueberry: [{ tone: 'violet', tall: true }, { tone: 'sky' }, { tone: 'pink' }, { tone: 'teal', tall: true }],
+  minnodi: [{ tone: 'teal', tall: true }],
+  educationone: [{ tone: 'apricot', tall: true, extra: 'book' }, { tone: 'pink' }, { tone: 'leaf' }],
+  kcm: [{ tone: 'gold', tall: true }, { tone: 'pink', extra: 'book' }, { tone: 'sky', extra: 'book' }, { tone: 'leaf', extra: 'book' }],
+};
 
 // Oldest first: the strip reads left to right through time.
 const ROLES = [...JOBS].sort((a, b) => a.sort - b.sort);
@@ -68,9 +80,14 @@ export default function Experience() {
             <li key={job.id} className="xp-item" data-hs-item="" style={{ '--dot': `var(--${job.dot})`, '--i': i } as CSSProperties}>
               <span className="xp-tick" aria-hidden="true">{started(job.sort)}</span>
               <article className="xp-card" aria-labelledby={`xp-${job.id}`}>
+                <span className="xp-crowd" aria-hidden="true">
+                  {CROWD[job.id].map((p, k) => <BlobPerson key={k} {...p} />)}
+                </span>
                 <span className="xp-when">{job.when}</span>
                 <h3 className="xp-role" id={`xp-${job.id}`}>{job.role}</h3>
                 <p className="xp-org">{job.org}</p>
+                {/* only KCM has a gloss: what the name means, since the hero bar points here */}
+                {'gloss' in job && <p className="xp-gloss">{job.gloss}</p>}
                 <p className="xp-line">{job.line}</p>
               </article>
             </li>

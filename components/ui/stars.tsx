@@ -56,9 +56,12 @@ type Props = {
   /** How far the sky leans from the pointer, as a fraction of its distance from the centre. */
   factor?: number;
   starColor?: string;
+  /** Fade out while scrolling through the section. Off where the sky must carry on unchanged into
+   *  the next section (Contact, whose sky runs straight into the résumé's). */
+  fade?: boolean;
 };
 
-export function StarsBackground({ className = '', speed = 90, factor = 0.03, starColor = 'rgb(255 250 240 / .9)' }: Props) {
+export function StarsBackground({ className = '', speed = 90, factor = 0.03, starColor = 'rgb(255 250 240 / .9)', fade: fades = true }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const fxRef = useRef<HTMLDivElement>(null);
   const [layers, setLayers] = useState<string[]>([]);
@@ -79,7 +82,7 @@ export function StarsBackground({ className = '', speed = 90, factor = 0.03, sta
     // its bottom reaches the screen's bottom (the end of the pin's runway).
     const fade = () => {
       raf = 0;
-      if (reduced()) { root.style.opacity = ''; return; }
+      if (!fades || reduced()) { root.style.opacity = ''; return; }
       const r = section.getBoundingClientRect(), run = Math.max(1, r.height - window.innerHeight);
       const p = Math.min(1, Math.max(0, -r.top / run));
       root.style.opacity = (1 - p).toFixed(3);
@@ -137,7 +140,7 @@ export function StarsBackground({ className = '', speed = 90, factor = 0.03, sta
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('pointermove', onMove);
     };
-  }, [x, y, factor]);
+  }, [x, y, factor, fades]);
 
   return (
     <div ref={rootRef} className={`stars ${className}`} aria-hidden="true" data-off="">

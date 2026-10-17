@@ -39,7 +39,7 @@ export function ResumeCard() {
         <img
           src={img.small}
           srcSet={`${img.small} ${img.smallW}w, ${img.src} ${img.w}w`}
-          sizes="(min-width: 900px) 400px, min(84vw, 400px)"
+          sizes="(min-width: 900px) 600px, min(84vw, 520px)" /* the card is up to 520px, 600 hovered */
           width={img.w} height={img.h} alt={img.alt}
           loading="lazy" decoding="async"
         />

@@ -14,7 +14,7 @@ import './hero-objects.css';
 const NS = 'non-scaling-stroke' as const;
 const INK = '#12142b'; // the site's --ink (an SVG attribute cannot read a CSS variable)
 
-function Pencil() {
+export function Pencil() {
   return (
     <svg viewBox="0 0 40 96" aria-hidden="true" focusable="false">
       <g stroke={INK} strokeWidth="2" vectorEffect={NS} strokeLinejoin="round">

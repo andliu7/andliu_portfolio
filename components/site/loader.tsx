@@ -6,11 +6,11 @@ import { PREFS } from './handoffs';
 // in the first page before the rest of it").
 //
 // The count is real. It follows what the first screen needs, each worth part of the 100:
-//   dom       15  the HTML is parsed (DOMContentLoaded)
-//   fonts     25  the hero's two faces are loaded (document.fonts.load also starts the download)
-//   hydrated  30  React is running (the director in app/motion.tsx sets html.motion-ready)
-//   fit       15  the hero name is sized (HeroFit in hero.client.tsx sets --fs-js on .hero-stage)
-//   sky       10  two frames have painted since React mounted the Cloudscape sky's WebGL
+//   dom       10  the HTML is parsed (DOMContentLoaded)
+//   fonts     20  the hero's two faces are loaded (document.fonts.load also starts the download)
+//   hydrated  35  React is running (the director in app/motion.tsx sets html.motion-ready), and
+//                 two frames have painted since (this used to be its own 10-point "sky" step)
+//   fit       10  the hero name is sized (HeroFit in hero.client.tsx sets --fs-js on .hero-stage)
 //   settled   25  after React is up, 12 frames in a row came under 25ms: the main thread is free,
 //                 so the scroll effects are set up and the first scroll is smooth (Andrew
 //                 2026-10-07: "I have to wait ... to even be able to scroll smoothly")
@@ -73,15 +73,14 @@ var reduced=d.getAttribute('data-motion')==='reduced';
 root.innerHTML=${JSON.stringify(MARKUP)};
 var el=root.firstChild,num=el.querySelector('.loader-count'),t0=Date.now();
 mark('loader:start');
-var W={dom:10,fonts:20,hydrated:25,fit:10,sky:10,settled:25},got={},frames=0,smooth=0,last=0,shown=0,full=0,lifted=false;
+var W={dom:10,fonts:20,hydrated:35,fit:10,settled:25},got={},frames=0,smooth=0,last=0,shown=0,full=0,lifted=false;
 function have(k){got[k]=true}
 if(document.readyState!=='loading')have('dom');else document.addEventListener('DOMContentLoaded',function(){have('dom')});
 try{Promise.all([document.fonts.load('700 1em "Fira Code"'),document.fonts.load('500 1em "Karla"')]).then(function(){have('fonts')},function(){have('fonts')})}catch(e){have('fonts')}
 function poll(){
-if(!got.hydrated&&d.classList.contains('motion-ready'))have('hydrated');
+if(!got.hydrated&&d.classList.contains('motion-ready')&&++frames>2)have('hydrated');
 if(got.dom&&!got.fit){var s=document.querySelector('.hero-stage');if(!s||s.style.getPropertyValue('--fs-js'))have('fit')}
-if(got.hydrated&&!got.sky&&++frames>2)have('sky');
-var t=P&&P.now?P.now():Date.now();if(got.sky&&!got.settled){smooth=last&&t-last<25?smooth+1:0;if(smooth>=12)have('settled')}last=t}
+var t=P&&P.now?P.now():Date.now();if(got.hydrated&&!got.settled){smooth=last&&t-last<25?smooth+1:0;if(smooth>=12)have('settled')}last=t}
 function target(now){if(now-t0>=${CAP_MS})return 100;var t=0;for(var k in W)if(got[k])t+=W[k];return t}
 function done(){if(el.parentNode)el.parentNode.removeChild(el);mark('loader:end')}
 function lift(){if(lifted)return;lifted=true;mark('loader:lift');

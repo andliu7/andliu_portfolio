@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import { HERO, HERO_BAR, HERO_CAUTION, IDENTITY, PORTRAITS, MICROCOPY, sectionAttrs } from '@/lib/site';
 import { Portrait } from '@/components/site/portrait';
 import { Marquee } from '@/components/site/marquee';
+import { HeroWrite } from '@/components/site/hero-write';
 import { HeroObjects } from '@/components/site/hero-objects/hero-objects';
 import Cloudscape from '@/components/ui/cloudscape';
 import { FlowButton } from '@/components/ui/flow-button';
@@ -10,8 +11,8 @@ import { HeroFit, NameRoll } from './hero.client';
 import './hero.css';
 
 // The hero (SITE-PLAN.md 4.1) in the Slush poster language: Andrew's Cloudscape sky drifting
-// edge to edge across the whole first screen (behind the header too), a frosted glass card on it
-// holding the name crushed onto one line as wide as the card allows, four cartoon objects of his
+// edge to edge across the whole first screen (behind the header too), a card on it (no glass since
+// 2026-10-17) holding the name crushed onto one line as wide as the card allows, four cartoon objects of his
 // projects on the name's four corners (each a link), the résumé button centred under it, then a
 // cream marquee on the seam with a slim caution-stripe edge: short true facts, and between them
 // small boxed caution lines (HERO_CAUTION). The degree chip lives
@@ -85,8 +86,8 @@ export default function Hero() {
           {/* phones only (hero.css); the header carries it on a wider screen */}
           <span className="hero-tag hero-rise" style={{ '--d': 0 } as CSSProperties}><ChipMarquee text={HERO.chip} /></span>
 
-          {/* The glass card (hero.css .hero-card): the name, its objects and the button on frosted
-              glass over the sky; the objects hang over its edges */}
+          {/* The card (hero.css .hero-card): the name, its objects and the button straight on the
+              sky; the objects hang over its edges */}
           <div className="hero-card">
             <div className="hero-namewrap">
               <h1 id="hero-title" className="display fit hero-name" style={{ '--chars': 6, '--max': '300px' } as CSSProperties}>
@@ -95,6 +96,7 @@ export default function Hero() {
                 <NameLine text={HERO.last} start={HERO.first.length} kw />
               </h1>
               <HeroObjects />
+              <HeroWrite />
             </div>
 
             <div className="hero-foot">

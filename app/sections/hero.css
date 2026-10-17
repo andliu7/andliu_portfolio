@@ -58,34 +58,15 @@
 .hero .hero-tag .chipm { flex:1 1 auto; }
 @media (min-width:720px) { .hero .hero-tag { display:none; } }
 
-/* ---------- The glass card (Andrew 2026-10-06: "still want the glass background") ----------
-   Frosted glass over the sky: a light white tint, blurred and a little more saturated behind,
-   a 1.5px white rim, a bright line along the top edge and a soft drop. It
-   keeps inside the gutters, so the screen's edges show the same strip of sky on both sides. The tint is 38% white, so the brightest
-   thing behind it is white cloud (#fff) and the darkest the sky (#87ceeb): the glass reads from
-   #b9e1f2 to #fff. Ink on #b9e1f2 is 13.6:1, berry (LIU, display size) 5.6:1 and ink on white 18:1.
-   Without backdrop-filter, a translucent paper fill instead. */
-/* Since 2026-10-12 the glass hugs the name only (Andrew: "make the liquid glass around my name
-   smaller vertically ... keep the margins more consistent around my name"). The card keeps its
-   padding and layout, so the objects and the résumé button stay exactly where they were; the
-   glass itself is the h1's ::before, set --glass-m out from the caps on every side. The caps sit
-   from .07em to .76em of the .84 line box (see the roll below), hence the top and bottom offsets.
-   --glass-m is the card's own side padding, so the glass never reaches past the card into the
-   gutter. */
+/* ---------- The name's card ----------
+   The frosted glass behind the name is gone (Andrew 2026-10-17: "liquid glass behind my name
+   should be removed"); the name sits straight on the sky (ink on #87ceeb is about 11:1, berry LIU
+   at display size about 4:1). The card keeps its padding and layout, so the objects and the
+   résumé button stay exactly where they were. */
 .hero .hero-card {
-  --glass-m:clamp(12px,1.8vw,26px);
+  --card-m:clamp(12px,1.8vw,26px);
   position:relative; display:grid; gap:inherit;
-  padding:clamp(10px,1.4vw,18px) var(--glass-m) clamp(14px,1.8vw,26px);
-}
-.hero .hero-name::before {
-  content:''; position:absolute; z-index:-1; pointer-events:none;
-  inset:calc(.07em - var(--glass-m)) calc(-1 * var(--glass-m)) calc(.08em - var(--glass-m));
-  border:1.5px solid rgb(255 255 255 / .55); border-radius:clamp(22px,2.4vw,34px);
-  background:rgb(251 248 241 / .82);
-  box-shadow:inset 0 1.5px 0 rgb(255 255 255 / .85), inset 0 24px 40px -28px rgb(255 255 255 / .7), 0 24px 60px -24px rgb(18 20 43 / .28);
-}
-@supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))) {
-  .hero .hero-name::before { background:rgb(255 255 255 / .38); -webkit-backdrop-filter:blur(16px) saturate(1.4); backdrop-filter:blur(16px) saturate(1.4); }
+  padding:clamp(10px,1.4vw,18px) var(--card-m) clamp(14px,1.8vw,26px);
 }
 
 /* ---------- The name and its objects ----------
@@ -170,6 +151,18 @@ html[data-motion="reduced"] .hero .hero-mq .mq { overflow:visible; }
 html[data-motion="reduced"] .hero .hero-mq .mq-track { flex-shrink:1; flex-wrap:wrap; justify-content:center; padding:8px calc(var(--gutter) + 48px); }
 html[data-motion="reduced"] .hero .hero-mq .mq-item { flex-shrink:1; }
 html[data-motion="reduced"] .hero .hero-mq-item { line-height:36px; }
+
+/* ---------- The pencil writing the name (components/site/hero-write.tsx) ----------
+   While it writes, the real letters are hidden until each one's ink is in (data-on), with no
+   transition so the hand-over from the drawn outline is invisible; the hero's own pencil waits. */
+.hero .hero-name[data-write] .hero-c { transition:none; }
+.hero .hero-name[data-write] .hero-c:not([data-on]) { opacity:0; }
+.hero[data-writing] .hob-pencil :is(.hob-art,.hob-label) { visibility:hidden; }
+.hero .hero-write { position:absolute; inset:0; z-index:3; pointer-events:none; }
+.hero .hero-write-letters svg { position:absolute; overflow:visible; }
+.hero .hero-write-letters path { stroke-width:2.5px; vector-effect:non-scaling-stroke; stroke-linejoin:round; }
+.hero .hero-write-pen { display:none; position:absolute; left:0; top:0; }
+.hero .hero-write-pen svg { display:block; width:100%; height:100%; overflow:visible; }
 
 /* ---------- Entrance (Slush motion, gated on the loader's html.is-loaded) ---------- */
 .hero .hero-c { transition:opacity .3s linear calc(.1s + var(--i) * 30ms),transform .65s var(--elastic) calc(.1s + var(--i) * 30ms); }

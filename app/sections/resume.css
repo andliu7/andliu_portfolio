@@ -26,10 +26,37 @@ html:not([data-motion="reduced"]) .resume .rs-page { position:sticky; top:0; }
 .resume .rs-text { grid-area:text; align-self:end; display:grid; gap:24px; min-width:0; }
 .resume .rs-title { margin:0; font-size:clamp(64px,11vw,184px); line-height:.9; color:var(--on); }
 .resume .rs-line { margin:0; max-inline-size:34ch; font:500 clamp(19px,1.9vw,28px)/1.45 var(--body); color:var(--on); }
+/* The photo (Andrew 2026-10-17: "small and framed, bottom right of the resume text area"): a
+   paper frame with a deeper foot, like a print, 2px ink outline and a berry ledge to match the
+   card, turned the other way from it. Absolute, so the title and line keep their own layout. */
+.resume .rs-text { position:relative; }
+.resume .rs-photo { position:absolute; right:-48px; bottom:-210px; z-index:1; width:clamp(150px,13vw,220px); margin:0; padding:10px 10px 32px; border:2px solid var(--ink); border-radius:6px;
+  background:var(--card); box-shadow:0 8px 0 var(--berry); rotate:-5deg; }
+/* Two strips of tape across the top corners (Andrew 2026-10-17), in the contact tape's sky with
+   the same torn ends, see-through enough that the frame's edge shows under them. */
+.resume .rs-photo::before, .resume .rs-photo::after { content:''; position:absolute; z-index:1; top:-4%; width:34%; height:12%;
+  background:color-mix(in srgb,var(--sky) 72%,transparent); box-shadow:0 1px 0 rgb(0 0 0 / .12);
+  clip-path:polygon(0 0, 100% 0, 95% 20%, 100% 40%, 95% 60%, 100% 80%, 95% 100%, 0 100%, 5% 80%, 0 60%, 5% 40%, 0 20%); }
+.resume .rs-photo::before { left:-12%; rotate:-40deg; }
+.resume .rs-photo::after { right:-12%; rotate:40deg; }
+/* "(me)" in the frame's foot, and the place as an Instagram-style tag: black highlight, white
+   type, level (turned back against the frame's tilt), over the bottom right corner. */
+.resume .rs-photo-cap { position:absolute; left:0; right:0; bottom:5px; text-align:center; font:700 15px/1 var(--body); color:var(--ink); }
+.resume .rs-photo-place { position:absolute; z-index:2; right:-14px; bottom:22px; padding:4px 8px; border-radius:4px; background:#000; color:#fff;
+  font:700 13px/1.2 var(--body); white-space:nowrap; rotate:5deg; }
+.resume .rs-photo img { display:block; width:100%; height:auto; aspect-ratio:1; border-radius:3px; object-fit:cover; }
 .resume .rs-actions { grid-area:actions; align-self:start; display:flex; flex-wrap:wrap; gap:16px; }
 .resume .rs-actions .pill-big { --pill-pad:clamp(28px,2.6vw,40px); min-height:clamp(56px,5vw,72px); font-size:clamp(17px,1.5vw,21px); }
 .resume .rs-actions .pill-big > :is(.pill-face,.pill-back) { min-height:clamp(56px,5vw,72px); }
-.resume .rs-card-cell { grid-area:card; display:grid; place-items:center; min-height:0; container-type:size; }
+.resume .rs-card-cell { position:relative; grid-area:card; display:grid; place-items:center; min-height:0; container-type:size; }
+/* "click here!" with a curved arrow down onto the card's top left (Andrew 2026-10-17). Placed from
+   the card's own size (the same min() as .rs-card) so it stays on the corner as the card resizes.
+   Not on a phone, where the card fills the width and the note would sit on the text. */
+.resume .rs-click { --cw:min(520px,100cqw,(100cqh - 48px) * .7726); position:absolute; z-index:2; pointer-events:none;
+  left:calc(50% - var(--cw) / 2 - 150px); top:calc(50% - var(--cw) / .7726 / 2 - 40px);
+  font:700 clamp(20px,1.7vw,26px)/1 var(--display); color:var(--apricot); rotate:-8deg; white-space:nowrap; }
+.resume .rs-click svg { display:block; width:90px; height:70px; margin:4px 0 0 70px; overflow:visible; fill:none; stroke:var(--apricot); stroke-width:4; stroke-linecap:round; stroke-linejoin:round; rotate:8deg; }
+@media (max-width:760px) { .resume .rs-click { display:none; } }
 
 /* The card: the page on paper, 2px ink outline, a berry ledge (an ink ledge would vanish on the
    ink ground), turned a little. Its width is the smallest of 400px, the cell's width, and what the
@@ -47,6 +74,9 @@ html[data-motion="reduced"] .resume .rs-card { transition:none; }
   .resume .rs-wrap { grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr) auto; grid-template-areas:"text" "card" "actions"; row-gap:20px; }
   .resume .rs-card { width:min(520px,84vw,(100cqh - 48px) * .7726); }
   .resume .rs-actions { justify-content:center; gap:10px; }
+  .resume .rs-photo-cap { bottom:3px; font-size:10px; }
+  .resume .rs-photo-place { right:-8px; bottom:14px; padding:2px 5px; font-size:9px; }
+  .resume .rs-photo { width:84px; padding:5px 5px 16px; right:0; bottom:auto; top:-34px; box-shadow:0 5px 0 var(--berry); }
   .resume .rs-actions .pill-big { --pill-pad:18px; }
 }
 
