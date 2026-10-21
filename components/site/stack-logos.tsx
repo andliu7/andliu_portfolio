@@ -2,7 +2,7 @@ import { FlaskConical } from 'lucide-react';
 import { LOGOS, logosFor, splitVersion } from '@/components/site/work/logos';
 import './stack-logos.css';
 
-// One stack item as a chip for the two stack bands (Blueberry's and the contact section's, both
+// One stack item as a chip for the two stack bands (Blueberry's and components/site/stack-band.tsx, both
 // in components/ui/infinite-slider.tsx): the tool's logo, its name, and the version, if the name
 // carries one ("React 19", "Tailwind v4"), as a small berry badge.
 // The names come from lib/site.ts (BB_ENGINEERING.stack, STACK) unchanged; the logo paths and the

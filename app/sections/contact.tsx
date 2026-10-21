@@ -1,10 +1,9 @@
 import { ArrowLeft, ArrowUpRight, Mail } from 'lucide-react';
-import { BB_HEAD, CONTACT, MICROCOPY, RESUME, STACK, sectionAttrs } from '@/lib/site';
+import { CONTACT, MICROCOPY, RESUME, sectionAttrs } from '@/lib/site';
 import { FlipHeading } from '@/components/site/flip-heading';
 import { FlipLink } from '@/components/ui/flip-links';
 import { SocialButton, socialKind } from '@/components/site/social-button';
-import { InfiniteSlider } from '@/components/ui/infinite-slider';
-import { StackChip } from '@/components/site/stack-logos';
+import { StackBand } from '@/components/site/stack-band';
 import { ContactForm } from '@/components/site/contact-form';
 import { TextBlockAnimation } from '@/components/ui/text-block-animation';
 import { PillFaces } from '@/components/site/pill-faces';
@@ -17,23 +16,30 @@ import { StarsBackground } from '@/components/ui/stars';
 // the headline crushed giant over a one-line invitation, GitHub and LinkedIn as big outlined pills
 // (they open wider on hover to show the handle), the email address itself in display type as the
 // mailto link, and "Email me" as the one berry button (Andrew 2026-10-07: "make it more of a
-// contact me", "the second CTA so very important"); the résumé is the light pill beside the eyebrow. The sitemap and copyright live in the site footer
+// contact me", "the second CTA so very important"); the résumé is the light pill beside the eyebrow.
+// On 2026-10-20 it became a page of its own (Andrew: "the let's compare notes can be expanded to a
+// page"): on the home page the card fills the screen and the contact form, always shown now, is
+// its centrepiece, in its own full-width part under the one-tap row (Andrew 2026-10-20: "needs
+// to be wider. like lower it to it's own part"). The sitemap and copyright live in the site footer
 // (components/site/footer.tsx), not here. Each link appears
-// once in the card. Under the card, the STACK runs as a sky band of logo chips that
-// slides (components/ui/infinite-slider.tsx) and slows on hover; on the home page it is a strip of
-// tape across the card's lower right corner (contact.css, 2026-10-12).
+// once in the card. The stack band that used to cross the card's lower right corner as tilted tape
+// now runs straight between Projects and Impact (components/site/stack-band.tsx, Andrew
+// 2026-10-20); only About still shows it, under its card.
 //
 // FooterCard is exported for About; its signature is fixed:
-//   variant 'home'   the card, then the marquee band. The NOTCH_TO_ISLAND tab is gone (round 2:
-//                    the island window now stands on its own below the band)
-//   variant 'about'  the same, plus a pill back to the home page (MICROCOPY.backHome)
+//   variant 'home'   the card, then the "Résumé below" cue. The NOTCH_TO_ISLAND tab is gone
+//                    (round 2: the island window now stands on its own)
+//   variant 'about'  the card with a pill back to the home page (MICROCOPY.backHome), then the
+//                    stack band, which has no other place on About
 
 export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
   const resume = CONTACT.links.find(link => link.href === RESUME);
   const mail = CONTACT.links.find(link => link.href.startsWith('mailto:'));
   const links = CONTACT.links.filter(link => link !== resume && link !== mail);
+  // Email me and the address open a draft with the subject already filled in (2026-10-20).
+  const mailto = `${mail?.href ?? `mailto:${CONTACT.email}`}?subject=${encodeURIComponent(CONTACT.mailSubject)}`;
   return (
-    // A fragment (<>...</>): the card and the band are two siblings in the section, no wrapper.
+    // A fragment (<>...</>): the card and what follows it are siblings in the section, no wrapper.
     <>
     <div className="ct-card" data-ground="apricot">
       {variant === 'home' && <ContactToys />}
@@ -48,48 +54,46 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
         </div>
         <FlipHeading id="contact-title" text={CONTACT.headline} max={170} />
         <TextBlockAnimation as="p" className="ct-invite" delay={0.2}>{CONTACT.invite}</TextBlockAnimation>
-        {/* Two columns from a wide card up (Andrew 2026-10-12: "too much empty space"): the address
-            and its buttons on the left, GitHub and LinkedIn on the right. One column on a phone. */}
-        <div className="ct-row">
-          <div className="ct-reach">
-            <p className="ct-email">
-              <a className="display ct-mail" href={mail?.href ?? `mailto:${CONTACT.email}`}>{CONTACT.email}</a>
-            </p>
-            <div className="row-actions ct-actions">
-              <a className="pill pill-berry press pill-big ct-cta" href={mail?.href ?? `mailto:${CONTACT.email}`}>
-                {CONTACT.emailCta} <Mail size={20} aria-hidden="true" />
-              </a>
-              <CopyEmail email={CONTACT.email} />
-            </div>
-            <p className="ct-note">{CONTACT.emailNote}</p>
-            {/* Renders nothing unless the Worker URL is set at build time (worker/CONTACT.md). */}
-            <ContactForm />
+        {/* The one-tap way first, since it is the fastest (Email me, Copy email, the address, then
+            GitHub and LinkedIn), across the card in one row from a wide card up. The form has its
+            own full-width part under it (Andrew 2026-10-20: "the contact email sending part needs
+            to be wider. like lower it to it's own part"); it used to be a narrow right column. */}
+        <div className="ct-reach">
+          <span className="eyebrow ct-quick">{CONTACT.quick}</span>
+          <div className="row-actions ct-actions">
+            <a className="pill pill-berry press pill-big ct-cta" href={mailto}>
+              {CONTACT.emailCta} <Mail size={20} aria-hidden="true" />
+            </a>
+            <CopyEmail email={CONTACT.email} />
           </div>
+          <p className="ct-email">
+            <a className="display ct-mail" href={mailto}>{CONTACT.email}</a>
+          </p>
+          <p className="ct-note">{CONTACT.emailNote}</p>
           <ul className="ct-links">
-              {links.map(link => {
-                const kind = socialKind(link.href);
-                return (
-                  <li key={link.label} className="ct-pill">
-                    {kind
-                      ? <SocialButton className="ct-social" href={link.href} label={link.label} kind={kind} extra={CONTACT.handles[kind]} />
-                      : <FlipLink href={link.href} external={link.external}>{link.label}</FlipLink>}
-                  </li>
-                );
-              })}
+            {links.map(link => {
+              const kind = socialKind(link.href);
+              return (
+                <li key={link.label} className="ct-pill">
+                  {kind
+                    ? <SocialButton className="ct-social" href={link.href} label={link.label} kind={kind} extra={CONTACT.handles[kind]} />
+                    : <FlipLink href={link.href} external={link.external}>{link.label}</FlipLink>}
+                </li>
+              );
+            })}
           </ul>
         </div>
+        {/* Sends through the Worker when its URL is set at build time (worker/CONTACT.md),
+            through the visitor's mail app when not (contact-form.tsx). */}
+        <ContactForm />
       </div>
       {variant === 'about' && (
         <a className="pill pill-light ct-home" href="/"><ArrowLeft size={16} aria-hidden="true" /> {MICROCOPY.backHome}</a>
       )}
     </div>
-    <div className="ct-mq">
-      <InfiniteSlider label={BB_HEAD.stack} gap={16} duration={55} durationOnHover={140}>
-        {STACK.map(item => <StackChip key={item} name={item} className="ct-mq-item" />)}
-      </InfiniteSlider>
-    </div>
-    {/* "Résumé below", the cue under the card: UMD's "Contents below" (umd.tsx), same pill and
-        bobbing arrow, in the card's apricot. Home only; About has no résumé under it. */}
+    {variant === 'about' && <StackBand className="ct-band" />}
+    {/* "Résumé below", the cue under the card: a pill and a bobbing arrow in the card's apricot.
+        Home only; About has no résumé under it. */}
     {variant === 'home' && (
       <div className="ct-cue">
         <a className="pill ct-down" href="#resume"><PillFaces>{CONTACT.down}</PillFaces></a>
@@ -109,7 +113,7 @@ export default function Contact() {
       {/* The résumé's night sky, carried up behind the card (Andrew 2026-10-17: "basically the same
           background"). No fade here, so it runs on into the résumé's sky without a jump. */}
       <StarsBackground fade={false} />
-      {/* The frame: the card, the stack band and the cue together (contact.css). */}
+      {/* The frame: the card and the cue together (contact.css). */}
       <div className="ct-frame">
         <FooterCard variant="home" />
       </div>

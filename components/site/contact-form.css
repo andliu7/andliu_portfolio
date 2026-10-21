@@ -1,10 +1,13 @@
-/* The contact form (contact-form.tsx), inside the apricot footer card. Every selector starts
-   with .cf. Fields are card-coloured with the Slush 2px ink outline; labels speak in the small
-   mono voice of the eyebrows. Contrast on apricot: ink 12.61, berry-deep 10.04, error red
-   #8a1c2b 6.41. */
-.cf { --cf-bad:#8a1c2b; display:grid; gap:16px; max-inline-size:62ch; margin-top:16px; }
-.cf-title { font:700 clamp(20px,2.4cqi,28px)/1.15 var(--display); text-transform:uppercase; font-variant-ligatures:none; }
-.cf-pair { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:16px; }
+/* The contact form (contact-form.tsx), the centrepiece of the contact page (2026-10-20), in its
+   own full-width part of the card, under the one-tap row. Every
+   selector starts with .cf. Slush's colour-as-fill: the form is its own sky panel with the 2px
+   ink outline, laid on the apricot card; fields are card-coloured with the same outline and a
+   flat ink lip; labels speak in the small mono voice of the eyebrows. Contrast on sky: ink 13.3,
+   berry-deep 10.9, error red #8a1c2b 6.8; inside the fields, ink on card 17.1. */
+.cf { --cf-bad:#8a1c2b; --on:var(--ink); --on-2:var(--berry-deep); position:relative; display:grid; gap:16px; padding:clamp(18px,3cqi,32px); border:var(--bw) solid var(--ink); border-radius:var(--r-panel); background:var(--sky); color:var(--ink); }
+.cf-title { font:700 clamp(22px,3cqi,34px)/1 var(--display); letter-spacing:-.03em; text-transform:uppercase; font-variant-ligatures:none; }
+.cf-fields { display:grid; gap:12px; }
+.cf-pair { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr)); gap:12px 16px; }
 .cf-field { display:grid; gap:6px; align-content:start; }
 .cf-label { font:600 13px/1.4 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--on-2); }
 .cf :is(input, textarea) {
@@ -20,7 +23,21 @@
 .cf-bot { position:absolute; left:-10000px; inline-size:1px; block-size:1px; overflow:hidden; }
 
 .cf-foot { display:flex; flex-wrap:wrap; align-items:center; gap:12px 20px; }
+/* Send at the far end of the row, the hint taking the rest (Andrew 2026-10-20: the form got its
+   own full-width part); on a phone the hint wraps above it. */
+.cf-send { margin-inline-start:auto; }
 .cf-send:disabled { cursor:progress; opacity:.75; }
+.cf-hint { flex:1 1 18ch; font:500 15px/1.45 var(--body); color:var(--on-2); }
 .cf-status { display:inline-flex; align-items:center; gap:8px; min-block-size:1.5em; font:600 17px/1.5 var(--body); color:var(--on); }
+/* Empty, it takes no height; it stays in the page so screen readers keep listening to it. */
+.cf-status:empty { min-block-size:0; margin-top:-16px; }
 .cf-status[data-kind="error"] { color:var(--cf-bad); }
 .cf-status[data-kind="sent"] { color:var(--berry-deep); }
+
+/* Sent: the fields give way to a card-coloured sticker, tilted, with a round leaf badge (motion
+   pops it in on a spring, contact-form.tsx). Write another brings the fields back. */
+.cf-sent { display:grid; justify-items:start; gap:16px; padding:clamp(20px,3cqi,32px); border:var(--bw) solid var(--ink); border-radius:var(--r-card); background:var(--card); }
+.cf-sent-badge { display:grid; place-items:center; width:56px; height:56px; border:var(--bw) solid var(--ink); border-radius:50%; background:var(--tile-leaf); color:var(--ink); }
+.cf-sent-title { font-size:clamp(40px,7cqi,72px); color:var(--ink); }
+.cf-sent-title:focus { outline:none; }
+.cf-sent-title:focus-visible { outline:3px solid var(--berry); outline-offset:4px; }

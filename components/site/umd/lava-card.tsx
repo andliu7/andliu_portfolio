@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 // children, so the card is the positioned, isolated box and the content is a sibling above it.
 //
 // Text stays AA over the lava: a 50% black scrim sits between the gradient and the text. Lava's
-// brightest colour is #FF9F21; under the scrim, white text on it measures 6.8:1 (umd.css).
+// brightest colour is #FF9F21; under the scrim, white text on it measures 6.8:1 (experience.css).
 // Without WebGL the card keeps its dark red background, which is also AA under white text.
 //
 // NearViewport mounts the WebGL canvas only near the screen and unmounts it far away, so its

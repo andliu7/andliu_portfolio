@@ -15,6 +15,11 @@ const Berry = () => (
   <svg viewBox="0 0 48 48"><circle cx="24" cy="27" r="17" fill="#3b4f9e" {...S} /><ellipse cx="17" cy="21" rx="4" ry="2.6" fill="#c9d1f4" opacity=".6" transform="rotate(-30 17 21)" />
     <path d="M24 9l3 4 4-1-2 4H19l-2-4 4 1z" fill={INK} /><circle cx="19" cy="27" r="1.8" fill={INK} /><circle cx="29" cy="27" r="1.8" fill={INK} /><path d="M21 32q3 2.4 6 0" fill="none" {...S} /></svg>
 );
+// The phone gallery's row [Andrew 2026-10-20]: a sky phone with an ink island and a berry on screen.
+const Phone = () => (
+  <svg viewBox="0 0 48 48"><rect x="13" y="4" width="22" height="40" rx="6" fill="#bfe3f0" {...S} /><rect x="17" y="10" width="14" height="28" rx="2.5" fill="#fbf8f1" {...S} />
+    <rect x="20.5" y="6.5" width="7" height="2" rx="1" fill={INK} /><circle cx="24" cy="25" r="5" fill="#3b4f9e" {...S} /></svg>
+);
 const Folder = () => (
   <svg viewBox="0 0 48 48"><path d="M5 13a3 3 0 0 1 3-3h10l4 4h18a3 3 0 0 1 3 3v20a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3z" fill="#FFCF98" {...S} />
     <path d="M5 19h38" fill="none" {...S} /><rect x="12" y="25" width="14" height="4" rx="2" fill="#fbf8f1" {...S} /></svg>
@@ -40,6 +45,7 @@ const Controller = () => (
 
 export const ROW_ICONS: Record<string, () => JSX.Element> = {
   '#blueberry': Berry,
+  '#phones': Phone,
   '#work': Folder,
   '#impact': Bars,
   '#experience': Calendar,

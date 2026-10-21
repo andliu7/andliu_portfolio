@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { ArrowUpRight, Minus, RotateCcw } from 'lucide-react';
-import { APPROVALS, FLOAT_TABS, MICROCOPY, PROJECTS, type ImageKey } from '@/lib/site';
+import { APPROVALS, FLOAT_TABS, HOVER, MICROCOPY, PROJECTS, type ImageKey } from '@/lib/site';
 import { PROJECT_ART } from './art';
 import { Shot } from './shot';
 import './floating-tabs.css';
@@ -408,9 +408,13 @@ export default function FloatingTabs() {
                     <span className="fw-ctl-face"><Minus size={16} strokeWidth={2.8} aria-hidden="true" /></span>
                   </button>
                 </header>
+                {/* The hover bubble names the click on the picture side (Andrew 2026-10-20); the
+                    keyboard help (FLOAT_TABS.keys) says the same to screen readers. */}
                 <div
                   className="fw-pane"
                   onClick={e => { if (!(e.target as Element).closest('a, button')) flip(win); }}
+                  data-bubble={win.flipped ? undefined : HOVER.deskFlip}
+                  data-bubble-icon="flip"
                 >
                   <div className="fw-turn">
                     <div className="fw-face fw-front">

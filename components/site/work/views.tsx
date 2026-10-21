@@ -2,7 +2,7 @@
 import { Suspense, lazy, useEffect, useState, type ReactNode } from 'react';
 import { WORK_HEAD } from '@/lib/site';
 
-// The Carousel | Desk switch over projects 02 to 06 (Andrew 2026-10-07: "toggle a view so that
+// The Carousel | Desk switch over the projects (the carousel has 01 to 06, the desk 02 to 06) (Andrew 2026-10-07: "toggle a view so that
 // you can turn off the carousel and make them into floating tabs"). Carousel shows `children`
 // (the fan, rendered on the server in app/sections/projects.tsx); Desk shows the floating tabs.
 // The choice is remembered in localStorage, read after mount so the server's markup (always the

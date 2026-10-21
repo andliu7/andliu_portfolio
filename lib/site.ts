@@ -189,11 +189,12 @@ export const BB_SCREENS = [
 ] as const;
 
 // 4.4 The website around the app, in the small carousel. Captured from the live site 2026-10-07;
-// each caption says what its page shows.
+// each caption says what its page shows. Home, Review and Learn re-shot 2026-10-20 from the
+// phone captures (PHONES below): the site's headline and page names had changed since.
 export const BB_SITE = [
-  { image: 'bbSiteHome', title: 'Home', caption: 'Organic chemistry that actually sticks: the front door, one Get Started button.' }, // [S] live site home h1 and CTA (needs sign-off)
-  { image: 'bbSiteDecks', title: 'Study decks', caption: 'The deck library, with the mechanism trainer offered at the top.' }, // [S] live #/study-decks (needs sign-off)
-  { image: 'bbSiteLessons', title: 'Lessons', caption: 'CHEM241 in the order the course takes it, a section list down the side.' }, // [S] live #/lessons, "12 sections, 43 checked reactions" (needs sign-off)
+  { image: 'bbSiteHome', title: 'Home', caption: 'The class everyone warns you about, one arrow at a time: a practice card, then the first lesson.' }, // [Andrew 2026-10-20] [S] live site home h1 and CTA (needs sign-off)
+  { image: 'bbSiteDecks', title: 'Review', caption: 'What is due today, then every deck, with the ones you miss coming back.' }, // [Andrew 2026-10-20] [S] live #/study-decks, now titled Review (needs sign-off)
+  { image: 'bbSiteLessons', title: 'Learn', caption: 'The unit track, with Dienes and Diels-Alder up next.' }, // [Andrew 2026-10-20] [S] live #/learn, where #/lessons now redirects (needs sign-off)
   { image: 'bbTetris', title: 'Break: Tetris', caption: 'The focus timer offers Tetris on a break. Four rows stacked, an I piece over the well.' }, // [S] components/ui/break-room.tsx, tetris.tsx; played with scripted keys 2026-10-07 (needs sign-off)
 ] as const;
 
@@ -226,6 +227,69 @@ export const BB_HEAD = {
   stack: 'The stack', // [UI] label over BB_ENGINEERING.stack (needs sign-off)
 } as const;
 
+// 4.4b Blueberry on a phone (app/sections/phones.tsx), right after the chapter. Andrew
+// 2026-10-20: "for my projects I want a page of phone screens and updated pictures of
+// blueberry". Captured from the live site at 390x844, 2x (780x1688 WebP), by
+// scripts/capture-blueberry-phone.mjs. Six of the twelve captures, the most important screens
+// (Andrew 2026-10-20: "only include the most important screens ... the periodic table and the
+// reactions search. also the schedule and the learn tab. and then maybe a couple more"): those
+// four, plus the game's Pathway (its front door: the mascot and the trail of lessons) and a
+// Lesson (the chemistry itself, a drawn molecule and a real question). Listed row by row for
+// three columns (phones.css), so the two site pages sit in the middle column and the four game
+// screens mirror each other on the sides. `where` and `title` make each phone's caption tag;
+// `alt` says what the screen shows.
+const PHONE_SHOT = (file: string, where: 'Site' | 'Game', title: string, alt: string) =>
+  ({ src: `/work/blueberry-phone/${file}.webp`, w: 780, h: 1688, where, title, alt });
+export const PHONES = {
+  eyebrow: '02 / On a phone', // [Andrew 2026-10-20] (needs sign-off); 02 as its Contents row
+  headline: 'IN YOUR\n*pocket.*', // [Andrew 2026-10-20] (needs sign-off)
+  line: 'Six screens from the live site and the game, captured at phone size: the periodic table, the reaction search, the calendar, the units, the pathway and a lesson.', // [Andrew 2026-10-20] [S] the captures below (needs sign-off)
+  link: 'Open it on your phone', // [Andrew 2026-10-20] (needs sign-off)
+  href: BB_LIVE, // [P]
+  label: 'Blueberry screens on a phone', // [Andrew 2026-10-20] the gallery's accessible name (needs sign-off)
+  shots: [
+    PHONE_SHOT('game-periodic', 'Game', 'Periodic table', "Blueberry's periodic table on a phone: colour-coded elements by category with carbon selected, showing atomic number 6, mass 12.011 and its electron configuration"), // [S] live game tool (needs sign-off)
+    PHONE_SHOT('site-learn', 'Site', 'Learn', "Blueberry's Learn page on a phone: a banner showing butadiene and HBr giving 1-bromobut-2-ene, then Up next, Dienes and Diels-Alder, with a Start Unit 1 button"), // [S] live #/learn (needs sign-off)
+    PHONE_SHOT('game-search', 'Game', 'Reaction search', "Blueberry's reaction search on a phone: a search box and tappable chips for reagents like PCC and NaBH4, starting groups like ketone, and named reactions like Grignard and Diels-Alder"), // [S] live game tool (needs sign-off)
+    PHONE_SHOT('game-path', 'Game', 'Pathway', "Blueberry's learning game on a phone: the Organic Chemistry II Unit 1 pathway, a glowing start node beside the berry mascot and a trail of locked lessons down to a trophy"), // [S] live #/app/pathway (needs sign-off)
+    PHONE_SHOT('site-schedule', 'Site', 'Schedule', "Blueberry's Schedule page on a phone: an October 2026 month calendar for CHEM241 exams and deadlines, with today's date circled"), // [S] live #/schedule (needs sign-off)
+    PHONE_SHOT('game-lesson', 'Game', 'Lesson', 'A Blueberry game lesson on a phone: the berry asks which of two products wins, with a drawing of 1-bromobut-2-ene and four answer choices about kinetic and thermodynamic control'), // [S] live #/app/lesson/u1-kvt (needs sign-off)
+  ],
+} as const;
+export type PhoneShot = (typeof PHONES.shots)[number];
+
+// The hover bubble (components/site/hover-bubble.tsx): the round label that follows a mouse over
+// a picture (Andrew 2026-10-20: "over images I want there to be a circle that appears beside the
+// mouse ... say a few words about the image but focus on what the user can DO with it"). Each
+// `text` is an action, two to five words, and it must stay true: a click on that picture does
+// exactly this. `icon` picks the bubble's small glyph: open (a link), flip, turn (bring a fan
+// card round), enlarge (a full-size view). `href` is where a phone screen's click goes.
+export type HoverIcon = 'open' | 'flip' | 'turn' | 'enlarge';
+export const HOVER = {
+  // #phones: each phone opens its own screen on the live site, at the route it was captured on
+  // (scripts/capture-blueberry-phone.mjs SHOTS). Keyed by the shot's title.
+  phones: {
+    'Periodic table': { text: 'Open the periodic table', icon: 'open', href: `${BB_LIVE}#/app/periodic` }, // [Andrew 2026-10-20] (needs sign-off)
+    Learn: { text: 'Open the Learn page', icon: 'open', href: `${BB_LIVE}#/learn` }, // [Andrew 2026-10-20] (needs sign-off)
+    'Reaction search': { text: 'Search the reactions', icon: 'open', href: `${BB_LIVE}#/app/search` }, // [Andrew 2026-10-20] (needs sign-off)
+    Pathway: { text: 'Walk the pathway', icon: 'open', href: `${BB_LIVE}#/app/pathway` }, // [Andrew 2026-10-20] (needs sign-off)
+    Schedule: { text: 'Check the exam calendar', icon: 'open', href: `${BB_LIVE}#/schedule` }, // [Andrew 2026-10-20] (needs sign-off)
+    Lesson: { text: 'Play this lesson', icon: 'open', href: `${BB_LIVE}#/app/lesson/u1-kvt` }, // [Andrew 2026-10-20] (needs sign-off)
+  } as Record<string, { text: string; icon: HoverIcon; href: string }>,
+  // The project fan's centre card opens the project's first link (live, else source); a side
+  // card comes round to the centre. The pipeline (studio) has no link, so no bubble.
+  fan: {
+    blueberry: 'Open Blueberry live', // [Andrew 2026-10-20] (needs sign-off)
+    flashcards: 'Study the decks', // [Andrew 2026-10-20] (needs sign-off)
+    brain: 'Read the code', // [Andrew 2026-10-20] source only (needs sign-off)
+    trainer: 'Push some electrons', // [Andrew 2026-10-20] (needs sign-off)
+    guide: 'Read the guide', // [Andrew 2026-10-20] (needs sign-off)
+  } as Record<string, string>,
+  fanTurn: 'Bring this one round', // [Andrew 2026-10-20] (needs sign-off)
+  deskFlip: 'Flip for the details', // [Andrew 2026-10-20] the Desk view's picture side (needs sign-off)
+  resume: 'Read it full size', // [Andrew 2026-10-20] the résumé page card, which opens the PDF (needs sign-off)
+} as const;
+
 // 4.9 The footer marquee
 export const STACK = [
   'Python', 'TypeScript', 'React', 'Vite', 'Tailwind', 'Supabase', 'PostgreSQL', 'RDKit.js',
@@ -239,8 +303,8 @@ export const STACK = [
 export type LinkKind = 'live' | 'source';
 export type ProjectLink = { kind: LinkKind; href: string };
 
-// `num` is the display number: 01 is the Blueberry chapter, 02 to 06 the spreads, 07 the one
-// island teaser line. `image` is an IMAGES key, or null where the spread draws an illustration
+// `num` is the display number: 01 to 06 are the cards in the project fan (01 Blueberry, which
+// also has its own chapter, since 2026-10-20), 07 the one island teaser line. `image` is an IMAGES key, or null where the spread draws an illustration
 // (Second Brain until approved, the Chemistry pipeline) or has none (the island teaser).
 // `imageApproved` is the image used once APPROVALS.secondBrainShot is true.
 export const PROJECTS = [
@@ -376,14 +440,17 @@ export const JOBS = [
 ] as const;
 
 export const WORK_HEAD = {
-  eyebrow: '02 / Selected work', // [P]
+  eyebrow: '03 / Selected work', // [P] renumbered after On a phone took Contents row 02 (2026-10-20)
   headline: 'SELECTED *work.*', // [P]
   label: 'Selected work', // [P] as headline, plain, for the Projects section's visually hidden heading
   hint: 'hover!', // [UI] Andrew 2026-10-06 ("add a little 'hover!' icon"); the sticker over the project fan (needs sign-off)
   hintTouch: 'tap!', // [UI] the same sticker on touch screens, which have no hover (needs sign-off)
-  // The fan of projects 02 to 06 and its Carousel / Desk switch (Andrew 2026-10-07: "maybe 2
-  // through 6 can be a carousel too"; "toggle a view so that you can turn off the carousel")
+  // The fan of projects 01 to 06 and its Carousel / Desk switch (Andrew 2026-10-07: "maybe 2
+  // through 6 can be a carousel too"; "toggle a view so that you can turn off the carousel";
+  // 2026-10-20: "include 01 the blueberry as a card in the carousel fan")
   fan: 'Projects, one card each', // [UI] the carousel's accessible name (needs sign-off)
+  bbChapter: 'Read the chapter', // [Andrew 2026-10-20] the Blueberry card's caption link to #blueberry (needs sign-off)
+  bbPhones: 'See it on a phone', // [Andrew 2026-10-20] the Blueberry card's caption link to #phones (needs sign-off)
   prev: 'Previous project', // [UI] arrow button name (needs sign-off)
   next: 'Next project', // [UI] arrow button name (needs sign-off)
   slideOf: (n: number, total: number) => `${n} of ${total}`, // [UI] each card's position, read with its title
@@ -407,7 +474,7 @@ export const FLOAT_TABS = {
 } as const;
 
 export const EXPERIENCE_HEAD = {
-  eyebrow: '04 / Along the way', // [P] renumbered after Impact
+  eyebrow: '05 / Along the way', // [P] renumbered after Impact, then after On a phone (2026-10-20)
   headline: 'ALONG THE *way*', // [P]
   hint: 'Scroll to move through time', // [UI] from the approved timeline design (needs sign-off)
 } as const;
@@ -419,7 +486,7 @@ export const EXPERIENCE_HEAD = {
 // ---------------------------------------------------------------------------------------------
 
 export const IMPACT_HEAD = {
-  eyebrow: '03 / Impact', // [plan 4.6] (needs sign-off)
+  eyebrow: '04 / Impact', // [plan 4.6] (needs sign-off); renumbered after On a phone (2026-10-20)
   headline: 'MEASURED *impact.*', // [plan 4.6] (needs sign-off)
 } as const;
 
@@ -506,7 +573,7 @@ const GARDEN_LINE = 'I love the UMD garden. Someday, a garden of my own, with sp
 const FAITH_LINE = 'Quietly, it is why the guides I write for my campus community matter to me as much as the code.'; // [P]
 
 export const OFF_CLOCK = {
-  eyebrow: '06 / The rest of the week', // [P][Z yard] renumbered after Impact, then after Contact moved up (2026-10-07)
+  eyebrow: '07 / The rest of the week', // [P][Z yard] renumbered after Impact, then after Contact moved up (2026-10-07), then after On a phone (2026-10-20)
   title: 'OFF THE CLOCK', // [P][Z yard]
   keywords: ['Cooking', 'Lifting', 'Faith'], // [P][Z yard]
   headline: 'The rest of the week.', // [P][Z yard]
@@ -554,10 +621,10 @@ export const EVENING = {
 // ---------------------------------------------------------------------------------------------
 
 export const CONTACT = {
-  eyebrow: '05 / Contact me', // [UI] Andrew 2026-10-07 ("make it more of a contact me"; was 'Say hi') (needs sign-off)
+  eyebrow: '06 / Contact me', // renumbered after On a phone (2026-10-20); [UI] Andrew 2026-10-07 ("make it more of a contact me"; was 'Say hi') (needs sign-off)
   headline: "LET'S COMPARE *notes.*", // [P]
   invite: 'Hiring, building something, or stuck on a mechanism? Email me.', // [UI] Andrew 2026-10-07, the one-line invitation under the headline (needs sign-off)
-  down: 'Résumé below', // [UI] the bobbing cue under the card, like UMD's "Contents below" (Andrew 2026-10-12, needs sign-off)
+  down: 'Résumé below', // [UI] the bobbing cue under the card (Andrew 2026-10-12, needs sign-off)
   emailCta: 'Email me', // [UI] the primary button, a mailto link (needs sign-off)
   // Shown beside the word when the GitHub and LinkedIn pills open on hover (components/site/social-button.tsx)
   handles: { github: '@andliu7', linkedin: 'Andrew Liu' }, // [UI] from GITHUB's address and his name (needs sign-off)
@@ -569,28 +636,39 @@ export const CONTACT = {
   ],
   email: EMAIL, // [P]
   emailNote: 'Email is the fastest way to reach me.', // [Z contact]
+  // The full-screen contact page (Andrew 2026-10-20: "expanded to a page ... a quick way to send
+  // out an email to me"): the one-tap row's label, and the subject Email me fills in.
+  quick: 'One tap', // [Andrew 2026-10-20] (needs sign-off)
+  mailSubject: 'Hello from andliu.dev', // [Andrew 2026-10-20] (needs sign-off)
 } as const;
 
-// The contact form in the footer card (components/site/contact-form.tsx). It only renders when
-// the Worker URL is set at build time (worker/CONTACT.md). All new [UI] wording: NEEDS ANDREW'S
-// SIGN-OFF. Limits match worker/contact.js.
+// The contact form in the footer card (components/site/contact-form.tsx). It always renders now
+// (2026-10-20): with the Worker URL set at build time it sends through the Worker
+// (worker/CONTACT.md); without it, Send opens the visitor's mail app with the message filled in.
+// All new [UI] wording: NEEDS ANDREW'S SIGN-OFF. Limits match worker/contact.js.
 export const CONTACT_FORM = {
   heading: 'Or write it here', // [UI] (needs sign-off)
-  name: 'Your name', // [UI] (needs sign-off)
+  name: 'Your name (optional)', // [Andrew 2026-10-20] name is optional now (needs sign-off)
   email: 'Your email', // [UI] (needs sign-off)
   message: 'Message', // [UI] (needs sign-off)
   botcheck: 'Leave this empty', // [UI] the honeypot's label, read by bots only (needs sign-off)
   send: 'Send', // [UI] (needs sign-off)
   sending: 'Sending', // [UI] (needs sign-off)
   sent: 'Sent. It is in my inbox now.', // [UI] (needs sign-off)
+  // The Worker needs a name for the subject line; a blank one is sent as this.
+  anonName: 'A visitor to andliu.dev', // [Andrew 2026-10-20] (needs sign-off)
+  sentTitle: 'Got it.', // [Andrew 2026-10-20] the card that replaces the form once sent (needs sign-off)
+  again: 'Write another', // [Andrew 2026-10-20] (needs sign-off)
+  viaMail: 'Send opens your mail app with this filled in.', // [Andrew 2026-10-20] the hint when no Worker is set (needs sign-off)
+  handoff: 'Your mail app should open with this message. Press send there.', // [Andrew 2026-10-20] (needs sign-off)
   errors: {
-    name: 'Add your name, up to 100 characters.', // [UI] (needs sign-off)
+    name: 'Keep your name under 100 characters.', // [Andrew 2026-10-20] name is optional now (needs sign-off)
     email: 'That email address does not look right.', // [UI] (needs sign-off)
     messageShort: 'A few more words, please: 10 characters at least.', // [UI] (needs sign-off)
     messageLong: 'Keep it under 5000 characters.', // [UI] (needs sign-off)
     fix: 'Fix the highlighted fields, then send again.', // [UI] (needs sign-off)
     rate: 'Too many messages from here. Try again in a minute.', // [UI] (needs sign-off)
-    failed: 'That did not send. Email me at the address above instead.', // [UI] (needs sign-off)
+    failed: 'That did not send. Tap Email me or copy my address instead.', // [Andrew 2026-10-20] the address is just above the form (needs sign-off)
   },
 } as const;
 
@@ -648,7 +726,7 @@ export const RESUME_PREVIEW = {
 
 // The island, project 07: the page's finale (app/sections/island.tsx).
 export const ISLAND = {
-  eyebrow: '06 / The island', // [P] numbered as its Contents row, like every other eyebrow (calibrate F1, 2026-10-08)
+  eyebrow: '07 / The island', // [P] renumbered after On a phone (2026-10-20); numbered as its Contents row, like every other eyebrow (calibrate F1, 2026-10-08)
   titleTop: 'THE RÉSUMÉ', // [inventory 2.4]
   titleBottom: 'ISLAND', // [inventory 2.4]
   tagline: 'Every place on the island is one line of the résumé.', // [Z]
@@ -746,20 +824,21 @@ export const CHAT_FALLBACK = {
 } as const;
 
 // ---------------------------------------------------------------------------------------------
-// College Park and the contents (app/sections/umd.tsx, contents.tsx), added 2026-10-06 from the
-// approved Umd and Contents designs. New [UI] wording: NEEDS ANDREW'S SIGN-OFF.
+// UMD, now the first stop on the Experience timeline (app/sections/experience.umd.tsx), and the
+// contents (contents.tsx). The College Park section was retired 2026-10-20 (Andrew: "the second
+// (UMD) page is going to be removed"). New [UI] wording: NEEDS ANDREW'S SIGN-OFF.
 // ---------------------------------------------------------------------------------------------
 
 export const UMD = {
-  chip: '01 / College Park', // [UI] from the approved design (needs sign-off)
-  titleTop: 'COLLEGE', // [R] College Park, MD
-  titleBottom: 'PARK, MD.', // [R]
-  degree: 'B.S. Computer Science on the pre-dental track at the University of Maryland, College Park. Expected May 2027.', // [R] as CHAT_FALLBACK education
+  place: 'College Park, MD', // [R] the timeline's label over the stop (the strip's first, Andrew 2026-10-20)
+  when: EDUCATION.expected, // [R] the Coursework card's ink chip, as JOBS[].when on the role cards
+  degree: IDENTITY.degree, // [R] derived from IDENTITY
   tags: ['UMD Barbell Club', 'Focus Family at KCM', 'The UMD garden'], // [Andrew 2026-10-06 via lead brief, as EVENING gym][R][Z yard] (needs sign-off)
   courseworkLabel: EDUCATION.courseworkLabel, // [R]
-  coursework: EDUCATION.coursework.join(', '), // [R][Z umd]
+  coursework: EDUCATION.coursework, // [R][Z umd]
+  clubsLabel: 'Clubs', // [Andrew 2026-10-20] the club pills' accessible name, now in the stop's foot (needs sign-off)
+  schoolShort: IDENTITY.schoolShort, // [P] after the degree on the Coursework card
   sweat: 'Make the terrapin sweat', // [Andrew 2026-10-06 via lead] the terrapin button's name (needs sign-off)
-  down: 'Contents below', // [UI] from the approved design (needs sign-off)
 } as const;
 
 // The contents rows: each points at a section that exists on the page. Titles are the footer's
@@ -783,9 +862,10 @@ export const CONTENTS = {
     // The Blueberry chapter first (Andrew, 2026-10-06: "Where to?" should go into "From flashcards
     // to a platform", numbered 01 as the start of the list).
     { href: '#blueberry', title: 'From flashcards to a platform', sub: BLUEBERRY_CHAPTER.headlinePlain, meta: BLUEBERRY_TITLE }, // [P] as BB_HEAD.headline; sub and meta derived from BLUEBERRY_CHAPTER and BLUEBERRY_TITLE
+    { href: '#phones', title: 'Blueberry on a phone', sub: PHONES.shots.slice(0, 4).map(s => s.title).join(', '), meta: `${PHONES.shots.length} screens` }, // [Andrew 2026-10-20] sub and meta derived from PHONES (needs sign-off)
     { href: '#work', title: FOOTER_SKIP.links[0].a, sub: PROJECTS.slice(0, 4).map(p => p.title).join(', '), meta: `${PROJECTS.length} projects` }, // [UI] derived from FOOTER_SKIP and PROJECTS
     { href: '#impact', title: FOOTER_SKIP.links[1].a, sub: IMPACT.map(p => p.title).join(', '), meta: `${IMPACT.length} panels` }, // [UI] derived from FOOTER_SKIP and IMPACT
-    { href: '#experience', title: FOOTER_SKIP.links[2].a, sub: JOBS.map(j => j.org).join(', '), meta: `${JOBS.length} roles` }, // [UI] derived from FOOTER_SKIP and JOBS
+    { href: '#experience', title: FOOTER_SKIP.links[2].a, sub: [UMD.schoolShort, ...JOBS.map(j => j.org)].join(', '), meta: `${JOBS.length} roles` }, // [UI] derived from FOOTER_SKIP and JOBS; UMD added [Andrew 2026-10-20] first, as it now opens the timeline (needs sign-off)
     { href: '#contact', title: 'Say hi', sub: CONTACT.links.map(l => l.label).join(', '), meta: null }, // [P][Z contact] as CONTACT.eyebrow, links derived
     // One row for the island finale, which also holds Off the clock's evening reel (2026-10-07).
     { href: '#island', title: ISLAND.previewTitle, sub: ISLAND.tagline, meta: OFF_CLOCK.title }, // [plan 4.10][Z] tagline; meta [P][Z yard] as OFF_CLOCK.title
@@ -810,10 +890,12 @@ export const GROUND_LUMINANCE: Record<Ground, number> = {
 // The island finale is the last section; Off the clock's evening lives inside it (2026-10-07).
 export const SECTIONS = [
   { id: 'top', ground: 'paper', gradient: 'paper-apricot', label: null, budget: 1.0, kind: 'cap', project: false, pinned: false, texture: true },
-  // umd paints its own UMD red (umd.css); 'apricot' only sets ink text and a light-ground header.
-  { id: 'umd', ground: 'apricot', gradient: null, label: null, budget: 1.7, kind: 'cap', project: false, pinned: false, texture: true },
   { id: 'contents', ground: 'berry-deep', gradient: null, label: null, budget: 1.0, kind: 'cap', project: false, pinned: false, texture: true },
   { id: 'blueberry', ground: 'berry', gradient: 'berry-deep', label: 'Blueberry', budget: 3.6, kind: 'floor', project: true, pinned: true, texture: true },
+  // Blueberry on a phone (app/sections/phones.tsx), the chapter's screens at phone size [Andrew 2026-10-20].
+  // Budget measured 2026-10-20 at 1440x900: about 2,750px (six phones in three columns of two,
+  // each as tall as the screen allows, plus the centre column's sink room).
+  { id: 'phones', ground: 'berry-deep', gradient: null, label: 'Blueberry', budget: 3.1, kind: 'cap', project: true, pinned: false, texture: true },
   { id: 'work', ground: 'berry-deep', gradient: null, label: 'Projects', budget: 4.2, kind: 'floor', project: true, pinned: false, texture: true },
   { id: 'impact', ground: 'berry-deep', gradient: null, label: 'Impact', budget: 1.3, kind: 'cap', project: true, pinned: false, texture: true },
   { id: 'experience', ground: 'berry-deep', gradient: null, label: 'Experience', budget: 1.0, kind: 'cap', project: false, pinned: false, texture: true },
@@ -833,8 +915,8 @@ export const BUDGET = {
   viewport: 900, // px, the 1440x900 reference viewport
   maxTotal: 18.0, // viewports
   plannedTotal: 17.75,
-  projectIds: ['blueberry', 'work', 'impact'],
-  projectShareMin: 0.48, // (#blueberry + #work + #impact) over the total
+  projectIds: ['blueberry', 'phones', 'work', 'impact'],
+  projectShareMin: 0.48, // (#blueberry + #phones + #work + #impact) over the total
   experienceMaxPx: 900, // #experience at 1440x900 (plan A10)
   maxPins: 3,
   sections: Object.fromEntries(SECTIONS.map(s => [s.id, { budget: s.budget, kind: s.kind }])) as Record<SectionId, { budget: number; kind: 'cap' | 'floor' }>,
@@ -895,9 +977,13 @@ export const IMAGES = {
   // The website, captured 2026-10-07 at 2x from the live site (1200x900 viewport), each cropped
   // 4:3 to its heading. bbTetris is the focus timer's break game, played with scripted keys on a
   // seeded piece order (scratchpad r2/tetris.mjs): four flat rows, the well open, an I over it.
-  bbSiteHome: { src: '/images/work/bb-site-home.webp', w: 1200, h: 900, sm: '/images/work/bb-site-home-800.webp', smW: 800, alt: "Blueberry's home page: the headline Organic chemistry that actually sticks, a line on lessons, mechanisms and flashcards, and a Get Started button", owner: 'capture', sections: ['blueberry'] },
-  bbSiteDecks: { src: '/images/work/bb-site-decks.webp', w: 1200, h: 900, sm: '/images/work/bb-site-decks-800.webp', smW: 800, alt: "Blueberry's Study Decks page: the heading, then a card offering the mechanism trainer, above the deck search", owner: 'capture', sections: ['blueberry'] },
-  bbSiteLessons: { src: '/images/work/bb-site-lessons.webp', w: 1200, h: 900, sm: '/images/work/bb-site-lessons-800.webp', smW: 800, alt: "Blueberry's CHEM241 lessons page: the course heading and its introduction above the section list", owner: 'capture', sections: ['blueberry'] },
+  // Home, Review and Learn were swapped 2026-10-20 [Andrew 2026-10-20: "updated pictures of
+  // blueberry"] for the phone captures (PHONES): the 10-07 desktop shots showed a headline and
+  // page names the live site no longer has. The print is 4:3 with object-fit cover, so it shows
+  // the middle band of each phone screen (the practice card, the due card, the unit track).
+  bbSiteHome: { src: '/work/blueberry-phone/site-home.webp', w: 780, h: 1688, alt: "Blueberry's home page on a phone: the headline The class everyone warns you about, one arrow at a time, above a practice card where cyanide adds to a ketone, marked Correct, and a Start the first lesson button", owner: 'capture', sections: ['blueberry', 'phones'] },
+  bbSiteDecks: { src: '/work/blueberry-phone/site-review.webp', w: 780, h: 1688, alt: "Blueberry's Review page on a phone: a Due today card suggesting the Epoxidation deck, a search box for every deck, and the start of the deck library", owner: 'capture', sections: ['blueberry', 'phones'] },
+  bbSiteLessons: { src: '/work/blueberry-phone/site-learn.webp', w: 780, h: 1688, alt: "Blueberry's Learn page on a phone: a banner showing butadiene and HBr giving 1-bromobut-2-ene, then Up next, Dienes and Diels-Alder, with a Start Unit 1 button", owner: 'capture', sections: ['blueberry', 'phones'] },
   bbTetris: { src: '/images/work/bb-tetris.webp', w: 1200, h: 900, sm: '/images/work/bb-tetris-800.webp', smW: 800, alt: "Tetris in Blueberry's focus timer break: four flat rows filled in checkered orange and purple, the right column left open as a well, and a straight piece falling toward it", owner: 'capture', sections: ['blueberry'] },
   mechanismTrainer: { src: '/images/work/mechanism-trainer.webp', w: 1600, h: 1000, sm: '/images/work/mechanism-trainer-800.webp', smW: 800, alt: 'The Mechanism Trainer', owner: 'capture', sections: ['work'] },
   // Re-captured 2026-10-07 at Andrew's request ("make the ff_tech... an animated slide with the

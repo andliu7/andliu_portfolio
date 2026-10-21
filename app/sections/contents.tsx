@@ -8,8 +8,8 @@ import { CompassSpin, FlipOnView } from './contents.client';
 import { ROW_ICONS } from './contents-icons';
 import './contents.css';
 
-// The contents (the approved Contents design, fp/project/Contents.dc.html), right after College
-// Park, in the site's own palette: berry-deep ground, paper text, apricot numbers. "Where to?",
+// The contents (the approved Contents design, fp/project/Contents.dc.html), right after the hero
+// (College Park, between them, was retired 2026-10-20), in the site's own palette: berry-deep ground, paper text, apricot numbers. "Where to?",
 // the short note, then one big numbered row per section that is on the page now (CONTENTS.rows
 // in lib/site.ts). Each row is a plain in-page link; the director's link delegate
 // (app/motion.tsx) scrolls to it, and #island goes through the island's own delegate.

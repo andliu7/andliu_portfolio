@@ -1,0 +1,128 @@
+/* Blueberry on a phone (phones.tsx). Every selector starts with .phones, the section root.
+   Ground berry-deep: --on paper (12.58:1), --on-2 berry-soft (9.54:1). The phones are Slush
+   stickers: flat token fills (apricot, sky, berry-soft) with a 2px ink outline and a big
+   radius, no shadows, no gradients. The caption tags are card with ink text (17.06:1) and a berry
+   label (7.2:1). Display type is Fira Code 700 (--display), small labels --mono.
+   Reduced motion is html[data-motion="reduced"] (see app/globals.css). */
+
+.phones {
+  --tile-line: var(--bw) solid var(--ink);
+  display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: clamp(32px, 4cqi, 64px);
+  color: var(--on);
+  overflow-x: clip;
+}
+/* The seam with the Blueberry chapter (blueberry.css, the hand-off): this section starts under
+   the chapter's rounded foot (pulled up by the corner's size), and its top pad clears the stack
+   strip (76px, half of it hanging over). Selected work below starts flush (projects.css), so the
+   bottom pad is only breathing room; the room the sinking centre column needs is the list's own
+   bottom pad (section 2).
+   The ground is flat berry-deep at every edge, so both seams meet their neighbour's flat
+   berry-deep with no line; a soft berry glow sits behind the phones instead of the shared corner
+   gradient (paper text over it stays 9:1 or better). */
+.phones {
+  --ph-tuck: clamp(40px, 6cqi, 96px);
+  margin-top: calc(-1 * var(--ph-tuck));
+  padding: calc(var(--ph-tuck) + 38px + clamp(40px, 5cqi, 80px)) var(--gutter) clamp(24px, 3cqi, 48px);
+  background-color: var(--ground);
+  background-image: radial-gradient(70% 45% at 50% 60%, color-mix(in srgb, var(--berry) 30%, var(--berry-deep)) 0%, var(--berry-deep) 100%);
+}
+
+/* ---------- 1. head ---------- */
+.phones .ph-head { display: grid; gap: 14px; width: 100%; max-width: 1180px; margin-inline: auto; }
+.phones .ph-head .eyebrow { color: var(--on-2); }
+.phones .ph-intro { display: grid; gap: 22px; justify-items: start; margin-top: 10px; }
+.phones .ph-line { max-inline-size: 46ch; margin: 0; font: 400 clamp(19px, 1.5cqi, 22px)/1.55 var(--body); color: var(--on); }
+.phones .ph-live { --pill-pad: 22px; font: 600 15px/1 var(--mono); }
+@container (min-width: 900px) {
+  .phones .ph-intro { grid-template-columns: minmax(0, 46ch) auto; align-items: end; column-gap: 48px; }
+}
+
+/* ---------- 2. the gallery ----------
+   Six phones in one row on a wide screen, as big as the width allows, so the whole section is
+   about one and a half screens of scroll (Andrew 2026-10-20: "it should be rather quick"; two
+   rows of three made it three screens long). --ph-n is the number of columns and --ph-w a
+   column's width: the full bleed width (the list steps out of the section's gutter to a small one
+   of its own) shared by --ph-n phones, but never so wide that one phone is taller than the
+   screen, so every phone can be seen whole. --ph-k is a phone's height over its width (frame,
+   screen and the caption's overhang, measured 2026-10-20), so the travel room below can be sized
+   in phone heights.
+     under 760px   two columns of three rows, still: one column was six screens long, three
+                   leave a phone too small to read
+     760 to 1099   three columns of two rows, still: six across would be about 110px a phone
+     1100 and up   six across, drifting (below)
+   One list item per phone in reading order (lib/site.ts PHONES): the two site pages are the
+   second and fifth, so the row mirrors itself around its centre.
+   On the six-across row each item moves by translate, reading --rise or --sink, which
+   phones.client.tsx sets from the scroll: the two site pages rise, the four game screens sink,
+   so every neighbour slides against the next and the halves mirror (Andrew 2026-10-20: "make sure
+   it's symmetric"). Nothing clips the list (Andrew 2026-10-20: "there is no cuttoff"): the bottom
+   pad is the room the sinking phones end in (SINK_TO in phones.client.tsx, 10% of a phone), and
+   the head's gap the room they start raised into.
+   Without the variables (reduced motion, no JavaScript) --rise is 0 and --sink a fixed stagger,
+   a still zigzag. */
+.phones .ph-cols {
+  --rise: 0%; --sink: 10%;
+  --ph-n: 2; --ph-edge: 16px; --ph-k: 2.2;
+  --ph-gap: clamp(12px, 4cqi, 24px);
+  --ph-w: min(calc((100cqi + 2 * var(--gutter) - 2 * var(--ph-edge) - (var(--ph-n) - 1) * var(--ph-gap)) / var(--ph-n)), calc((100svh - 32px) / var(--ph-k)));
+  display: grid; grid-template-columns: repeat(var(--ph-n), var(--ph-w)); justify-content: center; align-items: start;
+  gap: clamp(28px, 4cqi, 56px) var(--ph-gap);
+  margin: 0 calc(var(--ph-edge) - var(--gutter)); padding: 0; list-style: none;
+}
+.phones .ph-item { translate: none; }
+/* The caption tags lean out from the centre line by the same angle, mirrored. */
+.phones .ph-item:nth-child(odd) .ph-cap { rotate: -3deg; }
+.phones .ph-item:nth-child(even) .ph-cap { rotate: 3deg; }
+@media (min-width: 760px) {
+  .phones .ph-cols { --ph-n: 3; --ph-edge: 20px; --ph-gap: clamp(16px, 3cqi, 40px); }
+  .phones .ph-item:nth-child(3n+1) .ph-cap { rotate: -3deg; }
+  .phones .ph-item:nth-child(3n+2) .ph-cap { rotate: none; }
+  .phones .ph-item:nth-child(3n) .ph-cap { rotate: 3deg; }
+}
+@media (min-width: 1100px) {
+  .phones .ph-cols {
+    --ph-n: 6; --ph-gap: clamp(12px, 1.6cqi, 32px);
+    padding-bottom: calc(var(--ph-w) * var(--ph-k) * .10);
+  }
+  .phones .ph-item { translate: 0 var(--sink); }
+  .phones .ph-item:nth-child(3n+2) { translate: 0 var(--rise); }
+  .phones .ph-item:nth-child(-n+3) .ph-cap { rotate: -3deg; }
+  .phones .ph-item:nth-child(n+4) .ph-cap { rotate: 3deg; }
+}
+
+/* A phone: the body is a flat sticker fill with an ink outline; the screen sits inside a bezel
+   with an ink island in its forehead (not over the capture, which has the site's own header at
+   the top). Sizes are in cqi of the figure, so the frame keeps its proportions at any width. */
+.phones .ph-shot { container-type: inline-size; position: relative; display: grid; justify-items: center; margin: 0; }
+.phones .ph-phone {
+  position: relative; display: block; width: 100%;
+  padding: 10cqi 4cqi 5cqi;
+  border: var(--tile-line); border-radius: 15cqi;
+  transition: rotate var(--dur-roll) var(--ease-elastic), translate var(--dur-roll) var(--ease-elastic);
+}
+.phones [data-fill="apricot"] { background: var(--apricot); }
+.phones [data-fill="sky"] { background: var(--sky); }
+.phones [data-fill="berry-soft"] { background: var(--berry-soft); }
+.phones .ph-island { position: absolute; top: 3.6cqi; left: 50%; width: 26cqi; height: 3.4cqi; translate: -50% 0; border-radius: var(--r-pill); background: var(--ink); }
+/* width/height attributes give the intrinsic ratio; height auto plus aspect-ratio reserves the
+   box before the image lands, so the page height (and every scroll trigger) never jumps. */
+.phones .ph-phone img { display: block; width: 100%; height: auto; aspect-ratio: 780 / 1688; border: var(--tile-line); border-radius: 11cqi; background: var(--berry-deep); }
+/* The caption: a card tag stuck over the phone's chin, tilted a little each (collage). */
+.phones .ph-cap {
+  position: relative; z-index: 1; margin-top: -18px;
+  display: inline-flex; align-items: baseline; gap: 8px; max-width: 100%;
+  padding: 8px 16px; border: var(--tile-line); border-radius: var(--r-pill);
+  background: var(--card); color: var(--ink);
+  font: 600 clamp(13px, 5cqi, 16px)/1.2 var(--body);
+}
+.phones .ph-where { font: 500 11px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--berry); }
+/* A small springy lean on hover, the Slush roll's ease, a fine pointer only. Each phone is a
+   link to its live screen (2026-10-20), and the hover bubble says so. */
+@media (hover: hover) {
+  html:not([data-motion="reduced"]) .phones .ph-shot:hover .ph-phone { rotate: -2deg; translate: 0 -6px; }
+}
+
+/* Reduced motion: phones.client.tsx stops driving the variables, but the first (server shaped)
+   render has already written them inline and motion leaves them there, so this pins the still
+   stagger above over them (measured 2026-10-20: the inline values stay under reduced motion). */
+html[data-motion="reduced"] .phones .ph-cols { --rise: 0% !important; --sink: 10% !important; }

@@ -6,6 +6,7 @@ import { Header } from '@/components/site/header';
 import { Loader } from '@/components/site/loader';
 import ChatDock from '@/components/chat/chat-dock';
 import MascotSlot from '@/components/mascot/mascot-slot';
+import HoverBubble from '@/components/site/hover-bubble';
 import './globals.css';
 
 // Three voices (plan 3.1's two, plus Karla for reading, 2026-10-06):
@@ -71,6 +72,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <main id="main" tabIndex={-1}>{children}</main>
         <ChatDock />
         <MascotSlot />
+        {/* The one hover bubble, for every picture marked data-bubble (components/site/hover-bubble.tsx) */}
+        <HoverBubble />
       </body>
     </html>
   );

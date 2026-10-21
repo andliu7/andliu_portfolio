@@ -1,10 +1,11 @@
-// A flat cartoon of the state of Maryland for the UMD section's top right corner (Andrew
-// 2026-10-06: "include an icon of the maryland state top right of the screen that tilts when
+// A flat cartoon of the state of Maryland, first for the UMD section's top right corner, now on
+// UMD's stop in the Experience strip, in its foot by the club pills (Andrew 2026-10-06: "include an icon of the maryland state top right of the screen that tilts when
 // hover"). An original, simplified outline: the thin western panhandle under the straight
 // northern border, the Potomac running down to the southern tip, the Chesapeake Bay cut up the
 // middle (painted as water), and the Eastern Shore down to the Atlantic. Gold with an ink outline
 // and a ledge shadow, and a red star roughly where College Park sits. Decorative: the section hides it from
-// screen readers. A plain server component; the tilt is TiltFrame around it (umd.tsx).
+// screen readers. A plain server component; the tilt is TiltFrame around it
+// (app/sections/experience.umd.tsx).
 
 const OUTLINE =
   'M4 12 H150 V58 H180 L174 84 L170 100 L138 104 H108 Q96 98 94 84 Q90 66 84 58 Q72 46 56 42 Q40 34 28 34 Q18 26 4 28 Z';

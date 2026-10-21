@@ -110,7 +110,7 @@ export default function MetroHero({
     }
     video.addEventListener("seeked", onSeeked)
 
-    function seekTo(t: number) {
+    const seekTo = (t: number) => {
       if (isSeeking) {
         pendingTime = t
         return

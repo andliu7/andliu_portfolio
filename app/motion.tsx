@@ -211,6 +211,10 @@ function pauseAway() {
   const io = new IntersectionObserver(onEntries);
   const sections = document.querySelectorAll<HTMLElement>('main section[id]');
   sections.forEach(el => io.observe(el));
+  // The stack band (components/site/stack-band.tsx) sits between two sections on the home page,
+  // not inside one, so it is watched on its own; its slide pauses like a section's loops.
+  const band = document.querySelector<HTMLElement>('main > .stack-band');
+  if (band) io.observe(band);
   // The footer's laser seam (components/site/footer.tsx) is not a section but loops all the same
   // (a blurred glow that drifts and flickers), and it is on screen only at the very end of the
   // page. It is a 0px-tall line whose glow reaches about 20px either side, hence the margin.
@@ -221,6 +225,7 @@ function pauseAway() {
     io.disconnect();
     seamIo.disconnect();
     sections.forEach(el => el.removeAttribute('data-away'));
+    band?.removeAttribute('data-away');
     seam?.removeAttribute('data-away');
   };
 }

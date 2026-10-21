@@ -1,8 +1,8 @@
 import Motion from './motion';
 import Hero from './sections/hero';
-import Umd from './sections/umd';
 import Contents from './sections/contents';
 import Blueberry from './sections/blueberry';
+import Phones from './sections/phones';
 import Projects from './sections/projects';
 import Impact from './sections/impact';
 import Experience from './sections/experience';
@@ -10,6 +10,7 @@ import Island from './sections/island';
 import Contact from './sections/contact';
 import Resume from './sections/resume';
 import { SiteFooter } from '@/components/site/footer';
+import { StackBand } from '@/components/site/stack-band';
 import ContourBg from '@/components/site/contour-bg';
 import { AfterLoad } from '@/components/site/after-load';
 
@@ -25,10 +26,13 @@ export default function Home() {
       {/* AfterLoad: the contour canvases start once the loader lifts (components/site/after-load.tsx) */}
       <AfterLoad><ContourBg /></AfterLoad>
       <Hero />
-      <Umd />
       <Contents />
       <Blueberry />
+      <Phones />
       <Projects />
+      {/* The stack band, straight across the seam between Projects and Impact (Andrew 2026-10-20);
+          not a section, so it is not in SECTIONS (components/site/stack-band.tsx) */}
+      <StackBand />
       <Impact />
       <Experience />
       <Contact />

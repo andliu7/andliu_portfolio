@@ -22,6 +22,9 @@
   --apricot:#ffcf98; --apricot-deep:#e98a5a; /* apricot-deep is decoration only */
   --line:#d9d0bf; --sky:#bfe3f0; --ledge:#0000002e;
   --tile-apricot:#e98a5a; --tile-leaf:#6fae4a; --tile-gold:#c9a24a; --tile-teal:#2f9e8f; --tile-pink:#d6689a; --tile-violet:#8555bf;
+  /* Maryland's flag colours, for the UMD stop on the Experience strip only (experience.css, Andrew
+     2026-10-20). ember is the dark red under the Lava when WebGL is off (white on it is AA). */
+  --umd-red:#e21833; --umd-gold:#ffd200; --umd-black:#000000; --umd-white:#ffffff; --umd-ember:#5a0a0f;
 
   /* Three voices (app/layout.tsx). --display is Fira Code 700, the big bold title face; --mono is
      the same family for small labels (eyebrows, captions, buttons, numbers); reading text is

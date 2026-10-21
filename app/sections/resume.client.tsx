@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { ArrowUpRight, X } from 'lucide-react';
-import { RESUME, RESUME_PREVIEW } from '@/lib/site';
+import { HOVER, RESUME, RESUME_PREVIEW } from '@/lib/site';
 import { getLenis } from '@/app/smooth';
 import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
@@ -35,7 +35,8 @@ export function ResumeCard() {
 
   return (
     <>
-      <button type="button" className="rs-card" onClick={show} aria-label={RESUME_PREVIEW.enlarge}>
+      {/* The hover bubble (Andrew 2026-10-20) says what the aria-label says: it opens full size. */}
+      <button type="button" className="rs-card" onClick={show} aria-label={RESUME_PREVIEW.enlarge} data-bubble={HOVER.resume} data-bubble-icon="enlarge">
         <img
           src={img.small}
           srcSet={`${img.small} ${img.smallW}w, ${img.src} ${img.w}w`}

@@ -1,10 +1,10 @@
 import type { JSX } from 'react';
-import { ArrowUpRight } from 'lucide-react';
-import { APPROVALS, MICROCOPY, PROJECTS, WORK_HEAD, sectionAttrs, type ImageKey } from '@/lib/site';
+import { ArrowUp, ArrowUpRight } from 'lucide-react';
+import { APPROVALS, HOVER, IMAGES, MICROCOPY, PHONES, PROJECTS, WORK_HEAD, sectionAttrs, type ImageKey } from '@/lib/site';
 import { RollingRow } from '@/components/ui/rolling-list';
 import { ProjectFan, type FanItem } from '@/components/ui/project-fan';
 import { CheckSticker, PROJECT_ART } from '@/components/site/work/art';
-import { FlashcardSticker } from '@/components/site/stickers/stickers';
+import { BlueberrySticker, FlashcardSticker } from '@/components/site/stickers/stickers';
 import { Shot } from '@/components/site/work/shot';
 import { Pipeline } from '@/components/site/work/pipeline';
 import { Letters, Words } from '@/components/site/work/rise';
@@ -17,8 +17,11 @@ import './projects.css';
 //   - the index: one rolling row per project (01 to 07). Row 01 goes to the Blueberry chapter,
 //     07 to #island, the rest to their card in the fan (#work-<id>, which also brings the card
 //     round).
-//   - projects 02 to 06 as one fan of cards (components/ui/project-fan.tsx): each card keeps its
+//   - projects 01 to 06 as one fan of cards (components/ui/project-fan.tsx): each card keeps its
 //     fill, number and picture; the pipeline, which has no picture, is a text-and-diagram card.
+//     Blueberry joined as card 01 on 2026-10-20 (Andrew: "include 01 the blueberry as a card in
+//     the carousel fan"): its picture is three of the phone captures, and its caption also links
+//     back up to the chapter and the phone screens.
 //     Hovering a card (or tapping the centre one) shows its words in the caption under the fan.
 //   - a Carousel | Desk switch over the fan swaps it for the floating tabs
 //     (components/site/work/views.tsx).
@@ -28,13 +31,14 @@ import './projects.css';
 
 type Project = (typeof PROJECTS)[number];
 
-const FAN = PROJECTS.filter(p => p.id !== 'blueberry' && p.id !== 'island');
+const FAN = PROJECTS.filter(p => p.id !== 'island');
 
 // One sticker fill per project, so neighbours never share one (ink text is AA on all of them).
-const FILL: Record<string, string> = { flashcards: 'tile-gold', brain: 'tile-pink', trainer: 'tile-leaf', studio: 'tile-apricot', guide: 'tile-teal' };
+// Blueberry takes its own berry-soft (ink 12:1), between the guide's teal and the flashcards' gold.
+const FILL: Record<string, string> = { blueberry: 'berry-soft', flashcards: 'tile-gold', brain: 'tile-pink', trainer: 'tile-leaf', studio: 'tile-apricot', guide: 'tile-teal' };
 // The corner sticker on a card's picture. The mechanism trainer and the animation pipeline have
 // none: theirs was the molecule, removed 2026-10-06 (Andrew: no chemistry art).
-const STICKER: Partial<Record<string, (props: { className?: string }) => JSX.Element>> = { flashcards: FlashcardSticker, brain: CheckSticker, guide: FlashcardSticker };
+const STICKER: Partial<Record<string, (props: { className?: string }) => JSX.Element>> = { blueberry: BlueberrySticker, flashcards: FlashcardSticker, brain: CheckSticker, guide: FlashcardSticker };
 
 const rowHref = (id: string) => (id === 'blueberry' ? '#blueberry' : id === 'island' ? '#island' : `#work-${id}`);
 
@@ -50,6 +54,26 @@ function Media({ project, sizes, compact = false }: { project: Project; sizes: s
   if (image) return <Shot image={image} sizes={sizes} />;
   const Art = PROJECT_ART[project.id];
   return Art ? <Art compact={compact} /> : null;
+}
+
+// Blueberry's card picture: three phone captures standing in a sky window, cut off at the bottom
+// like phones in a pocket. Decoration (alt=""): Pathway and Lesson are in the #phones section with
+// their descriptions, and the caption carries the words. Home left PHONES when the gallery went
+// down to six screens (Andrew 2026-10-20), so it comes from IMAGES, the same capture.
+// Eager, with the default decoding: card 01 is the first card the fan shows, and lazy loading
+// inside the transformed card left the centre phone a blank card for seconds after the fan came
+// into view (verified 2026-10-20). The three files are about 40KB each and #phones above loads
+// two of them anyway, so eager costs little extra.
+const CARD_PHONES = [IMAGES.bbSiteHome, ...['Pathway', 'Lesson'].map(title => PHONES.shots.find(s => s.title === title)!)];
+
+function PhoneTrio() {
+  return (
+    <div className="wk-phones">
+      {CARD_PHONES.map(shot => (
+        <img key={shot.src} src={shot.src} width={shot.w} height={shot.h} alt="" draggable={false} />
+      ))}
+    </div>
+  );
 }
 
 /** A card's face. Picture-led: number, kind, the picture in a small browser window with the
@@ -73,7 +97,9 @@ function Card({ project }: { project: Project }) {
               <i /><i /><i />
               {project.url && <span className="wk-url">{project.url}</span>}
             </div>
-            <div className="wk-media"><Media project={project} sizes="(min-width: 700px) 340px, 70vw" /></div>
+            <div className="wk-media">
+              {project.id === 'blueberry' ? <PhoneTrio /> : <Media project={project} sizes="(min-width: 700px) 340px, 70vw" />}
+            </div>
           </div>
           {Sticker && <span className="wk-sticker"><Sticker /></span>}
         </div>
@@ -116,6 +142,12 @@ function Caption({ project }: { project: Project }) {
         <p className="wk-cap-line"><Words text={project.lines[0]} start={0} /></p>
         <div className="wk-cap-foot">
           <Links project={project} />
+          {project.id === 'blueberry' && (
+            <div className="row-actions wk-actions">
+              <a className="pill pill-light" href="#blueberry">{WORK_HEAD.bbChapter} <ArrowUp size={16} aria-hidden="true" /></a>
+              <a className="pill pill-light" href="#phones">{WORK_HEAD.bbPhones} <ArrowUp size={16} aria-hidden="true" /></a>
+            </div>
+          )}
           {project.note && <p className="wk-note">{project.note}</p>}
         </div>
       </div>
@@ -123,12 +155,19 @@ function Caption({ project }: { project: Project }) {
   );
 }
 
-const FAN_ITEMS: FanItem[] = FAN.map((project, i) => ({
-  id: `work-${project.id}`,
-  label: `${project.title}, ${WORK_HEAD.slideOf(i + 1, FAN.length)}`,
-  card: <Card project={project} />,
-  caption: <Caption project={project} />,
-}));
+// A click on the centre card opens the project's first link (live before source, as listed), and
+// the hover bubble says what that is (HOVER.fan, Andrew 2026-10-20). No link, no bubble.
+const FAN_ITEMS: FanItem[] = FAN.map((project, i) => {
+  const href = (project.links as readonly { href: string }[])[0]?.href;
+  return {
+    id: `work-${project.id}`,
+    label: `${project.title}, ${WORK_HEAD.slideOf(i + 1, FAN.length)}`,
+    card: <Card project={project} />,
+    caption: <Caption project={project} />,
+    href,
+    bubble: href ? HOVER.fan[project.id] : undefined,
+  };
+});
 
 export default function Projects() {
   return (
@@ -164,7 +203,7 @@ export default function Projects() {
       </div>
 
       <WorkViews>
-        <ProjectFan items={FAN_ITEMS} name={WORK_HEAD.fan} prevLabel={WORK_HEAD.prev} nextLabel={WORK_HEAD.next} />
+        <ProjectFan items={FAN_ITEMS} name={WORK_HEAD.fan} prevLabel={WORK_HEAD.prev} nextLabel={WORK_HEAD.next} turnBubble={HOVER.fanTurn} />
       </WorkViews>
     </section>
   );

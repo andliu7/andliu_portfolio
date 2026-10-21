@@ -2,7 +2,6 @@ import type { CSSProperties } from 'react';
 import { HERO, HERO_BAR, HERO_CAUTION, IDENTITY, PORTRAITS, MICROCOPY, sectionAttrs } from '@/lib/site';
 import { Portrait } from '@/components/site/portrait';
 import { Marquee } from '@/components/site/marquee';
-import { HeroWrite } from '@/components/site/hero-write';
 import { HeroObjects } from '@/components/site/hero-objects/hero-objects';
 import Cloudscape from '@/components/ui/cloudscape';
 import { FlowButton } from '@/components/ui/flow-button';
@@ -96,7 +95,6 @@ export default function Hero() {
                 <NameLine text={HERO.last} start={HERO.first.length} kw />
               </h1>
               <HeroObjects />
-              <HeroWrite />
             </div>
 
             <div className="hero-foot">

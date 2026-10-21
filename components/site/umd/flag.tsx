@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from '@/components/site/use-reduced-motion';
 import { useAfterLoad } from '@/components/site/after-load';
 
-// The Maryland flag waving behind College Park (Andrew 2026-10-06: "an animated flowing maryland
+// The Maryland flag waving behind UMD's stop on the Experience strip, first behind the College
+// Park section, retired 2026-10-20 (Andrew 2026-10-06: "an animated flowing maryland
 // flag ... with a 'flow' like wind blowing it every now and then").
 //
 // Rendering comes from the Canvas UI "Cloth" component he pasted (scratchpad cloth-spec.md; Canvas
@@ -23,8 +24,8 @@ import { useAfterLoad } from '@/components/site/after-load';
 // Load reveal (Andrew 2026-10-07: "the maryland page can do a load reveal if it doesn't have the
 // flag rendered"): the canvas exists only once the loader has lifted (useAfterLoad, so WebGL
 // setup never lands in hydration) and within one screen of the viewport, and is removed again
-// (its WebGL context freed) two screens away. Until its first frame is drawn, umd.css clips it
-// away and the section's red shows under the shade; the first frame sets data-ready and it wipes
+// (its WebGL context freed) two screens away. Until its first frame is drawn, experience.css clips
+// it away and the card's red shows under the shade; the first frame sets data-ready and it wipes
 // in from the pole. No WebGL2, or shaders that will not compile: the red simply stays.
 //
 // Pattern: everything lives in one useEffect, outside React's render. The GL objects, the arrays
@@ -361,7 +362,7 @@ function FlagCanvas() {
       gl.bindVertexArray(null);
     };
 
-    // The first drawn frame uncovers the canvas top to bottom (umd.css). Leaving the screen clears
+    // The first drawn frame uncovers the canvas top to bottom (experience.css). Leaving the screen clears
     // data-ready, so the reveal slides again each time the section comes back (Andrew 2026-10-07:
     // "always slides when you get to it so that it doesn't look like it glitches into the flag").
     const reveal = () => { if (!('ready' in canvas.dataset)) canvas.dataset.ready = ''; };

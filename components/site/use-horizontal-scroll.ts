@@ -14,6 +14,11 @@ import { autoplayOn, subscribeAutoplay } from './strip-autoplay';
 //   track   the wide strip inside the frame. Each frame we read how far the runway has scrolled
 //           (0 at its top, --run at its end) and slide the track left by the same amount.
 // So one pixel down is one pixel left (or `speed` pixels, see below), and once the runway ends the page scrolls on normally.
+//
+// Hold (Andrew 2026-10-20: "it should hold at the first card for a moment. I was trying to scroll
+// down to see the full card and it scrolled right"): the runway can start with `hold` screens of
+// plain scroll during which the strip stays at its start, so the first card can be read before
+// anything slides. The runway is then hold + travel / speed tall.
 // Only `transform` changes per frame (no layout), batched in requestAnimationFrame.
 //
 // Keyboard and screen readers: the cards stay in normal DOM order, so Tab and a reader walk them
@@ -26,7 +31,8 @@ import { autoplayOn, subscribeAutoplay } from './strip-autoplay';
 // 2026-10-11: "keep the horizontal scroll on phone screens"); before that, under 700px stacked.
 //
 // Items: children of the track marked data-hs-item get the class hs-in as they come on screen
-// (from the right while pinned, from below in the stack), which the section CSS uses to pop them.
+// (from the right while pinned, once the section is most of the way up the screen; from below in
+// the stack), which the section CSS uses to pop them.
 // The track must be position:relative so each item's offsetLeft is measured from the track.
 //
 // html[data-hscroll="on"]: set while any pinned strip holds the screen (the header styles itself
@@ -56,7 +62,8 @@ function markActive(runway: HTMLElement, active: boolean) {
 
 // `speed` is how many px the strip slides per px scrolled (1 by default). Above 1 the runway is
 // shorter than the strip's travel, so the strip moves faster (Off the clock uses 1.4).
-export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>(onProgress?: (p: number) => void, { speed = 1 }: { speed?: number } = {}) {
+// `hold` is the still stretch at the runway's start, in screen heights (0 by default).
+export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>(onProgress?: (p: number) => void, { speed = 1, hold = 0 }: { speed?: number; hold?: number } = {}) {
   const runwayRef = useRef<HTMLElement>(null);
   const trackRef = useRef<T>(null);
   const reduced = useReducedMotion();
@@ -83,7 +90,8 @@ export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>(onPr
     }
 
     let travel = 0; // how far the track slides, px
-    let run = 0; // the runway, px of scroll: travel / speed
+    let held = 0; // the still stretch at the runway's start, px of scroll: hold screens
+    let run = 0; // the runway, px of scroll: held + travel / speed
     let raf = 0;
     // Geometry cached by measure(), so the per-frame update reads nothing but scrollY. Reading
     // layout (getBoundingClientRect, clientWidth, offsetLeft) after another script's style write
@@ -96,20 +104,23 @@ export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>(onPr
     const update = () => {
       raf = 0;
       const top = runwayTop - window.scrollY;
-      const p = run ? Math.min(1, Math.max(0, -top / run)) : 0;
+      const p = run > held ? Math.min(1, Math.max(0, (-top - held) / (run - held))) : 0;
       // Pinned means the frame is stuck to the screen: the runway's top is above it, its foot below.
       const holding = top <= 0.5 && top + runwayH >= viewH - 0.5;
       markActive(runway, holding);
       setActive(holding);
-      const fixed = p.toFixed(4);
+      // The section has come most of the way up the screen (its top above 35% of it).
+      const arrived = top < viewH * 0.35;
+      const fixed = p.toFixed(4) + (arrived ? '' : '-');
       if (fixed === lastP) return; // nothing moved: skip the writes and the callback
       lastP = fixed;
       const x = p * travel;
       track.style.transform = `translate3d(${-x}px,0,0)`;
-      runway.style.setProperty('--p', fixed);
-      // In once its left edge passes 85% of the frame; out again if it slides back off the right.
+      runway.style.setProperty('--p', p.toFixed(4));
+      // In once the section has arrived and its left edge passes 85% of the frame; out again if it
+      // slides back off the right or the section drops back down the screen.
       items.forEach((item, k) => {
-        const on = lefts[k] - x < frameW * 0.85;
+        const on = arrived && lefts[k] - x < frameW * 0.85;
         if (on !== shown[k]) { shown[k] = on; item.classList.toggle('hs-in', on); }
       });
       progressRef.current?.(p);
@@ -122,10 +133,12 @@ export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>(onPr
     const measure = () => {
       frameW = frame.clientWidth;
       travel = Math.max(0, track.scrollWidth - frameW);
-      run = travel / speed;
+      viewH = window.innerHeight;
+      held = travel ? hold * viewH : 0;
+      run = held + travel / speed;
       runway.style.setProperty('--run', `${run}px`);
       const box = runway.getBoundingClientRect();
-      runwayTop = box.top + window.scrollY; runwayH = box.height; viewH = window.innerHeight;
+      runwayTop = box.top + window.scrollY; runwayH = box.height;
       lefts = items.map(item => item.offsetLeft);
       lastP = ''; // geometry changed: the next update must write even if p did not
       schedule();
@@ -140,7 +153,7 @@ export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>(onPr
       if (!item || !run) return;
       const want = item.offsetLeft - (frame.clientWidth - item.offsetWidth) / 2;
       const p = Math.min(1, Math.max(0, want / travel));
-      const y = runway.getBoundingClientRect().top + window.scrollY + p * run;
+      const y = runway.getBoundingClientRect().top + window.scrollY + held + p * (run - held);
       const lenis = getLenis();
       if (lenis) lenis.scrollTo(y, { immediate: true });
       else window.scrollTo({ top: y });
@@ -161,7 +174,7 @@ export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>(onPr
     // The next card to rest on: each item centred in the frame (as onFocus does), then the end.
     const nextStop = (from: number) => {
       const w = frame.clientWidth;
-      const stops = items.map(item => Math.min(travel, Math.max(0, item.offsetLeft - (w - item.offsetWidth) / 2)) / speed);
+      const stops = items.map(item => held + Math.min(travel, Math.max(0, item.offsetLeft - (w - item.offsetWidth) / 2)) / speed);
       return [...stops, run].sort((a, b) => a - b).find(x => x > from + 4);
     };
     const step = () => {
@@ -169,6 +182,14 @@ export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>(onPr
       if (!active || stopped || !run || !autoplayOn()) return;
       const top = runway.getBoundingClientRect().top + window.scrollY;
       const from = Math.min(run, Math.max(0, window.scrollY - top));
+      // Still inside the hold, where nothing moves: skip to its end at once (the screen does not
+      // change) and rest there, so the first card gets the same rest as the others.
+      if (from < held - 4) {
+        setY(top + held);
+        phase = 'rest';
+        timer = window.setTimeout(step, 1800 / speed);
+        return;
+      }
       const to = nextStop(from);
       if (to === undefined) return; // at the end: the page scrolls on normally from here
       const dist = to - from;
@@ -258,7 +279,7 @@ export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>(onPr
       track.style.transform = '';
       items.forEach(item => item.classList.remove('hs-in'));
     };
-  }, [pinned, speed]);
+  }, [pinned, speed, hold]);
 
   // Where item `index` sits centred, as strip progress 0..1 (Off the clock's slider steps by these).
   const progressOf = useCallback((index: number) => {
@@ -277,12 +298,13 @@ export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>(onPr
     const track = trackRef.current;
     const frame = track?.parentElement;
     if (!runway || !track || !frame) return;
-    const run = Math.max(0, track.scrollWidth - frame.clientWidth) / speed;
-    const y = runway.getBoundingClientRect().top + window.scrollY + Math.min(1, Math.max(0, p)) * run;
+    const travel = Math.max(0, track.scrollWidth - frame.clientWidth);
+    const held = travel ? hold * window.innerHeight : 0;
+    const y = runway.getBoundingClientRect().top + window.scrollY + held + Math.min(1, Math.max(0, p)) * (travel / speed);
     const lenis = getLenis();
     if (lenis) lenis.scrollTo(y, immediate ? { immediate: true } : { duration });
     else window.scrollTo({ top: y });
-  }, [speed]);
+  }, [speed, hold]);
 
   // Scroll to just past the section: the way out of a pinned strip.
   const scrollPast = useCallback(() => {

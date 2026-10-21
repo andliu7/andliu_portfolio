@@ -152,18 +152,6 @@ html[data-motion="reduced"] .hero .hero-mq .mq-track { flex-shrink:1; flex-wrap:
 html[data-motion="reduced"] .hero .hero-mq .mq-item { flex-shrink:1; }
 html[data-motion="reduced"] .hero .hero-mq-item { line-height:36px; }
 
-/* ---------- The pencil writing the name (components/site/hero-write.tsx) ----------
-   While it writes, the real letters are hidden until each one's ink is in (data-on), with no
-   transition so the hand-over from the drawn outline is invisible; the hero's own pencil waits. */
-.hero .hero-name[data-write] .hero-c { transition:none; }
-.hero .hero-name[data-write] .hero-c:not([data-on]) { opacity:0; }
-.hero[data-writing] .hob-pencil :is(.hob-art,.hob-label) { visibility:hidden; }
-.hero .hero-write { position:absolute; inset:0; z-index:3; pointer-events:none; }
-.hero .hero-write-letters svg { position:absolute; overflow:visible; }
-.hero .hero-write-letters path { stroke-width:2.5px; vector-effect:non-scaling-stroke; stroke-linejoin:round; }
-.hero .hero-write-pen { display:none; position:absolute; left:0; top:0; }
-.hero .hero-write-pen svg { display:block; width:100%; height:100%; overflow:visible; }
-
 /* ---------- Entrance (Slush motion, gated on the loader's html.is-loaded) ---------- */
 .hero .hero-c { transition:opacity .3s linear calc(.1s + var(--i) * 30ms),transform .65s var(--elastic) calc(.1s + var(--i) * 30ms); }
 .hero .hero-rise { transition:opacity .5s linear calc(.5s + var(--d) * 100ms),translate 1s var(--elastic) calc(.5s + var(--d) * 100ms); }

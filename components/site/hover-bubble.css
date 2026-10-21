@@ -1,0 +1,27 @@
+/* The hover bubble (hover-bubble.tsx). The outer layer only moves (motion writes its transform);
+   the disc inside scales in and out on the site's elastic spring, so the two never fight over
+   one transform. Slush's sticker look: a flat apricot fill, an ink outline, ink words in the
+   display face. Under the cursor (z 1000) and over everything else on the page. */
+.hover-bubble { --hb-size: 128px; position: fixed; z-index: 990; left: 0; top: 0; width: var(--hb-size); height: var(--hb-size); pointer-events: none; }
+.hb-disc {
+  display: grid; place-content: center; justify-items: center; gap: 6px;
+  width: 100%; height: 100%; padding: 18px;
+  border: var(--bw) solid var(--ink); border-radius: 50%;
+  background: var(--apricot); color: var(--ink);
+  text-align: center;
+  scale: .2; opacity: 0;
+  transition: scale var(--dur-roll) var(--ease-elastic), opacity .15s ease-out;
+}
+.hover-bubble[data-on] .hb-disc { scale: 1; opacity: 1; }
+.hb-text { font: 700 12.5px/1.15 var(--display); letter-spacing: -.01em; text-wrap: balance; }
+/* One glyph per kind of action, all in the markup; the root's data-icon shows the matching one,
+   so a new label never needs a React render. */
+.hb-icon { display: grid; }
+.hb-icon > svg { grid-area: 1 / 1; display: none; }
+.hover-bubble[data-icon="open"] .hb-icon > [data-i="open"],
+.hover-bubble[data-icon="flip"] .hb-icon > [data-i="flip"],
+.hover-bubble[data-icon="turn"] .hb-icon > [data-i="turn"],
+.hover-bubble[data-icon="enlarge"] .hb-icon > [data-i="enlarge"] { display: block; }
+
+/* Reduced motion: no scale-in, a quick fade in place (the trail is already off in the TSX). */
+html[data-motion="reduced"] .hb-disc { scale: 1; transition: opacity .12s linear; }

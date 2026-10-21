@@ -1,0 +1,13 @@
+/* The stack band (components/site/stack-band.tsx): a flat sky band, edge to edge, with a 2px ink
+   rule top and bottom (the Slush marquee strip). Sky because it sits between two berry-deep
+   grounds on the home page and needs to read as a seam, not a third section; ink on sky is 13.3:1.
+   The chips are in display type, ink logos and names on card fills (17.1:1), every third one
+   apricot. Straight, at 0deg (Andrew 2026-10-20). Clipped sideways so the moving row can never
+   widen the page. */
+.stack-band { position:relative; z-index:1; padding:18px 0; border-block:2px solid var(--ink); background:var(--sky); overflow:hidden; }
+.stack-band .islider[data-static] { padding-inline:var(--gutter); }
+.stack-band-item { --chip-h:clamp(52px,4.6vw,68px); --chip-fs:clamp(18px,1.9vw,28px); border-width:2px; font-family:var(--display); font-weight:700; letter-spacing:-.02em; }
+.stack-band-item:nth-child(3n + 2) { background:var(--apricot); }
+@media (max-width:640px) {
+  .stack-band { padding-block:12px; }
+}

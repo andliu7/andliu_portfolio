@@ -1,13 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 
 const ParallaxBackground = () => {
-  const bgRef = useRef(null);
+  const bgRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const bg = bgRef.current;
     if (!bg) return;
 
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e: MouseEvent) => {
       const windowWidth = window.innerWidth / 5;
       const windowHeight = window.innerHeight / 5;
       const mouseX = e.clientX / windowWidth;

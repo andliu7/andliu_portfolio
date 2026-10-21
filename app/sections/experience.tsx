@@ -10,10 +10,11 @@ import { AutoplayButton, EscHint } from '@/components/site/strip-autoplay';
 import './experience.css';
 import { CornerStickers } from '@/components/site/corner-stickers/corner-stickers';
 import { BlobPerson, type PersonTone } from '@/components/site/closing/stickers';
+import { UmdStop } from './experience.umd';
 
 // Experience, the timeline (rebuilt 2026-10-06 from the approved design, Timeline.dc.html).
-// The section pins and vertical scroll slides the four roles left past a dated track, oldest to
-// newest, with the résumé pill waiting at the end. The head row (eyebrow, heading, the scroll
+// The section pins and vertical scroll slides the stops left past a dated track: UMD first, then
+// the four roles oldest to newest, with the résumé pill waiting at the end. The head row (eyebrow, heading, the scroll
 // hint and a progress bar) stays put while the strip moves. The pin lives in
 // components/site/use-horizontal-scroll.ts, which explains the sticky-runway pattern.
 //
@@ -28,6 +29,11 @@ import { BlobPerson, type PersonTone } from '@/components/site/closing/stickers'
 // The hand-off to Contact (2026-10-07): Contact's ground is ink, this one berry-deep. A soft
 // gradient toward ink grows in along the frame's foot as the strip runs (experience.css), so the
 // change of ground arrives prepared, not as a hard edge.
+//
+// UMD opens the strip (2026-10-20): the College Park section was retired and became one stop, the
+// first (Andrew: "having umd be the first one"); experience.umd.tsx explains it. The strip holds
+// on it for a stretch of scroll before sliding (Andrew: "it should hold at the first card for a
+// moment"), the `hold` passed to the hook below.
 //
 // A client component ('use client'): the hook reads the scroll position. The server still
 // renders the whole list.
@@ -54,7 +60,8 @@ const started = (sort: number) => {
 };
 
 export default function Experience() {
-  const { runwayRef, trackRef, pinned } = useHorizontalScroll<HTMLOListElement>();
+  // hold: 0.8 of a screen of scroll on the first stop before the strip moves.
+  const { runwayRef, trackRef, pinned } = useHorizontalScroll<HTMLOListElement>(undefined, { hold: 0.8 });
 
   return (
     <section {...sectionAttrs('experience')} ref={runwayRef} className="experience" aria-labelledby="experience-title">
@@ -75,9 +82,10 @@ export default function Experience() {
           </div>
         </div>
         <ol className="xp-track" ref={trackRef}>
+          <UmdStop />
           {ROLES.map((job, i) => (
             // --dot is the role's tile token; the card's pastel is mixed from it in experience.css.
-            <li key={job.id} className="xp-item" data-hs-item="" style={{ '--dot': `var(--${job.dot})`, '--i': i } as CSSProperties}>
+            <li key={job.id} className="xp-item" data-hs-item="" style={{ '--dot': `var(--${job.dot})`, '--i': i + 1 } as CSSProperties}>
               <span className="xp-tick" aria-hidden="true">{started(job.sort)}</span>
               <article className="xp-card" aria-labelledby={`xp-${job.id}`}>
                 <span className="xp-crowd" aria-hidden="true">

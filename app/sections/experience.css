@@ -28,7 +28,7 @@
    Sized to read from a step back (Andrew, 2026-10-06: "make it larger so it's easy to read"):
    20px body, a 28 to 34px role, an 18px org, a 14px date chip, in every layout. */
 .experience .xp-card { --fill:color-mix(in srgb,var(--dot) 50%,var(--card));
-  display:grid; gap:4px; justify-items:start; padding:26px 30px 30px; border:1px solid var(--ink); border-radius:var(--r-card);
+  display:grid; gap:4px; justify-items:start; align-content:start; padding:26px 30px 30px; border:1px solid var(--ink); border-radius:var(--r-card);
   background:var(--fill); color:var(--ink); box-shadow:0 6px 0 var(--ink); }
 /* The island's people (experience.tsx CROWD) standing on the card's top edge at the right, feet
    just over the outline. They bob a little, each out of step; still under reduced motion. */
@@ -58,6 +58,9 @@ html:not([data-motion="reduced"]) .experience .xp-crowd .cl-person:nth-child(3n)
 .experience[data-pin] .xp-head { padding-inline:var(--gutter); }
 .experience[data-pin] .xp-meter { display:grid; }
 .experience[data-pin] .xp-track { display:flex; align-items:stretch; gap:32px; width:max-content; justify-self:start; padding-inline:var(--gutter); will-change:transform; }
+/* Over the corner stickers' layer (z-index 1), so on a short screen a card reaching the frame's
+   foot covers the clock and the briefcase rather than wearing them (2026-10-20). */
+.experience[data-pin] .xp-track { z-index:2; }
 /* The dated track: one line along the whole strip at the ticks' height, a dot and a month above
    each card. */
 .experience[data-pin] .xp-track::before { content:''; position:absolute; left:0; right:0; top:30px; height:2px; background:color-mix(in srgb,var(--berry-soft) 45%,transparent); }
@@ -73,26 +76,84 @@ html:not([data-motion="reduced"]) .experience .xp-crowd .cl-person:nth-child(3n)
 .experience .xp-resume { --pill-pad:clamp(32px,3.4vw,52px); min-height:clamp(72px,7vw,96px); font-size:clamp(20px,2.2vw,30px); gap:.5em; }
 .experience .xp-resume > :is(.pill-face,.pill-back) { min-height:clamp(72px,7vw,96px); }
 .experience .xp-resume svg { width:1.1em; height:1.1em; }
-/* Pinned on a phone: one card a little narrower than the screen, so the next one peeks in from the
-   right, and type a step smaller so the head row and a whole card fit in one 100svh frame. Esc
-   means nothing without a keyboard, so its hint goes. */
+/* Fitting the frame's height (Andrew 2026-10-20: "I was trying to scroll down to see the full card
+   and it scrolled right", "the page does get cut off at the end at least on my computer"). The
+   runway's sideways math was right: measured at 1440x900, 1920x1080 and 1366x768, with and without
+   a classic scrollbar, the résumé pill ends a full gutter inside the frame. What cut him off was
+   the frame's height: it is exactly one screen (100svh) with overflow:clip, and the heading was
+   sized by width alone, so on a wide but short window (a laptop screen less the browser's bars,
+   1366x650 measured 15px over at the foot and 47px under the header at the top) the cards ran
+   off the bottom, and scrolling down to see them slid the strip instead. So the heading is capped
+   by height too, and on short screens the cards widen a little and their type steps down, so the
+   tallest card fits the frame with room under its ledge. */
+.experience[data-pin] .xp-title { font-size:clamp(48px,min(8.4vw,14svh),136px); }
+@media (min-width:700px) and (max-height:860px) {
+  .experience[data-pin] .xp-frame { gap:clamp(16px,3svh,28px); padding-bottom:20px; }
+  .experience[data-pin] .xp-item:not(.xp-end) { width:clamp(600px,46vw,660px); }
+  .experience[data-pin] .xp-card { padding:20px 26px 22px; }
+  .experience[data-pin] .xp-when { margin-bottom:8px; }
+  .experience[data-pin] .xp-role { font-size:clamp(24px,2vw,28px); }
+  .experience[data-pin] .xp-org { margin-bottom:8px; font-size:16px; }
+  .experience[data-pin] .xp-gloss { margin-bottom:8px; font-size:14px; }
+  .experience[data-pin] .xp-line { font-size:17px; line-height:1.5; }
+  .experience[data-pin] .xp-crowd .cl-person { height:56px; }
+}
+@media (min-width:700px) and (max-height:700px) {
+  .experience[data-pin] .xp-line { font-size:16px; line-height:1.45; }
+  .experience[data-pin] .xp-tick { padding-bottom:20px; }
+  .experience[data-pin] .xp-tick::after { top:20px; }
+  .experience[data-pin] .xp-track::before { top:26px; }
+}
+
+/* Pinned on a phone (Andrew 2026-10-11 kept the pin on phones; 2026-10-20 the cards ran past the
+   screen's foot at 320x640 and 375x812): the heading on one line, the meter and the auto-play
+   button on one row beside each other, a card nearly the screen's width (the next one still peeks
+   in) and type a step smaller, so the head row and the tallest card fit one 100svh frame. Esc
+   means nothing without a keyboard, so its hint goes, and so does the scroll hint (the bar stays). */
 @media (max-width:699px) {
-  .experience[data-pin] .xp-title { font-size:clamp(44px,13vw,56px); }
-  .experience[data-pin] .xp-track { gap:16px; }
-  .experience[data-pin] .xp-item { width:82vw; }
-  .experience[data-pin] .xp-card { padding:20px 22px 22px; }
-  .experience[data-pin] .xp-role { font-size:24px; }
-  .experience[data-pin] .xp-org { font-size:16px; margin-bottom:8px; }
-  .experience[data-pin] .xp-gloss { font-size:14px; margin-bottom:8px; }
-  .experience[data-pin] .xp-line { font-size:16px; line-height:1.5; }
-  .experience[data-pin] .xp-bar { width:140px; }
+  .experience[data-pin] .xp-frame { gap:14px; padding-bottom:16px; }
+  .experience[data-pin] .xp-head { gap:10px; }
+  .experience[data-pin] .xp-head-text { gap:6px; }
+  .experience[data-pin] .xp-title { font-size:min(10.4vw,44px); white-space:nowrap; }
+  .experience[data-pin] .xp-side { display:flex; align-items:center; gap:12px; width:100%; }
+  .experience[data-pin] .xp-meter { flex:1 1 auto; justify-items:stretch; }
+  .experience[data-pin] .xp-hint { display:none; }
+  .experience[data-pin] .xp-bar { width:auto; }
+  .experience[data-pin] .xp-ctl .sa-btn { margin-bottom:4px; padding:0 12px; font-size:11px; }
   .experience[data-pin] .sa-esc { display:none; }
+  /* The clock sticker (corner-stickers.css) sits at the top right on a phone, which the one-line
+     heading and the button row now reach, so it steps aside while the strip pins. */
+  .experience[data-pin] .cs-experience .cs-1 { display:none; }
+  .experience[data-pin] .xp-track { gap:14px; }
+  .experience[data-pin] .xp-item { width:88vw; }
+  .experience[data-pin] .xp-tick { padding-bottom:20px; font-size:12px; }
+  .experience[data-pin] .xp-tick::after { top:20px; }
+  .experience[data-pin] .xp-track::before { top:26px; }
+  .experience[data-pin] .xp-card { padding:16px 18px 18px; }
+  .experience[data-pin] .xp-when { min-height:28px; padding:0 12px; margin-bottom:8px; font-size:12px; }
+  .experience[data-pin] .xp-role { font-size:20px; }
+  .experience[data-pin] .xp-org { font-size:14px; margin-bottom:6px; }
+  .experience[data-pin] .xp-gloss { font-size:13px; line-height:1.4; margin-bottom:6px; }
+  .experience[data-pin] .xp-line { font-size:15px; line-height:1.45; }
+  .experience[data-pin] .xp-crowd { right:16px; }
+  .experience[data-pin] .xp-crowd .cl-person { height:48px; }
+}
+/* A short phone (320x640 measured): the eyebrow goes (the heading under it says the same), and
+   the reading type steps down once more. */
+@media (max-width:699px) and (max-height:700px) {
+  .experience[data-pin] .xp-head .eyebrow { display:none; }
+  .experience[data-pin] .xp-line { font-size:14px; line-height:1.4; }
+  .experience[data-pin] .xp-gloss { font-size:12px; }
 }
 
 /* ---------- Motion ----------
-   Each card tips up from a slight turn as it comes on screen (.hs-in from the hook); its dot pops.
-   Cards are never hidden: only their tilt and offset change, and only with full motion. */
-html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-card { transform:translateY(18px) rotate(2.5deg); transition:transform .8s var(--ease-spring); }
+   Each card rises from below the frame to meet the timeline bar as it comes into the strip (.hs-in
+   from the hook), settling on the spring from a slight turn; its dot pops (Andrew 2026-10-20:
+   "emphasizing the cards coming up to meet the horizontal bar as you scroll"). The hook also holds
+   .hs-in back until the section has come most of the way up the screen, so the first stops rise
+   as the strip arrives. Cards are never hidden: only their offset and tilt change, and only with
+   full motion (the frame's overflow:clip cuts a low card off at the foot until it rises). */
+html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-card { transform:translateY(clamp(140px,34svh,320px)) rotate(4deg); transition:transform 1s var(--ease-spring); }
 html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-item.hs-in .xp-card { transform:none; }
 html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-tick::after { scale:0; transition:scale .6s var(--ease-spring) .15s; }
 html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-item.hs-in .xp-tick::after { scale:1; }
@@ -114,3 +175,103 @@ html[data-motion="reduced"] .experience :is(.xp-card,.xp-tick) { transition:none
 .experience .xp-frame::after { content:''; position:absolute; z-index:-1; left:0; right:0; bottom:0; height:clamp(160px,32svh,320px); pointer-events:none;
   background:linear-gradient(to bottom, transparent, color-mix(in srgb,var(--berry-deep) 60%,var(--ink)) 55%, var(--ink));
   transform-origin:50% 100%; opacity:var(--p,1); transform:scaleY(calc(.4 + var(--p,1) * .6)); }
+
+/* ---------- The UMD stop (experience.umd.tsx, 2026-10-20) ----------
+   The retired College Park section, now the strip's first stop: a panel whose ground is the
+   waving flag, holding the Coursework card, the club pills along its foot with the cartoon
+   Maryland beside them, and the terrapin on its top edge. It reuses the role cards' rules above;
+   this block adds the flag, the Lava and the figures. Colours are the --umd-* tokens (globals.css).
+
+   Colour, measured (WCAG 2.x relative luminance), carried over from the old umd.css:
+     white on Lava under at least 50% black            6.8:1  worst case (Lava's #FF9F21)
+     white on the ember ground (no WebGL)               14:1
+     ink on the cream pills (--card)                    17:1   so the pills need no shade at all
+     gold on the ink chip                               14:1
+   No text sits on the bare flag: only the cream pills and the Coursework card, which carries its
+   own scrim. The flag's shade is there so the card and the pills stand off the busy cloth. */
+
+/* A little wider than a role card: the course pills want the room. */
+.experience[data-pin] .xp-umd { width:clamp(580px,44vw,660px); }
+
+/* The panel: the flag is its ground (clipped to its corners by .xp-umd-ground, so the terrapin can
+   still stand above the edge). A column: the card on top, the foot pushed to the bottom, so when
+   the strip stretches every card to the tallest, the spare room lands between them. */
+.experience .xp-card.xp-umd-panel { --fill:var(--umd-gold); isolation:isolate; display:flex; flex-direction:column; justify-content:space-between; align-items:stretch; gap:18px;
+  padding:22px; background:var(--umd-red); color:var(--umd-white); }
+.experience .xp-umd-ground { position:absolute; inset:0; z-index:-1; overflow:hidden; border-radius:calc(var(--r-card) - 1px); }
+
+/* The flag (components/site/umd/flag.tsx) and its shade. The live canvas stays clipped away, so
+   the panel's own UMD red shows, until its first frame; then it wipes in from the top, each time it
+   comes back. */
+.experience .xp-umd-flag { position:absolute; inset:0; display:block; }
+.experience .xp-umd-flag canvas { display:block; width:100%; height:100%; clip-path:inset(0 0 100% 0); }
+.experience .xp-umd-flag canvas[data-ready] { clip-path:inset(0 0 0 0); transition:clip-path 900ms var(--ease-out); }
+html[data-motion="reduced"] .experience .xp-umd-flag canvas[data-ready] { transition:none; }
+.experience .xp-umd-shade { position:absolute; inset:0; pointer-events:none; background:color-mix(in srgb,var(--umd-black) 38%,transparent); }
+
+/* The terrapin standing on the panel's top edge at the right, like the role cards' crowd (a
+   button: press it and he sweats, sweaty-terrapin.tsx). */
+.experience .xp-umd-edge { position:absolute; z-index:2; right:22px; bottom:calc(100% - 12px); width:clamp(84px,7vw,104px); }
+
+/* Coursework: a card on the flag, its whole ground the Lava (lava-card.tsx). The card is a flex
+   column and the Lava grows to fill it (flex:1), so the fire reaches the foot however tall the card
+   gets; before, a grid row sized to the text left a flat gold band under it. It lifts and tilts on
+   hover (Andrew 2026-10-20: "I also really liked how the coursework lifted and tilted on hover"),
+   on translate and rotate, so it never fights the panel's own rise (transform, below). */
+.experience .xp-umd-course { position:relative; display:flex; flex-direction:column; border:1px solid var(--ink); border-radius:18px; box-shadow:0 5px 0 var(--ink);
+  transition:translate .5s var(--ease-spring), rotate .5s var(--ease-spring); }
+@media (hover:hover) {
+  html:not([data-motion="reduced"]) .experience .xp-umd-course:hover { translate:0 -8px; rotate:-1.5deg; }
+}
+.experience .umd-lava { position:relative; isolation:isolate; overflow:hidden; background:var(--umd-ember); color:var(--umd-white); }
+.experience .umd-lava-bg { position:absolute; inset:0; z-index:-1; }
+/* The scrim is darkest at the top behind the heading and eases to 50% at the foot, where only the
+   cream pills sit, so the fire glows there (never under 50%: 6.8:1). */
+.experience .umd-lava-scrim { position:absolute; inset:0; z-index:-1;
+  background:linear-gradient(to bottom, color-mix(in srgb,var(--umd-black) 72%,transparent) 30%, color-mix(in srgb,var(--umd-black) 50%,transparent)); }
+.experience .umd-lava-body { position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:4px; }
+.experience .xp-umd-lava { flex:1 1 auto; padding:20px 24px 22px; border-radius:17px; }
+.experience .xp-umd-course .xp-when { margin-bottom:10px; }
+.experience .xp-umd-course .xp-role { font-size:clamp(24px,2vw,30px); }
+.experience .xp-umd-course .xp-org { margin-bottom:10px; font-size:16px; }
+
+/* The pills: the courses on the card and the clubs in the foot. Flat cream stickers with an ink
+   outline and ledge, readable over anything (17:1), so they sit straight on the fire or the flag. */
+.experience :is(.xp-umd-tags,.xp-umd-chips) { list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:8px; }
+.experience :is(.xp-umd-tags,.xp-umd-chips) li { padding:7px 13px; border:1px solid var(--ink); border-radius:var(--r-pill); background:var(--card); color:var(--ink); box-shadow:0 3px 0 var(--ink); font:700 14px/1.2 var(--body); }
+
+/* The foot: the club pills (Andrew 2026-10-20: "bring the little chips to the bottom empty space")
+   and the cartoon Maryland at the right, tilting toward the pointer (TiltFrame). */
+.experience .xp-umd-foot { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
+.experience .xp-umd-state { flex:none; width:clamp(76px,6vw,96px); }
+.experience .xp-umd-state-svg { display:block; width:100%; height:auto; overflow:visible; }
+.experience .xp-umd-state .tilt-stage { transition:transform 600ms var(--ease-out), translate 450ms var(--ease-spring); }
+.experience .xp-umd-state[data-tilting] .tilt-stage { translate:0 -6px; transition:transform 140ms linear, translate 450ms var(--ease-spring); }
+
+/* A short screen (see "Fitting the frame's height" above): the pills a step smaller. */
+@media (min-width:700px) and (max-height:860px) {
+  .experience .xp-card.xp-umd-panel { padding:18px; gap:14px; }
+  .experience .xp-umd-lava { padding:16px 20px 18px; }
+  .experience .xp-umd-course .xp-role { font-size:clamp(22px,1.8vw,26px); }
+  .experience .xp-umd-course .xp-org { font-size:15px; margin-bottom:8px; }
+  .experience :is(.xp-umd-tags,.xp-umd-chips) li { padding:5px 11px; font-size:13px; }
+  .experience .xp-umd-state { width:72px; }
+}
+/* Pinned on a phone: tighter padding and smaller type, so the stop fits the frame. */
+@media (max-width:699px) {
+  .experience[data-pin] .xp-umd { width:88vw; }
+  .experience .xp-card.xp-umd-panel { padding:12px; gap:10px; }
+  .experience .xp-umd-lava { padding:12px 14px 14px; }
+  .experience .xp-umd-course { border-radius:14px; }
+  .experience .xp-umd-lava { border-radius:13px; }
+  .experience .xp-umd-course .xp-role { font-size:20px; }
+  .experience .xp-umd-course .xp-org { font-size:13px; margin-bottom:6px; }
+  .experience :is(.xp-umd-tags,.xp-umd-chips) { gap:5px 4px; }
+  .experience :is(.xp-umd-tags,.xp-umd-chips) li { padding:4px 8px; font-size:12px; box-shadow:0 2px 0 var(--ink); }
+  .experience .xp-umd-edge { width:64px; right:14px; }
+  .experience .xp-umd-course .xp-when { margin-bottom:6px; }
+  .experience .xp-umd-chips li { padding:3px 8px; line-height:1.15; }
+  /* The cartoon Maryland does not fit cleanly beside the pills at this width (it pushed them to a
+     third row and the stop past the screen's foot), so on a phone the terrapin stands alone. */
+  .experience .xp-umd-state { display:none; }
+}
