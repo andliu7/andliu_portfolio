@@ -7,24 +7,29 @@ import { useReducedMotion } from '@/components/site/use-reduced-motion';
 
 // The phone columns (phones.tsx). One scroll progress for the whole gallery, 0 when its top
 // enters at the bottom of the screen and 1 when its bottom leaves at the top, mapped to two
-// vertical shifts: on the six-across row the two site pages rise and the four game screens
-// sink, so neighbours slide past each other (Andrew 2026-10-20, the landonorris.com style
-// opposing columns).
+// vertical shifts: on the three-column grid (two rows of three, Andrew 2026-10-21) the left
+// and right columns rise and the centre column sinks, so the centre slides past both sides
+// (Andrew 2026-10-20, the landonorris.com style opposing columns).
 //   - One list, one item per phone, in reading order. phones.css picks which items rise or sink
-//     and on which screens they move at all (only six across), so the breakpoints live in one
-//     place (the CSS).
+//     and on which screens they move at all (only on three columns), so the breakpoints live in
+//     one place (the CSS).
 //   - This file only publishes the two shifts as CSS variables (--rise, --sink) on the list.
 //     Each item reads one in `translate`, a percentage of its own height: transform only, no
-//     layout reads per frame. Mirrored items read the same variable, so the row stays
-//     symmetric (Andrew 2026-10-20: "make sure it's symmetric").
+//     layout reads per frame. The left and right columns read the same variable, so they move
+//     identically and the grid stays symmetric (Andrew 2026-10-21: "I thought I chose the one
+//     that said it would be symmetric").
 //   - No cutoff (Andrew 2026-10-20: "there is no cuttoff"): nothing clips the list, so the
-//     travel is sized to stay inside the section's own bands instead: the sinking phones start
-//     raised by at most SINK_FROM, under the head's gap, and end sunk SINK_TO, which the list's
-//     bottom pad in phones.css holds (keep the two in step).
-//   - The sinking phones travel further than the rising ones (Andrew 2026-10-20: "the middle
-//     should move down faster"). The travel is small because the section is short (Andrew
-//     2026-10-20: "it should be rather quick"), and the run is the gallery's own height, so the
-//     shear starts with the first pixels of scroll.
+//     travel is sized to stay inside the section's own bands instead: the centre column ends
+//     sunk SINK_TO, which the list's bottom pad in phones.css holds (keep the two in step).
+//   - The centre always sits lower than the sides, by more as the page scrolls (Andrew
+//     2026-10-21: "stagger them a little bit more"). The old run (sides 4 to -6, centre -4 to
+//     12) crossed level about a third of the way in, so the stagger vanished there; starting
+//     the centre below the sides keeps it readable at every scroll position. Measured at
+//     1440x900, centre minus sides at start/middle/end: -37/43/102px before (the centre still
+//     higher at the start), 46/117/170 after.
+//   - The centre column travels further than the sides (Andrew 2026-10-20: "the middle should
+//     move down faster"). The run is the gallery's own height, so the shear starts with the
+//     first pixels of scroll.
 //   - Lenis eases the real window scroll (app/motion.tsx), so window-based useScroll follows the
 //     smoothed position with no extra wiring: no `container`, no second rAF loop.
 //   - Reduced motion (and no JavaScript): the variables stop moving (or never arrive), and
@@ -35,14 +40,13 @@ import { useReducedMotion } from '@/components/site/use-reduced-motion';
 // React. A MotionValue on a `--name` key is set as a CSS custom property.
 
 // Percent of one phone's height, positive is down.
-const RISE_FROM = 4, RISE_TO = -6; // the two site pages: 10 in all
-const SINK_FROM = -4, SINK_TO = 10; // the four game screens: 14 in all
+const RISE_FROM = 3, RISE_TO = -5; // the left and right columns: 8 in all
+const SINK_FROM = 5, SINK_TO = 20; // the centre column (the two site pages): 15 in all
 
-// Flat sticker fills for the phone bodies (phones.css [data-fill]), by distance from the
-// centre of the six, so the halves of the row match: apricot at the ends, then sky, then
-// berry-soft in the middle.
-const FILLS = ['apricot', 'sky', 'berry-soft'] as const;
-const fillAt = (n: number, count: number) => FILLS[Math.min(n, count - 1 - n) % FILLS.length];
+// Flat sticker fills for the phone bodies (phones.css [data-fill]), mirrored across the centre
+// column so each row's halves match: sky down the centre (the site pages), apricot on the
+// sides of the first row, berry-soft on the sides of the second.
+const fillAt = (n: number) => (n % 3 === 1 ? 'sky' : Math.floor(n / 3) % 2 ? 'berry-soft' : 'apricot');
 
 export function PhoneColumns({ shots, label }: { shots: readonly PhoneShot[]; label: string }) {
   const ref = useRef<HTMLUListElement>(null);
@@ -63,7 +67,7 @@ export function PhoneColumns({ shots, label }: { shots: readonly PhoneShot[]; la
                 action words the bubble shows, then the screenshot's description. */}
             <a
               className="ph-phone"
-              data-fill={fillAt(n, shots.length)}
+              data-fill={fillAt(n)}
               href={HOVER.phones[shot.title].href}
               target="_blank"
               rel="noreferrer"

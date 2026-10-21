@@ -1,158 +1,147 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
+import { motion, useMotionValue, useSpring } from 'motion/react';
+import { useFinePointer } from '@/components/site/use-fine-pointer';
+import { useReducedMotion } from '@/components/site/use-reduced-motion';
 
-// The hero's fit (hero.tsx, hero.css). CSS alone cannot size the name to the band: the display
-// face's letters are not one width, so "chars times a factor" either overflows or leaves a gap.
-// After the web fonts have loaded (document.fonts.ready), this measures the name at its current
-// size and sets --fs-js on the stage so that:
-//   1. the name, one line, fills the glass card's inner width exactly, and
-//   2. on a stage 640px or wider, the band and the room under it for the bar on the
-//      seam still fit the first screen (the name and the room for its objects shrink first; a phone
-//      scrolls, so there the width alone decides).
-// The four objects around the name are placed in units of --fs by CSS, so they follow the fit.
-// Until this runs (and with JavaScript off) hero.css has a conservative CSS size; nothing is
-// hidden waiting for it.
+// The hero's client pieces (hero.tsx HeroPanel; Andrew 2026-10-21 picked the photo layout on
+// /draft). /draft shows a second panel (icons D, kept in case he changes his mind), so HeroFx
+// does its jobs for every .hp-panel on the page: it fits the name, and it runs the one roll and
+// the LIU to 刘 flip with hero.css's own attributes (data-roll, data-zh).
 //
 // It renders nothing: a client component used only for its effect (useEffect runs in the
 // browser after the server HTML is on screen).
 
-export function HeroFit() {
-  useEffect(() => {
-    const hero = document.getElementById('top');
-    const stage = hero?.querySelector<HTMLElement>('.hero-stage');
-    const wrap = hero?.querySelector<HTMLElement>('.hero-namewrap');
-    const foot = hero?.querySelector<HTMLElement>('.hero-foot');
-    const band = hero?.querySelector<HTMLElement>('.hero-band');
-    const name = hero?.querySelector<HTMLElement>('.hero-name');
-    if (!hero || !stage || !band || !wrap || !foot || !name) return;
+const ROLL_AFTER = 4500; // the one roll, 4.5s after the panel is first seen
 
-    const fit = () => {
-      const current = parseFloat(getComputedStyle(name).fontSize);
-      // The name's natural width at the current size, wherever its column would wrap it
+// The fit: the name fills the card's inside on one line (a stage 760px and wider), or ANDREW
+// fills it on a phone, where LIU drops to a second line (hero-photo.css). It runs again once
+// the web fonts are in, and on resize.
+function fitAll() {
+  document.querySelectorAll<HTMLElement>('.hp-panel').forEach(panel => {
+    const stage = panel.querySelector<HTMLElement>('.hp-stage');
+    const wrap = panel.querySelector<HTMLElement>('.hero-namewrap');
+    const name = panel.querySelector<HTMLElement>('.hp-name');
+    const back = panel.querySelector<HTMLElement>('.hp-back');
+    if (!stage || !wrap || !name || !back) return;
+    const current = parseFloat(getComputedStyle(name).fontSize);
+    const wide = stage.clientWidth >= 760;
+    let natural: number;
+    if (wide) {
       name.style.width = 'max-content';
-      const natural = name.getBoundingClientRect().width;
+      natural = name.getBoundingClientRect().width;
       name.style.width = '';
-      if (!current || !natural) return;
-      // the name's column is the glass card's inside (hero.css .hero-card), the namewrap's width
-      let size = (current * wrap.clientWidth) / natural;
-      if (stage.clientWidth >= 640) {
-        // The name's wrapper (the letters plus the room above them for the objects) and the foot
-        // under it (its wide-stage min-height is in units of --fs) scale with the size; everything
-        // else in the hero stays put, so solve for their height. The foot counts as scaling whole,
-        // which errs small (its -40px, or the button's own height when that is taller), never over the fold.
-        // The bar (.hero-strip) hangs on the seam, out of the flow; the hero's bottom
-        // padding is the room it takes above it (hero.css), so it is what comes after the band.
-        // Layout boxes (offsetTop/offsetHeight) ignore transforms, so the entrance's rise and the
-        // bar's centring do not skew this. The hero is a screen less 27px (half the bar) tall.
-        const wrapHeight = wrap.offsetHeight + foot.offsetHeight;
-        const heroTop = hero.getBoundingClientRect().top + window.scrollY;
-        const below = parseFloat(getComputedStyle(hero).paddingBottom);
-        // band.offsetTop less its own top margin: a centred band's auto margin is free space too
-        const bandTop = band.offsetTop - parseFloat(getComputedStyle(band).marginTop);
-        const rest = heroTop + bandTop + band.offsetHeight + below - wrapHeight;
-        const room = window.innerHeight - 27 - rest;
-        if (room > 0) size = Math.min(size, (current * room) / wrapHeight);
-      }
-      stage.style.setProperty('--fs-js', `${Math.max(40, Math.floor(size * 0.995))}px`);
-      hero.setAttribute('data-fit', '');
-    };
-
-    let alive = true;
-    document.fonts.ready.then(() => { if (alive) fit(); });
-    // Refit when the stage changes width (window resize, chat dock) or the window changes height.
-    // For the stage, only a change of width refits (the fit itself changes the height), and never inside the
-    // observer's own callback: the next frame, so the browser does not report a resize loop.
-    let lastWidth = 0;
-    let pending = 0;
-    const observer = new ResizeObserver(entries => {
-      const width = Math.round(entries[0].contentRect.width);
-      if (width === lastWidth) return;
-      lastWidth = width;
-      cancelAnimationFrame(pending);
-      pending = requestAnimationFrame(fit);
+    } else {
+      natural = back.getBoundingClientRect().width;
+    }
+    if (!current || !natural) return;
+    // Wide: 86% of the card (80% until Andrew 2026-10-21 asked for it slightly larger), so the
+    // objects still have room round the name (icons D sit at its corners)
+    const size = (current * wrap.clientWidth * (wide ? 0.86 : 1)) / natural;
+    stage.style.setProperty('--fs-js', `${Math.max(40, Math.floor(size * 0.98))}px`);
+    // Where ANDREW now starts inside the card, so "Hi, my name is" lines up with it whichever
+    // limit (the width or the screen's height) sized the name (hero-photo.css .hp-hi). Read on the
+    // next frame, after the new size has laid out.
+    const card = panel.querySelector<HTMLElement>('.hero-card');
+    if (card) requestAnimationFrame(() => {
+      stage.style.setProperty('--hp-name-left', `${Math.round(back.getBoundingClientRect().left - card.getBoundingClientRect().left)}px`);
     });
-    observer.observe(stage);
-    const onResize = () => { cancelAnimationFrame(pending); pending = requestAnimationFrame(fit); };
-    window.addEventListener('resize', onResize);
+  });
+}
+
+export function HeroFx() {
+  useEffect(() => {
+    const d = document.documentElement;
+    let alive = true;
+    let pending = 0;
+    const refit = () => {
+      document.fonts.ready.then(() => {
+        if (!alive) return;
+        cancelAnimationFrame(pending);
+        pending = requestAnimationFrame(fitAll);
+      });
+    };
+    refit();
+    window.addEventListener('resize', refit);
+
+    // The roll: once per name, 4.5s after it first comes on screen once the loader has lifted
+    const timers: number[] = [];
+    const seen = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        seen.unobserve(entry.target);
+        const name = entry.target.querySelector<HTMLElement>('.hp-name');
+        const wait = () => {
+          if (!d.classList.contains('is-loaded')) { timers.push(window.setTimeout(wait, 500)); return; }
+          timers.push(window.setTimeout(() => {
+            if (d.getAttribute('data-motion') !== 'reduced') name?.setAttribute('data-roll', '');
+          }, ROLL_AFTER));
+        };
+        wait();
+      });
+    }, { threshold: 0.4 });
+    const panels = document.querySelectorAll<HTMLElement>('.hp-panel');
+    panels.forEach(panel => seen.observe(panel));
+
+    // LIU to 刘 under the pointer, or for 1.6s after a tap
+    const offs: (() => void)[] = [];
+    panels.forEach(panel => {
+      const name = panel.querySelector<HTMLElement>('.hp-name');
+      const liu = panel.querySelector<HTMLElement>('.hero-liu');
+      if (!name || !liu) return;
+      let back = 0;
+      const enter = (e: PointerEvent) => { if (e.pointerType !== 'touch') name.setAttribute('data-zh', ''); };
+      const leave = (e: PointerEvent) => { if (e.pointerType !== 'touch') name.removeAttribute('data-zh'); };
+      const tap = (e: PointerEvent) => {
+        if (e.pointerType !== 'touch') return;
+        name.setAttribute('data-zh', '');
+        window.clearTimeout(back);
+        back = window.setTimeout(() => name.removeAttribute('data-zh'), 1600);
+      };
+      liu.addEventListener('pointerenter', enter);
+      liu.addEventListener('pointerleave', leave);
+      liu.addEventListener('pointerdown', tap);
+      offs.push(() => {
+        liu.removeEventListener('pointerenter', enter);
+        liu.removeEventListener('pointerleave', leave);
+        liu.removeEventListener('pointerdown', tap);
+        window.clearTimeout(back);
+      });
+    });
+
     return () => {
       alive = false;
-      observer.disconnect(); cancelAnimationFrame(pending);
-      window.removeEventListener('resize', onResize);
+      cancelAnimationFrame(pending);
+      window.removeEventListener('resize', refit);
+      seen.disconnect();
+      timers.forEach(t => window.clearTimeout(t));
+      offs.forEach(off => off());
     };
   }, []);
   return null;
 }
 
-// The name's one roll (hero.css, .hero-name[data-roll]). About 4.5 seconds after the loader
-// lifts (html.is-loaded), while the hero is on screen and the tab visible, it sets data-roll on the h1 once and
-// leaves it: the letters roll over to their second face and stay there (Andrew 2026-10-07: "delay
-// it more just one flip and keep it there"). Under reduced motion it never rolls. Like HeroFit it
-// renders nothing and works on the server HTML's h1.
-// It also runs LIU's flip to his Chinese surname (hero.css .hero-liu): data-zh on the h1 while the
-// pointer is over LIU itself, or for 1.6s after a tap on it. That is separate from the roll, and
-// works before or after it.
-const ROLL_AFTER = 4500;
-
-export function NameRoll() {
+// The drift (Andrew 2026-10-21 kept it in his pick): a layer that drifts a few px with the
+// pointer anywhere on the page. depth is the most it moves, in px at the screen's edge; a negative depth moves against the pointer, so
+// the layers part like depth. Mouse or trackpad only, and still under reduced motion.
+// Pattern: useMotionValue holds the target outside React state (no re-render per mousemove);
+// useSpring follows it with a spring, and motion.span reads the spring straight into transform.
+export function Follow({ depth, className, children }: { depth: number; className: string; children: ReactNode }) {
+  const fine = useFinePointer();
+  const reduced = useReducedMotion();
+  const tx = useMotionValue(0);
+  const ty = useMotionValue(0);
+  const x = useSpring(tx, { stiffness: 120, damping: 20, mass: 0.6 });
+  const y = useSpring(ty, { stiffness: 120, damping: 20, mass: 0.6 });
+  const on = fine && !reduced;
   useEffect(() => {
-    const d = document.documentElement;
-    const name = document.getElementById('hero-title');
-    const hero = document.getElementById('top');
-    if (!name || !hero) return;
-
-    const liu = name.querySelector<HTMLElement>('.hero-liu');
-    // when the loader lifted; -1 until it has
-    let started = d.classList.contains('is-loaded') ? performance.now() : -1;
-    let onScreen = true;
-    let tapBack = 0;
-    let timer = 0;
-    // (Re)arm the one timer for whatever is left of the 4.5s, only while the name can be seen
-    const arm = () => {
-      window.clearTimeout(timer);
-      if (name.hasAttribute('data-roll') || d.getAttribute('data-motion') === 'reduced') return;
-      if (started < 0 || !onScreen || document.visibilityState !== 'visible') return;
-      timer = window.setTimeout(() => {
-        if (d.getAttribute('data-motion') === 'reduced') return;
-        name.setAttribute('data-roll', '');
-        observer.disconnect();
-        document.removeEventListener('visibilitychange', arm);
-      }, Math.max(0, ROLL_AFTER - (performance.now() - started)));
+    if (!on) { tx.set(0); ty.set(0); return; }
+    const move = (e: PointerEvent) => {
+      tx.set(((e.clientX / window.innerWidth) * 2 - 1) * depth);
+      ty.set(((e.clientY / window.innerHeight) * 2 - 1) * depth * 0.6);
     };
-    const observer = new IntersectionObserver(([entry]) => { onScreen = entry.isIntersecting; arm(); });
-    observer.observe(hero);
-    // Not loaded yet: watch <html>'s class list until is-loaded lands, then start the clock
-    const loaded = new MutationObserver(() => {
-      if (!d.classList.contains('is-loaded')) return;
-      loaded.disconnect();
-      started = performance.now();
-      arm();
-    });
-    if (started < 0) loaded.observe(d, { attributes: true, attributeFilter: ['class'] });
-    document.addEventListener('visibilitychange', arm);
-    const zhOn = () => name.setAttribute('data-zh', '');
-    const zhOff = () => name.removeAttribute('data-zh');
-    const onEnter = (e: PointerEvent) => { if (e.pointerType !== 'touch') zhOn(); };
-    const onLeave = (e: PointerEvent) => { if (e.pointerType !== 'touch') zhOff(); };
-    const onTap = (e: PointerEvent) => {
-      if (e.pointerType !== 'touch') return;
-      zhOn();
-      window.clearTimeout(tapBack);
-      tapBack = window.setTimeout(zhOff, 1600);
-    };
-    liu?.addEventListener('pointerenter', onEnter);
-    liu?.addEventListener('pointerleave', onLeave);
-    liu?.addEventListener('pointerdown', onTap);
-    return () => {
-      liu?.removeEventListener('pointerenter', onEnter);
-      liu?.removeEventListener('pointerleave', onLeave);
-      liu?.removeEventListener('pointerdown', onTap);
-      window.clearTimeout(tapBack);
-      name.removeAttribute('data-zh');
-      observer.disconnect(); loaded.disconnect();
-      document.removeEventListener('visibilitychange', arm);
-      window.clearTimeout(timer);
-      name.removeAttribute('data-roll');
-    };
-  }, []);
-  return null;
+    window.addEventListener('pointermove', move, { passive: true });
+    return () => window.removeEventListener('pointermove', move);
+  }, [on, depth, tx, ty]);
+  return <motion.span className={className} style={{ x, y }}>{children}</motion.span>;
 }

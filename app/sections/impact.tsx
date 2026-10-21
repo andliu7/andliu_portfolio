@@ -99,7 +99,7 @@ export default function Impact() {
         <FlipHeading id="impact-title" text={IMPACT_HEAD.headline} max={150} />
       </header>
       {ticker.length > 0 && (
-        <Marquee className="impact-ticker" duration={48} label={said}>
+        <Marquee className="impact-ticker" duration={80} label={said}>
           {ticker.map(g => (
             <span className="impact-tick-group" key={g.id}>
               <span className="impact-tick-p">{g.title}</span>

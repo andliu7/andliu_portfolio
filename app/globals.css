@@ -304,13 +304,20 @@ section[data-texture] { isolation:isolate; }
    (.ft-mark-host, footer.tsx) dances the same way. Reduced motion: none. */
 /* The left group: the mark, then the degree chip (components/site/chip-marquee.tsx), which takes
    whatever room is left before the centre and scrolls when its one line does not fit. An outlined
-   pill with no lip: it is not pressable. Ink on --card is 17:1. Phones show it in the hero. */
+   pill with no lip: it is not pressable. Ink on --card is 17:1. Phones show it only in the hero
+   (the bar has no room for it there). */
 .site-header > .hdr-left { justify-self:stretch; display:flex; align-items:center; gap:10px; min-width:0; pointer-events:none; }
 .hdr-left > * { pointer-events:auto; }
 .hdr-chip { display:flex; align-items:center; flex:0 1 auto; min-width:0; height:40px; padding:0 14px; margin-right:8px; border:var(--bw) solid var(--ink); border-radius:var(--r-pill); background:var(--card); color:var(--ink);
   font:600 13px/1 var(--mono); letter-spacing:.06em; text-transform:uppercase; font-variant-ligatures:none; }
 .hdr-chip .chipm { flex:1 1 auto; }
 @media (max-width:719px) { .hdr-chip { display:none; } }
+/* On the home page the chip waits until the hero's own degree line has scrolled up under the
+   header, then fades and rises in (header.tsx sets data-docked; Andrew 2026-10-21: it "goes to the
+   top sticky header when I scroll past it"). Scrolling back up hands it back to the hero. */
+.site-header[data-dock] .hdr-chip { opacity:0; visibility:hidden; translate:0 10px; transition:opacity var(--dur-ui) var(--ease-ui),translate var(--dur-roll) var(--ease-elastic),visibility 0s linear var(--dur-ui); }
+.site-header[data-dock][data-docked] .hdr-chip { opacity:1; visibility:visible; translate:0 0; transition-delay:0s; }
+html[data-motion="reduced"] .site-header[data-dock] .hdr-chip { translate:none; transition:opacity var(--dur-ui) linear,visibility 0s linear var(--dur-ui); }
 :is(.site-header .wordmark-host,.ft-mark-host) { flex:none; display:grid; transform-origin:50% 100%; }
 @media (hover:hover) and (pointer:fine) { :is(.site-header .wordmark-host,.ft-mark-host):hover { animation:mark-dance 640ms var(--ease-ui) both; } }
 :is(.site-header .wordmark-host,.ft-mark-host):has(:focus-visible,[data-flipped]) { animation:mark-dance 640ms var(--ease-ui) both; }

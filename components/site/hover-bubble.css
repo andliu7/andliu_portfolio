@@ -20,7 +20,6 @@
 .hb-icon > svg { grid-area: 1 / 1; display: none; }
 .hover-bubble[data-icon="open"] .hb-icon > [data-i="open"],
 .hover-bubble[data-icon="flip"] .hb-icon > [data-i="flip"],
-.hover-bubble[data-icon="turn"] .hb-icon > [data-i="turn"],
 .hover-bubble[data-icon="enlarge"] .hb-icon > [data-i="enlarge"] { display: block; }
 
 /* Reduced motion: no scale-in, a quick fade in place (the trail is already off in the TSX). */

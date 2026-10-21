@@ -91,6 +91,11 @@ export const HERO = {
   // His surname in Chinese, the face LIU flips to under the pointer (Andrew 2026-10-06). Simplified;
   // swap for the traditional '劉' here if he prefers (the hero's font link loads both).
   lastZh: '刘', // [Andrew 2026-10-06 via lead]
+  // The photo hero's words (Andrew 2026-10-21: "Hi, my name is Andrew Liu," with the software
+  // engineer part bigger), picked on /draft
+  hi: 'Hi, my name is', // [Andrew 2026-10-21] (needs sign-off)
+  comma: ',', // [Andrew 2026-10-21] "Andrew Liu," keeps its comma (needs sign-off)
+  role: 'SOFTWARE ENGINEER', // [Andrew 2026-10-21] (needs sign-off)
   // The four cartoon objects around the name, each a link to its project (labels are PROJECTS titles)
   objects: {
     pencil: { label: 'Focus Family Guide', href: '#work-guide' }, // [P] PROJECTS guide
@@ -174,11 +179,11 @@ export const BB_FACTS: readonly { id: string; value?: number; label: string }[] 
   { id: 'deckCards', label: 'cards in his first deck' }, // [B] value = lib/bb-deck.json count
 ] as const;
 
-// 4.4 The screens. Four from the app hang as prints on a string beside FOR REAL! (Andrew,
-// 2026-10-07: "i wanted to keep it four because for is a pun in that case ... the main part would
-// be the app and the side view is the website images. also yeah include the animations of the
-// arrow pushing"). The small carousel under it shows the website around the app (BB_SITE). Both
-// are in components/ui/polaroid-line-carousel.tsx.
+// 4.4 The screens. Four from the app hang as prints on a string (Andrew, 2026-10-07: "i wanted to
+// keep it four ... the main part would be the app ... also yeah include the animations of the
+// arrow pushing"), in components/ui/polaroid-line-carousel.tsx. Since 2026-10-21 the line stands
+// alone: FOR REAL! and the small website carousel beside it were removed (Andrew: "it just feels
+// cluttery and distracting from the other projects").
 // `route` is the literal route each capture was taken on; `title` is the feature's own name in
 // the app; `caption` restates what the capture shows (its IMAGES alt), nothing more.
 export const BB_SCREENS = [
@@ -188,22 +193,11 @@ export const BB_SCREENS = [
   { image: 'bbPathway', title: 'Pathway', caption: 'Organic Chemistry II, Unit 1, as a column of lesson nodes.', route: '#/app/pathway', href: `${BB_LIVE}#/app/pathway` }, // [S]
 ] as const;
 
-// 4.4 The website around the app, in the small carousel. Captured from the live site 2026-10-07;
-// each caption says what its page shows. Home, Review and Learn re-shot 2026-10-20 from the
-// phone captures (PHONES below): the site's headline and page names had changed since.
-export const BB_SITE = [
-  { image: 'bbSiteHome', title: 'Home', caption: 'The class everyone warns you about, one arrow at a time: a practice card, then the first lesson.' }, // [Andrew 2026-10-20] [S] live site home h1 and CTA (needs sign-off)
-  { image: 'bbSiteDecks', title: 'Review', caption: 'What is due today, then every deck, with the ones you miss coming back.' }, // [Andrew 2026-10-20] [S] live #/study-decks, now titled Review (needs sign-off)
-  { image: 'bbSiteLessons', title: 'Learn', caption: 'The unit track, with Dienes and Diels-Alder up next.' }, // [Andrew 2026-10-20] [S] live #/learn, where #/lessons now redirects (needs sign-off)
-  { image: 'bbTetris', title: 'Break: Tetris', caption: 'The focus timer offers Tetris on a break. Four rows stacked, an I piece over the well.' }, // [S] components/ui/break-room.tsx, tetris.tsx; played with scripted keys 2026-10-07 (needs sign-off)
-] as const;
-
 // The carousel's own labels (screen readers and the arrow buttons).
 export const BB_CAROUSEL = {
   label: 'Blueberry screens', // [UI] (needs sign-off)
   prev: 'Previous screen', // [UI] (needs sign-off)
   next: 'Next screen', // [UI] (needs sign-off)
-  more: 'Blueberry website screens', // [UI] the small carousel's region label (needs sign-off)
 } as const;
 
 // 4.4 The engineering claims, one sentence each, and the stack as tags.
@@ -221,9 +215,6 @@ export const BB_ENGINEERING = {
 // 2026-10-06). This headline tells the story's arc; the product slogan's own section was removed.
 export const BB_HEAD = {
   headline: 'FROM FLASHCARDS\nTO A *platform.*', // [P] BLUEBERRY_CHAPTER.story, "What began as flashcards ... learning platform"
-  screens: 'Four real screens', // [plan 4.4] the four app screens on the line; "four" is Andrew's pun on FOR REAL! (2026-10-07) (needs sign-off)
-  site: 'And the website', // [UI] label over the small carousel of BB_SITE (needs sign-off)
-  forReal: 'FOR\nREAL!', // [UI] Andrew 2026-10-07: "make a for real exclamation on the side" (needs sign-off)
   stack: 'The stack', // [UI] label over BB_ENGINEERING.stack (needs sign-off)
 } as const;
 
@@ -245,7 +236,10 @@ export const PHONES = {
   headline: 'IN YOUR\n*pocket.*', // [Andrew 2026-10-20] (needs sign-off)
   line: 'Six screens from the live site and the game, captured at phone size: the periodic table, the reaction search, the calendar, the units, the pathway and a lesson.', // [Andrew 2026-10-20] [S] the captures below (needs sign-off)
   link: 'Open it on your phone', // [Andrew 2026-10-20] (needs sign-off)
-  href: BB_LIVE, // [P]
+  // Blueberry's hidden #/phone page: the real game in a phone frame, with the app stores as
+  // plain "coming soon" text. Nothing on Blueberry links to it (Andrew 2026-10-21; built in
+  // grignard-app-source 88387f1, live once that repo's next push to main lands).
+  href: `${BB_LIVE}#/phone`, // [Andrew 2026-10-21]
   label: 'Blueberry screens on a phone', // [Andrew 2026-10-20] the gallery's accessible name (needs sign-off)
   shots: [
     PHONE_SHOT('game-periodic', 'Game', 'Periodic table', "Blueberry's periodic table on a phone: colour-coded elements by category with carbon selected, showing atomic number 6, mass 12.011 and its electron configuration"), // [S] live game tool (needs sign-off)
@@ -262,9 +256,8 @@ export type PhoneShot = (typeof PHONES.shots)[number];
 // a picture (Andrew 2026-10-20: "over images I want there to be a circle that appears beside the
 // mouse ... say a few words about the image but focus on what the user can DO with it"). Each
 // `text` is an action, two to five words, and it must stay true: a click on that picture does
-// exactly this. `icon` picks the bubble's small glyph: open (a link), flip, turn (bring a fan
-// card round), enlarge (a full-size view). `href` is where a phone screen's click goes.
-export type HoverIcon = 'open' | 'flip' | 'turn' | 'enlarge';
+// exactly this. `icon` picks the bubble's small glyph: open (a link), flip, enlarge (a full-size view). `href` is where a phone screen's click goes.
+export type HoverIcon = 'open' | 'flip' | 'enlarge';
 export const HOVER = {
   // #phones: each phone opens its own screen on the live site, at the route it was captured on
   // (scripts/capture-blueberry-phone.mjs SHOTS). Keyed by the shot's title.
@@ -276,16 +269,6 @@ export const HOVER = {
     Schedule: { text: 'Check the exam calendar', icon: 'open', href: `${BB_LIVE}#/schedule` }, // [Andrew 2026-10-20] (needs sign-off)
     Lesson: { text: 'Play this lesson', icon: 'open', href: `${BB_LIVE}#/app/lesson/u1-kvt` }, // [Andrew 2026-10-20] (needs sign-off)
   } as Record<string, { text: string; icon: HoverIcon; href: string }>,
-  // The project fan's centre card opens the project's first link (live, else source); a side
-  // card comes round to the centre. The pipeline (studio) has no link, so no bubble.
-  fan: {
-    blueberry: 'Open Blueberry live', // [Andrew 2026-10-20] (needs sign-off)
-    flashcards: 'Study the decks', // [Andrew 2026-10-20] (needs sign-off)
-    brain: 'Read the code', // [Andrew 2026-10-20] source only (needs sign-off)
-    trainer: 'Push some electrons', // [Andrew 2026-10-20] (needs sign-off)
-    guide: 'Read the guide', // [Andrew 2026-10-20] (needs sign-off)
-  } as Record<string, string>,
-  fanTurn: 'Bring this one round', // [Andrew 2026-10-20] (needs sign-off)
   deskFlip: 'Flip for the details', // [Andrew 2026-10-20] the Desk view's picture side (needs sign-off)
   resume: 'Read it full size', // [Andrew 2026-10-20] the résumé page card, which opens the PDF (needs sign-off)
 } as const;
@@ -891,11 +874,20 @@ export const GROUND_LUMINANCE: Record<Ground, number> = {
 export const SECTIONS = [
   { id: 'top', ground: 'paper', gradient: 'paper-apricot', label: null, budget: 1.0, kind: 'cap', project: false, pinned: false, texture: true },
   { id: 'contents', ground: 'berry-deep', gradient: null, label: null, budget: 1.0, kind: 'cap', project: false, pinned: false, texture: true },
-  { id: 'blueberry', ground: 'berry', gradient: 'berry-deep', label: 'Blueberry', budget: 3.6, kind: 'floor', project: true, pinned: true, texture: true },
+  // Budget measured 2026-10-21 at 1440x900: 1,561px (the head, the line of prints alone on its
+  // band, the stack strip), down from 1,732px with FOR REAL! and the website carousel; 1,355px at
+  // 375x812, down from 1,968px; 1,370px at 1366x768 (1.78), down from 1,529 (1.99, over the cap)
+  // once the line and the chapter's air shrink on short screens (blueberry.css, "Short laptop
+  // screens"). A cap now: the old 3.6 floor was scroll length for a pinned phone
+  // stage that is long gone, and blueberry.css had to switch it off.
+  // [Andrew 2026-10-21] "I want to make it smaller so it's easier to scroll through"
+  { id: 'blueberry', ground: 'berry', gradient: 'berry-deep', label: 'Blueberry', budget: 1.8, kind: 'cap', project: true, pinned: true, texture: true },
   // Blueberry on a phone (app/sections/phones.tsx), the chapter's screens at phone size [Andrew 2026-10-20].
-  // Budget measured 2026-10-20 at 1440x900: about 2,750px (six phones in three columns of two,
-  // each as tall as the screen allows, plus the centre column's sink room).
-  { id: 'phones', ground: 'berry-deep', gradient: null, label: 'Blueberry', budget: 3.1, kind: 'cap', project: true, pinned: false, texture: true },
+  // Budget measured 2026-10-21 at 1440x900: 2,664px (six phones in two rows of three columns,
+  // 398px wide, each as tall as the screen allows, plus the centre column's sink room, 20% of a
+  // phone since the stagger grew; it was 2,594 at 12%).
+  // [Andrew 2026-10-21] "the phones should have at least two rows (three columns)" (needs sign-off)
+  { id: 'phones', ground: 'berry-deep', gradient: null, label: 'Blueberry', budget: 3.0, kind: 'cap', project: true, pinned: false, texture: true },
   { id: 'work', ground: 'berry-deep', gradient: null, label: 'Projects', budget: 4.2, kind: 'floor', project: true, pinned: false, texture: true },
   { id: 'impact', ground: 'berry-deep', gradient: null, label: 'Impact', budget: 1.3, kind: 'cap', project: true, pinned: false, texture: true },
   { id: 'experience', ground: 'berry-deep', gradient: null, label: 'Experience', budget: 1.0, kind: 'cap', project: false, pinned: false, texture: true },
@@ -974,17 +966,9 @@ export const IMAGES = {
   // of the trainer's seq-aldol solved arrow by arrow at 800x600, cropped 4:3 to the step text and
   // canvas; its still is step 2 with all three arrows drawn, before Check.
   bbAldol: { src: '/images/work/bb-aldol.webp', w: 1200, h: 900, sm: '/images/work/bb-aldol-800.webp', smW: 800, video: '/media/work/bb-aldol.webm', alt: "Blueberry's trainer solving the aldol addition in two steps: hydroxide takes an alpha hydrogen from acetone to make the enolate, then the enolate's carbon attacks formaldehyde, each step drawn as three curved arrows", owner: 'capture', sections: ['blueberry'] },
-  // The website, captured 2026-10-07 at 2x from the live site (1200x900 viewport), each cropped
-  // 4:3 to its heading. bbTetris is the focus timer's break game, played with scripted keys on a
-  // seeded piece order (scratchpad r2/tetris.mjs): four flat rows, the well open, an I over it.
-  // Home, Review and Learn were swapped 2026-10-20 [Andrew 2026-10-20: "updated pictures of
-  // blueberry"] for the phone captures (PHONES): the 10-07 desktop shots showed a headline and
-  // page names the live site no longer has. The print is 4:3 with object-fit cover, so it shows
-  // the middle band of each phone screen (the practice card, the due card, the unit track).
-  bbSiteHome: { src: '/work/blueberry-phone/site-home.webp', w: 780, h: 1688, alt: "Blueberry's home page on a phone: the headline The class everyone warns you about, one arrow at a time, above a practice card where cyanide adds to a ketone, marked Correct, and a Start the first lesson button", owner: 'capture', sections: ['blueberry', 'phones'] },
-  bbSiteDecks: { src: '/work/blueberry-phone/site-review.webp', w: 780, h: 1688, alt: "Blueberry's Review page on a phone: a Due today card suggesting the Epoxidation deck, a search box for every deck, and the start of the deck library", owner: 'capture', sections: ['blueberry', 'phones'] },
-  bbSiteLessons: { src: '/work/blueberry-phone/site-learn.webp', w: 780, h: 1688, alt: "Blueberry's Learn page on a phone: a banner showing butadiene and HBr giving 1-bromobut-2-ene, then Up next, Dienes and Diels-Alder, with a Start Unit 1 button", owner: 'capture', sections: ['blueberry', 'phones'] },
-  bbTetris: { src: '/images/work/bb-tetris.webp', w: 1200, h: 900, sm: '/images/work/bb-tetris-800.webp', smW: 800, alt: "Tetris in Blueberry's focus timer break: four flat rows filled in checkered orange and purple, the right column left open as a well, and a straight piece falling toward it", owner: 'capture', sections: ['blueberry'] },
+  // Blueberry's home page on a phone (PHONES capture, 2026-10-20), the Projects card's first
+  // phone (app/sections/projects.tsx).
+  bbSiteHome: { src: '/work/blueberry-phone/site-home.webp', w: 780, h: 1688, alt: "Blueberry's home page on a phone: the headline The class everyone warns you about, one arrow at a time, above a practice card where cyanide adds to a ketone, marked Correct, and a Start the first lesson button", owner: 'capture', sections: ['work', 'phones'] },
   mechanismTrainer: { src: '/images/work/mechanism-trainer.webp', w: 1600, h: 1000, sm: '/images/work/mechanism-trainer-800.webp', smW: 800, alt: 'The Mechanism Trainer', owner: 'capture', sections: ['work'] },
   // Re-captured 2026-10-07 at Andrew's request ("make the ff_tech... an animated slide with the
   // new fire animation and the marquee"): the live guide in headless SwiftShader Chrome at
@@ -1110,3 +1094,12 @@ export const A11Y = {
 } as const;
 
 export const APPROVALS = { microcopy: false, secondBrainShot: true } as const; // Andrew flips these. secondBrainShot: approved 2026-10-06 (he asked for the globe picture)
+
+// The /draft page (app/draft/page.tsx): the hero redrawn with his photo between the letters of
+// his name, then one full-screen panel per icon placement. Unlinked and noindex; not in SECTIONS.
+export const DRAFT_HERO = {
+  title: 'Hero draft, Andrew Liu', // [Andrew 2026-10-21] the tab title (needs sign-off)
+  // /draft keeps the name-corners icon placement (D) in case Andrew changes his mind (2026-10-21:
+  // "I think I like A but save D"); the live hero uses A
+  tag: 'Saved: icons on the corners of the name', // [Andrew 2026-10-21] (needs sign-off)
+} as const;

@@ -17,7 +17,7 @@
   min-height:calc(100svh - 27px);
   display:flex; flex-direction:column; justify-content:flex-start;
   padding:calc(var(--header-h) + 12px) var(--gutter) 60px;
-  position:relative; /* the offset parent HeroFit measures against, and the bar hangs from */
+  position:relative; /* the offset parent the name's fit measures against, and the bar hangs from */
   z-index:2; /* above the UMD section, so the bar's lower half lies over the flag */
   isolation:isolate; /* the sky's z-index 0 stays inside the hero */
   color:var(--ink);
@@ -80,7 +80,7 @@
 .hero .hero-nl { display:inline; white-space:nowrap; }
 .hero .hero-nl-kw { color:var(--kw); }
 .hero .hero-c { display:inline-block; }
-/* The roll (Slush's wordmark slot roll; NameRoll in hero.client.tsx sets data-roll on the h1).
+/* The roll (Slush's wordmark slot roll; HeroFx in hero.client.tsx sets data-roll on the name).
    Each letter clips top and bottom to its own line box, which holds the caps (.07em to .76em of
    the .84 line), and hangs its second face one line below; the roll lifts both a full line on
    Slush's spring, letter by letter from the first, 50ms apart (Slush offsets its columns .05s),
@@ -94,7 +94,7 @@
 .hero .hero-name[data-roll] .hero-roll { transform:translateY(-100%); }
 html[data-motion="reduced"] .hero .hero-name .hero-roll { transition:none; transform:none; }
 /* LIU to 刘 (Andrew 2026-10-06: "make my last name turn into the chinese character if you
-   directly hover over it"). NameRoll (hero.client.tsx) sets data-zh on the h1 while the pointer is
+   directly hover over it"). HeroFx (hero.client.tsx) sets data-zh on the name while the pointer is
    on LIU (or for a moment after a tap). The word clips to its own line box; its track holds the
    three letters and, one line below, the character, which is centred across the word in Noto
    Sans SC 900 (only these glyphs are downloaded, hero.tsx ZH_FONT) at the line's height, in
@@ -107,7 +107,7 @@ html[data-motion="reduced"] .hero .hero-name .hero-roll { transition:none; trans
 .hero .hero-name[data-zh] .hero-liu-track { transform:translateY(-100%); }
 html[data-motion="reduced"] .hero .hero-liu-track { transition:none; }
 
-/* the word gap: a margin on ANDREW (not the first span, which is the sr-only name). HeroFit
+/* the word gap: a margin on ANDREW (not the first span, which is the sr-only name). HeroFx
    measures the name with it, so the fitted size includes the gap. */
 .hero .hero-nl:not(.hero-nl-kw) { margin-right:.34em; }
 

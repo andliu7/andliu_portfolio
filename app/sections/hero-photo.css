@@ -1,0 +1,201 @@
+/* The hero's photo layout (hero.tsx HeroPanel; Andrew 2026-10-21 picked it on the /draft page):
+   his black-and-white cut-out centred behind the name, drifting with the pointer, the four
+   objects orbiting him (icons A; /draft keeps D). The panel is a .hero, so hero.css still lays out
+   the sky, the chip, the objects' room, the foot, the bar and the letter roll; this file only adds
+   what the photo layout changes. Every selector starts with .hp. "hp" is "hero photo".
+
+   Colour (Andrew 2026-10-21: "ANDLIU in the darker blue color, and then the REW in a lighter
+   color"): A N D and L I U are --berry-deep, R E W a lighter blue mixed from --berry and
+   --berry-soft. Measured 2026-10-21 against the composited sky and scrim behind each letter
+   (worst sample, 1440 and 375 wide): AND and LIU 12.5:1, REW 4.1:1 (display size, AA large
+   needs 3), "Hi, my name is" 12.4:1, the role 15.7:1. Re-measured 2026-10-21 with the centred
+   photo, after the jacket fade was pulled up to sit above the caps (REW's fill, rgb(85,105,176),
+   against the pixels rendered under each letter with the letters transparent and no outline;
+   it cannot beat 5.2:1 even on white, and the earlier "REW 6.4:1" here was wrong: REW was
+   1.6:1 at the 5th percentile on his jacket and read only by its outline). Now 1440 and 1366,
+   AND and LIU 12.2:1 or more, R E W 4.05:1 minimum; 375, AND 10.0:1 minimum, LIU 12.5:1,
+   R 3.62:1 minimum (5th percentile 3.80), E 3.70:1, W 3.91:1. */
+
+.hp {
+  --hp-face:var(--font-baloo),var(--body);
+  --hp-deep:var(--berry-deep);
+  --hp-light:color-mix(in oklab,var(--berry) 80%,var(--berry-soft));
+  --hp-scrim:color-mix(in srgb,var(--card) 84%,transparent);
+}
+
+/* ---------- The panel ---------- */
+/* The scrim: a soft cream ellipse over the sky, solid enough under the type that every letter
+   passes AA, fading out so the clouds still show round the edges (Andrew: "one of those
+   gradients so that you can still see the text, but with the cloud background") */
+.hp .hp-scrim {
+  position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:radial-gradient(ellipse 72% 58% at 50% 54%,var(--hp-scrim) 0 52%,transparent 100%);
+}
+/* The option's numbered tag, top left under the header */
+.hp .hp-tag {
+  position:absolute; z-index:5; top:calc(var(--header-h) + 8px); left:var(--gutter); margin:0;
+  max-width:calc(100% - 2 * var(--gutter));
+  padding:6px 12px; border:1px solid var(--ink); border-radius:var(--r-pill); background:var(--card);
+  color:var(--ink); font:600 13px/1.3 var(--mono); letter-spacing:.02em;
+}
+/* The stage: the size container hero-objects.css asks for (named hero), and --fs, the name's
+   size, from HeroFx's fit (--fs-js), capped so the panel fits a laptop screen */
+.hp .hp-stage {
+  container:hero / inline-size; position:relative; z-index:1; display:grid; gap:clamp(10px,1.4vw,18px);
+  /* 21svh, was 19 (Andrew 2026-10-21: "scale everything up slightly on my laptop screen"): on a
+     laptop the height cap is what binds, and the hero, its objects and the photo all scale from it */
+  --fs:min(var(--fs-js, calc((100vw - 2 * var(--gutter)) / 9.5)), 21svh);
+}
+@container hero (max-width:759px) { .hp .hp-stage { --fs:var(--fs-js, calc((100vw - 2 * var(--gutter)) / 5)); } }
+.hp .hp-stage > * { --fs:inherit; }
+
+/* ---------- The words ---------- */
+.hp .hp-hi {
+  /* set on ANDREW's left edge (HeroFx measures it into --hp-name-left; before that, about where
+     the name starts), not centred: centred, it sat across his face (2026-10-21). The .06em steps
+     past the A's side bearing to its ink. As wide as its words (justify-self), so its box never
+     sits over an object's link. */
+  margin:0 0 calc(var(--fs) * -.2) calc(var(--hp-name-left, 8%) + var(--fs) * .06); justify-self:start; position:relative; z-index:3;
+  font:600 clamp(20px,calc(var(--fs) * .24),46px)/1.1 var(--hp-face); color:var(--ink);
+}
+/* The name: one line on a wide stage, ANDREW, the gap he stands in, LIU. Line height 1 holds the
+   rounded faces' caps inside each letter's clip (hero.css .hero-c). */
+.hp .hp-name {
+  display:flex; align-items:flex-start; justify-content:center; flex-wrap:nowrap;
+  font:800 var(--fs)/1 var(--hp-face); letter-spacing:-.01em; color:var(--hp-deep);
+}
+/* inline-block so the drift can move each word (a transform skips inline boxes) */
+.hp .hp-name .hero-nl { display:inline-block; position:relative; margin:0; }
+/* The letters' blues, the same on both faces of the roll. HeroFx never takes data-roll back
+   off, so the second face (.hero-fb) is what stays on screen after the roll; swapping its colours
+   left a light ANDLIU and a dark REW, the reverse of Andrew's ask. The roll itself still shows
+   as the letters sliding. */
+.hp.hero .hp-d :is(.hero-fa,.hero-fb) { color:var(--hp-deep); }
+.hp.hero .hp-l :is(.hero-fa,.hero-fb) { color:var(--hp-light); }
+.hp.hero .hero-zh { color:var(--hp-deep); }
+
+/* The photo (Andrew 2026-10-21 picked "Option 2: cut out, centred"): the cut-out, large, centred
+   on the whole name and behind every letter, his feet on the name's line and his head well above
+   it. The letters keep a cream outline (paint-order draws the stroke under the fill) so the deep
+   blue still reads where it crosses his dark jacket. His jacket fades out above the letters (the
+   mask): the caps start 61% down the cut-out, where it is down to 8%, so REW, the lighter blue,
+   sits on the cream scrim instead of his jacket (2026-10-21: with the fade starting at 50% and
+   still 45% at 66%, REW's fill measured 1.6:1 on the jacket). The gap is the word space
+   between ANDREW and LIU. */
+.hp .hp-name { position:relative; }
+.hp .hp-gap { position:static; flex:0 0 auto; width:.34em; height:1em; }
+.hp .hp-photo { position:absolute; z-index:0; left:50%; bottom:0; translate:-50% 0; display:block; height:2.4em; pointer-events:none; }
+.hp .hp-back, .hp .hp-front { z-index:3; }
+.hp .hp-name :is(.hero-fa,.hero-fb,.hp-comma) { -webkit-text-stroke:.07em var(--card); paint-order:stroke fill; }
+.hp .hp-comma { color:var(--hp-deep); }
+/* The comma hangs outside LIU (absolute, so the fit and the centring count only the letters): it
+   no longer pulls the name's centre right (Andrew 2026-10-21: "Why isn't my name centered") */
+.hp .hp-comma { position:absolute; left:100%; top:0; }
+.hp .hp-cut {
+  display:block; height:100%; width:auto; max-width:none;
+  filter:grayscale(1) contrast(1.06); /* Andrew: "I liked the black-and-white image of me better" */
+  -webkit-mask-image:linear-gradient(to bottom,black 44%,rgb(0 0 0 / .3) 54%,rgb(0 0 0 / .08) 61%,transparent 78%);
+  mask-image:linear-gradient(to bottom,black 44%,rgb(0 0 0 / .3) 54%,rgb(0 0 0 / .08) 61%,transparent 78%);
+}
+
+/* ---------- Under the name: the role, the degree line, then the résumé button ---------- */
+/* The degree chip shows here at every width (hero.css hides .hero-tag from 720px up, for the old
+   hero, where the header carried it), as wide as its words, centred (Andrew 2026-10-21: it "goes
+   between software engineer and resume CTA and then goes to the top sticky header") */
+.hp .hp-foot .hp-degree { display:flex; justify-self:center; width:fit-content; max-width:100%; }
+.hp .hp-foot { gap:clamp(10px,1.2vw,18px); }
+.hp .hp-role {
+  margin:0; text-align:center; position:relative; z-index:3;
+  font:700 clamp(22px,calc(var(--fs) * .3),64px)/1.05 var(--mono); letter-spacing:.04em; color:var(--ink);
+  font-variant-ligatures:none;
+}
+
+/* ---------- A phone: ANDREW over LIU, him behind both lines ----------
+   The gap becomes a full-width line break with no height, and the photo hangs from the name
+   itself, centred, its foot on LIU's line. 3.2em tall so his chin (38% down the cut-out) lands
+   just above ANDREW's caps: at 2.6em, D and R sat on his mouth. ANDREW's caps start 40% down,
+   so the fade runs from his chin (34%) to 12% there: his neck and collar go, and R and E, which
+   sit right under his chin, measured 2.3:1 on the collar with the fade at his shoulders. */
+@container hero (max-width:759px) {
+  .hp .hp-name { flex-wrap:wrap; }
+  .hp .hp-gap { flex-basis:100%; width:auto; height:0; }
+  .hp .hp-photo { height:3.2em; }
+  .hp .hp-cut {
+    -webkit-mask-image:linear-gradient(to bottom,black 34%,rgb(0 0 0 / .12) 40%,rgb(0 0 0 / .04) 55%,transparent 70%);
+    mask-image:linear-gradient(to bottom,black 34%,rgb(0 0 0 / .12) 40%,rgb(0 0 0 / .04) 55%,transparent 70%);
+  }
+  .hp .hp-hi { justify-self:center; margin:0; text-align:center; }
+}
+
+/* ---------- Where the four objects go (page.tsx data-icons) ----------
+   Andrew 2026-10-21: "I just think there could be better placement of icons." hero-objects.css
+   places each object by its centre (left, top, and a -50% transform) in the name's wrapper, sized
+   from --fs; each placement below overrides only that. Every object stays a 44px-plus link, off
+   the letters and off his face; the photo takes no pointer, so nothing under it is lost. */
+
+/* A, orbit: stickers on the cut-out's edges, drifting with him (page.tsx wraps them in his
+   Follow). Measured from the cut-out (rembg alpha, 421 x 465): his head spans 29% to 60% of the
+   photo's width and 3% to 38% of its height, his shoulders 13% to 86% from 49% down. The photo is
+   2.4em tall and 2.17em wide, centred, its foot on the name's line, so in --fs from the name's
+   centre and its top: head from -.46em to +.22em across and -1.33em to -.49em up, shoulders
+   +-.8em from -.22em. The top two flank his head, the lower two sit on his shoulders' outer
+   edges, all clear of the caps. Labels go outward, away from him. */
+.hp .hp-icons { position:absolute; inset:0; display:block; z-index:2; pointer-events:none; }
+/* Every object's own link box is at least 44px each way (2026-10-21: the thin pencil and phone
+   were 23 to 39px wide, under the target, on A, C and a phone's D). The art keeps its drawn size:
+   its SVG fits and centres in the wider box, and the box's centre, where each placement puts it,
+   does not move. */
+.hp .hob { min-width:var(--hit); min-height:var(--hit); }
+.hp[data-icons="a"] .hob { left:calc(50% + var(--fs) * var(--ax)); top:calc(var(--pt) + var(--fs) * var(--ay)); }
+/* 2026-10-21, after the scale-up: the top two a little lower (the phone's label went under the
+   header at 1366x768), the pencil lower too (its tip touched "is") */
+.hp[data-icons="a"] .hob-phone  { --h:calc(var(--fs) * .62); --ax:-.8; --ay:-.9; --r:-12deg; }
+.hp[data-icons="a"] .hob-laptop { --h:calc(var(--fs) * .48); --ax:.64; --ay:-.96; --r:8deg; }
+.hp[data-icons="a"] .hob-pencil { --h:calc(var(--fs) * .52); --ax:-.84; --ay:-.3; --r:-24deg; }
+.hp[data-icons="a"] .hob-card   { --h:calc(var(--fs) * .4); --ax:.86; --ay:-.4; --r:10deg; }
+/* the top two's labels above them (hero-objects.css), the lower two's out to the side */
+.hp[data-icons="a"] .hob-pencil .hob-label { top:50%; left:auto; right:calc(100% + 10px); translate:0 -50%; rotate:calc(var(--r) * -1); }
+.hp[data-icons="a"] .hob-card .hob-label { top:50%; left:calc(100% + 10px); translate:0 -50%; rotate:calc(var(--r) * -1); }
+/* A on a phone: the name is two lines and the photo 3.2em tall, foot on LIU's line, so the top
+   two flank his head just above ANDREW and the lower two flank LIU at his elbows */
+@container hero (max-width:759px) {
+  .hp[data-icons="a"] .hob { --h:max(48px, calc(var(--fs) * .75)); }
+  .hp[data-icons="a"] .hob-phone  { --ax:-1.05; --ay:-.55; }
+  .hp[data-icons="a"] .hob-laptop { --h:max(44px, calc(var(--fs) * .6)); --ax:.95; --ay:-.55; }
+  .hp[data-icons="a"] .hob-pencil { --ax:-1.6; --ay:1.5; }
+  .hp[data-icons="a"] .hob-card   { --h:max(44px, calc(var(--fs) * .6)); --ax:1.6; --ay:1.5; }
+  /* the lower two's labels (keyboard focus only here) under them, growing inward from the edge */
+  .hp[data-icons="a"] :is(.hob-pencil,.hob-card) .hob-label { top:calc(100% + 8px); translate:none; rotate:calc(var(--r) * -1); }
+  .hp[data-icons="a"] .hob-pencil .hob-label { left:0; right:auto; }
+  .hp[data-icons="a"] .hob-card .hob-label { left:auto; right:0; }
+}
+
+/* D, the corners of the name (the live hero's idea, tuned): the name fills 80% of the card
+   (hero.client.tsx HeroFx), so the four sit outside its first and last letters, clear of his
+   silhouette, the pencil bottom left. On a phone, hero-objects.css's own narrow rules, the
+   bottom two hung under LIU's line. */
+@container hero (min-width:760px) {
+  .hp[data-icons="d"] .hob-phone { --x:3%; }
+  .hp[data-icons="d"] .hob-pencil { --x:5%; }
+  .hp[data-icons="d"] .hob-laptop { --x:95%; }
+  .hp[data-icons="d"] .hob-card { --x:96%; }
+}
+@container hero (max-width:759px) {
+  .hp[data-icons="d"] :is(.hob-pencil,.hob-card) { --low:1.85; }
+  /* the top two a little higher than the live hero's, so they clear ANDREW's caps */
+  .hp[data-icons="d"] :is(.hob-phone,.hob-laptop) { top:calc(var(--pt) + var(--fs) * .1 - var(--h) / 2); }
+  /* A needs no room above or under the name for objects, only for his head (1.2em) */
+  .hp[data-icons="a"] .hero-namewrap { --pt:calc(var(--fs) * 1.25); padding-bottom:12px; }
+}
+
+/* ---------- The bar under reduced motion ----------
+   hero.css wraps the bar's list into several centred lines when motion is reduced, and still
+   centres the bar on the hero's foot, so half of a 100 to 300px bar rose over the résumé button
+   (2026-10-21, 375x812: a tap on the button hit the bar). On the live page the half below the
+   seam lies over the next section; on /draft the next panel paints over it. So here the
+   wrapped bar is the hero's last row instead, full bleed, its foot on the hero's foot: nothing
+   above it is covered and every line of it shows. */
+html[data-motion="reduced"] .hp .hero-strip {
+  position:relative; top:auto; transform:none; flex:0 0 auto;
+  margin:24px calc(var(--gutter) * -1) -60px; /* out through the side gutters and the 60px foot padding */
+}

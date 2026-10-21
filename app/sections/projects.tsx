@@ -1,6 +1,6 @@
 import type { JSX } from 'react';
 import { ArrowUp, ArrowUpRight } from 'lucide-react';
-import { APPROVALS, HOVER, IMAGES, MICROCOPY, PHONES, PROJECTS, WORK_HEAD, sectionAttrs, type ImageKey } from '@/lib/site';
+import { APPROVALS, IMAGES, MICROCOPY, PHONES, PROJECTS, WORK_HEAD, sectionAttrs, type ImageKey } from '@/lib/site';
 import { RollingRow } from '@/components/ui/rolling-list';
 import { ProjectFan, type FanItem } from '@/components/ui/project-fan';
 import { CheckSticker, PROJECT_ART } from '@/components/site/work/art';
@@ -155,19 +155,15 @@ function Caption({ project }: { project: Project }) {
   );
 }
 
-// A click on the centre card opens the project's first link (live before source, as listed), and
-// the hover bubble says what that is (HOVER.fan, Andrew 2026-10-20). No link, no bubble.
-const FAN_ITEMS: FanItem[] = FAN.map((project, i) => {
-  const href = (project.links as readonly { href: string }[])[0]?.href;
-  return {
-    id: `work-${project.id}`,
-    label: `${project.title}, ${WORK_HEAD.slideOf(i + 1, FAN.length)}`,
-    card: <Card project={project} />,
-    caption: <Caption project={project} />,
-    href,
-    bubble: href ? HOVER.fan[project.id] : undefined,
-  };
-});
+// The carousel has no hover bubble and its centre card does not open a link (Andrew 2026-10-21:
+// "Get rid of the hover icon thing during the carousel ... keep it the way it was"); the caption
+// under the fan carries the project's links.
+const FAN_ITEMS: FanItem[] = FAN.map((project, i) => ({
+  id: `work-${project.id}`,
+  label: `${project.title}, ${WORK_HEAD.slideOf(i + 1, FAN.length)}`,
+  card: <Card project={project} />,
+  caption: <Caption project={project} />,
+}));
 
 export default function Projects() {
   return (
@@ -203,7 +199,7 @@ export default function Projects() {
       </div>
 
       <WorkViews>
-        <ProjectFan items={FAN_ITEMS} name={WORK_HEAD.fan} prevLabel={WORK_HEAD.prev} nextLabel={WORK_HEAD.next} turnBubble={HOVER.fanTurn} />
+        <ProjectFan items={FAN_ITEMS} name={WORK_HEAD.fan} prevLabel={WORK_HEAD.prev} nextLabel={WORK_HEAD.next} />
       </WorkViews>
     </section>
   );

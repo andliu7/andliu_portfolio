@@ -1,41 +1,33 @@
 import type { CSSProperties } from 'react';
-import { HERO, HERO_BAR, HERO_CAUTION, IDENTITY, PORTRAITS, MICROCOPY, sectionAttrs } from '@/lib/site';
-import { Portrait } from '@/components/site/portrait';
+import { Baloo_2 } from 'next/font/google';
+import { HERO, HERO_BAR, HERO_CAUTION, IDENTITY, MICROCOPY, sectionAttrs } from '@/lib/site';
 import { Marquee } from '@/components/site/marquee';
 import { HeroObjects } from '@/components/site/hero-objects/hero-objects';
 import Cloudscape from '@/components/ui/cloudscape';
 import { FlowButton } from '@/components/ui/flow-button';
 import { ChipMarquee } from '@/components/site/chip-marquee';
-import { HeroFit, NameRoll } from './hero.client';
+import { HeroFx, Follow } from './hero.client';
 import './hero.css';
+import './hero-photo.css';
 
-// The hero (SITE-PLAN.md 4.1) in the Slush poster language: Andrew's Cloudscape sky drifting
-// edge to edge across the whole first screen (behind the header too), a card on it (no glass since
-// 2026-10-17) holding the name crushed onto one line as wide as the card allows, four cartoon objects of his
-// projects on the name's four corners (each a link), the résumé button centred under it, then a
-// cream marquee on the seam with a slim caution-stripe edge: short true facts, and between them
-// small boxed caution lines (HERO_CAUTION). The degree chip lives
-// in the header (components/site/header.tsx); a phone has no room there, so it shows here, one
-// line, above the card.
+// The hero (Andrew 2026-10-21, picked on the /draft page): the cloud sky with a soft cream scrim,
+// "Hi, my name is", the name in Baloo 2 (A N D and L I U deep blue, R E W lighter), his
+// black-and-white cut-out centred behind the name and drifting with the pointer, SOFTWARE
+// ENGINEER, the résumé button, then the cream fact bar on the seam. The four project objects
+// orbit him (icons A); /draft keeps the name-corners placement (icons D) in case he changes his
+// mind, so HeroPanel takes the placement and is shared with that page.
 //
-// Layout (hero.css): the hero is one screen tall less half the bar, so on arrival the bar shows
-// whole at the foot of the screen, on the seam with the next section. The band's inner stage is a
-// size container. HeroFit (hero.client.tsx) sizes the name to fill the stage once the fonts have
-// loaded and keeps the band and the room for the bar above the seam inside the first
-// screen on a wide screen. The objects are placed in units of that size
-// (components/site/hero-objects), so they stay on the same letters at every width.
-//
-// The entrance is CSS only (hero.css): until the loader sets html.is-loaded, each letter waits
-// a quarter em to the left, invisible; then they spring in, last letter first. The blocks rise
-// after, and the objects fall in from above, tumbling, one by one. With JavaScript off (no html.js) or
-// reduced motion nothing is ever hidden. The h1 is server HTML (it is the LCP element) and reads
-// "Andrew Liu" once: the letter spans are aria-hidden. Once, a few seconds after the loader, the
-// letters roll over to a second face in the other voice's colour and stay (NameRoll, hero.css).
-//
-// There is no photo of Andrew yet. When PORTRAITS.hero.src is set the Portrait print joins the
-// foot beside the résumé button; until then the objects are the picture.
+// It reuses the old hero's pieces as they were: hero.css lays out the sky, the degree chip's look
+// (here under the role, docking into the header on scroll), the objects' room, the foot and the bar, and
+// keeps the letter roll and the LIU to 刘 flip (hero-photo.css adds the photo layout). The h1 is
+// server HTML (the LCP element) and reads "Andrew Liu" once: the letter spans are aria-hidden.
+// HeroFx (hero.client.tsx) fits the name and runs the roll and the flip; Follow is the drift.
 
-const NAME_CHARS = HERO.first.length + HERO.last.length;
+const baloo = Baloo_2({ weight: ['800'], variable: '--font-baloo', subsets: ['latin'], display: 'swap' });
+
+// Only the CJK glyphs of his surname, from Google Fonts' text= subset (a few KB). React 19 hoists
+// a <link rel="stylesheet"> with `precedence` into the document head.
+const ZH_FONT = 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@900&text=%E5%88%98%E5%8A%89&display=swap';
 
 // The bar's list: the facts, with a caution box after each of the first four
 type BarItem = { text: string; caution?: boolean; code?: boolean };
@@ -44,73 +36,88 @@ const BAR_ITEMS: BarItem[] = HERO_BAR.flatMap((text, i): BarItem[] => {
   return caution ? [{ text }, { ...caution, caution: true }] : [{ text }];
 });
 
-// Only the CJK glyphs of his surname, from Google Fonts' text= subset (a few KB): Fira Code has
-// none. React 19 hoists a <link rel="stylesheet"> with `precedence` into the document head.
-const ZH_FONT = 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@900&text=%E5%88%98%E5%8A%89&display=swap';
+// golden-gate-cutout.webp is a background-removed cut-out of golden-gate.webp, trimmed to him.
+// Black and white is CSS (hero-photo.css, grayscale).
+const CUTOUT = { src: '/images/me/golden-gate-cutout.webp', w: 421, h: 465 };
 
-function NameLine({ text, start, kw = false }: { text: string; start: number; kw?: boolean }) {
-  const letters = Array.from(text).map((char, i) => (
-    // --i counts from the last letter, so the stagger runs right to left (Slush's entrance);
-    // --j counts from the first, for the roll (NameRoll): the letter as set, its second face below
-    <span key={i} className="hero-c" style={{ '--i': NAME_CHARS - 1 - (start + i), '--j': start + i } as CSSProperties}>
+// Where the four objects go (hero-photo.css places each from the panel's data-icons):
+//   a  orbit: tucked round him like stickers on the cut-out's edges, drifting with him (the hero)
+//   d  the name block's outer corners (kept on /draft)
+export type Icons = 'a' | 'd';
+
+const NAME_CHARS = HERO.first.length + HERO.last.length;
+
+// One line of the name, letters as hero.css expects them (.hero-c, .hero-roll, two faces) so the
+// roll applies. `tones` picks each letter's blue: d deep, l light.
+function Letters({ text, start, tones }: { text: string; start: number; tones: string }) {
+  return Array.from(text).map((char, i) => (
+    <span key={i} className={`hero-c hp-${tones[i]}`} style={{ '--i': NAME_CHARS - 1 - (start + i), '--j': start + i } as CSSProperties}>
       <span className="hero-roll"><span className="hero-fa">{char}</span><span className="hero-fb">{char}</span></span>
     </span>
   ));
-  if (!kw) return <span className="hero-nl" aria-hidden="true">{letters}</span>;
-  // LIU as one word that flips to his Chinese surname under the pointer (NameRoll sets data-zh on
-  // the h1; hero.css .hero-liu): the letters ride up out of the word's clip and the character
-  // rises in from below. It is absolutely placed, so the fitted width never counts it.
-  return (
-    <span className="hero-nl hero-nl-kw" aria-hidden="true">
-      <span className="hero-liu">
-        <span className="hero-liu-track">
-          {letters}
-          <span className="hero-zh" lang="zh">{HERO.lastZh}</span>
-        </span>
-      </span>
-    </span>
-  );
 }
 
-export default function Hero() {
+export function HeroPanel({ icons, tag, main = false }: { icons: Icons; tag?: string; main?: boolean }) {
+  const Heading = main ? 'h1' : 'h2';
   return (
-    <section {...sectionAttrs('top')} className="hero" aria-labelledby="hero-title">
-      {/* Andrew's Cloudscape (components/ui/cloudscape.tsx) at its own sky colours, filling the whole first screen; decoration only */}
+    <section {...(main ? sectionAttrs('top') : {})} className={`hero hp hp-panel ${baloo.variable}`} data-icons={icons} aria-labelledby={main ? 'hero-title' : undefined} aria-label={main ? undefined : tag}>
+      <link rel="stylesheet" href={ZH_FONT} precedence="default" />
+      <HeroFx />
+      {/* Andrew's Cloudscape (components/ui/cloudscape.tsx) at its own sky colours; decoration only */}
       <Cloudscape className="hero-sky" height="100%" aria-hidden="true" />
+      <div className="hp-scrim" aria-hidden="true" />
+      {tag && <p className="hp-tag">{tag}</p>}
       <div className="hero-band">
-        <div className="hero-stage">
-          <link rel="stylesheet" href={ZH_FONT} precedence="default" />
-          <HeroFit />
-          <NameRoll />
-          {/* phones only (hero.css); the header carries it on a wider screen */}
-          <span className="hero-tag hero-rise" style={{ '--d': 0 } as CSSProperties}><ChipMarquee text={HERO.chip} /></span>
-
-          {/* The card (hero.css .hero-card): the name, its objects and the button straight on the
-              sky; the objects hang over its edges */}
+        <div className="hp-stage">
           <div className="hero-card">
+            <p className="hp-hi hero-rise" style={{ '--d': 0 } as CSSProperties}>{HERO.hi}</p>
             <div className="hero-namewrap">
-              <h1 id="hero-title" className="display fit hero-name" style={{ '--chars': 6, '--max': '300px' } as CSSProperties}>
+              {/* Each layer drifts with the pointer at its own depth (Follow): ANDREW against it,
+                  him most, LIU a little, so they part like depth */}
+              <Heading id={main ? 'hero-title' : undefined} className="hero-name hp-name">
                 <span className="sr-only">{IDENTITY.name}</span>
-                <NameLine text={HERO.first} start={0} />
-                <NameLine text={HERO.last} start={HERO.first.length} kw />
-              </h1>
-              <HeroObjects />
+                <Follow depth={-6} className="hero-nl hp-back">
+                  <span aria-hidden="true"><Letters text={HERO.first} start={0} tones="dddlll" /></span>
+                </Follow>
+                {/* The gap between the words; the photo is centred on the whole name, behind every letter */}
+                <span className="hp-gap" aria-hidden="true">
+                  <Follow depth={14} className="hp-photo">
+                    <img className="hp-cut" src={CUTOUT.src} width={CUTOUT.w} height={CUTOUT.h} alt="" decoding="async" />
+                  </Follow>
+                </span>
+                {/* LIU, which flips to 刘 under the pointer (hero.css .hero-liu) */}
+                <Follow depth={8} className="hero-nl hero-nl-kw hp-front">
+                  <span aria-hidden="true">
+                    <span className="hero-liu">
+                      <span className="hero-liu-track">
+                        <Letters text={HERO.last} start={HERO.first.length} tones="ddd" />
+                        <span className="hero-zh" lang="zh">{HERO.lastZh}</span>
+                      </span>
+                    </span>
+                    <span className="hp-comma">{HERO.comma}</span>
+                  </span>
+                </Follow>
+              </Heading>
+              {/* a: the stickers ride on his layer, so they drift with him, not with the letters */}
+              {icons === 'a' && <Follow depth={14} className="hp-icons"><HeroObjects /></Follow>}
+              {icons === 'd' && <HeroObjects />}
             </div>
-
-            <div className="hero-foot">
+            <div className="hero-foot hp-foot">
+              <p className="hp-role hero-rise" style={{ '--d': 1 } as CSSProperties}>{HERO.role}</p>
+              {/* The degree line between the role and the button, at every width (Andrew 2026-10-21);
+                  once it scrolls up under the header, the header shows its own copy (header.tsx
+                  finds it by .hp-degree) */}
+              <span className="hero-tag hp-degree hero-rise" style={{ '--d': 1 } as CSSProperties}><ChipMarquee text={HERO.chip} /></span>
               <div className="hero-about hero-rise" style={{ '--d': 1 } as CSSProperties}>
-                <div className="row-actions">
-                  {/* Scrolls to the résumé preview rather than opening the PDF: a softer first step (Andrew 2026-10-07). */}
-<FlowButton href="#resume" text={MICROCOPY.resumeShort} />
-                </div>
+                {/* Scrolls to the résumé preview rather than opening the PDF: a softer first step (Andrew 2026-10-07). /draft has none, so it opens the home page's. */}
+                <FlowButton href={main ? '#resume' : '/#resume'} text={MICROCOPY.resumeShort} />
               </div>
-              {PORTRAITS.hero.src ? <Portrait id="hero" className="hero-portrait hero-rise" /> : null}
             </div>
           </div>
         </div>
       </div>
 
-      {/* The bar lies level on the seam with the UMD flag, full bleed (hero.css) */}
+      {/* The bar lies level on the seam with the next section, full bleed (hero.css) */}
       <div className="hero-strip hero-rise" style={{ '--d': 2 } as CSSProperties}>
         <Marquee className="hero-mq" label={BAR_ITEMS.map(item => item.text).join('. ')} duration={120} fade={false}>
           {BAR_ITEMS.map(item => (
@@ -124,4 +131,8 @@ export default function Hero() {
       </div>
     </section>
   );
+}
+
+export default function Hero() {
+  return <HeroPanel icons="a" main />;
 }

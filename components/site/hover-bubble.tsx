@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { motion, useMotionValue, useSpring } from 'motion/react';
-import { ArrowLeftRight, ArrowUpRight, Maximize2, RotateCcw } from 'lucide-react';
+import { ArrowUpRight, Maximize2, RotateCcw } from 'lucide-react';
 import { useFinePointer } from './use-fine-pointer';
 import { useReducedMotion } from './use-reduced-motion';
 import './hover-bubble.css';
@@ -126,7 +126,6 @@ export function HoverBubble() {
         <span className="hb-icon">
           <ArrowUpRight data-i="open" size={18} strokeWidth={2.6} />
           <RotateCcw data-i="flip" size={16} strokeWidth={2.6} />
-          <ArrowLeftRight data-i="turn" size={18} strokeWidth={2.6} />
           <Maximize2 data-i="enlarge" size={16} strokeWidth={2.6} />
         </span>
       </span>

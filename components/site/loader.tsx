@@ -10,7 +10,7 @@ import { PREFS } from './handoffs';
 //   fonts     20  the hero's two faces are loaded (document.fonts.load also starts the download)
 //   hydrated  35  React is running (the director in app/motion.tsx sets html.motion-ready), and
 //                 two frames have painted since (this used to be its own 10-point "sky" step)
-//   fit       10  the hero name is sized (HeroFit in hero.client.tsx sets --fs-js on .hero-stage)
+//   fit       10  the hero name is sized (HeroFx in hero.client.tsx sets --fs-js on .hp-stage)
 //   settled   25  after React is up, 12 frames in a row came under 25ms: the main thread is free,
 //                 so the scroll effects are set up and the first scroll is smooth (Andrew
 //                 2026-10-07: "I have to wait ... to even be able to scroll smoothly")
@@ -79,7 +79,7 @@ if(document.readyState!=='loading')have('dom');else document.addEventListener('D
 try{Promise.all([document.fonts.load('700 1em "Fira Code"'),document.fonts.load('500 1em "Karla"')]).then(function(){have('fonts')},function(){have('fonts')})}catch(e){have('fonts')}
 function poll(){
 if(!got.hydrated&&d.classList.contains('motion-ready')&&++frames>2)have('hydrated');
-if(got.dom&&!got.fit){var s=document.querySelector('.hero-stage');if(!s||s.style.getPropertyValue('--fs-js'))have('fit')}
+if(got.dom&&!got.fit){var s=document.querySelector('.hp-stage');if(!s||s.style.getPropertyValue('--fs-js'))have('fit')}
 var t=P&&P.now?P.now():Date.now();if(got.hydrated&&!got.settled){smooth=last&&t-last<25?smooth+1:0;if(smooth>=12)have('settled')}last=t}
 function target(now){if(now-t0>=${CAP_MS})return 100;var t=0;for(var k in W)if(got[k])t+=W[k];return t}
 function done(){if(el.parentNode)el.parentNode.removeChild(el);mark('loader:end')}

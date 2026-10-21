@@ -29,10 +29,8 @@ import { getLenis } from '@/app/smooth';
 // the handlers and the frame loop share; the loop writes each card's transform straight to the
 // DOM, so React re-renders only when the centre card, the hovered card or the caption changes.
 
-// `id` is the card's element id (the target of #links), `label` its accessible name. `href` and
-// `bubble`: a click on the centre card opens `href` in a new tab, and the hover bubble
-// (components/site/hover-bubble.tsx) says so in `bubble`; an item without them only turns.
-export type FanItem = { id: string; label: string; card: ReactNode; caption: ReactNode; href?: string; bubble?: string };
+// `id` is the card's element id (the target of #links), `label` its accessible name.
+export type FanItem = { id: string; label: string; card: ReactNode; caption: ReactNode };
 
 const clamp = (n: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, n));
 const smooth = (t: number) => t * t * (3 - 2 * t);
@@ -46,10 +44,8 @@ const PILE_TILT = [-4, 3, -1.5, 5, -6, 2, -3];
 const centreOf = (el: Element) => { const r = el.getBoundingClientRect(); return r.left + r.width / 2; };
 const frameCentre = (frame: HTMLElement) => frame.getBoundingClientRect().left + frame.clientLeft + frame.clientWidth / 2;
 
-export function ProjectFan({ items, name, prevLabel, nextLabel, turnBubble, className = '' }: {
+export function ProjectFan({ items, name, prevLabel, nextLabel, className = '' }: {
   items: readonly FanItem[];
-  /** The hover bubble's words on a side card, which a click brings round. */
-  turnBubble?: string;
   /** The carousel's accessible name. */
   name: string;
   prevLabel: string;
@@ -289,16 +285,12 @@ export function ProjectFan({ items, name, prevLabel, nextLabel, turnBubble, clas
 
   // A click (or Enter on a card's title link): bring a side card round. The title links stay
   // real links for the keyboard and the hero icons, but here they move the fan instead of the page.
-  // A mouse click on the centre card's picture opens the project (Andrew 2026-10-20, the hover
-  // bubble: what you can DO with a picture must be what a click does). Not from the keyboard
-  // (detail 0) or the title link: the same link is in the caption under the fan, by name.
   const onClick = (event: MouseEvent<HTMLUListElement>) => {
     const i = cardIndex(event.target);
     if (i < 0) return;
     event.preventDefault();
     if (motion.current.moved) { motion.current.moved = false; return; }
     if (i !== active) goTo(i);
-    else if (items[i].href && event.detail > 0 && !(event.target as Element).closest('a, button')) window.open(items[i].href, '_blank', 'noreferrer');
   };
 
   const onPointerOver = (event: PointerEvent<HTMLUListElement>) => {
@@ -360,8 +352,6 @@ export function ProjectFan({ items, name, prevLabel, nextLabel, turnBubble, clas
                 data-i={i}
                 data-active={i === active ? '' : undefined}
                 data-hover={i === hover ? '' : undefined}
-                data-bubble={i === active ? item.bubble : turnBubble}
-                data-bubble-icon={i === active ? 'open' : 'turn'}
                 aria-roledescription="slide"
                 aria-label={item.label}
               >

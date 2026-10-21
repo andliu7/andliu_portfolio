@@ -38,35 +38,42 @@
 }
 
 /* ---------- 2. the gallery ----------
-   Six phones in one row on a wide screen, as big as the width allows, so the whole section is
-   about one and a half screens of scroll (Andrew 2026-10-20: "it should be rather quick"; two
-   rows of three made it three screens long). --ph-n is the number of columns and --ph-w a
-   column's width: the full bleed width (the list steps out of the section's gutter to a small one
-   of its own) shared by --ph-n phones, but never so wide that one phone is taller than the
-   screen, so every phone can be seen whole. --ph-k is a phone's height over its width (frame,
-   screen and the caption's overhang, measured 2026-10-20), so the travel room below can be sized
-   in phone heights.
-     under 760px   two columns of three rows, still: one column was six screens long, three
-                   leave a phone too small to read
-     760 to 1099   three columns of two rows, still: six across would be about 110px a phone
-     1100 and up   six across, drifting (below)
+   Six phones in two rows of three columns, as big as the screen allows (Andrew 2026-10-21: "the
+   phones should have at least two rows (three columns) ... make it larger"; the 10-20 single row
+   of six left each phone about 216px wide at 1440). The section is about three screens of scroll
+   at 1440x900. --ph-n is the number of columns and --ph-w a column's width: the full bleed width
+   (the list steps out of the section's gutter to a small one of its own) shared by --ph-n phones,
+   but never so wide that one phone is taller than the screen, so every phone can be seen whole
+   (about 400px a phone at 1440x900, 480 at 1920x1080). --ph-k is a phone's height over its width
+   (frame, screen and the caption's overhang, measured 2026-10-21), so the travel room below can
+   be sized in phone heights.
+     under 760px   two columns of three rows, still: three across a 375px phone is about 105px
+                   a phone, too small to read; two across is about 165px
+     760 and up    three columns of two rows, drifting (below)
    One list item per phone in reading order (lib/site.ts PHONES): the two site pages are the
-   second and fifth, so the row mirrors itself around its centre.
-   On the six-across row each item moves by translate, reading --rise or --sink, which
-   phones.client.tsx sets from the scroll: the two site pages rise, the four game screens sink,
-   so every neighbour slides against the next and the halves mirror (Andrew 2026-10-20: "make sure
-   it's symmetric"). Nothing clips the list (Andrew 2026-10-20: "there is no cuttoff"): the bottom
-   pad is the room the sinking phones end in (SINK_TO in phones.client.tsx, 10% of a phone), and
-   the head's gap the room they start raised into.
-   Without the variables (reduced motion, no JavaScript) --rise is 0 and --sink a fixed stagger,
-   a still zigzag. */
+   second and fifth, the centre column, and the four game screens mirror each other on the sides.
+   On three columns each item moves by translate, reading --rise or --sink, which
+   phones.client.tsx sets from the scroll: the left and right columns rise by the same amount (the
+   same variable, so they stay level with each other), the centre column sinks, and further, so it
+   slides against both (Andrew 2026-10-21: "I thought I chose the one that said it would be
+   symmetric"; 10-20: "the middle should move down faster"). Nothing clips the list (Andrew
+   2026-10-20: "there is no cuttoff"): the bottom pad is the room the sinking column ends in
+   (SINK_TO in phones.client.tsx, 20% of a phone); the centre starts below the sides, so it never
+   rises into the head's gap.
+   More stagger and a little more spread (Andrew 2026-10-21: "stagger them a little bit more and
+   spread them slightly"): the centre now always sits lower than the sides (phones.client.tsx), the
+   still stagger is 15% (was 10%), and the column gap is about a third wider (53px at 1440, was 40;
+   64 at 1920, was 48). The phones keep their size wherever the screen's height caps them.
+   Under reduced motion --rise is 0 and --sink a fixed stagger (the pin at the end of this file):
+   the centre column sits lower, a still, symmetric grid. With no JavaScript the server render's
+   first values stay (sides 3% down, centre 5% down), also still and symmetric. */
 .phones .ph-cols {
-  --rise: 0%; --sink: 10%;
+  --rise: 0%; --sink: 15%;
   --ph-n: 2; --ph-edge: 16px; --ph-k: 2.2;
-  --ph-gap: clamp(12px, 4cqi, 24px);
-  --ph-w: min(calc((100cqi + 2 * var(--gutter) - 2 * var(--ph-edge) - (var(--ph-n) - 1) * var(--ph-gap)) / var(--ph-n)), calc((100svh - 32px) / var(--ph-k)));
+  --ph-gap: clamp(16px, 5.5cqi, 32px);
+  --ph-w: min(calc((100cqi + 2 * var(--gutter) - 2 * var(--ph-edge) - (var(--ph-n) - 1) * var(--ph-gap)) / var(--ph-n)), calc((100svh - 24px) / var(--ph-k)));
   display: grid; grid-template-columns: repeat(var(--ph-n), var(--ph-w)); justify-content: center; align-items: start;
-  gap: clamp(28px, 4cqi, 56px) var(--ph-gap);
+  gap: clamp(28px, 4cqi, 64px) var(--ph-gap);
   margin: 0 calc(var(--ph-edge) - var(--gutter)); padding: 0; list-style: none;
 }
 .phones .ph-item { translate: none; }
@@ -74,20 +81,15 @@
 .phones .ph-item:nth-child(odd) .ph-cap { rotate: -3deg; }
 .phones .ph-item:nth-child(even) .ph-cap { rotate: 3deg; }
 @media (min-width: 760px) {
-  .phones .ph-cols { --ph-n: 3; --ph-edge: 20px; --ph-gap: clamp(16px, 3cqi, 40px); }
+  .phones .ph-cols {
+    --ph-n: 3; --ph-edge: 24px; --ph-gap: clamp(22px, 4cqi, 64px);
+    padding-bottom: calc(var(--ph-w) * var(--ph-k) * .20);
+  }
+  .phones .ph-item { translate: 0 var(--rise); }
+  .phones .ph-item:nth-child(3n+2) { translate: 0 var(--sink); }
   .phones .ph-item:nth-child(3n+1) .ph-cap { rotate: -3deg; }
   .phones .ph-item:nth-child(3n+2) .ph-cap { rotate: none; }
   .phones .ph-item:nth-child(3n) .ph-cap { rotate: 3deg; }
-}
-@media (min-width: 1100px) {
-  .phones .ph-cols {
-    --ph-n: 6; --ph-gap: clamp(12px, 1.6cqi, 32px);
-    padding-bottom: calc(var(--ph-w) * var(--ph-k) * .10);
-  }
-  .phones .ph-item { translate: 0 var(--sink); }
-  .phones .ph-item:nth-child(3n+2) { translate: 0 var(--rise); }
-  .phones .ph-item:nth-child(-n+3) .ph-cap { rotate: -3deg; }
-  .phones .ph-item:nth-child(n+4) .ph-cap { rotate: 3deg; }
 }
 
 /* A phone: the body is a flat sticker fill with an ink outline; the screen sits inside a bezel
@@ -125,4 +127,4 @@
 /* Reduced motion: phones.client.tsx stops driving the variables, but the first (server shaped)
    render has already written them inline and motion leaves them there, so this pins the still
    stagger above over them (measured 2026-10-20: the inline values stay under reduced motion). */
-html[data-motion="reduced"] .phones .ph-cols { --rise: 0% !important; --sink: 10% !important; }
+html[data-motion="reduced"] .phones .ph-cols { --rise: 0% !important; --sink: 15% !important; }

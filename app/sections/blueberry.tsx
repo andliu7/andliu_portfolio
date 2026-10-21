@@ -1,11 +1,11 @@
-import { BB_CAROUSEL, BB_ENGINEERING, BB_FACTS, BB_HEAD, BB_SCREENS, BB_SITE, BLUEBERRY_CHAPTER, IMAGES, PROJECTS, sectionAttrs, type ImageEntry } from '@/lib/site';
+import { BB_CAROUSEL, BB_ENGINEERING, BB_FACTS, BB_HEAD, BB_SCREENS, BLUEBERRY_CHAPTER, IMAGES, PROJECTS, sectionAttrs, type ImageEntry } from '@/lib/site';
 import { FlipHeading } from '@/components/site/flip-heading';
 import { TextBlockAnimation } from '@/components/ui/text-block-animation';
 import { InfiniteSlider } from '@/components/ui/infinite-slider';
 import { StackChip } from '@/components/site/stack-logos';
 import { BlueberrySticker, FlashcardSticker } from '@/components/site/stickers/stickers';
 import { CountUp } from '@/components/site/work/count-up';
-import PolaroidLineCarousel, { PolaroidMini, type Slide } from '@/components/ui/polaroid-line-carousel';
+import PolaroidLineCarousel, { type Slide } from '@/components/ui/polaroid-line-carousel';
 import { BlueberrySwing } from './blueberry.client';
 import './blueberry.css';
 
@@ -13,14 +13,18 @@ import './blueberry.css';
 // that used to sit above it was removed; this chapter tells how it got here and what it is made of:
 //   1. head:    a crushed two-line headline with stickers on it, the story at reading width,
 //               and the facts as count-up stickers beside it
-//   2. screens: a sky band; FOR REAL! in giant display type beside four app captures, each a
-//               feature mid-use, hung as prints on a string (the first a recording of arrows
-//               being pushed); the website around the app in a small carousel under FOR REAL!
+//   2. screens: four app captures, each a feature mid-use, hung as prints on a string (the
+//               first a recording of arrows being pushed), alone on a quiet sky band
 //   3. stack:   the stack as logo chips sliding along an ink strip, which straddles the chapter's
 //               rounded foot and settles onto Selected work's ground as it scrolls (blueberry.css)
 // The exploded phone and its "layer by layer" list were removed 2026-10-06 (Andrew: the layers
 // did not make sense); what replaces them is not decided yet.
-// The bands are Slush's colour bands: rounded panels inset from the berry ground, each carrying
+// Shortened 2026-10-21 (Andrew: "I want to make it smaller so it's easier to scroll through ...
+// remove the four-reel screens page and just bring up the sliding carousel view of the four reel
+// images, and then just raise that up and leave it by itself"): the FOR REAL! word and the small
+// website carousel under it are gone, so the line of prints sits straight under the head on its
+// own. The website screens still show at phone size in the #phones gallery right after this.
+// The band is a Slush colour band: a rounded panel inset from the berry ground, carrying
 // data-ground="paper" so the text, links and focus ring inside switch to ink.
 // Left out on purpose: the "cards in his first deck" fact and the deck layer's label. Both come
 // from lib/bb-deck.json (`count`), which does not exist yet, and a fact without its number is
@@ -37,13 +41,11 @@ const NUM = PROJECTS.find(p => p.id === 'blueberry')?.num;
 const FACTS = BB_FACTS.filter(fact => fact.value !== undefined);
 const FACT_FILLS = ['apricot', 'sky', 'berry-soft'] as const;
 // The captures as slides: each IMAGES entry's files and alt, with the screen's own title, caption
-// and live route. The four app screens hang on the line (Andrew 2026-10-07: "keep it four because
-// for is a pun"); the website shots go in the small carousel.
+// and live route. The four app screens hang on the line (Andrew 2026-10-07: "keep it four").
 // Each app print zooms in on the moment its caption names, so the molecules and labels can be
 // read at print size (a whole app screen at 400px is a navy rectangle). Picked by eye from the
 // 800px files: x% y% is the point of the shot that stays put, scale the zoom. Kept modest where
-// the caption names something wide (all four rating buttons). The website shots were cropped
-// to their headings when captured, so they need none.
+// the caption names something wide (all four rating buttons).
 const CROPS: Partial<Record<keyof typeof IMAGES, Slide['crop']>> = {
   bbAldol: { x: 20, y: 45, scale: 1.08 },        // the step text and the molecules with their arrows
   bbFlashcards: { x: 50, y: 100, scale: 1.15 },  // the two molecules and the Again/Hard/Good/Easy row
@@ -55,7 +57,6 @@ function toSlide(screen: { image: keyof typeof IMAGES; title: string; caption: s
   return { image: entry.src, sm: entry.sm, alt: entry.alt, video: entry.video, title: screen.title, caption: screen.caption, href: screen.href, linkText: screen.route, crop: CROPS[screen.image] };
 }
 const LINE = BB_SCREENS.map(toSlide);
-const SITE = BB_SITE.map(toSlide);
 // The band repeats the stack twice so one copy is wider than the screen and the loop never
 // shows a gap; the repeats are marked `repeat`, so screen readers get the list once.
 const BAND = [...BB_ENGINEERING.stack, ...BB_ENGINEERING.stack];
@@ -85,18 +86,9 @@ export default function Blueberry() {
           </div>
         </div>
 
+        {/* The band is kept as the line's ground: the string, captions and arrows are ink, which
+            needs a light ground (ink on sky 13.32:1), and on the berry it would not read. */}
         <div className="bb-band bb-screens" data-ground="paper">
-          <div className="bb-real">
-            {/* Block-wipe entrances (2026-10-12): --kw on the paper bands, berry-soft on the berry ground */}
-            <TextBlockAnimation as="span" className="eyebrow">{BB_HEAD.screens}</TextBlockAnimation>
-            <p className="bb-real-word" data-reveal>
-              {/* A closing "!" gets its own span, so CSS can tuck the monospace glyph's wide side
-                  bearing back against the letter before it. */}
-              {BB_HEAD.forReal.split('\n').map(line => (
-                <span key={line}>{line.endsWith('!') ? <>{line.slice(0, -1)}<span className="bb-bang">!</span></> : line}</span>
-              ))}
-            </p>
-          </div>
           <PolaroidLineCarousel
             className="bb-line"
             slides={LINE}
@@ -106,15 +98,6 @@ export default function Blueberry() {
             prevLabel={BB_CAROUSEL.prev}
             nextLabel={BB_CAROUSEL.next}
           />
-          <div className="bb-more">
-            <TextBlockAnimation as="span" className="eyebrow">{BB_HEAD.site}</TextBlockAnimation>
-            <PolaroidMini
-              slides={SITE}
-              label={BB_CAROUSEL.more}
-              prevLabel={BB_CAROUSEL.prev}
-              nextLabel={BB_CAROUSEL.next}
-            />
-          </div>
         </div>
 
         <div className="bb-stack">

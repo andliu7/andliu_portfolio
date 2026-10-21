@@ -31,10 +31,6 @@
   background: radial-gradient(125% 125% at 50% 10%, var(--berry) 40%, var(--berry-deep) 100%);
   will-change: transform;
 }
-/* SECTIONS gives this chapter a 3.6-viewport floor, which was scroll length for the pinned phone
-   stage. Nothing here is pinned, so that floor would only add bare ground under the
-   content (Andrew: no empty background). The chapter is as tall as what it shows. */
-.bb[data-budget] { min-height: 0; }
 @supports (transition-timing-function: linear(0, 1)) {
   /* The Slush spring: overshoots to 1.14 at 25%, settles by 81% (slush skill, --elastic-ease-out). */
   .bb { --ease-elastic: linear(0, .5737 7.6%, .8382 11.87%, .9463 14.19%, 1.0292 16.54%, 1.0886 18.97%, 1.1258 21.53%, 1.137 22.97%, 1.1424 24.48%, 1.1423 26.1%, 1.1366 27.86%, 1.1165 31.01%, 1.0507 38.62%, 1.0219 42.57%, .9995 46.99%, .9872 51.63%, .9842 58.77%, 1.0011 81.26%, 1); }
@@ -44,17 +40,17 @@
 .bb [data-fill="berry-soft"] { background: var(--berry-soft); }
 .bb [data-fill="card"] { background: var(--card); }
 
-/* The colour bands (Slush: each section a pastel poster, rounded and inset so a sliver of the
-   berry ground frames it). They bleed out of the section's gutter to 12px from the edge. */
+/* The colour band (Slush: a pastel poster, rounded and inset so a sliver of the berry ground
+   frames it). It bleeds out of the section's gutter to 12px from the edge. */
 .bb .bb-band { margin-inline: calc(var(--band-inset) - var(--gutter)); padding: clamp(32px, 4.4cqi, 72px) max(18px, calc(var(--gutter) - var(--band-inset))); border-radius: clamp(28px, 3cqi, 40px); color: var(--ink); }
-/* Soft grounds (Andrew, 2026-10-06): each band is a radial wash from a paper-lightened tint to
+/* Soft grounds (Andrew, 2026-10-06): the band is a radial wash from a paper-lightened tint to
    its own token, so ink text stays AA everywhere on it (ink on sky 13.32 at the darkest point,
    on berry-soft 11.98). Bands only; tiles, cards and buttons stay flat. */
 .bb .bb-screens { background: radial-gradient(120% 120% at 15% 0%, color-mix(in srgb, var(--sky) 55%, var(--paper)) 0%, var(--sky) 65%); }
 .bb .eyebrow { margin-bottom: 18px; color: var(--on-2); }
 
 /* ---------- 1. head: headline with stickers, then story beside the fact stickers ---------- */
-.bb .bb-head { display: grid; gap: clamp(32px, 4cqi, 56px); padding-bottom: clamp(48px, 6cqi, 96px); }
+.bb .bb-head { display: grid; gap: clamp(32px, 4cqi, 56px); padding-bottom: clamp(32px, 4cqi, 56px); }
 .bb .bb-title { position: relative; container-type: inline-size; padding-top: 8px; }
 .bb .bb-title .flip-heading { position: relative; z-index: 1; }
 /* Sized here rather than by .fit's character count, which undercounts the word gap. On a phone
@@ -95,36 +91,28 @@
   .bb .bb-intro { grid-template-columns: minmax(0, 60ch) minmax(0, 1fr); column-gap: clamp(40px, 5cqi, 88px); }
 }
 
-/* ---------- 2. screens: FOR REAL! beside the prints on a string (Andrew 2026-10-07, after the
-   Lando Norris stacked words, then his Polaroid Line Carousel). The carousel's own look is in
-   components/ui/polaroid-line-carousel.css; this places it. Ink on the sky band 13.32:1, berry on
-   sky 5.6:1 (the second word is 100px and up, so AA large needs 3:1). ---------- */
-.bb .bb-screens { --bb-line-h: 610px; display: grid; gap: 0; }
-.bb .bb-real { display: grid; align-content: center; justify-items: start; gap: 6px; }
-.bb .bb-real .eyebrow { margin-bottom: 0; }
-.bb .bb-real-word { display: grid; margin: 0; font: 700 clamp(76px, 21cqi, 120px)/.82 var(--display); letter-spacing: -.07em; text-transform: uppercase; font-variant-ligatures: none; color: var(--ink); }
-.bb .bb-real-word > span { display: block; }
-.bb .bb-real-word > span + span { color: var(--berry); rotate: -4deg; translate: .12em .02em; transform-origin: 0 50%; }
-/* Fira Code is monospace, so "!" sits mid-cell with wide bearings and read as a stray mark
-   about 30px off the L; pulled back against it. */
-.bb .bb-real-word .bb-bang { margin-left: -.16em; }
-/* The prints hang inside the band; the line's ends run to the band's rounded edge. */
+/* ---------- 2. screens: the prints on a string (Andrew 2026-10-07, his Polaroid Line
+   Carousel), alone on the sky band since 2026-10-21 (Andrew: "it just feels cluttery and
+   distracting from the other projects"). The carousel's own look is in
+   components/ui/polaroid-line-carousel.css; this places it. Ink on the sky band 13.32:1.
+   The band's top pad is trimmed: the string's sag and the pegs already leave air above the
+   prints, so the full pad read as an empty strip. The head's foot pad is trimmed with it
+   (96px to 56px wide), which raises the line toward the story: room for the fact tiles' tilt
+   is all it needs to keep. ---------- */
+.bb .bb-screens { --bb-line-h: 620px; padding-block: clamp(12px, 1.6cqi, 24px); }
+/* The line runs the band's full width, its ends to the band's rounded edge. */
 .bb .bb-line { margin-inline: calc(-1 * max(18px, calc(var(--gutter) - var(--band-inset)))); width: auto; border-radius: 0; }
-/* The small carousel (the website, PolaroidMini) sits in the lower left: after the line on
-   phones, under FOR REAL! beside the line on wide screens. It stays clearly smaller than a print
-   on the line (about 270px wide on a 390 phone, 460px wide on desktop), so the app reads first. */
-.bb .bb-more { justify-self: start; display: grid; justify-items: start; gap: 10px; width: 100%; max-width: 172px; margin-top: 28px; }
-.bb .bb-more .eyebrow { margin-bottom: 0; }
-@container (min-width: 640px) { .bb .bb-more { max-width: 210px; } }
-@container (min-width: 960px) {
-  .bb .bb-screens { --bb-line-h: 720px; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: clamp(8px, 2cqi, 32px); }
-  .bb .bb-real { grid-area: 1 / 1; align-self: end; }
-  .bb .bb-line { grid-area: 1 / 2 / 3 / 3; }
-  .bb .bb-more { grid-area: 2 / 1; align-self: start; margin-top: 36px; }
-  .bb .bb-real-word { font-size: clamp(96px, 9.6cqi, 156px); }
-  /* The line's left end meets FOR REAL!, so prints fade out there instead of being cut off. */
-  .bb .bb-line { margin-inline: 0 calc(-1 * max(18px, calc(var(--gutter) - var(--band-inset)))); -webkit-mask-image: linear-gradient(90deg, transparent, #000 96px); mask-image: linear-gradient(90deg, transparent, #000 96px); }
-  .bb .bb-line .pl-bar { left: 104px; }
+/* Short laptop screens (Andrew 2026-10-21, the chapter's 1.8-screen cap): a fixed 660px line
+   put the chapter at 1.99 screens on 1366x768. Wide, the line is the screen's height less 240px,
+   between 600 and 660, so 1440x900 keeps its full 660. It stops at 600 because the carousel sizes
+   a print at 62% of the line's height and its caption bar is fixed: under about 600 the front
+   print runs into the caption. The rest comes out of the chapter's air, only on screens under
+   860px tall: the top pad, the head's gaps and foot, and the space above the stack strip. */
+@container (min-width: 960px) { .bb .bb-screens { --bb-line-h: clamp(600px, calc(100svh - 240px), 660px); } }
+@media (min-width: 960px) and (max-height: 860px) {
+  .bb .bb-flow { padding-top: 56px; }
+  .bb .bb-head { gap: 40px; padding-bottom: 24px; }
+  .bb .bb-stack { margin-top: 28px; }
 }
 
 /* ---------- 3. the stack: logo chips (components/site/stack-logos.tsx) sliding along an ink
@@ -166,6 +154,5 @@
 .bb .bb-fact.is-in { animation: bb-card .85s var(--ease-elastic) both; }
 .bb .bb-fact:nth-child(2).is-in { animation-delay: 80ms; }
 .bb .bb-fact:nth-child(3).is-in { animation-delay: 160ms; }
-.bb .bb-real-word.is-in { animation: bb-pop 1s var(--ease-elastic) both; }
 
-html[data-motion="reduced"] .bb :is(.bb-st, .bb-fact, .bb-real-word) { animation: none !important; }
+html[data-motion="reduced"] .bb :is(.bb-st, .bb-fact) { animation: none !important; }

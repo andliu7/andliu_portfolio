@@ -46,6 +46,7 @@ export function Header() {
   }, []);
 
   const { hidden, band } = useHideOnScroll();
+  const docked = useDocked(home);
   const markRef = useRef<HTMLAnchorElement>(null);
   useHello(markRef);
 
@@ -77,7 +78,7 @@ export function Header() {
 
   return (
     // data-menu-open keeps Résumé above the open menu and hides the rest (plan 6.1).
-    <header className="site-header" data-menu-open={open ? '' : undefined} data-hidden={hidden ? '' : undefined} data-band={band ? '' : undefined}>
+    <header className="site-header" data-menu-open={open ? '' : undefined} data-hidden={hidden ? '' : undefined} data-band={band ? '' : undefined} data-dock={home ? '' : undefined} data-docked={docked ? '' : undefined}>
       {/* The left group is the header's first grid item: the host span (.wordmark-host in
           globals.css, which dances) around the mark, then the degree chip */}
       <div className="hdr-left">
@@ -143,6 +144,26 @@ function useHello(ref: RefObject<HTMLAnchorElement | null>) {
     mo.observe(d, { attributes: true, attributeFilter: ['class'] });
     return () => { mo.disconnect(); window.clearTimeout(timer); };
   }, [ref]);
+}
+
+// docked: the hero's degree line (.hp-degree, app/sections/hero.tsx) has scrolled up under the
+// header, so the header shows its own copy (Andrew 2026-10-21: it "goes to the top sticky header
+// when I scroll past it"). An IntersectionObserver (the browser reports when the chip crosses the
+// header's bottom edge) instead of a scroll listener, so nothing is measured while scrolling.
+// Below the header's edge, or not reached yet, it is not docked.
+function useDocked(home: boolean) {
+  const [docked, setDocked] = useState(false);
+  useEffect(() => {
+    const chip = home ? document.querySelector('.hp-degree') : null;
+    if (!chip) { setDocked(false); return; }
+    const top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 76;
+    const io = new IntersectionObserver(([entry]) => {
+      setDocked(!entry.isIntersecting && entry.boundingClientRect.top < top);
+    }, { rootMargin: `-${top}px 0px 0px 0px` });
+    io.observe(chip);
+    return () => io.disconnect();
+  }, [home]);
+  return docked;
 }
 
 // hidden: the header should be out of the way, after scrolling down past the first 120px and
