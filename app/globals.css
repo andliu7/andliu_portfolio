@@ -416,6 +416,9 @@ html[data-hscroll="on"] .site-header:not([data-menu-open]) > .header-right { tra
 /* Narrow phones: the four controls must fit 390px less a desktop scrollbar (372px), so Visit
    Blueberry drops its arrow and tightens. */
 @media (max-width:420px) { .header-visit { --pill-pad:10px; font-size:12px; letter-spacing:.02em; } .header-visit svg { display:none; } }
+/* The smallest phones (320 wide): the mark and the three controls overlapped by about 16px, so
+   the pill and the gaps tighten once more (2026-10-23) */
+@media (max-width:359px) { .header-visit { --pill-pad:8px; font-size:11px; letter-spacing:0; } .header-right { gap:6px; } }
 
 /* ---------- Menu overlay ---------- */
 /* Left: the numbered links, the small links and the switches. Right, 1000px and up: the preview,

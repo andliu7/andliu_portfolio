@@ -42,12 +42,20 @@
    size, from HeroFx's fit (--fs-js), capped so the panel fits a laptop screen */
 .hp .hp-stage {
   container:hero / inline-size; position:relative; z-index:1; display:grid; gap:clamp(10px,1.4vw,18px);
-  /* 21svh, was 19 (Andrew 2026-10-21: "scale everything up slightly on my laptop screen"): on a
-     laptop the height cap is what binds, and the hero, its objects and the photo all scale from it */
-  --fs:min(var(--fs-js, calc((100vw - 2 * var(--gutter)) / 9.5)), 21svh);
 }
-@container hero (max-width:759px) { .hp .hp-stage { --fs:var(--fs-js, calc((100vw - 2 * var(--gutter)) / 5)); } }
-.hp .hp-stage > * { --fs:inherit; }
+/* Before HeroFx's fit lands, the same sum it does, so the name renders at its final size and does
+   not jump when the script runs (2026-10-23: it went 132 to 161px at 1366 wide, 37 to 78px at
+   390). Set on the stage's children, not the stage: a container query cannot style its own
+   container, so the old phone rule on .hp-stage never applied, and 100cqi there would not be the
+   stage. 100cqi is the stage; --card-m is the card's side padding (hero.css).
+   Wide: the whole name is 5.72em and the fit takes 86% of the card, then 98% of that. 21svh, was
+   19 (Andrew 2026-10-21: "scale everything up slightly on my laptop screen"): on a laptop the
+   height cap is what binds, and the hero, its objects and the photo all scale from it. */
+.hp .hp-stage > * { --fs:min(var(--fs-js, calc((100cqi - 2 * var(--card-m)) / 6.79)), 21svh); }
+/* A phone: ANDREW alone (3.94em) fills 98% of the card */
+@container hero (max-width:759px) {
+  .hp .hp-stage > * { --fs:var(--fs-js, calc((100cqi - 2 * var(--card-m)) / 4.02)); }
+}
 
 /* ---------- The words ---------- */
 .hp .hp-hi {

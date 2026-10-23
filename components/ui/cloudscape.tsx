@@ -8,7 +8,8 @@ import { useReducedMotion } from "@/components/site/use-reduced-motion";
 // each marked "site:": it pauses when the tab is hidden or the canvas is off screen, it draws one
 // still frame under reduced motion, the host carries a CSS gradient of the same three colours
 // so the sky still shows where WebGL is missing (the canvas then stays transparent), and the
-// context skips antialiasing, which a single full-canvas quad never uses.
+// context skips antialiasing, which a single full-canvas quad never uses. A fifth: the canvas
+// resolution is capped at 1x (see resize).
 
 const vertexShaderGLSL = `
 attribute vec2 position;
@@ -253,7 +254,10 @@ const Cloudscape = ({
     let redrawStill = () => {};
 
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // site: drawn at one canvas pixel per CSS pixel at most (was up to 2). The clouds are soft
+      // noise with no hard edges, so the browser's upscale looks the same, and a 3x phone shades
+      // a quarter of the pixels every frame (2026-10-23)
+      const dpr = Math.min(window.devicePixelRatio || 1, 1);
       const { width, height } = host.getBoundingClientRect();
       canvas.width = Math.max(1, Math.floor(width * dpr));
       canvas.height = Math.max(1, Math.floor(height * dpr));
