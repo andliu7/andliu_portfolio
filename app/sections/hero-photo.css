@@ -43,6 +43,13 @@
 .hp .hp-stage {
   container:hero / inline-size; position:relative; z-index:1; display:grid; gap:clamp(10px,1.4vw,18px);
 }
+/* One column exactly as wide as the stage, for the stage and the card both (2026-10-23, on
+   Andrew's iPhone: WebKit counts the degree chip's fit-content width, its whole 629px line, as
+   its smallest width, so each grid's auto column grew to it and the card went 642px wide on a
+   361px stage, the name and photo centred 140px right of the screen's middle). The foot, the
+   chip's own grid, did the same to the role. minmax(0,1fr) lets no child, however long its one
+   line, widen any of the three. */
+.hp .hp-stage, .hp .hero-card, .hp .hero-foot { grid-template-columns:minmax(0,1fr); }
 /* Before HeroFx's fit lands, the same sum it does, so the name renders at its final size and does
    not jump when the script runs (2026-10-23: it went 132 to 161px at 1366 wide, 37 to 78px at
    390). Set on the stage's children, not the stage: a container query cannot style its own
@@ -52,9 +59,11 @@
    19 (Andrew 2026-10-21: "scale everything up slightly on my laptop screen"): on a laptop the
    height cap is what binds, and the hero, its objects and the photo all scale from it. */
 .hp .hp-stage > * { --fs:min(var(--fs-js, calc((100cqi - 2 * var(--card-m)) / 6.79)), 21svh); }
-/* A phone: ANDREW alone (3.94em) fills 98% of the card */
+/* A phone: the whole name (5.72em) on one line, 92% of the page and then 98% of that, as the fit
+   does (2026-10-23, was ANDREW alone filling the card). 100vw is the fit's innerWidth. No height
+   cap: the name is short on a phone. */
 @container hero (max-width:759px) {
-  .hp .hp-stage > * { --fs:var(--fs-js, calc((100cqi - 2 * var(--card-m)) / 4.02)); }
+  .hp .hp-stage > * { --fs:var(--fs-js, calc(100vw * .92 * .98 / 5.72)); }
 }
 
 /* ---------- The words ---------- */
@@ -122,19 +131,16 @@
   font-variant-ligatures:none;
 }
 
-/* ---------- A phone: ANDREW over LIU, his head and shoulders above them ----------
-   The gap becomes a full-width line break with no height, and the photo hangs from the name
-   itself, centred, 3.2em tall. It used to stand on LIU's line, which put ANDREW's caps 40% down
-   the cut-out, right under his chin, so the fade had to start at his chin and his shoulders were
-   lost (R and E measured 2.3:1 on his collar otherwise). Now it is lifted so the caps start 61%
-   down, as on a wide screen (Andrew 2026-10-23: "make it so that my shoulders show in the phone
-   image as well"): his top sits 1.88em above the name (.07em, where the caps start, less 61% of
-   3.2em), his shoulders (49% down) clear the caps, and the fade is the wide screen's, down to 8%
-   by the caps, so REW still sits on the cream scrim, not his jacket. */
+/* ---------- A phone: his photo the centrepiece, the name one line through it ----------
+   (2026-10-23, Andrew: "make it so that the image is the central point with my name horizontally
+   going through, slightly less large than the width of the page"; until then ANDREW sat over
+   LIU with a 3.2em photo.) The name stays one line, as on a wide stage, and the photo is larger,
+   4em tall (about 57% of a 393px screen), so his face reads. The name crosses it where it does
+   on a wide stage: ANDREW's caps start 61% down the cut-out (his top .07em less 61% of 4em above
+   the name), so the base fade is down to 8% by the caps and R E W sit on the cream scrim, not his
+   jacket. "Hi, my name is" is centred above his head. */
 @container hero (max-width:759px) {
-  .hp .hp-name { flex-wrap:wrap; }
-  .hp .hp-gap { flex-basis:100%; width:auto; height:0; }
-  .hp .hp-photo { height:3.2em; top:-1.88em; bottom:auto; }
+  .hp .hp-photo { height:4em; top:-2.37em; bottom:auto; }
   .hp .hp-hi { justify-self:center; margin:0; text-align:center; }
 }
 
@@ -167,14 +173,18 @@
 /* the top two's labels above them (hero-objects.css), the lower two's out to the side */
 .hp[data-icons="a"] .hob-pencil .hob-label { top:50%; left:auto; right:calc(100% + 10px); translate:0 -50%; rotate:calc(var(--r) * -1); }
 .hp[data-icons="a"] .hob-card .hob-label { top:50%; left:calc(100% + 10px); translate:0 -50%; rotate:calc(var(--r) * -1); }
-/* A on a phone: the name is two lines and the photo 3.2em tall, its top 1.88em above the name,
-   so the top two flank his head (from -1.78em to -.66em) and the lower two flank LIU */
+/* A on a phone (2026-10-23, the one-line name through a 4em photo, was two lines and 3.2em): the
+   photo is 3.62em wide, its top 2.37em above the name, so his head spans -.76em to +.36em across
+   and -2.25em to -.85em up, his shoulders +-1.3em. There is no room beside the name (it is 92% of
+   the page), so the top two flank his head and the lower two sit outside his shoulders, over
+   ANDREW's and LIU's outer letters, their feet clear of the caps (.07em). */
 @container hero (max-width:759px) {
-  .hp[data-icons="a"] .hob { --h:max(48px, calc(var(--fs) * .75)); }
-  .hp[data-icons="a"] .hob-phone  { --ax:-1.05; --ay:-1.22; }
-  .hp[data-icons="a"] .hob-laptop { --h:max(44px, calc(var(--fs) * .6)); --ax:.95; --ay:-1.22; }
-  .hp[data-icons="a"] .hob-pencil { --ax:-1.6; --ay:1.5; }
-  .hp[data-icons="a"] .hob-card   { --h:max(44px, calc(var(--fs) * .6)); --ax:1.6; --ay:1.5; }
+  .hp[data-icons="a"] .hob { --h:max(48px, calc(var(--fs) * .8)); }
+  .hp[data-icons="a"] .hob-phone  { --h:max(48px, calc(var(--fs) * .9)); --ax:-1.55; --ay:-1.8; }
+  .hp[data-icons="a"] .hob-laptop { --h:max(36px, calc(var(--fs) * .6)); --ax:1.3; --ay:-1.6; }
+  /* -.8, was -.7: at 320 wide its 48px floor size put the tip on the A's caps (0px clear) */
+  .hp[data-icons="a"] .hob-pencil { --ax:-2.3; --ay:-.8; }
+  .hp[data-icons="a"] .hob-card   { --h:max(40px, calc(var(--fs) * .7)); --ax:2.25; --ay:-.45; }
   /* the lower two's labels (keyboard focus only here) under them, growing inward from the edge */
   .hp[data-icons="a"] :is(.hob-pencil,.hob-card) .hob-label { top:calc(100% + 8px); translate:none; rotate:calc(var(--r) * -1); }
   .hp[data-icons="a"] .hob-pencil .hob-label { left:0; right:auto; }
@@ -195,8 +205,9 @@
   .hp[data-icons="d"] :is(.hob-pencil,.hob-card) { --low:1.85; }
   /* the top two a little higher than the live hero's, so they clear ANDREW's caps */
   .hp[data-icons="d"] :is(.hob-phone,.hob-laptop) { top:calc(var(--pt) + var(--fs) * .1 - var(--h) / 2); }
-  /* A needs no room above or under the name for objects, only for his head (1.88em) */
-  .hp[data-icons="a"] .hero-namewrap { --pt:calc(var(--fs) * 1.93); padding-bottom:12px; }
+  /* A needs no room above or under the name for objects, only for his head: 2.42em, the 4em
+     photo's top (2.37em above the name) and a hair (2026-10-23, was 1.93em for the 3.2em photo) */
+  .hp[data-icons="a"] .hero-namewrap { --pt:calc(var(--fs) * 2.42); padding-bottom:12px; }
 }
 
 /* ---------- The bar under reduced motion ----------

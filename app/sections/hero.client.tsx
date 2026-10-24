@@ -14,9 +14,11 @@ import { useReducedMotion } from '@/components/site/use-reduced-motion';
 
 const ROLL_AFTER = 4500; // the one roll, 4.5s after the panel is first seen
 
-// The fit: the name fills the card's inside on one line (a stage 760px and wider), or ANDREW
-// fills it on a phone, where LIU drops to a second line (hero-photo.css). It runs again once
-// the web fonts are in, and on resize.
+// The fit: the whole name on one line at every width. A stage 760px and wider fills the card's
+// inside; a phone fills 92% of the page (2026-10-23, Andrew: "the image is the central point
+// with my name horizontally going through, slightly less large than the width of the page";
+// until then ANDREW alone filled the card, LIU on a second line). It runs again once the web
+// fonts are in, and on resize.
 function fitAll() {
   document.querySelectorAll<HTMLElement>('.hp-panel').forEach(panel => {
     const stage = panel.querySelector<HTMLElement>('.hp-stage');
@@ -26,18 +28,14 @@ function fitAll() {
     if (!stage || !wrap || !name || !back) return;
     const current = parseFloat(getComputedStyle(name).fontSize);
     const wide = stage.clientWidth >= 760;
-    let natural: number;
-    if (wide) {
-      name.style.width = 'max-content';
-      natural = name.getBoundingClientRect().width;
-      name.style.width = '';
-    } else {
-      natural = back.getBoundingClientRect().width;
-    }
+    name.style.width = 'max-content';
+    const natural = name.getBoundingClientRect().width;
+    name.style.width = '';
     if (!current || !natural) return;
     // Wide: 86% of the card (80% until Andrew 2026-10-21 asked for it slightly larger), so the
-    // objects still have room round the name (icons D sit at its corners)
-    const size = (current * wrap.clientWidth * (wide ? 0.86 : 1)) / natural;
+    // objects still have room round the name (icons D sit at its corners). A phone: 92% of
+    // innerWidth, the same width 100vw is in hero-photo.css's fallback, so nothing jumps.
+    const size = (current * (wide ? wrap.clientWidth * 0.86 : window.innerWidth * 0.92)) / natural;
     stage.style.setProperty('--fs-js', `${Math.max(40, Math.floor(size * 0.98))}px`);
     // Where ANDREW now starts inside the card, so "Hi, my name is" lines up with it whichever
     // limit (the width or the screen's height) sized the name (hero-photo.css .hp-hi). Read on the
@@ -54,14 +52,21 @@ export function HeroFx() {
     const d = document.documentElement;
     let alive = true;
     let pending = 0;
+    // One fit per frame, however many of the triggers below fire
+    const fit = () => {
+      if (!alive) return;
+      cancelAnimationFrame(pending);
+      pending = requestAnimationFrame(fitAll);
+    };
+    // (2026-10-23: WebKit, so Safari and Chrome on an iPhone, can leave document.fonts.ready
+    // pending for good with document.fonts.status already 'loaded', so the fit never ran there.
+    // Now it also runs when the fonts are already in, and when a font load finishes.)
     const refit = () => {
-      document.fonts.ready.then(() => {
-        if (!alive) return;
-        cancelAnimationFrame(pending);
-        pending = requestAnimationFrame(fitAll);
-      });
+      if (document.fonts.status === 'loaded') fit();
+      document.fonts.ready.then(fit);
     };
     refit();
+    document.fonts.addEventListener('loadingdone', fit);
     window.addEventListener('resize', refit);
 
     // The roll: once per name, 4.5s after it first comes on screen once the loader has lifted
@@ -113,6 +118,7 @@ export function HeroFx() {
       alive = false;
       cancelAnimationFrame(pending);
       window.removeEventListener('resize', refit);
+      document.fonts.removeEventListener('loadingdone', fit);
       seen.disconnect();
       timers.forEach(t => window.clearTimeout(t));
       offs.forEach(off => off());
