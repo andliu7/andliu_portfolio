@@ -25,8 +25,10 @@ export default function Resume() {
   return (
     <section {...sectionAttrs('resume')} className="resume" aria-labelledby="resume-title">
       <div className="rs-page">
-        {/* The night sky behind the page, fading out as you scroll through it (components/ui/stars.tsx). */}
-        <StarsBackground />
+        {/* The night sky behind the page (components/ui/stars.tsx). It no longer fades out as you
+            scroll through: it stays until the island covers it (Andrew 2026-10-23: "the stars
+            disappear once I get down to the island"). */}
+        <StarsBackground fade={false} />
         <div className="rs-wrap">
           <div className="rs-text">
             <h2 id="resume-title" className="display rs-title">{RESUME_PREVIEW.title}</h2>

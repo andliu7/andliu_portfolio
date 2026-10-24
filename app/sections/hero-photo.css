@@ -92,7 +92,11 @@
    between ANDREW and LIU. */
 .hp .hp-name { position:relative; }
 .hp .hp-gap { position:static; flex:0 0 auto; width:.34em; height:1em; }
-.hp .hp-photo { position:absolute; z-index:0; left:50%; bottom:0; translate:-50% 0; display:block; height:2.4em; pointer-events:none; }
+/* The box takes its width from the cut-out's ratio (421 x 465), not from the image inside it:
+   left to the image, Safari can size a shrink-to-fit box like this from the file's own 421px
+   width instead of the drawn one, so the -50% centring pulls him off centre (2026-10-23, on
+   Andrew's phone). */
+.hp .hp-photo { position:absolute; z-index:0; left:50%; bottom:0; translate:-50% 0; display:block; height:2.4em; aspect-ratio:421 / 465; pointer-events:none; }
 .hp .hp-back, .hp .hp-front { z-index:3; }
 .hp .hp-name :is(.hero-fa,.hero-fb,.hp-comma) { -webkit-text-stroke:.07em var(--card); paint-order:stroke fill; }
 .hp .hp-comma { color:var(--hp-deep); }
@@ -100,7 +104,7 @@
    no longer pulls the name's centre right (Andrew 2026-10-21: "Why isn't my name centered") */
 .hp .hp-comma { position:absolute; left:100%; top:0; }
 .hp .hp-cut {
-  display:block; height:100%; width:auto; max-width:none;
+  display:block; height:100%; width:100%; max-width:none;
   filter:grayscale(1) contrast(1.06); /* Andrew: "I liked the black-and-white image of me better" */
   -webkit-mask-image:linear-gradient(to bottom,black 44%,rgb(0 0 0 / .3) 54%,rgb(0 0 0 / .08) 61%,transparent 78%);
   mask-image:linear-gradient(to bottom,black 44%,rgb(0 0 0 / .3) 54%,rgb(0 0 0 / .08) 61%,transparent 78%);
