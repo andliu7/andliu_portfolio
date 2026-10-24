@@ -39,8 +39,10 @@ import { useReducedMotion } from '@/components/site/use-reduced-motion';
 // it to a CSS length, and motion.ul writes it into the style each frame without re-rendering
 // React. A MotionValue on a `--name` key is set as a CSS custom property.
 
-// Percent of one phone's height, positive is down.
-const RISE_FROM = 3, RISE_TO = -5; // the left and right columns: 8 in all
+// Percent of one phone's height, positive is down. The sides rise about four times as fast as
+// they did (Andrew 2026-10-23: "I want the side ones to scroll up much faster"; was 3 to -5).
+// They still start above the centre (5), so the centre stays the lower column throughout.
+const RISE_FROM = 3, RISE_TO = -27; // the left and right columns: 30 in all
 const SINK_FROM = 5, SINK_TO = 20; // the centre column (the two site pages): 15 in all
 
 // Flat sticker fills for the phone bodies (phones.css [data-fill]), mirrored across the centre

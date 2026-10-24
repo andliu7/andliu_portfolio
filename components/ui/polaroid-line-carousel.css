@@ -6,6 +6,17 @@
 .pl-root { position: relative; width: 100%; overflow: hidden; color: var(--ink); user-select: none; -webkit-user-select: none; touch-action: pan-y; outline: none; cursor: grab; border-radius: var(--r-tile); }
 .pl-root[data-drag='1'] { cursor: grabbing; }
 .pl-root:focus-visible { box-shadow: inset 0 0 0 3px var(--berry); }
+/* The stage: the string and the prints, shown through a window about three prints wide that fades
+   out at both ends (Andrew 2026-10-23: "only see three images at a time ... a gradient fade at the
+   sides"). --pl-sp is one print's spacing (the .tsx spaces them 1.08 widths apart): the side prints
+   sit a spacing either side of the centre, so the window is solid out to 1.2 spacings and gone by
+   1.75. On a phone, where one print nearly fills the width, the fade keeps to the outer 12%. */
+.pl-stage {
+  --pl-sp: calc(var(--pl-cw) * 1.08);
+  --pl-fade: linear-gradient(90deg, transparent max(0%, calc(50% - 1.75 * var(--pl-sp))), #000 max(12%, calc(50% - 1.2 * var(--pl-sp))), #000 min(88%, calc(50% + 1.2 * var(--pl-sp))), transparent min(100%, calc(50% + 1.75 * var(--pl-sp))));
+  position: absolute; inset: 0;
+  -webkit-mask-image: var(--pl-fade); mask-image: var(--pl-fade);
+}
 .pl-string { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; stroke: var(--ink); }
 .pl-card { position: absolute; left: 0; top: 0; width: var(--pl-cw); transform-origin: 50% 0; will-change: transform; cursor: inherit; }
 .pl-print { margin-top: 12px; padding: 10px 10px 0; border: 1.5px solid var(--ink); border-radius: 14px; background: var(--card); box-shadow: 0 6px 0 var(--ledge); transition: transform .5s cubic-bezier(.2,.7,.2,1), filter .5s ease; }

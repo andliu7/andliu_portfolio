@@ -10,12 +10,18 @@ import './polaroid-line-carousel.css';
  * swinging on their pegs with the speed you give them and settling back with a little overshoot;
  * at rest they sway in a light breeze. The print in the middle is the one you are looking at.
  *
- * Drag (mouse or touch), click a print, Left/Right keys, and autoplay. Changes from the paste:
+ * Drag (mouse or touch), click a print, Left/Right keys, and the drift. Changes from the paste:
  *   - every slide is a real capture, so the painted-landscape fallback is gone
  *   - a slide may carry a `video`: only the front print plays it, muted and looping, and only
- *     while the carousel is on screen; autoplay waits until it has played through once
- *   - autoplay also waits while the carousel is off screen
- *   - reduced motion (html[data-motion="reduced"]): no swing, no sway, no autoplay, and the line
+ *     while the carousel is on screen
+ *   - the drift (Andrew 2026-10-23, replacing autoplay's one-print jumps, which read as choppy):
+ *     the line slides on by itself at a steady pace, and holds while the pointer is over it,
+ *     while it has keyboard focus, and for a moment after a drag, click or arrow
+ *   - the window: the prints show through a band about three prints wide that fades out at
+ *     both ends (the .pl-stage mask in the .css), so a print fades in on one side and out on
+ *     the other instead of popping. Fewer than five slides are drawn twice, so the loop has
+ *     a print ready behind each faded end
+ *   - reduced motion (html[data-motion="reduced"]): no swing, no sway, no drift, and the line
  *     jumps to the chosen print instead of springing
  *   - labels come in as props (lib/site.ts holds every word), styles live in the .css beside it
  *   - the line loops (2026-10-07, after a critic found bare string at either end): the offset runs
@@ -62,8 +68,8 @@ export type PolaroidLineCarouselProps = {
   sag?: number;
   /** How much the prints swing; 0 holds them still. */
   swing?: number;
-  /** ms per print; 0 turns autoplay off. It waits while someone is interacting. */
-  autoplay?: number;
+  /** Seconds the drift takes to move on one print; 0 turns it off. It waits while someone is interacting. */
+  drift?: number;
   /** The print in front at first. */
   start?: number;
   onChange?: (index: number) => void;
@@ -106,6 +112,12 @@ export function nearestAt(off: number, spacing: number, n: number): number {
 export function pad2(n: number): string {
   return n < 10 ? '0' + n : String(n);
 }
+
+// How long the drift holds after a drag, click or arrow, ms.
+const HOLD = 3000;
+// The fewest prints the loop needs: the window shows about three, and each faded end needs one
+// more waiting behind it, so a print never jumps sides where it can still be seen.
+const MIN_PRINTS = 5;
 // #endregion logic
 
 export default function PolaroidLineCarousel({
@@ -114,7 +126,7 @@ export default function PolaroidLineCarousel({
   cardWidth = 360,
   sag = 46,
   swing = 1,
-  autoplay = 5000,
+  drift = 6,
   start = 0,
   onChange,
   className,
@@ -123,8 +135,13 @@ export default function PolaroidLineCarousel({
   nextLabel,
 }: PolaroidLineCarouselProps) {
   const n = slides.length;
+  // m prints on the line: the slides, drawn twice or more when there are too few to fill the loop.
+  // Print k shows slide k % n.
+  const m = n * Math.max(1, Math.ceil(MIN_PRINTS / n));
   const reduced = useReducedMotion();
-  const [active, setActive] = React.useState(start);
+  // The print in front, 0 to m - 1; `active` is its slide.
+  const [front, setFront] = React.useState(start);
+  const active = front % n;
   const [dragging, setDragging] = React.useState(false);
   const [onScreen, setOnScreen] = React.useState(false);
   const [size, setSize] = React.useState({ w: 1200, h: 700, cw: cardWidth });
@@ -135,13 +152,12 @@ export default function PolaroidLineCarousel({
   const sim = React.useRef({ off: 0, vel: 0, target: 0, a: [] as number[], w: [] as number[] });
   const drag = React.useRef<null | { x: number; off: number; lx: number; lt: number; v: number; moved: boolean }>(null);
   const lastTouch = React.useRef(0);
-  const activeRef = React.useRef(start);
+  const frontRef = React.useRef(start);
   const visibleRef = React.useRef(false);
-  // Set once the front print's video has played through (or cannot play), so autoplay may move on.
-  const videoDone = React.useRef(true);
+  const hoverRef = React.useRef(false);
   // useRef as a mailbox: the animation loop reads the latest props without restarting.
-  const opts = React.useRef({ sag, swing, reduced });
-  opts.current = { sag, swing, reduced };
+  const opts = React.useRef({ sag, swing, reduced, drift });
+  opts.current = { sag, swing, reduced, drift };
 
   const spacing = size.cw * 1.08;
   // i is a position on the looping line, not wrapped: from the last print, n is the next one (print 0).
@@ -171,18 +187,13 @@ export default function PolaroidLineCarousel({
 
   // Keep the line on the front print when the spacing changes.
   React.useEffect(() => {
-    sim.current.target = activeRef.current * spacing;
-    sim.current.off = activeRef.current * spacing;
+    sim.current.target = frontRef.current * spacing;
+    sim.current.off = frontRef.current * spacing;
   }, [spacing]);
 
   React.useEffect(() => {
     onChange?.(active);
   }, [active, onChange]);
-
-  // A new front print with a video holds autoplay until that video loops once.
-  React.useEffect(() => {
-    videoDone.current = !slides[active]?.video;
-  }, [active, slides]);
 
   // The simulation, written straight to the DOM each frame.
   React.useEffect(() => {
@@ -207,14 +218,18 @@ export default function PolaroidLineCarousel({
       } else if (o.reduced) {
         S.off = S.target; S.vel = 0; lineVel = 0;
       } else {
+        // The drift moves the target on at a steady pace and the spring follows it, so the line
+        // eases out of a pause instead of lurching
+        const held = hoverRef.current || root.contains(document.activeElement) || now - lastTouch.current < HOLD;
+        if (o.drift && !held) S.target += (spacing / o.drift) * dt;
         const before = S.off;
         [S.off, S.vel] = springStep(S.off, S.vel, S.target, dt);
         lineVel = -(S.off - before) / Math.max(dt, 1e-3);
       }
       const g = o.reduced ? 0 : o.swing;
-      const near = nearestAt(S.off, spacing, n);
-      const loop = n * spacing;
-      for (let i = 0; i < n; i++) {
+      const near = nearestAt(S.off, spacing, m);
+      const loop = m * spacing;
+      for (let i = 0; i < m; i++) {
         const el = cards.current[i];
         if (!el) continue;
         let d = i * spacing - S.off;
@@ -234,15 +249,15 @@ export default function PolaroidLineCarousel({
         S.w[i] = av;
         const y = stringY(x, w, y0, o.sag) - 6;
         el.style.transform = 'translate(' + (x - cw / 2).toFixed(1) + 'px,' + y.toFixed(1) + 'px) rotate(' + a.toFixed(4) + 'rad)';
-        el.style.zIndex = String(i === near ? n + 1 : n - Math.round(Math.abs(d) / spacing));
+        el.style.zIndex = String(i === near ? m + 1 : m - Math.round(Math.abs(d) / spacing));
       }
       // Setting an SVG path's d re-parses and repaints it even when the value is the same, so skip
       // the write on the (almost every) frame where the line has not moved.
       const path = 'M0 ' + y0 + ' Q' + w / 2 + ' ' + (y0 + 2 * o.sag) + ' ' + w + ' ' + y0;
       if (path !== lineD) { lineD = path; pathRef.current?.setAttribute('d', path); }
-      if (near !== activeRef.current) {
-        activeRef.current = near;
-        setActive(near);
+      if (near !== frontRef.current) {
+        frontRef.current = near;
+        setFront(near);
       }
       raf = requestAnimationFrame(frame);
     };
@@ -259,36 +274,16 @@ export default function PolaroidLineCarousel({
       cancelAnimationFrame(raf);
       io.disconnect();
     };
-  }, [size, spacing, n]);
-
-  // Autoplay, on along the loop (after the last print comes the first). Off under reduced motion,
-  // paused off screen, while someone is interacting, and while the front print's video has not
-  // yet played through.
-  React.useEffect(() => {
-    if (!autoplay || n < 2 || reduced) return;
-    const t = window.setInterval(() => {
-      if (document.hidden || !visibleRef.current || drag.current || !videoDone.current) return;
-      if (performance.now() - lastTouch.current < autoplay) return;
-      goTo(heading() + 1);
-    }, autoplay);
-    return () => window.clearInterval(t);
-  }, [autoplay, n, goTo, heading, reduced]);
+  }, [size, spacing, m]);
 
   // The front print's video plays only while the carousel is on screen.
   const playing = !reduced && onScreen;
   React.useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    if (playing) v.play().catch(() => { videoDone.current = true; }); // autoplay can be refused; the still stays
+    if (playing) v.play().catch(() => {}); // autoplay can be refused; the still stays
     else v.pause();
-  }, [playing, active]);
-
-  const onVideoTime = (e: React.SyntheticEvent<HTMLVideoElement>) => {
-    const v = e.currentTarget;
-    const last = Number(v.dataset.t || 0);
-    if (v.currentTime < last) videoDone.current = true; // it wrapped: one loop played
-    v.dataset.t = String(v.currentTime);
-  };
+  }, [playing, front]);
 
   const onDown = (e: React.PointerEvent) => {
     if ((e.target as HTMLElement).closest('.pl-bar')) return;
@@ -358,52 +353,57 @@ export default function PolaroidLineCarousel({
       onPointerMove={onMove}
       onPointerUp={onUp}
       onPointerCancel={onUp}
+      onPointerEnter={e => { if (e.pointerType === 'mouse') hoverRef.current = true; }}
+      onPointerLeave={() => { hoverRef.current = false; }}
     >
-      <svg className="pl-string" aria-hidden="true">
-        <path ref={pathRef} fill="none" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-      {slides.map((sl, i) => (
-        <div
-          key={sl.image}
-          className="pl-card"
-          data-i={i}
-          data-on={i === active ? '1' : '0'}
-          // A callback ref: React calls it with each card's element, so the loop can move them.
-          ref={el => void (cards.current[i] = el)}
-          aria-hidden={i === active ? undefined : true}
-        >
-          <div className="pl-print">
-            <div className="pl-shot">
-              <img
-                src={sl.sm ?? sl.image}
-                srcSet={sl.sm ? `${sl.sm} 800w, ${sl.image} 1600w` : undefined}
-                sizes={`${Math.round(size.cw * (sl.crop?.scale ?? 1))}px`}
-                alt={sl.alt}
-                draggable={false}
-                loading="lazy"
-                decoding="async"
-                style={cropStyle(sl.crop)}
-              />
-              {sl.video && i === active && !reduced ? (
-                <video
-                  ref={videoRef}
-                  src={sl.video}
-                  poster={sl.image}
-                  muted
-                  loop
-                  playsInline
-                  preload="none"
-                  aria-hidden="true"
-                  onTimeUpdate={onVideoTime}
+      {/* The stage holds the string and the prints, and carries the fade at both ends; the
+          caption bar sits outside it, so its text never fades */}
+      <div className="pl-stage">
+        <svg className="pl-string" aria-hidden="true">
+          <path ref={pathRef} fill="none" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+        {Array.from({ length: m }, (_, k) => slides[k % n]).map((sl, k) => (
+          <div
+            key={k}
+            className="pl-card"
+            data-i={k % n}
+            data-on={k === front ? '1' : '0'}
+            // A callback ref: React calls it with each card's element, so the loop can move them.
+            ref={el => void (cards.current[k] = el)}
+            aria-hidden={k === front ? undefined : true}
+          >
+            <div className="pl-print">
+              <div className="pl-shot">
+                <img
+                  src={sl.sm ?? sl.image}
+                  srcSet={sl.sm ? `${sl.sm} 800w, ${sl.image} 1600w` : undefined}
+                  sizes={`${Math.round(size.cw * (sl.crop?.scale ?? 1))}px`}
+                  alt={sl.alt}
+                  draggable={false}
+                  loading="lazy"
+                  decoding="async"
                   style={cropStyle(sl.crop)}
                 />
-              ) : null}
+                {sl.video && k === front && !reduced ? (
+                  <video
+                    ref={videoRef}
+                    src={sl.video}
+                    poster={sl.image}
+                    muted
+                    loop
+                    playsInline
+                    preload="none"
+                    aria-hidden="true"
+                    style={cropStyle(sl.crop)}
+                  />
+                ) : null}
+              </div>
+              <div className="pl-note"><span className="pl-pill">{sl.title}</span></div>
             </div>
-            <div className="pl-note"><span className="pl-pill">{sl.title}</span></div>
+            <div className="pl-peg" />
           </div>
-          <div className="pl-peg" />
-        </div>
-      ))}
+        ))}
+      </div>
       <div className="pl-bar">
         <div className="pl-cap" key={active}>
           <span className="pl-title" aria-hidden="true">{s?.title}</span>

@@ -118,20 +118,19 @@
   font-variant-ligatures:none;
 }
 
-/* ---------- A phone: ANDREW over LIU, him behind both lines ----------
+/* ---------- A phone: ANDREW over LIU, his head and shoulders above them ----------
    The gap becomes a full-width line break with no height, and the photo hangs from the name
-   itself, centred, its foot on LIU's line. 3.2em tall so his chin (38% down the cut-out) lands
-   just above ANDREW's caps: at 2.6em, D and R sat on his mouth. ANDREW's caps start 40% down,
-   so the fade runs from his chin (34%) to 12% there: his neck and collar go, and R and E, which
-   sit right under his chin, measured 2.3:1 on the collar with the fade at his shoulders. */
+   itself, centred, 3.2em tall. It used to stand on LIU's line, which put ANDREW's caps 40% down
+   the cut-out, right under his chin, so the fade had to start at his chin and his shoulders were
+   lost (R and E measured 2.3:1 on his collar otherwise). Now it is lifted so the caps start 61%
+   down, as on a wide screen (Andrew 2026-10-23: "make it so that my shoulders show in the phone
+   image as well"): his top sits 1.88em above the name (.07em, where the caps start, less 61% of
+   3.2em), his shoulders (49% down) clear the caps, and the fade is the wide screen's, down to 8%
+   by the caps, so REW still sits on the cream scrim, not his jacket. */
 @container hero (max-width:759px) {
   .hp .hp-name { flex-wrap:wrap; }
   .hp .hp-gap { flex-basis:100%; width:auto; height:0; }
-  .hp .hp-photo { height:3.2em; }
-  .hp .hp-cut {
-    -webkit-mask-image:linear-gradient(to bottom,black 34%,rgb(0 0 0 / .12) 40%,rgb(0 0 0 / .04) 55%,transparent 70%);
-    mask-image:linear-gradient(to bottom,black 34%,rgb(0 0 0 / .12) 40%,rgb(0 0 0 / .04) 55%,transparent 70%);
-  }
+  .hp .hp-photo { height:3.2em; top:-1.88em; bottom:auto; }
   .hp .hp-hi { justify-self:center; margin:0; text-align:center; }
 }
 
@@ -164,12 +163,12 @@
 /* the top two's labels above them (hero-objects.css), the lower two's out to the side */
 .hp[data-icons="a"] .hob-pencil .hob-label { top:50%; left:auto; right:calc(100% + 10px); translate:0 -50%; rotate:calc(var(--r) * -1); }
 .hp[data-icons="a"] .hob-card .hob-label { top:50%; left:calc(100% + 10px); translate:0 -50%; rotate:calc(var(--r) * -1); }
-/* A on a phone: the name is two lines and the photo 3.2em tall, foot on LIU's line, so the top
-   two flank his head just above ANDREW and the lower two flank LIU at his elbows */
+/* A on a phone: the name is two lines and the photo 3.2em tall, its top 1.88em above the name,
+   so the top two flank his head (from -1.78em to -.66em) and the lower two flank LIU */
 @container hero (max-width:759px) {
   .hp[data-icons="a"] .hob { --h:max(48px, calc(var(--fs) * .75)); }
-  .hp[data-icons="a"] .hob-phone  { --ax:-1.05; --ay:-.55; }
-  .hp[data-icons="a"] .hob-laptop { --h:max(44px, calc(var(--fs) * .6)); --ax:.95; --ay:-.55; }
+  .hp[data-icons="a"] .hob-phone  { --ax:-1.05; --ay:-1.22; }
+  .hp[data-icons="a"] .hob-laptop { --h:max(44px, calc(var(--fs) * .6)); --ax:.95; --ay:-1.22; }
   .hp[data-icons="a"] .hob-pencil { --ax:-1.6; --ay:1.5; }
   .hp[data-icons="a"] .hob-card   { --h:max(44px, calc(var(--fs) * .6)); --ax:1.6; --ay:1.5; }
   /* the lower two's labels (keyboard focus only here) under them, growing inward from the edge */
@@ -192,8 +191,8 @@
   .hp[data-icons="d"] :is(.hob-pencil,.hob-card) { --low:1.85; }
   /* the top two a little higher than the live hero's, so they clear ANDREW's caps */
   .hp[data-icons="d"] :is(.hob-phone,.hob-laptop) { top:calc(var(--pt) + var(--fs) * .1 - var(--h) / 2); }
-  /* A needs no room above or under the name for objects, only for his head (1.2em) */
-  .hp[data-icons="a"] .hero-namewrap { --pt:calc(var(--fs) * 1.25); padding-bottom:12px; }
+  /* A needs no room above or under the name for objects, only for his head (1.88em) */
+  .hp[data-icons="a"] .hero-namewrap { --pt:calc(var(--fs) * 1.93); padding-bottom:12px; }
 }
 
 /* ---------- The bar under reduced motion ----------
