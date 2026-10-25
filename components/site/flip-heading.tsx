@@ -15,6 +15,9 @@ import { FlipReveal } from '@/components/ui/text-block-animation';
 // Triggers (CSS in app/globals.css, .flip-head): :hover with a fine pointer, :focus-visible, and
 // a tap or Enter, which the director (app/motion.tsx) turns into data-flipped for 900ms.
 // Reduced motion: no roll; the colours swap instantly instead.
+// Since 2026-10-25 only the AND/LIU mark rolls (it uses FlipStage). Section headings built here
+// keep the second row in the markup but no longer roll: the reveal below is their one motion
+// (Andrew: "either text reveal or flip on hover, not both ... remove the flip").
 //
 // A server component: plain markup, the motion is CSS. Screen readers read the sr-only text once;
 // the letter stage is aria-hidden.
@@ -22,7 +25,7 @@ import { FlipReveal } from '@/components/ui/text-block-animation';
 // Entrance (2026-10-12): FlipReveal (components/ui/text-block-animation.tsx), the client piece
 // after the link, wipes a colour block across each visual line and fades the letter cells in
 // under it. It adds no wrapper: one aria-hidden layer as the heading's last child. `reveal={false}`
-// leaves it out; `revealColor` overrides the block's var(--kw).
+// leaves it out; `revealColor` overrides the block's var(--reveal).
 
 type Level = 'h1' | 'h2' | 'h3';
 

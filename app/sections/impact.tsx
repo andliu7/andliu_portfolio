@@ -95,7 +95,7 @@ export default function Impact() {
       <CornerStickers set="impact" />
       <header className="impact-head">
         {/* The block-wipe entrance (2026-10-12): berry-soft here, the heading's own is --kw */}
-        <TextBlockAnimation as="span" className="eyebrow" blockColor="var(--berry-soft)">{IMPACT_HEAD.eyebrow}</TextBlockAnimation>
+        <TextBlockAnimation as="span" className="eyebrow">{IMPACT_HEAD.eyebrow}</TextBlockAnimation>
         <FlipHeading id="impact-title" text={IMPACT_HEAD.headline} max={150} />
       </header>
       {ticker.length > 0 && (

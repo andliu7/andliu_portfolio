@@ -27,7 +27,7 @@ export default function Phones() {
   return (
     <section {...sectionAttrs('phones')} className="phones" aria-labelledby="phones-title">
       <div className="ph-head">
-        <TextBlockAnimation as="span" className="eyebrow" blockColor="var(--berry-soft)">{PHONES.eyebrow}</TextBlockAnimation>
+        <TextBlockAnimation as="span" className="eyebrow">{PHONES.eyebrow}</TextBlockAnimation>
         <FlipHeading id="phones-title" text={PHONES.headline} max={150} />
         <div className="ph-intro">
           <p className="ph-line" data-reveal="lines">{PHONES.line}</p>

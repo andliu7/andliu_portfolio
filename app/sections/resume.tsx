@@ -1,6 +1,6 @@
 import { ArrowUpRight, Download } from 'lucide-react';
 import { RESUME, RESUME_PREVIEW, sectionAttrs } from '@/lib/site';
-import { ResumeCard } from './resume.client';
+import { PhotoOpen, ResumeCard } from './resume.client';
 import './resume.css';
 import { StarsBackground } from '@/components/ui/stars';
 
@@ -35,8 +35,8 @@ export default function Resume() {
             <p className="rs-line">{RESUME_PREVIEW.line}</p>
             {/* A small photo of Andrew in a paper frame, pinned at the block's bottom right (resume.css) */}
             <figure className="rs-photo">
-              <img src={RESUME_PREVIEW.photo.src} srcSet={`${RESUME_PREVIEW.photo.srcSm} 320w, ${RESUME_PREVIEW.photo.src} 700w`} sizes="(max-width: 760px) 160px, 320px"
-                width={RESUME_PREVIEW.photo.w} height={RESUME_PREVIEW.photo.h} alt={RESUME_PREVIEW.photo.alt} loading="lazy" decoding="async" />
+              {/* The photo opens large on click (resume.client.tsx PhotoOpen) */}
+              <PhotoOpen />
               <figcaption className="rs-photo-cap">{RESUME_PREVIEW.photo.caption}</figcaption>
               <span className="rs-photo-place">{RESUME_PREVIEW.photo.place}</span>
             </figure>

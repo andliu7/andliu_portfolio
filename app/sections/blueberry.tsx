@@ -101,7 +101,7 @@ export default function Blueberry() {
         </div>
 
         <div className="bb-stack">
-          <TextBlockAnimation as="span" className="eyebrow" blockColor="var(--berry-soft)">{BB_HEAD.stack}</TextBlockAnimation>
+          <TextBlockAnimation as="span" className="eyebrow">{BB_HEAD.stack}</TextBlockAnimation>
           <div className="bb-strip">
             <InfiniteSlider label={BB_HEAD.stack} gap={14} duration={40} durationOnHover={110}>
               {BAND.map((tag, i) => <StackChip key={i} name={tag} repeat={i >= BB_ENGINEERING.stack.length} className="bb-pill" />)}

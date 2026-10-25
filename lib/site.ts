@@ -696,7 +696,7 @@ export const RESUME_PREVIEW = {
   // The small framed photo at the text block's bottom right (Andrew 2026-10-17), cropped square
   // from his Golden Gate photo at full resolution (700) and lightly sharpened, so the tilt has
   // detail to resample; the caption sits in the frame's foot, the place as an Instagram-style tag
-  photo: { src: '/images/me/golden-gate.webp', srcSm: '/images/me/golden-gate-sm.webp', w: 700, h: 700, alt: 'Andrew at the Golden Gate Bridge, smiling with two thumbs up', caption: '(me)', place: '@Golden Gate Bridge' }, // [Andrew 2026-10-17]
+  photo: { src: '/images/me/golden-gate.webp', srcSm: '/images/me/golden-gate-sm.webp', w: 700, h: 700, alt: 'Andrew at the Golden Gate Bridge, smiling with two thumbs up', caption: '(me)', place: '@Golden Gate Bridge', enlarge: 'Open the photo full size' }, // [Andrew 2026-10-17]
   clickHere: 'click here!', // [Andrew 2026-10-17] the note pointing at the page card
   image: {
     // 2026-10-17: sharper (Andrew: "much clearer to look at"). 1600 covers the 520px card grown
@@ -832,6 +832,7 @@ export const STRIP = {
   esc: 'Esc to skip', // [UI] Andrew 2026-10-07 asked for Esc to pass both strips (needs sign-off)
   autoOn: 'Auto: on, tap to stop', // [UI] Andrew 2026-10-07: animates through by default, a red button turns it off (needs sign-off)
   autoOff: 'Auto: off, tap to play', // [UI] the same button once off, green (needs sign-off)
+  skip: 'Skip section', // [UI] Andrew 2026-10-25: "make a button to skip the section" (needs sign-off)
 } as const;
 
 export const CONTENTS = {

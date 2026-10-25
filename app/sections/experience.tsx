@@ -1,7 +1,7 @@
 'use client';
 import type { CSSProperties } from 'react';
 import { ArrowDown } from 'lucide-react';
-import { EXPERIENCE_HEAD, JOBS, MICROCOPY, sectionAttrs } from '@/lib/site';
+import { EXPERIENCE_HEAD, JOBS, MICROCOPY, STRIP, sectionAttrs } from '@/lib/site';
 import { FlipHeading } from '@/components/site/flip-heading';
 import { TextBlockAnimation } from '@/components/ui/text-block-animation';
 import { PillFaces } from '@/components/site/pill-faces';
@@ -24,7 +24,11 @@ import { UmdStop } from './experience.umd';
 // twice. Under reduced motion it is a plain vertical list; phones pin too (2026-10-11).
 //
 // The way through (2026-10-07): while the strip pins, the Esc hint and the red/green auto-play
-// button (components/site/strip-autoplay.tsx) sit under the progress bar. The hook does the gliding.
+// button (components/site/strip-autoplay.tsx) sit at the head row's right. The hook does the gliding.
+// Easier to get past (Andrew 2026-10-25: "along the way should be easier to skip ... make a button
+// to skip the section and make the progress bar clearer and stuck at the bottom of the screen"):
+// the progress bar is a full-width bar along the foot of the pinned frame, with a Skip section
+// button at its end (the hook's scrollPast, what Esc does, but on touch too).
 //
 // The hand-off to Contact (2026-10-07): Contact's ground is ink, this one berry-deep. A soft
 // gradient toward ink grows in along the frame's foot as the strip runs (experience.css), so the
@@ -61,7 +65,7 @@ const started = (sort: number) => {
 
 export default function Experience() {
   // hold: 0.8 of a screen of scroll on the first stop before the strip moves.
-  const { runwayRef, trackRef, pinned } = useHorizontalScroll<HTMLOListElement>(undefined, { hold: 0.8 });
+  const { runwayRef, trackRef, pinned, scrollPast } = useHorizontalScroll<HTMLOListElement>(undefined, { hold: 0.8 });
 
   return (
     <section {...sectionAttrs('experience')} ref={runwayRef} className="experience" aria-labelledby="experience-title">
@@ -69,13 +73,12 @@ export default function Experience() {
         <CornerStickers set="experience" />
         <div className="xp-head">
           <div className="xp-head-text">
-            <TextBlockAnimation as="span" className="eyebrow" blockColor="var(--berry-soft)">{EXPERIENCE_HEAD.eyebrow}</TextBlockAnimation>
+            <TextBlockAnimation as="span" className="eyebrow">{EXPERIENCE_HEAD.eyebrow}</TextBlockAnimation>
             <FlipHeading id="experience-title" text={EXPERIENCE_HEAD.headline} fit={false} className="display xp-title" />
           </div>
           <div className="xp-side">
             <div className="xp-meter" aria-hidden="true">
               <span className="xp-hint">{EXPERIENCE_HEAD.hint}</span>
-              <span className="xp-bar"><span className="xp-bar-fill" /></span>
             </div>
             {/* Only while the strip pins: the Esc hint and the auto-play button (strip-autoplay.tsx). */}
             {pinned && <div className="xp-ctl"><EscHint /><AutoplayButton /></div>}
@@ -106,6 +109,16 @@ export default function Experience() {
             </a>
           </li>
         </ol>
+        {/* The foot of the pinned frame (experience.css .xp-progress): the progress bar (--p from the
+            hook) and, beside it, Skip section, so how far you are and the way out sit together */}
+        <div className="xp-progress">
+          <span className="xp-bar" aria-hidden="true"><span className="xp-bar-fill" /></span>
+          {pinned && (
+            <button type="button" className="pill pill-light xp-skip" onClick={scrollPast}>
+              <PillFaces>{STRIP.skip} <ArrowDown size={16} aria-hidden="true" /></PillFaces>
+            </button>
+          )}
+        </div>
       </div>
     </section>
   );

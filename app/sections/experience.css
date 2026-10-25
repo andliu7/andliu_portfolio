@@ -15,8 +15,21 @@
 .experience .xp-title { font-size:clamp(56px,8.4vw,136px); line-height:.9; }
 .experience .xp-meter { display:none; justify-items:end; gap:10px; }
 .experience .xp-hint { font:500 12px/1.5 var(--mono); letter-spacing:.12em; text-transform:uppercase; color:var(--on-2); }
-.experience .xp-bar { display:block; width:220px; height:6px; border-radius:3px; background:color-mix(in srgb,var(--berry-soft) 30%,transparent); overflow:hidden; }
-.experience .xp-bar-fill { display:block; height:100%; border-radius:3px; background:var(--apricot); transform-origin:0 50%; transform:scaleX(var(--p,0)); }
+.experience .xp-progress { display:none; }
+
+/* ---------- The progress bar (2026-10-25, Andrew: "make the progress bar clearer and stuck at the
+   bottom of the screen"): while the strip pins, one full-width bar along the frame's foot, the
+   gutter in from each side, 10px tall with an outlined track, apricot filling it as the strip
+   runs (--p from use-horizontal-scroll.ts), and Skip section at its right end. It was a 220 x 6px
+   bar at the head row's right. The frame's bottom pad below makes room for the row. ---------- */
+.experience[data-pin] .xp-progress { display:flex; align-items:center; gap:14px; position:absolute; z-index:3; left:var(--gutter); right:var(--gutter); bottom:max(12px,env(safe-area-inset-bottom)); }
+.experience .xp-progress .xp-bar { flex:1 1 auto; }
+/* The foot now belongs to the progress row, so the clock and briefcase stickers (corner-stickers.css,
+   bottom corners on a wide screen) step aside while the strip pins: they sat on the bar's start and
+   behind Skip. They stay in the stacked layout (reduced motion). */
+@media (min-width:700px) { .experience[data-pin] .cs-experience :is(.cs-1,.cs-2) { display:none; } }
+.experience .xp-bar { display:block; height:10px; border-radius:5px; background:color-mix(in srgb,var(--berry-soft) 18%,transparent); box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--on) 50%,transparent); overflow:hidden; }
+.experience .xp-bar-fill { display:block; height:100%; border-radius:5px; background:var(--apricot); transform-origin:0 50%; transform:scaleX(var(--p,0)); }
 
 /* ---------- The track and its cards (both layouts) ---------- */
 .experience .xp-track { position:relative; margin:0; padding:0; list-style:none; display:grid; gap:24px; }
@@ -54,7 +67,7 @@ html:not([data-motion="reduced"]) .experience .xp-crowd .cl-person:nth-child(3n)
 
 /* ---------- Pinned ---------- */
 .experience[data-pin] { height:calc(100svh + var(--run,0px)); }
-.experience[data-pin] .xp-frame { position:sticky; top:0; height:100svh; overflow:clip; align-content:center; padding:calc(var(--header-h) + 8px) 0 32px; gap:clamp(24px,5svh,48px); }
+.experience[data-pin] .xp-frame { position:sticky; top:0; height:100svh; overflow:clip; align-content:center; padding:calc(var(--header-h) + 8px) 0 72px; gap:clamp(24px,5svh,48px); } /* 72px, was 32: room for the progress row */
 .experience[data-pin] .xp-head { padding-inline:var(--gutter); }
 .experience[data-pin] .xp-meter { display:grid; }
 .experience[data-pin] .xp-track { display:flex; align-items:stretch; gap:32px; width:max-content; justify-self:start; padding-inline:var(--gutter); will-change:transform; }
@@ -88,7 +101,7 @@ html:not([data-motion="reduced"]) .experience .xp-crowd .cl-person:nth-child(3n)
    tallest card fits the frame with room under its ledge. */
 .experience[data-pin] .xp-title { font-size:clamp(48px,min(8.4vw,14svh),136px); }
 @media (min-width:700px) and (max-height:860px) {
-  .experience[data-pin] .xp-frame { gap:clamp(16px,3svh,28px); padding-bottom:20px; }
+  .experience[data-pin] .xp-frame { gap:clamp(16px,3svh,28px); padding-bottom:64px; }
   .experience[data-pin] .xp-item:not(.xp-end) { width:clamp(600px,46vw,660px); }
   .experience[data-pin] .xp-card { padding:20px 26px 22px; }
   .experience[data-pin] .xp-when { margin-bottom:8px; }
@@ -111,15 +124,15 @@ html:not([data-motion="reduced"]) .experience .xp-crowd .cl-person:nth-child(3n)
    in) and type a step smaller, so the head row and the tallest card fit one 100svh frame. Esc
    means nothing without a keyboard, so its hint goes, and so does the scroll hint (the bar stays). */
 @media (max-width:699px) {
-  .experience[data-pin] .xp-frame { gap:14px; padding-bottom:16px; }
+  .experience[data-pin] .xp-frame { gap:14px; padding-bottom:64px; }
   .experience[data-pin] .xp-head { gap:10px; }
   .experience[data-pin] .xp-head-text { gap:6px; }
   .experience[data-pin] .xp-title { font-size:min(10.4vw,44px); white-space:nowrap; }
   .experience[data-pin] .xp-side { display:flex; align-items:center; gap:12px; width:100%; }
   .experience[data-pin] .xp-meter { flex:1 1 auto; justify-items:stretch; }
   .experience[data-pin] .xp-hint { display:none; }
-  .experience[data-pin] .xp-bar { width:auto; }
   .experience[data-pin] .xp-ctl .sa-btn { margin-bottom:4px; padding:0 12px; font-size:11px; }
+  .experience[data-pin] .xp-skip { --pill-pad:10px; font-size:11px; }
   .experience[data-pin] .sa-esc { display:none; }
   /* The clock sticker (corner-stickers.css) sits at the top right on a phone, which the one-line
      heading and the button row now reach, so it steps aside while the strip pins. */
@@ -141,9 +154,19 @@ html:not([data-motion="reduced"]) .experience .xp-crowd .cl-person:nth-child(3n)
 /* A short phone (320x640 measured): the eyebrow goes (the heading under it says the same), and
    the reading type steps down once more. */
 @media (max-width:699px) and (max-height:700px) {
+  /* the progress row lower and its bar slimmer, so the tallest card clears it at 320x640 */
+  .experience[data-pin] .xp-frame { gap:8px; padding-bottom:64px; }
+  .experience[data-pin] .xp-card { padding:12px 16px 14px; }
+  .experience[data-pin] .xp-when { min-height:24px; margin-bottom:6px; }
+  .experience[data-pin] .xp-role { font-size:18px; }
+  .experience[data-pin] .xp-progress { bottom:max(8px,env(safe-area-inset-bottom)); }
+  .experience[data-pin] .xp-bar { height:6px; }
+  .experience[data-pin] .xp-tick { padding-bottom:14px; }
+  .experience[data-pin] .xp-tick::after { top:14px; }
+  .experience[data-pin] .xp-track::before { top:20px; }
   .experience[data-pin] .xp-head .eyebrow { display:none; }
-  .experience[data-pin] .xp-line { font-size:14px; line-height:1.4; }
-  .experience[data-pin] .xp-gloss { font-size:12px; }
+  .experience[data-pin] .xp-line { font-size:12.5px; line-height:1.35; }
+  .experience[data-pin] .xp-gloss { font-size:11.5px; }
 }
 
 /* ---------- Motion ----------
@@ -152,8 +175,11 @@ html:not([data-motion="reduced"]) .experience .xp-crowd .cl-person:nth-child(3n)
    "emphasizing the cards coming up to meet the horizontal bar as you scroll"). The hook also holds
    .hs-in back until the section has come most of the way up the screen, so the first stops rise
    as the strip arrives. Cards are never hidden: only their offset and tilt change, and only with
-   full motion (the frame's overflow:clip cuts a low card off at the foot until it rises). */
-html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-card { transform:translateY(clamp(140px,34svh,320px)) rotate(4deg); transition:transform 1s var(--ease-spring); }
+   full motion (the frame's overflow:clip cuts a low card off at the foot until it rises).
+   Gentler since 2026-10-25 (Andrew: "a little less on the pop factor when the timeline cards slide
+   up. like start closer"): from 24 to 48px below and a 1deg turn on a plain ease-out, was 140 to
+   320px and 4deg on the overshooting spring, which left only the heading on screen at first. */
+html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-card { transform:translateY(clamp(24px,5svh,48px)) rotate(1deg); transition:transform .7s var(--ease-out); }
 html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-item.hs-in .xp-card { transform:none; }
 html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-tick::after { scale:0; transition:scale .6s var(--ease-spring) .15s; }
 html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-item.hs-in .xp-tick::after { scale:1; }
@@ -164,6 +190,7 @@ html[data-motion="reduced"] .experience :is(.xp-card,.xp-tick) { transition:none
 .experience .xp-side { display:grid; justify-items:end; gap:14px; }
 .experience .xp-ctl { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:12px; color:var(--on-2); }
 .experience .xp-ctl .sa-btn { margin-bottom:4px; }
+.experience .xp-skip { --pill-pad:14px; flex:none; font-size:12px; }
 
 /* ---------- The hand-off shadow (2026-10-07) ----------
    Contact, next, sits on ink; this ground is berry-deep. A gradient from clear through berry-deep

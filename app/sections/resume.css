@@ -45,6 +45,10 @@ html:not([data-motion="reduced"]) .resume .rs-page { position:sticky; top:0; }
 .resume .rs-photo-place { position:absolute; z-index:2; right:-14px; bottom:22px; padding:4px 8px; border-radius:4px; background:#000; color:#fff;
   font:700 13px/1.2 var(--body); white-space:nowrap; rotate:5deg; }
 .resume .rs-photo img { display:block; width:100%; height:auto; aspect-ratio:1; border-radius:3px; object-fit:cover; }
+/* The photo is a button that opens it large (resume.client.tsx PhotoOpen, 2026-10-25): no chrome of
+   its own, the frame stays the figure's, and a zoom-in cursor says it opens */
+.resume .rs-photo-btn { display:block; width:100%; padding:0; border:0; background:none; cursor:zoom-in; border-radius:3px; }
+.resume .rs-photo-btn:focus-visible { outline:3px solid var(--ring); outline-offset:3px; }
 .resume .rs-actions { grid-area:actions; align-self:start; display:flex; flex-wrap:wrap; gap:16px; }
 .resume .rs-actions .pill-big { --pill-pad:clamp(28px,2.6vw,40px); min-height:clamp(56px,5vw,72px); font-size:clamp(17px,1.5vw,21px); }
 .resume .rs-actions .pill-big > :is(.pill-face,.pill-back) { min-height:clamp(56px,5vw,72px); }
@@ -81,6 +85,9 @@ html[data-motion="reduced"] .resume .rs-card { transition:none; }
 }
 
 /* ---------- The dialog (portalled to <body>, so not under .resume) ---------- */
+/* The photo's dialog: the bar, then the photo as large as fits the screen, never past its own size */
+.rs-dialog.rs-photo-dialog { width:min(760px,calc(100vw - 24px)); height:auto; }
+.rs-photo-dialog .rs-photo-full { display:block; width:100%; height:auto; max-height:calc(100dvh - 120px); object-fit:contain; background:var(--ink); }
 /* Unlayered, so these beat the Tailwind utilities on DialogContent. */
 .rs-dialog { display:flex; flex-direction:column; gap:0; width:min(1000px,calc(100vw - 24px)); max-width:none; height:calc(100dvh - 32px); padding:0;
   border:2px solid var(--ink); border-radius:var(--r-panel); overflow:hidden; background:var(--ink); color:var(--on); }

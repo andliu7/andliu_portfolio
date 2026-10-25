@@ -132,17 +132,10 @@
 }
 
 /* The hand-off into Selected work (Andrew 2026-10-07: "the stack should transition into the
-   selected work page"). The strip is the seam: it hangs half over Work's ground (the margin
-   above), and as it scrolls up through the screen it slides down onto that edge and lies flat,
-   scrubbed by the scroll itself (a CSS scroll-driven animation: no JavaScript, transform only,
-   run by the compositor). The timeline is named on .bb-stack because a view timeline on the
-   moving strip would measure its own motion. Browsers without scroll timelines, and reduced
-   motion, get the strip already settled. */
-@keyframes bb-settle { from { transform: translateY(-56px) rotate(-2.5deg) scale(.94); } }
-@supports (animation-timeline: view()) {
-  .bb .bb-stack { view-timeline: --bb-stack block; }
-  html:not([data-motion="reduced"]) .bb .bb-strip { animation: bb-settle linear both; animation-timeline: --bb-stack; animation-range: entry 0% cover 40%; }
-}
+   selected work page"): the strip is the seam, hanging half over Work's ground (the margin
+   above). It is straight and still, a plain horizontal marquee (Andrew 2026-10-25: "remove that
+   tilt animation and just keep it as a straight, horizontal marquee"; it used to slide down,
+   untilt and grow as it scrolled in). */
 
 /* ---------- Entrances (Slush motion, on the director's .is-in): stickers pop from small and
    turned, tiles spring in from behind. The globals hold each block at opacity 0 until .is-in;

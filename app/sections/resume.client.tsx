@@ -71,3 +71,39 @@ export function ResumeCard() {
     </>
   );
 }
+
+// The framed photo of Andrew beside the résumé, as a button that opens it large in the same
+// dialog (Andrew 2026-10-25: "you should be able to open the photo of me"). It lives in the
+// figure (resume.tsx) in place of the bare <img>, so the frame, caption and tape stay as they were.
+const photo = RESUME_PREVIEW.photo;
+
+export function PhotoOpen() {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const lenis = getLenis();
+    if (!open || !lenis) return;
+    lenis.stop();
+    return () => lenis.start();
+  }, [open]);
+
+  return (
+    <>
+      <button type="button" className="rs-photo-btn" onClick={() => setOpen(true)} aria-label={photo.enlarge} data-bubble={photo.enlarge} data-bubble-icon="enlarge">
+        <img src={photo.src} srcSet={`${photo.srcSm} 320w, ${photo.src} ${photo.w}w`} sizes="(max-width: 760px) 160px, 320px"
+          width={photo.w} height={photo.h} alt={photo.alt} loading="lazy" decoding="async" />
+      </button>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="rs-dialog rs-photo-dialog" data-ground="ink" showCloseButton={false}>
+          <div className="rs-bar">
+            <DialogTitle className="rs-dialog-title">{photo.place}</DialogTitle>
+            <DialogClose className="square-btn rs-close" aria-label={RESUME_PREVIEW.close}>
+              <X size={20} aria-hidden="true" />
+            </DialogClose>
+          </div>
+          <img className="rs-photo-full" src={photo.src} width={photo.w} height={photo.h} alt={photo.alt} decoding="async" />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

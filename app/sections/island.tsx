@@ -28,12 +28,12 @@ export default function Island() {
         <div className="il-text">
           {/* Block-wipe entrances (2026-10-12): berry-soft on the eyebrow, --kw (apricot) on the
               title, one component per fit-line so they stagger, paper on the tagline. */}
-          <TextBlockAnimation as="span" className="eyebrow" blockColor="var(--berry-soft)">{ISLAND.eyebrow}</TextBlockAnimation>
+          <TextBlockAnimation as="span" className="eyebrow">{ISLAND.eyebrow}</TextBlockAnimation>
           <h2 id="island-title" className="display il-title">
             <TextBlockAnimation as="span" className="fit-line">{ISLAND.titleTop}</TextBlockAnimation>
             <TextBlockAnimation as="span" className="fit-line" delay={0.1}>{ISLAND.titleBottom}</TextBlockAnimation>
           </h2>
-          <TextBlockAnimation as="p" className="il-tagline" blockColor="var(--paper)" delay={0.2}>{ISLAND.tagline}</TextBlockAnimation>
+          <TextBlockAnimation as="p" className="il-tagline" delay={0.2}>{ISLAND.tagline}</TextBlockAnimation>
           <a className="pill pill-light pill-big il-go" href={ISLAND.src}>
             <Play size={18} aria-hidden="true" /> {MICROCOPY.prompt}
           </a>

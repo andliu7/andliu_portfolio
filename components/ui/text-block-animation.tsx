@@ -7,8 +7,9 @@ import { useReducedMotion } from '@/components/site/use-reduced-motion';
 
 // The block-wipe line reveal (Andrew 2026-10-12, after landonorris.com): a colour block sweeps
 // across each line left to right, the line appears under it once it is fully covered, then the
-// block sweeps off to the right. Lines follow 0.1s apart, expo.inOut, 0.6s per sweep. It plays at
-// "top 85%" and reverses if you scroll back above it ('play none none reverse').
+// block sweeps off to the right. Lines follow 0.1s apart, expo.inOut, 0.6s per sweep. It plays
+// once at "top 85%" and then stays (Andrew 2026-10-25: "when the text reveal happens don't make
+// the text go away. just leave it there once it's in"; it used to reverse on scrolling back up).
 //
 // Two entry points share one timeline (sweep below):
 //   TextBlockAnimation  eyebrows and intro lines. gsap SplitText cuts the text into lines; each
@@ -21,8 +22,9 @@ import { useReducedMotion } from '@/components/site/use-reduced-motion';
 //                       heading, and fades whole cells. The hover roll is untouched (it moves
 //                       .fh-roll inside the cell; this only touches the cell's opacity).
 //
-// Block colours are site tokens, var(--kw) by default: each ground's keyword colour, which is
-// already chosen to read on it (berry on paper, apricot on the dark grounds). gsap only animates
+// Block colour: var(--reveal) by default, a shade deeper than the ground the text sits on
+// (app/globals.css; Andrew 2026-10-25: "a color darker/deeper than the background for the text
+// reveal, not something so flashy"; it was each ground's bright keyword colour). gsap only animates
 // scaleX, so the colour stays a CSS var and never needs a computed literal.
 //
 // Safe by default: text is never hidden in the server HTML or by CSS. Only after the timeline is
@@ -63,7 +65,7 @@ function sweep(trigger: Element, blocks: HTMLElement[], lines: Element[][], opts
     onComplete: () => opts.onDone(true),
     onReverseComplete: () => opts.onDone(false),
     scrollTrigger: opts.animateOnScroll
-      ? { trigger, start: 'top 85%', toggleActions: 'play none none reverse' }
+      ? { trigger, start: 'top 85%', toggleActions: 'play none none none' }
       : undefined,
   });
   gsap.set(blocks, { scaleX: 0, transformOrigin: 'left center' });
@@ -110,7 +112,7 @@ type Tag = 'p' | 'span' | 'div' | 'h2' | 'h3';
  */
 export function TextBlockAnimation({
   children, as: As = 'div', id, className, animateOnScroll = true, delay = 0,
-  blockColor = 'var(--kw)', stagger = 0.1, duration = 0.6,
+  blockColor = 'var(--reveal)', stagger = 0.1, duration = 0.6,
 }: Shared & { children: ReactNode; as?: Tag; id?: string; className?: string }) {
   const ref = useRef<HTMLElement>(null);
   const reduced = useReducedMotion();
@@ -160,7 +162,7 @@ export function TextBlockAnimation({
  * resize, the display font landing) and only rebuilds if the lines actually moved.
  */
 export function FlipReveal({
-  animateOnScroll = true, delay = 0, blockColor = 'var(--kw)', stagger = 0.1, duration = 0.6,
+  animateOnScroll = true, delay = 0, blockColor = 'var(--reveal)', stagger = 0.1, duration = 0.6,
 }: Shared) {
   const ref = useRef<HTMLSpanElement>(null);
   const reduced = useReducedMotion();

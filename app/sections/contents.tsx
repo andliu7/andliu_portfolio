@@ -33,7 +33,7 @@ export default function Contents() {
           client component; this section stays a server component around it. */}
       <ContainerScroll className="toc-scroll" titleComponent={(
         <div className="toc-intro">
-          <TextBlockAnimation as="span" className="eyebrow" blockColor="var(--berry-soft)">{CONTENTS.eyebrow}</TextBlockAnimation>
+          <TextBlockAnimation as="span" className="eyebrow">{CONTENTS.eyebrow}</TextBlockAnimation>
           <FlipHeading id="contents-title" text={CONTENTS.title} href="#contents" fit={false} className="display toc-title" />
           <TextBlockAnimation as="p" className="toc-note" delay={0.2}>{CONTENTS.note}</TextBlockAnimation>
         </div>

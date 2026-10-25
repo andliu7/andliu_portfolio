@@ -251,6 +251,22 @@ html.js:not([data-motion="reduced"]):not(.reveal-off) :is([data-reveal="lines"],
 .pill:focus-visible > .pill-face { translate:0 -2em -6em; rotate:x 85deg; opacity:0; }
 .pill:focus-visible > .pill-back { translate:0 0 0; rotate:x 0deg; opacity:1; }
 
+/* The header's buttons (Résumé, Visit Blueberry, Ask, the menu) do not roll or lift (Andrew
+   2026-10-25: "the buttons at the top don't need to flip, just make them sink in on press and
+   maybe brighten slightly on hover"). The face stays put, hover brightens it a little, and the
+   press sinks it onto its lip as everywhere else. Focus keeps the ring, without the roll. */
+.site-header :is(.pill,.menu-btn,.chat-launcher)::before { content:none; }
+.site-header :is(.pill,.chat-launcher) > .pill-back { display:none; }
+.site-header :is(.pill,.chat-launcher) > .pill-face { translate:none !important; rotate:none !important; opacity:1 !important; transition:filter var(--dur-ui) var(--ease-ui); }
+.site-header .menu-btn { transition:transform var(--dur-release) var(--ease-spring),box-shadow var(--dur-release) var(--ease-spring),filter var(--dur-ui) var(--ease-ui); }
+.site-header :is(.pill,.menu-btn,.chat-launcher):is(:hover,:focus-visible):not(:disabled) { color:var(--face-on); }
+@media (hover:hover) {
+  .site-header :is(.pill,.menu-btn,.chat-launcher):hover:not(:disabled) { transform:none; box-shadow:0 var(--lip) 0 var(--ink); }
+  .site-header :is(.pill,.chat-launcher):hover:not(:disabled) > .pill-face, .site-header .menu-btn:hover { filter:brightness(1.1); }
+}
+/* after the hover rule, at its specificity, so a press while hovering still sinks */
+.site-header :is(.pill,.menu-btn,.chat-launcher):active:not(:disabled) { transform:translateY(var(--lip)); box-shadow:0 0 0 var(--ink); transition-duration:var(--dur-press); transition-timing-function:ease-out; }
+
 /* The global focus rule rounds to 6px; a pill keeps its own shape under the ring. */
 :is(.pill,.chat-launcher,.switch):focus-visible { border-radius:var(--r-pill); }
 :is(.square-btn,.menu-btn):focus-visible { border-radius:var(--r-control); }
@@ -309,7 +325,10 @@ section[data-texture] { isolation:isolate; }
 .site-header > .hdr-left { justify-self:stretch; display:flex; align-items:center; gap:10px; min-width:0; pointer-events:none; }
 .hdr-left > * { pointer-events:auto; }
 .hdr-chip { display:flex; align-items:center; flex:0 1 auto; min-width:0; height:40px; padding:0 14px; margin-right:8px; border:var(--bw) solid var(--ink); border-radius:var(--r-pill); background:var(--card); color:var(--ink);
-  font:600 13px/1 var(--mono); letter-spacing:.06em; text-transform:uppercase; font-variant-ligatures:none; }
+  font:600 11px/1 var(--mono); letter-spacing:.02em; text-transform:uppercase; font-variant-ligatures:none; }
+/* 11px and .02em, were 13px and .06em (Andrew 2026-10-25: "my marquee top left shouldn't have to
+   spin, let's try making it smaller so it doesn't have to"): small enough that the whole line fits
+   its slot on a laptop and sits still (ChipMarquee only scrolls a line that overflows). */
 .hdr-chip .chipm { flex:1 1 auto; }
 @media (max-width:719px) { .hdr-chip { display:none; } }
 /* On the home page the chip waits until the hero's own degree line has scrolled up under the
@@ -545,8 +564,11 @@ html[data-island="active"] .chat-launcher { display:none; }
 .fh-b { position:absolute; left:0; top:100%; white-space:nowrap; color:var(--kw); }
 .fh-kw-text { color:inherit; } /* one voice in titles, as .two-voice .kw above */
 .fh-kw .fh-b { font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:-.04em; color:var(--on); }
-.flip-head:is(:focus-visible,[data-flipped]) .fh-roll { transform:translateY(-100%); }
-@media (hover:hover) and (pointer:fine) { .flip-head:hover .fh-roll { transform:translateY(-100%); } }
+/* Only the AND/LIU mark (header and footer) still flips. Section headings no longer do (Andrew
+   2026-10-25: "either text reveal or flip on hover, not both ... I think the reveal is fine so
+   remove the flip"): they keep the reveal and stay as set. */
+:is(.wordmark,.ft-mark).flip-head:is(:focus-visible,[data-flipped]) .fh-roll { transform:translateY(-100%); }
+@media (hover:hover) and (pointer:fine) { :is(.wordmark,.ft-mark).flip-head:hover .fh-roll { transform:translateY(-100%); } }
 
 /* ---------- Block-wipe line reveal (components/ui/text-block-animation.tsx, 2026-10-12). Nothing
    here hides text: gsap sets opacity only once its timeline exists, so JS off or a failed bundle
@@ -554,6 +576,10 @@ html[data-island="active"] .chat-launcher { display:none; }
    overflow clip, which would cut the accents on tight display line heights; the block only ever
    shrinks inside it. FlipHeading's blocks sit in .tba-layer, placed in px by the component.
    :where() keeps the heading's position:relative at zero specificity, so a section's own wins. */
+/* --reveal, the block's colour: a shade deeper than the ground it sits on (Andrew 2026-10-25: "a
+   color darker/deeper than the background ... not something so flashy"). Declared where --ground
+   is, so each section resolves its own. */
+[data-ground] { --reveal:color-mix(in oklab,var(--ground,var(--paper)) 70%,#000); }
 .tba-line { position:relative; display:block; width:fit-content; max-width:100%; }
 .tba-block, .tba-layer { position:absolute; pointer-events:none; }
 .tba-line > .tba-block { inset:0; }
@@ -681,8 +707,8 @@ html[data-motion="reduced"] .hdr-label { transition:none; }
 /* FlipHeading: no roll; the colours swap instantly on hover and focus instead. */
 html[data-motion="reduced"] .fh-roll { transition:none; }
 html[data-motion="reduced"] .flip-head .fh-roll { transform:none !important; }
-html[data-motion="reduced"] .flip-head:is(:hover,:focus-visible,[data-flipped]) .fh-a { color:var(--kw); }
-html[data-motion="reduced"] .flip-head:is(:hover,:focus-visible,[data-flipped]) .fh-kw .fh-a .fh-kw-text { color:var(--on); }
+html[data-motion="reduced"] :is(.wordmark,.ft-mark).flip-head:is(:hover,:focus-visible,[data-flipped]) .fh-a { color:var(--kw); }
+html[data-motion="reduced"] :is(.wordmark,.ft-mark).flip-head:is(:hover,:focus-visible,[data-flipped]) .fh-kw .fh-a .fh-kw-text { color:var(--on); }
 /* Highlight and RollingRow: instant; the row's title changes colour instead of rolling. */
 html[data-motion="reduced"] :is(.hl-bar,.hl-text,.roll-track,.roll-meta,.roll-aside) { transition:none; }
 html[data-motion="reduced"] .roll-row .roll-track { transform:none !important; }
