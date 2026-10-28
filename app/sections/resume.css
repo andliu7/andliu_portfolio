@@ -87,7 +87,46 @@ html[data-motion="reduced"] .resume .rs-card { transition:none; }
 /* ---------- The dialog (portalled to <body>, so not under .resume) ---------- */
 /* The photo's dialog: the bar, then the photo as large as fits the screen, never past its own size */
 .rs-dialog.rs-photo-dialog { width:min(760px,calc(100vw - 24px)); height:auto; }
-.rs-photo-dialog .rs-photo-full { display:block; width:100%; height:auto; max-height:calc(100dvh - 120px); object-fit:contain; background:var(--ink); }
+.rs-photo-dialog .rs-sun { position:relative; width:min(100%,100dvh - 120px); aspect-ratio:1; margin-inline:auto; overflow:hidden; isolation:isolate; }
+.rs-photo-dialog .rs-photo-full { display:block; width:100%; height:100%; object-fit:cover; background:var(--ink); }
+
+/* The time of day (lib/sun.ts, resume.client.tsx PhotoOpen; Andrew 2026-10-25). --sx/--sy are the
+   sun's spot on the photo, which may lie off it (high at midday, behind the camera at dawn). Layers
+   over the one photo, bottom to top: a grade on the photo, a wash on the sky alone and one on the
+   water alone (golden-gate-sky.png and -water.png, masks cut from the photo, so the bridge keeps
+   its orange and the hills their brown), the sun's glow with its path on the water, then Andrew. No
+   phase (night, for now) leaves the photo plain. */
+.rs-photo-dialog .rs-sun :is(.rs-sun-sky,.rs-sun-water,.rs-sun-glow) { position:absolute; inset:0; pointer-events:none; opacity:0; }
+.rs-photo-dialog .rs-sun-sky { -webkit-mask:url(/images/me/golden-gate-sky.png) 0 0/100% 100%; mask:url(/images/me/golden-gate-sky.png) 0 0/100% 100%; }
+.rs-photo-dialog .rs-sun-water { -webkit-mask:url(/images/me/golden-gate-water.png) 0 0/100% 100%; mask:url(/images/me/golden-gate-water.png) 0 0/100% 100%; }
+.rs-photo-dialog .rs-sun[data-phase] :is(.rs-sun-sky,.rs-sun-water,.rs-sun-glow) { opacity:1; }
+/* Andrew himself, the cut-out laid exactly over his place in the photo (148,235 of 700, 421x465),
+   above the washes and the glow, with his own light per phase. */
+.rs-photo-dialog .rs-sun-me { position:absolute; left:21.143%; top:33.571%; width:60.143%; height:66.429%; pointer-events:none; }
+
+/* Dawn: the sun rises behind the camera, so the sky is the pink band over a blue one (the Belt of
+   Venus), the bay holds it, and the low warm light falls on Andrew's face from in front. */
+.rs-photo-dialog .rs-sun[data-phase="dawn"] .rs-photo-full { filter:brightness(.94) saturate(1.05); }
+.rs-photo-dialog .rs-sun[data-phase="dawn"] .rs-sun-sky { background:linear-gradient(to bottom,#6f7fc4,#c69ad0 30%,#ffb39a 56%); mix-blend-mode:color; opacity:.62; }
+.rs-photo-dialog .rs-sun[data-phase="dawn"] .rs-sun-water { background:linear-gradient(to bottom,#e7a7b4,#7f8fc0 40%); mix-blend-mode:soft-light; }
+.rs-photo-dialog .rs-sun[data-phase="dawn"] .rs-sun-me { filter:brightness(1.08) saturate(1.1) sepia(.16); }
+
+/* Midday: a clear deep blue sky (multiply, fading to white before the deck so the mask's edge in
+   the haze never shows), a bright bay that is still the bay's grey-green, everything crisp;
+   the high sun is a haze from its side. */
+.rs-photo-dialog .rs-sun[data-phase="day"] .rs-photo-full { filter:brightness(1.06) saturate(1.15) contrast(1.07); }
+.rs-photo-dialog .rs-sun[data-phase="day"] .rs-sun-sky { background:linear-gradient(to bottom,#3d86e0,#86bdf0 26%,#d6eaf9 36%,#fff 44%); mix-blend-mode:multiply; opacity:.85; }
+.rs-photo-dialog .rs-sun[data-phase="day"] .rs-sun-water { background:rgb(170 215 235 / .5); mix-blend-mode:soft-light; }
+.rs-photo-dialog .rs-sun[data-phase="day"] .rs-sun-glow { background:radial-gradient(60% 60% at var(--sx) var(--sy),rgb(255 252 236 / .45),transparent 70%); mix-blend-mode:screen; }
+.rs-photo-dialog .rs-sun[data-phase="day"] .rs-sun-me { filter:brightness(1.05) saturate(1.08) contrast(1.04); }
+
+/* Dusk: the sun sets in the west, in frame over the headlands: an orange sky deepening to violet,
+   the bay taking the colour, the glow where the sun stands and its path of light on the water. */
+.rs-photo-dialog .rs-sun[data-phase="dusk"] .rs-photo-full { filter:brightness(.9) saturate(1.2) contrast(1.04); }
+.rs-photo-dialog .rs-sun[data-phase="dusk"] .rs-sun-sky { background:linear-gradient(to bottom,#4c3f8f,#b8608f 22%,#ff8a3d 40%,#ffb05a 56%); mix-blend-mode:color; opacity:.8; }
+.rs-photo-dialog .rs-sun[data-phase="dusk"] .rs-sun-water { background:linear-gradient(to bottom,#ff9a5a,#5d5594 45%); mix-blend-mode:soft-light; }
+.rs-photo-dialog .rs-sun[data-phase="dusk"] .rs-sun-glow { background:radial-gradient(26% 22% at var(--sx) var(--sy),rgb(255 222 160 / .95),rgb(255 140 60 / .45) 45%,transparent 75%), radial-gradient(8% 30% at var(--sx) 74%,rgb(255 170 90 / .55),transparent 70%); mix-blend-mode:screen; }
+.rs-photo-dialog .rs-sun[data-phase="dusk"] .rs-sun-me { filter:brightness(.96) saturate(1.12) sepia(.2); }
 /* Unlayered, so these beat the Tailwind utilities on DialogContent. */
 .rs-dialog { display:flex; flex-direction:column; gap:0; width:min(1000px,calc(100vw - 24px)); max-width:none; height:calc(100dvh - 32px); padding:0;
   border:2px solid var(--ink); border-radius:var(--r-panel); overflow:hidden; background:var(--ink); color:var(--on); }

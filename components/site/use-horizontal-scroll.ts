@@ -47,8 +47,14 @@ import { autoplayOn, subscribeAutoplay } from './strip-autoplay';
 // is where it last put it, so a scrollbar drag stops it too. The on/off setting is shared by
 // both strips (components/site/strip-autoplay.tsx).
 //
-// Esc: while a strip holds the screen, Esc glides to just past its end, unless a dialog, the menu
-// or the chat is open (those own Esc).
+// Any key: while a strip holds the screen, a key glides to just past its end (Andrew 2026-10-28:
+// "press any key to skip ... a really harsh stop"), unless a dialog, the menu or the chat is
+// open, or the key is a modifier or Tab (Tab walks the cards, below), or focus is in a field.
+//
+// Swipe: on a touch screen a sideways swipe on the strip moves it too, as a down-scroll does
+// (Andrew 2026-10-28: "on phones people should be able to scroll down or scroll right"). The
+// frame sets touch-action pan-y (experience.css), so the browser keeps the vertical drag and
+// hands the sideways one to the swipe, which turns it into page scroll.
 //
 // Pattern: a custom hook. It returns refs for the caller to attach (ref={runwayRef}); a ref is a
 // box React fills with the real DOM element after render, which the effect then reads.
@@ -233,14 +239,36 @@ export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>(onPr
       stopped = true;
       halt();
     };
-    const onEsc = (event: globalThis.KeyboardEvent) => {
-      if (event.key !== 'Escape' || event.defaultPrevented || !active) return;
+    const onKey = (event: globalThis.KeyboardEvent) => {
+      if (event.defaultPrevented || !active || event.repeat) return;
+      if (event.key === 'Tab' || event.key === 'Shift' || event.key === 'Control' || event.key === 'Alt' || event.key === 'Meta' || event.ctrlKey || event.metaKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
       if (document.documentElement.dataset.chat || document.querySelector('[aria-modal="true"], dialog[open], .site-header[data-menu-open]')) return;
       event.preventDefault();
       stopped = true;
       halt();
       scrollToY(runway.getBoundingClientRect().bottom + window.scrollY);
     };
+    // A sideways swipe moves the page by the same distance, so the strip follows the finger.
+    let swipe: { x: number; y: number; id: number; on: boolean } | null = null;
+    const onSwipeDown = (event: PointerEvent) => {
+      if (event.pointerType !== 'touch' || !active) return;
+      swipe = { x: event.clientX, y: event.clientY, id: event.pointerId, on: false };
+    };
+    const onSwipeMove = (event: PointerEvent) => {
+      if (!swipe || event.pointerId !== swipe.id) return;
+      const dx = event.clientX - swipe.x, dy = event.clientY - swipe.y;
+      if (!swipe.on) {
+        if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy)) return;
+        swipe.on = true;
+        stopped = true;
+        halt();
+      }
+      swipe.x = event.clientX;
+      setY(window.scrollY - dx * speed);
+    };
+    const onSwipeEnd = (event: PointerEvent) => { if (swipe && event.pointerId === swipe.id) swipe = null; };
     // The button flipped the shared setting: on starts from here at once, off stops.
     const onSetting = () => {
       if (!autoplayOn()) { halt(); return; }
@@ -260,13 +288,21 @@ export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>(onPr
     track.addEventListener('focusin', onFocus);
     // Capture phase: these run before Lenis sees the same wheel, so the glide stops first.
     inputs.forEach(type => window.addEventListener(type, takeOver, { capture: true, passive: true }));
-    window.addEventListener('keydown', onEsc);
+    window.addEventListener('keydown', onKey);
+    frame.addEventListener('pointerdown', onSwipeDown, { passive: true });
+    frame.addEventListener('pointermove', onSwipeMove, { passive: true });
+    frame.addEventListener('pointerup', onSwipeEnd, { passive: true });
+    frame.addEventListener('pointercancel', onSwipeEnd, { passive: true });
     const unsubscribe = subscribeAutoplay(onSetting);
     return () => {
       cancelAnimationFrame(raf);
       halt();
       inputs.forEach(type => window.removeEventListener(type, takeOver, { capture: true }));
-      window.removeEventListener('keydown', onEsc);
+      window.removeEventListener('keydown', onKey);
+      frame.removeEventListener('pointerdown', onSwipeDown);
+      frame.removeEventListener('pointermove', onSwipeMove);
+      frame.removeEventListener('pointerup', onSwipeEnd);
+      frame.removeEventListener('pointercancel', onSwipeEnd);
       unsubscribe();
       ro.disconnect();
       nearIO.disconnect();

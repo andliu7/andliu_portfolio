@@ -10,7 +10,7 @@ import { emit, EVENTS } from '@/components/site/handoffs';
 import { useReducedMotion, isReducedMotion } from '@/components/site/use-reduced-motion';
 import { SKYLINE } from '@/lib/site';
 
-// The Impact accordion (SITE-PLAN.md 4.6). One row per project; the first is open by default;
+// The Impact accordion (SITE-PLAN.md 4.6). One row per project; every row starts closed (Andrew 2026-10-28);
 // opening one closes the others. Click, Enter or Space toggles (a real <button>, so Enter and
 // Space come free); hover only rolls the title (RollingRow's CSS). ArrowUp, ArrowDown, Home and
 // End move focus between the row buttons.
@@ -58,7 +58,7 @@ const fmt = (n: number) => n.toLocaleString('en-US');
 const pad = (i: number) => String(i + 1).padStart(2, '0');
 
 export function ImpactAccordion({ panels, labels }: { panels: PanelView[]; labels: Labels }) {
-  const [open, setOpen] = useState(0);
+  const [open, setOpen] = useState(-1);
   // Which panel, if any, collapses with no transition: the open one when it sits ABOVE the row
   // being clicked, so that row does not slide up under the pointer while the panel shrinks.
   const [instant, setInstant] = useState(-1);

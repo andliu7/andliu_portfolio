@@ -1,11 +1,12 @@
 import type { CSSProperties } from 'react';
 import { Baloo_2 } from 'next/font/google';
-import { HERO, HERO_BAR, HERO_CAUTION, IDENTITY, MICROCOPY, sectionAttrs } from '@/lib/site';
+import { HERO, HERO_BAR, HERO_CAUTION, IDENTITY, sectionAttrs } from '@/lib/site';
 import { Marquee } from '@/components/site/marquee';
 import { HeroObjects } from '@/components/site/hero-objects/hero-objects';
 import Cloudscape from '@/components/ui/cloudscape';
-import { FlowButton } from '@/components/ui/flow-button';
+import { ArrowDown } from 'lucide-react';
 import { ChipMarquee } from '@/components/site/chip-marquee';
+import { UmdBadge } from '@/components/site/umd/umd-badge';
 import { HeroFx, Follow } from './hero.client';
 import './hero.css';
 import './hero-photo.css';
@@ -103,14 +104,18 @@ export function HeroPanel({ icons, tag, main = false }: { icons: Icons; tag?: st
               {icons === 'd' && <HeroObjects />}
             </div>
             <div className="hero-foot hp-foot">
-              <p className="hp-role hero-rise" style={{ '--d': 1 } as CSSProperties}>{HERO.role}</p>
               {/* The degree line between the role and the button, at every width (Andrew 2026-10-21);
                   once it scrolls up under the header, the header shows its own copy (header.tsx
                   finds it by .hp-degree) */}
-              <span className="hero-tag hp-degree hero-rise" style={{ '--d': 1 } as CSSProperties}><ChipMarquee text={HERO.chip} /></span>
+              <span className="hero-tag hp-degree hero-rise" style={{ '--d': 1 } as CSSProperties}><ChipMarquee text={HERO.chip} /><UmdBadge /></span>
               <div className="hero-about hero-rise" style={{ '--d': 1 } as CSSProperties}>
-                {/* Scrolls to the résumé preview rather than opening the PDF: a softer first step (Andrew 2026-10-07). /draft has none, so it opens the home page's. */}
-                <FlowButton href={main ? '#resume' : '/#resume'} text={MICROCOPY.resumeShort} />
+                {/* In place of the résumé button (Andrew 2026-10-28: "a down arrow hovering with the
+                    text"); then "software engineer" took the word's place, in Baloo 2. The header
+                    still carries Résumé. Glides to Selected work, so the link is named for that. */}
+                <a className="hero-down" href={main ? '#work' : '/#work'} aria-label={HERO.down}>
+                  <span className="hero-down-text">{HERO.role}</span>
+                  <ArrowDown className="hero-down-arrow" size={28} aria-hidden="true" />
+                </a>
               </div>
             </div>
           </div>

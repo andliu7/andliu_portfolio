@@ -1,7 +1,6 @@
 import { IMAGES, IMPACT, IMPACT_HEAD, MICROCOPY, PROJECTS, sectionAttrs, type ImageKey } from '@/lib/site';
 import { FlipHeading } from '@/components/site/flip-heading';
 import { TextBlockAnimation } from '@/components/ui/text-block-animation';
-import { Marquee } from '@/components/site/marquee';
 import impact from '@/lib/impact.json';
 import { ImpactAccordion, type PanelView, type SeriesData, type SeriesView } from './impact.client';
 import './impact.css';
@@ -99,7 +98,7 @@ export default function Impact() {
         <FlipHeading id="impact-title" text={IMPACT_HEAD.headline} max={150} />
       </header>
       {ticker.length > 0 && (
-        <Marquee className="impact-ticker" duration={80} label={said}>
+        <div className="impact-ticker" role="group" aria-label={said}>
           {ticker.map(g => (
             <span className="impact-tick-group" key={g.id}>
               <span className="impact-tick-p">{g.title}</span>
@@ -111,7 +110,7 @@ export default function Impact() {
               ))}
             </span>
           ))}
-        </Marquee>
+        </div>
       )}
       <ImpactAccordion panels={panels} labels={{ howMeasured: MICROCOPY.howMeasured, showData: MICROCOPY.showData }} />
     </section>

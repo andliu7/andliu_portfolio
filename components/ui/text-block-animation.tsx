@@ -1,5 +1,5 @@
 'use client';
-import { useLayoutEffect, useRef, type ReactNode } from 'react';
+import { useId, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
@@ -52,19 +52,25 @@ type SweepOptions = {
   delay: number;
   stagger: number;
   duration: number;
-  /** Already finished before a re-measure: jump to the end instead of playing again. */
+  /** Already started once this page load: jump to the end instead of playing again. */
   done: boolean;
-  onDone: (done: boolean) => void;
+  onStart: () => void;
 };
+
+// Every reveal that has started, by its component's useId, for the life of the page (Andrew
+// 2026-10-25: "reveal once and remember unless you reload the page"). A re-split on resize (a
+// phone's address bar showing or hiding) or a remount used to build a fresh timeline and play it
+// again; now it lands on the finished text. Module scope, so only a reload forgets.
+const revealed = new Set<string>();
 
 /** One sub-sequence per line, offset by `stagger`: block in from the left, line on, block out to the right. */
 function sweep(trigger: Element, blocks: HTMLElement[], lines: Element[][], opts: SweepOptions) {
   const tl = gsap.timeline({
     paused: !opts.animateOnScroll,
     delay: opts.delay,
-    onComplete: () => opts.onDone(true),
-    onReverseComplete: () => opts.onDone(false),
-    scrollTrigger: opts.animateOnScroll
+    onStart: opts.onStart,
+    // No trigger once done: a refresh with the trigger below the fold would rewind it to hidden.
+    scrollTrigger: opts.animateOnScroll && !opts.done
       ? { trigger, start: 'top 85%', toggleActions: 'play none none none' }
       : undefined,
   });
@@ -116,12 +122,12 @@ export function TextBlockAnimation({
 }: Shared & { children: ReactNode; as?: Tag; id?: string; className?: string }) {
   const ref = useRef<HTMLElement>(null);
   const reduced = useReducedMotion();
+  const key = useId();
 
   useLayoutEffect(() => {
     const el = ref.current;
-    if (!el || reduced) return;
+    if (!el || reduced || revealed.has(key)) return;
     ensurePlugins();
-    let done = false;
     const ctx = gsap.context(() => {
       SplitText.create(el, {
         type: 'lines',
@@ -145,13 +151,13 @@ export function TextBlockAnimation({
             return block;
           });
           return sweep(el, blocks, self.lines.map(line => [line]), {
-            animateOnScroll, delay, stagger, duration, done, onDone: next => { done = next; },
+            animateOnScroll, delay, stagger, duration, done: revealed.has(key), onStart: () => revealed.add(key),
           });
         },
       });
     }, el);
     return () => ctx.revert();
-  }, [reduced, animateOnScroll, delay, blockColor, stagger, duration]);
+  }, [key, reduced, animateOnScroll, delay, blockColor, stagger, duration]);
 
   return <As ref={ref as never} id={id} className={className}>{children}</As>;
 }
@@ -166,13 +172,13 @@ export function FlipReveal({
 }: Shared) {
   const ref = useRef<HTMLSpanElement>(null);
   const reduced = useReducedMotion();
+  const key = useId();
 
   useLayoutEffect(() => {
     const layer = ref.current;
     const head = layer?.parentElement;
-    if (!layer || !head || reduced) return;
+    if (!layer || !head || reduced || revealed.has(key)) return;
     ensurePlugins();
-    let done = false;
     let ctx: gsap.Context | null = null;
     let signature = '';
     let frame = 0;
@@ -216,7 +222,7 @@ export function FlipReveal({
       blocks.forEach(block => layer.appendChild(block));
       ctx = gsap.context(() => {
         sweep(head, blocks, lines.map(line => line.cells), {
-          animateOnScroll, delay, stagger, duration, done, onDone: next => { done = next; },
+          animateOnScroll, delay, stagger, duration, done: revealed.has(key), onStart: () => revealed.add(key),
         });
       });
     };
@@ -234,7 +240,7 @@ export function FlipReveal({
       teardown();
       head.classList.remove('tba-on');
     };
-  }, [reduced, animateOnScroll, delay, blockColor, stagger, duration]);
+  }, [key, reduced, animateOnScroll, delay, blockColor, stagger, duration]);
 
   return <span ref={ref} className="tba-layer" aria-hidden="true" />;
 }

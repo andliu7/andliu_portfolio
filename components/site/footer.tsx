@@ -148,7 +148,13 @@ export function SiteFooter() {
             <Flame className="ft-mark-host" height={20} spread={9} radius={12} paused={!revealed}>
               <a className="ft-mark flip-head" href={home ? '#top' : '/'} aria-label={A11Y.home}><Mark /></a>
             </Flame>
-            <p className="ft-blurb">{FOOTER_SKIP.blurb}</p>
+            {/* Testudo beside the blurb (Andrew 2026-10-28: "hide testudo somewhere", then "next to the
+                text in the footer"); the official logo, trimmed (public/images/umd/testudo.webp).
+                Decoration, so no alt. */}
+            <div className="ft-blurb-row">
+              <p className="ft-blurb">{FOOTER_SKIP.blurb}</p>
+              <img className="ft-testudo" src="/images/umd/testudo.webp" width={500} height={507} alt="" loading="lazy" decoding="async" />
+            </div>
             <p className="ft-meta">{FOOTER_SKIP.copyright}</p>
             <div className="ft-social">
               {FOOTER_SKIP.social.map(link => (

@@ -113,10 +113,10 @@ export function ProjectFan({ items, name, prevLabel, nextLabel, className = '' }
       // (measured on the track, the cards' own box: the frame reaches past it above and below)
       const r = (frame.firstElementChild ?? frame).getBoundingClientRect();
       const rise = clamp((vh - r.top) / (vh * 0.35));
-      // in: a pile until the cards' top passes 60% of the screen, fanned by 30%; out: they start to
-      // gather once the top passes 10% (under the header), a pile again once 30% of the cards' box is
-      // above the screen, so the fan closes as one group while it is still in view
-      const g = smooth(Math.min(clamp((vh * 0.6 - r.top) / (vh * 0.3)), clamp((r.top + r.height * 0.3) / (vh * 0.1 + r.height * 0.3))));
+      // in: a pile until the cards' top passes 60% of the screen, fanned by 30%; out: the fan holds
+      // until 40% of the cards' box is above the screen and is a pile again at 85%, so it closes
+      // right as it leaves the page (Andrew 2026-10-28: "delay carousel coming back together")
+      const g = smooth(Math.min(clamp((vh * 0.6 - r.top) / (vh * 0.3)), clamp((r.top + r.height * 0.85) / (r.height * 0.45))));
       m.g = g;
       if (!seen && rise > 0.25) { seen = true; setEntered(true); }
       root.style.setProperty('--g', g.toFixed(3));

@@ -12,15 +12,17 @@
 .impact .impact-head { display:grid; gap:8px; margin-bottom:16px; }
 .impact .impact-head h2 { margin:0; }
 
-/* ---------- the ticker: every headline number, moving (Blueberry's marquee port) ---------- */
+/* ---------- the ticker: every headline number, standing still ---------- */
 /* Type, one ladder (Andrew 2026-10-25: "be more consistent about the font style. remember
    hierarchy"): the section heading, then the panel titles (22 to 36px), then the numbers (the
    ticker's 18 to 26px, a clear step under the titles it used to match), then body copy in Karla, then
    one label style for every small cap line (12px Fira 600, .08em; were .06 to .12em). No
    italics. The titles no longer roll on hover (the row rule below): headings reveal, they do
    not flip. */
-.impact .impact-ticker { margin:0 calc(var(--gutter) * -1) 16px; padding:10px 0; border-block:1px solid color-mix(in srgb, var(--on) 22%, transparent); }
-.impact .impact-tick-group { display:inline-flex; align-items:baseline; gap:clamp(20px, 3cqi, 44px); padding-right:clamp(20px, 3cqi, 44px); white-space:nowrap; }
+/* Still, in one horizontal line (Andrew 2026-10-28: "stationary. no animation as you scroll"): no marquee, a plain
+   row that a phone can swipe along. */
+.impact .impact-ticker { display:flex; overflow-x:auto; scrollbar-width:none; padding-inline:var(--gutter); margin:0 calc(var(--gutter) * -1) 16px; padding-block:10px; border-block:1px solid color-mix(in srgb, var(--on) 22%, transparent); }
+.impact .impact-tick-group { flex:none; display:inline-flex; align-items:baseline; gap:clamp(20px, 3cqi, 44px); padding-right:clamp(20px, 3cqi, 44px); white-space:nowrap; }
 .impact .impact-tick-p { align-self:center; padding:6px 12px; border:2px solid var(--kw); border-radius:var(--r-pill); font:600 12px/1 var(--display); letter-spacing:.08em; text-transform:uppercase; color:var(--kw); }
 .impact .impact-tick { display:inline-flex; align-items:baseline; gap:10px; }
 .impact .impact-tick-n { font:700 clamp(18px, 1.9cqi, 26px)/1 var(--display); letter-spacing:-.03em; color:var(--kw); font-variant-numeric:tabular-nums; }
@@ -189,7 +191,7 @@ html.js:not([data-motion="reduced"]) .impact .impact-card[data-live] .impact-sta
 /* ---------- narrow: one column, tiles 3-up under the picture, then the chart ---------- */
 @container (max-width:760px) {
   .impact .impact-head { margin-bottom:12px; }
-  .impact .impact-ticker { margin-bottom:12px; padding:8px 0; }
+  .impact .impact-ticker { margin-bottom:12px; padding-block:8px; }
   .impact .impact-tick-n { font-size:18px; }
   .impact .impact-tick-t { font-size:16px; }
   .impact .impact-card { grid-template-columns:minmax(0,1fr); gap:16px; margin-bottom:16px; padding:16px; }

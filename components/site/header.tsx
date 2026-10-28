@@ -1,8 +1,7 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import { usePathname } from 'next/navigation';
-import { ArrowUpRight } from 'lucide-react';
-import { A11Y, BLUEBERRY, HERO, MICROCOPY, SECTIONS } from '@/lib/site';
+import { A11Y, HERO, MICROCOPY, SECTIONS } from '@/lib/site';
 import { ChipMarquee } from './chip-marquee';
 import { Mark } from './mark';
 import { Menu } from './menu';
@@ -18,9 +17,9 @@ import { getSection, subscribeSection } from './section-state';
 //   centre  the current section's label in a pill (1200px and up), rolling when it changes; where
 //           a section has no label, the centre berry instead, a link back to the top that grows
 //           to "ANDLIU.DEV" on hover and keyboard focus
-//   right   Résumé (the PDF, a new tab; 720px and up, the menu has it on phones), the berry
-//           "Visit Blueberry" pill (the live site, a new tab), Ask (an empty slot that the chat
-//           dock fills with its launcher through a portal) and the menu button
+//   right   Résumé (the PDF, a new tab; 720px and up, the menu has it on phones), Ask (an
+//           empty slot that the chat dock fills with its launcher through a portal) and the menu
+//           button (no "Visit Blueberry" pill, Andrew 2026-10-28: it did not need to be there)
 // Scrolling down sends the pills up out of the way (so they never sit on the heading you are
 // reading); scrolling up, or reaching the top, brings them back. See useHideOnScroll. While they
 // are away the section label stays, compact, at the top centre. While a pinned horizontal strip
@@ -96,9 +95,6 @@ export function Header() {
         <a ref={resumeRef} className="pill pill-berry header-resume" href={home ? '#resume' : '/#resume'}
           onClick={event => { if (!open) return; event.preventDefault(); close(false); setTimeout(() => resumeRef.current?.click(), 600); }}>
           <PillFaces>{MICROCOPY.resumeShort}</PillFaces>
-        </a>
-        <a className="pill pill-light header-visit" href={BLUEBERRY.live} target="_blank" rel="noreferrer">
-          <PillFaces>{MICROCOPY.visitBlueberry} <ArrowUpRight size={18} aria-hidden="true" /></PillFaces>
         </a>
         {/* The chat launcher lands here (chat-dock.tsx, createPortal). display: contents, so the
             launcher is laid out as if it were a direct child of this row. */}

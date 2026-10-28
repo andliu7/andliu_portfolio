@@ -67,7 +67,7 @@ html:not([data-motion="reduced"]) .experience .xp-crowd .cl-person:nth-child(3n)
 
 /* ---------- Pinned ---------- */
 .experience[data-pin] { height:calc(100svh + var(--run,0px)); }
-.experience[data-pin] .xp-frame { position:sticky; top:0; height:100svh; overflow:clip; align-content:center; padding:calc(var(--header-h) + 8px) 0 72px; gap:clamp(24px,5svh,48px); } /* 72px, was 32: room for the progress row */
+.experience[data-pin] .xp-frame { touch-action:pan-y; position:sticky; top:0; height:100svh; overflow:clip; align-content:center; padding:calc(var(--header-h) + 8px) 0 72px; gap:clamp(24px,5svh,48px); } /* 72px, was 32: room for the progress row */
 .experience[data-pin] .xp-head { padding-inline:var(--gutter); }
 .experience[data-pin] .xp-meter { display:grid; }
 .experience[data-pin] .xp-track { display:flex; align-items:stretch; gap:32px; width:max-content; justify-self:start; padding-inline:var(--gutter); will-change:transform; }

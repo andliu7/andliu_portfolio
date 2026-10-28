@@ -85,7 +85,7 @@ export const META = {
 
 // 4.1 Hero
 export const HERO = {
-  chip: 'B.S. Computer Science, Pre-Dental Track. Expected May 2027.', // [R] Andrew's wording 2026-10-06 (B.S. instead of "Major")
+  chip: 'B.S. Computer Science, Pre-Dental Track UMD 2027', // [R] Andrew's wording 2026-10-06 (B.S. instead of "Major"); 2026-10-28: UMD 2027, no month and no @, then the UMD logo
   first: 'ANDREW', // [P]
   last: 'LIU', // [P]
   // His surname in Chinese, the face LIU flips to under the pointer (Andrew 2026-10-06). Simplified;
@@ -96,6 +96,7 @@ export const HERO = {
   hi: 'Hi, my name is', // [Andrew 2026-10-21] (needs sign-off)
   comma: ',', // [Andrew 2026-10-21] "Andrew Liu," keeps its comma (needs sign-off)
   role: 'SOFTWARE ENGINEER', // [Andrew 2026-10-21] (needs sign-off)
+  down: 'Scroll down to projects', // [Andrew 2026-10-28] the down arrow's accessible name; it shows the role, not these words
   // The four cartoon objects around the name, each a link to its project (labels are PROJECTS titles)
   objects: {
     pencil: { label: 'Focus Family Guide', href: '#work-guide' }, // [P] PROJECTS guide
@@ -107,7 +108,7 @@ export const HERO = {
 
 // 4.1 The hero's tilted marquee bar: short true facts, one line each (needs Andrew's sign-off)
 export const HERO_BAR = [
-  `${IDENTITY.degree}, ${IDENTITY.schoolShort}. ${IDENTITY.expected}.`, // [R] derived from IDENTITY
+  `${IDENTITY.degree}, ${IDENTITY.schoolShort} 2027`, // [R] derived from IDENTITY; no month (Andrew 2026-10-28)
   IDENTITY.line, // [P]
   `${BLUEBERRY_ROLE} of Blueberry, a team of four`, // [R] four per Andrew 2026-10-06
   'Browser Use docs used by 200+ contributors', // [R] Minnodi line
@@ -696,7 +697,11 @@ export const RESUME_PREVIEW = {
   // The small framed photo at the text block's bottom right (Andrew 2026-10-17), cropped square
   // from his Golden Gate photo at full resolution (700) and lightly sharpened, so the tilt has
   // detail to resample; the caption sits in the frame's foot, the place as an Instagram-style tag
-  photo: { src: '/images/me/golden-gate.webp', srcSm: '/images/me/golden-gate-sm.webp', w: 700, h: 700, alt: 'Andrew at the Golden Gate Bridge, smiling with two thumbs up', caption: '(me)', place: '@Golden Gate Bridge', enlarge: 'Open the photo full size' }, // [Andrew 2026-10-17]
+  photo: { src: '/images/me/golden-gate.webp', srcSm: '/images/me/golden-gate-sm.webp', w: 700, h: 700, alt: 'Andrew at the Golden Gate Bridge, smiling with two thumbs up', caption: '(me)', place: '@Golden Gate', enlarge: 'Open the photo full size',
+    // Opened, the photo takes the light of the visitor's time of day (lib/sun.ts, Andrew 2026-10-25). Night is queued: it shows plain.
+    light: { dawn: 'at dawn', day: 'in the midday sun', dusk: 'at dusk' },
+    // him alone (hero.tsx's cut-out), laid back over the sky effects so they never tint his face; it sits at 148,235 of the 700 frame
+    cutout: '/images/me/golden-gate-cutout.webp' }, // [Andrew 2026-10-17]
   clickHere: 'click here!', // [Andrew 2026-10-17] the note pointing at the page card
   image: {
     // 2026-10-17: sharper (Andrew: "much clearer to look at"). 1600 covers the 520px card grown
@@ -829,7 +834,7 @@ export const UMD = {
 // The two pinned horizontal strips (Experience's timeline, Off the clock's evening) share these:
 // the Esc hint and the auto-play button's two states (components/site/strip-autoplay.tsx).
 export const STRIP = {
-  esc: 'Esc to skip', // [UI] Andrew 2026-10-07 asked for Esc to pass both strips (needs sign-off)
+  esc: 'Press any key to skip', // [UI] Andrew 2026-10-07 asked for Esc to pass both strips; 2026-10-28: any key (needs sign-off)
   autoOn: 'Auto: on, tap to stop', // [UI] Andrew 2026-10-07: animates through by default, a red button turns it off (needs sign-off)
   autoOff: 'Auto: off, tap to play', // [UI] the same button once off, green (needs sign-off)
   skip: 'Skip section', // [UI] Andrew 2026-10-25: "make a button to skip the section" (needs sign-off)

@@ -16,15 +16,15 @@
    strip (76px, half of it hanging over). Selected work below starts flush (projects.css), so the
    bottom pad is only breathing room; the room the sinking centre column needs is the list's own
    bottom pad (section 2).
-   The ground is flat berry-deep at every edge, so both seams meet their neighbour's flat
-   berry-deep with no line; a soft berry glow sits behind the phones instead of the shared corner
-   gradient (paper text over it stays 9:1 or better). */
+   The ground is flat berry-deep from top to bottom (Andrew 2026-10-28: the background changed as
+   the sticky screen arrived, and cut off before Selected work), so it is the same colour at both
+   seams and all the way through the pin. The soft berry glow that sat behind the phones is gone. */
 .phones {
   --ph-tuck: clamp(40px, 6cqi, 96px);
   margin-top: calc(-1 * var(--ph-tuck));
   padding: calc(var(--ph-tuck) + 38px + clamp(40px, 5cqi, 80px)) var(--gutter) clamp(24px, 3cqi, 48px);
   background-color: var(--ground);
-  background-image: radial-gradient(70% 45% at 50% 60%, color-mix(in srgb, var(--berry) 30%, var(--berry-deep)) 0%, var(--berry-deep) 100%);
+  background-image: none;
 }
 
 /* ---------- 1. head ---------- */
@@ -90,6 +90,30 @@
   .phones .ph-item:nth-child(3n+1) .ph-cap { rotate: -3deg; }
   .phones .ph-item:nth-child(3n+2) .ph-cap { rotate: none; }
   .phones .ph-item:nth-child(3n) .ph-cap { rotate: 3deg; }
+}
+
+/* A wide screen (Andrew 2026-10-28: "in your pocket sticky to the left and then when you scrolled the
+   screens scrolled on the right. keep it for viewing from a phone though"): the head stays pinned
+   under the header on the left while the phones run past it in two drifting columns on the right,
+   the left column rising and the right sinking. Phones and tablets keep the layout above. The
+   section stays a grid, so the sticky head holds for as long as the phones are beside it. */
+@media (min-width: 1100px) {
+  .phones {
+    --ph-headw: clamp(320px, 30cqi, 460px);
+    --ph-colgap: clamp(32px, 4cqi, 64px);
+    grid-template-columns: var(--ph-headw) minmax(0, 1fr); column-gap: var(--ph-colgap); align-items: start;
+  }
+  .phones .ph-head { position: sticky; top: calc(var(--header-h) + 28px); max-width: none; margin: 0; align-self: start; }
+  .phones .ph-intro { grid-template-columns: minmax(0, 1fr); }
+  .phones .ph-cols {
+    --ph-n: 2; --ph-edge: 0px; --ph-gap: clamp(22px, 3cqi, 48px);
+    --ph-w: min(calc((100cqi - var(--ph-headw) - var(--ph-colgap) - var(--ph-gap)) / 2), calc((100svh - 24px) / var(--ph-k)));
+    margin: 0;
+  }
+  .phones .ph-item:nth-child(odd) { translate: 0 var(--rise); }
+  .phones .ph-item:nth-child(even) { translate: 0 var(--sink); }
+  .phones .ph-item:nth-child(odd) .ph-cap { rotate: -3deg; }
+  .phones .ph-item:nth-child(even) .ph-cap { rotate: 3deg; }
 }
 
 /* A phone: the body is a flat sticker fill with an ink outline; the screen sits inside a bezel

@@ -117,8 +117,13 @@
 [data-ground="paper"]:where(:not(html))      { --ground-grad:radial-gradient(125% 125% at 50% 10%, var(--paper) 40%, var(--apricot) 100%); }
 [data-ground="apricot"]:where(:not(html))    { --ground-grad:radial-gradient(125% 125% at 50% 10%, var(--apricot) 40%, var(--paper) 100%); }
 [data-ground="berry"]:where(:not(html))      { --ground-grad:radial-gradient(125% 125% at 50% 10%, var(--berry) 40%, var(--berry-deep) 100%); }
-[data-ground="berry-deep"]:where(:not(html)) { --ground-grad:radial-gradient(125% 125% at 50% 10%, var(--berry-deep) 40%, var(--ink) 100%); }
-[data-ground="ink"]:where(:not(html))        { --ground-grad:radial-gradient(125% 125% at 50% 10%, var(--ink) 40%, var(--berry-deep) 100%); }
+/* The dark grounds run top to bottom, not corner to corner (Andrew 2026-10-27: backgrounds should
+   not cut off between parts of the page). Both edges hold the flat ground, so a section meets the
+   next of its ground with no seam; the darkening sits mid-section, where it separates without
+   cutting. Contact opens on berry-deep and settles into ink, the one change of ground below. */
+[data-ground="berry-deep"]:where(:not(html)) { --ground-grad:linear-gradient(to bottom, var(--berry-deep) 0%, color-mix(in srgb, var(--berry-deep) 72%, var(--ink)) 50%, var(--berry-deep) 100%); }
+[data-ground="ink"]:where(:not(html))        { --ground-grad:linear-gradient(to bottom, var(--ink) 0%, color-mix(in srgb, var(--ink) 78%, var(--berry-deep)) 50%, var(--ink) 100%); }
+#contact { --ground-grad:linear-gradient(to bottom, var(--berry-deep) 0%, var(--ink) 28%, color-mix(in srgb, var(--ink) 78%, var(--berry-deep)) 60%, var(--ink) 100%); }
 :where(main > section[data-ground]:not([data-gradient])) { background-color:var(--ground); background-image:var(--ground-grad); }
 
 /* ---------- Base ---------- */
@@ -392,9 +397,9 @@ html:not([data-motion="reduced"]):not([data-hscroll="on"]) .site-header[data-hid
    the bar goes (wordmark, label, Résumé, Visit Blueberry and the band) but Ask and the menu
    button stay floating, so there is always a way out. They pop back in on the spring if the bar
    had left on scroll. Keyboard focus inside the header, or an open menu, still shows all of it. */
-.site-header .header-right > :is(.header-resume,.header-visit) { transition:transform var(--dur-release) var(--ease-spring),box-shadow var(--dur-release) var(--ease-spring),color var(--dur-ui) var(--ease-ui),translate var(--dur-roll) var(--ease-elastic); }
+.site-header .header-right > :is(.header-resume) { transition:transform var(--dur-release) var(--ease-spring),box-shadow var(--dur-release) var(--ease-spring),color var(--dur-ui) var(--ease-ui),translate var(--dur-roll) var(--ease-elastic); }
 html[data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within) > :is(.hdr-left,.hdr-centre),
-html[data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within) > .header-right > :is(.header-resume,.header-visit) { translate:0 -300%; }
+html[data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within) > .header-right > :is(.header-resume) { translate:0 -300%; }
 html[data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within)::before { translate:0 -110%; }
 html[data-hscroll="on"] .site-header:not([data-menu-open]) > .header-right { translate:none; }
 /* Right group: Résumé (720px and up; the menu has it on phones), Visit Blueberry (the one
@@ -419,7 +424,7 @@ html[data-hscroll="on"] .site-header:not([data-menu-open]) > .header-right { tra
 .site-header[data-menu-open] { z-index:210; }
 .site-header[data-menu-open] > .header-right { position:relative; z-index:201; pointer-events:none; }
 .site-header[data-menu-open] > .header-right > .header-resume { display:inline-grid; pointer-events:auto; }
-.site-header[data-menu-open] > .header-right > :is(.header-visit,.hdr-ask) { display:none; }
+.site-header[data-menu-open] > .header-right > .hdr-ask { display:none; }
 .site-header[data-menu-open] > .header-right > .menu-btn, .site-header[data-menu-open] > :is(.hdr-left,.hdr-centre) { visibility:hidden; }
 @media (max-width:719px) {
   /* Two groups, one at each edge; no centre column to balance. */
@@ -429,15 +434,10 @@ html[data-hscroll="on"] .site-header:not([data-menu-open]) > .header-right { tra
   .site-header { top:12px; gap:8px; }
   .site-header::before { top:-12px; bottom:-10px; }
   .site-header .wordmark { padding:3px 7px 4px; --mark-size:19px; }
-  .header-visit { --pill-pad:12px; font-size:13px; }
   .header-right { gap:8px; }
 }
-/* Narrow phones: the four controls must fit 390px less a desktop scrollbar (372px), so Visit
-   Blueberry drops its arrow and tightens. */
-@media (max-width:420px) { .header-visit { --pill-pad:10px; font-size:12px; letter-spacing:.02em; } .header-visit svg { display:none; } }
-/* The smallest phones (320 wide): the mark and the three controls overlapped by about 16px, so
-   the pill and the gaps tighten once more (2026-10-23) */
-@media (max-width:359px) { .header-visit { --pill-pad:8px; font-size:11px; letter-spacing:0; } .header-right { gap:6px; } }
+/* The smallest phones (320 wide): the gaps tighten (2026-10-23; the Visit Blueberry pill is gone) */
+@media (max-width:359px) { .header-right { gap:6px; } }
 
 /* ---------- Menu overlay ---------- */
 /* Left: the numbered links, the small links and the switches. Right, 1000px and up: the preview,
@@ -695,9 +695,9 @@ html[data-motion="reduced"] :is(.pill-face,.pill-back) { translate:none !importa
 /* The header does not travel at all: it stays, on its band. */
 html[data-motion="reduced"] .site-header > *, html[data-motion="reduced"] .site-header::before { transition:none; translate:none !important; }
 /* A pinned strip still clears the bar (the same rule as above), by hiding it in place. */
-html[data-motion="reduced"] .site-header .header-right > :is(.header-resume,.header-visit) { transition:none; }
+html[data-motion="reduced"] .site-header .header-right > :is(.header-resume) { transition:none; }
 html[data-motion="reduced"][data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within) > :is(.hdr-left,.hdr-centre),
-html[data-motion="reduced"][data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within) > .header-right > :is(.header-resume,.header-visit) { visibility:hidden; }
+html[data-motion="reduced"][data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within) > .header-right > :is(.header-resume) { visibility:hidden; }
 html[data-motion="reduced"][data-hscroll="on"] .site-header:not([data-menu-open]):not(:focus-within)::before { opacity:0; }
 html[data-motion="reduced"] :is(.menu,.menu-print) { animation:none; }
 html[data-motion="reduced"] :is(.hdr-mark,.hdr-berry,.hdr-berry-text) { transition:none; }

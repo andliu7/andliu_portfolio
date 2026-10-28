@@ -125,11 +125,23 @@
    between software engineer and resume CTA and then goes to the top sticky header") */
 .hp .hp-foot .hp-degree { display:flex; justify-self:center; width:fit-content; max-width:100%; }
 .hp .hp-foot { gap:clamp(10px,1.2vw,18px); }
-.hp .hp-role {
-  margin:0; text-align:center; position:relative; z-index:3;
-  font:700 clamp(22px,calc(var(--fs) * .3),64px)/1.05 var(--mono); letter-spacing:.04em; color:var(--ink);
-  font-variant-ligatures:none;
+
+/* ---------- Wide: the name and photo more toward the middle of the screen (Andrew 2026-10-28: "my
+   name and image should be more towards the centre"). The band stops centring itself and starts
+   --hp-top below the header, which also keeps his head clear of the header's berry. */
+@media (min-width:760px) {
+  .hp .hero-band { --hp-top:calc(var(--header-h) + 76px); margin:0 auto; padding-top:var(--hp-top); }
 }
+
+/* ---------- The UMD seal sticker on the degree banner's top right corner ----------
+   Overlapping the pill's edge, turned a little, with a white cut border, a hairline and a soft lift.
+   It flips in once, after the page's first rise (the banner is in by about 1s). Under reduced motion
+   it is simply there. */
+.hp .hp-degree .umd-badge { position:absolute; z-index:5; top:-30px; right:-30px; width:52px; height:52px; box-sizing:content-box;
+  border:3px solid #fff; border-radius:50%; background:#fff; rotate:14deg; pointer-events:none;
+  box-shadow:0 0 0 1px rgb(0 0 0 / .4), 0 3px 6px rgb(0 0 0 / .3); animation:umd-flip .9s var(--ease-spring) 1.3s both; }
+@keyframes umd-flip { from { opacity:0; transform:perspective(500px) rotateY(-180deg) scale(.5); } 40% { opacity:1; } to { opacity:1; transform:none; } }
+html[data-motion="reduced"] .hp .hp-degree .umd-badge { animation:none; }
 
 /* ---------- A phone: his photo the centrepiece, the name one line through it ----------
    (2026-10-23, Andrew: "make it so that the image is the central point with my name horizontally

@@ -32,6 +32,10 @@ main:has(> .ft) { isolation:isolate; }
 /* Stuck to the window's bottom only where it fits (data-fits) and motion is allowed. */
 html:not([data-motion="reduced"]) .ft[data-fits] { position:sticky; bottom:0; }
 
+/* Testudo stands beside the blurb, small and a little turned */
+.ft-blurb-row { display:flex; align-items:flex-end; justify-content:flex-end; gap:14px; }
+@media (max-width:760px) { .ft-blurb-row { justify-content:flex-start; } }
+.ft-testudo { flex:none; width:clamp(48px,5vw,64px); height:auto; rotate:-4deg; pointer-events:none; user-select:none; }
 .ft-in { max-width:1200px; margin:0 auto; padding:56px var(--gutter) 64px; display:grid; grid-template-columns:minmax(0,1.8fr) minmax(0,1fr); gap:40px 56px; }
 @media (max-width:760px) { .ft-in { grid-template-columns:minmax(0,1fr); padding-block:40px 48px; gap:32px; } }
 
