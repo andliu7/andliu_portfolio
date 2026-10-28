@@ -2,11 +2,9 @@
 import { useSyncExternalStore, type CSSProperties } from 'react';
 import { motion } from 'motion/react';
 import { UMD } from '@/lib/site';
-import { TiltFrame } from '@/components/site/tilt-frame';
 import { SweatyTerrapin } from '@/components/site/umd/sweaty-terrapin';
 import { LavaCard } from '@/components/site/umd/lava-card';
 import { MarylandFlag } from '@/components/site/umd/flag';
-import { MarylandIcon } from '@/components/site/umd/maryland-icon';
 import { useReducedMotion } from '@/components/site/use-reduced-motion';
 
 // UMD, the first stop on the Experience timeline (Andrew 2026-10-20, choosing between two drafts:
@@ -41,11 +39,20 @@ const PILL = {
   shown: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring' as const, stiffness: 420, damping: 18 } },
 };
 
-function Pills({ items, className, label, live }: { items: readonly string[]; className: string; label?: string; live: boolean }) {
-  if (!live) return <ul className={className} aria-label={label}>{items.map(item => <li key={item}>{item}</li>)}</ul>;
+// `logos` is an optional picture per item (the club pills' logos), drawn before the words; with `links`
+// each is a link to that club's Instagram, named by the link's label (the image itself has no alt).
+type Link = { href: string; label: string };
+function Pills({ items, className, label, live, logos, links }: { items: readonly string[]; className: string; label?: string; live: boolean; logos?: readonly string[]; links?: readonly Link[] }) {
+  const logo = (i: number) => {
+    if (!logos?.[i]) return null;
+    const img = <img className="xp-pill-logo" src={logos[i]} alt="" loading="lazy" decoding="async" />;
+    const link = links?.[i];
+    return link ? <a className="xp-pill-link" href={link.href} target="_blank" rel="noreferrer" aria-label={link.label}>{img}</a> : img;
+  };
+  if (!live) return <ul className={className} aria-label={label}>{items.map((item, i) => <li key={item}>{logo(i)}{item}</li>)}</ul>;
   return (
     <motion.ul className={className} aria-label={label} variants={LIST} initial="hidden" whileInView="shown" viewport={{ once: true, amount: 0.3 }}>
-      {items.map(item => <motion.li key={item} variants={PILL}>{item}</motion.li>)}
+      {items.map((item, i) => <motion.li key={item} variants={PILL}>{logo(i)}{item}</motion.li>)}
     </motion.ul>
   );
 }
@@ -80,9 +87,8 @@ export function UmdStop() {
           </LavaCard>
         </div>
         <div className="xp-umd-foot">
-          <Pills className="xp-umd-tags" items={UMD.tags} label={UMD.clubsLabel} live={live} />
-          {/* The cartoon Maryland, tilting toward the pointer (TiltFrame, fine pointer and full motion only). */}
-          <TiltFrame className="xp-umd-state" max={14} shift={0} layers={[{ depth: 0, node: <MarylandIcon className="xp-umd-state-svg" /> }]} />
+          <Pills className="xp-umd-tags" items={UMD.tags} logos={UMD.tagLogos} links={UMD.tagLinks} label={UMD.clubsLabel} live={live} />
+          {/* The cartoon Maryland moved to the Contents section (Andrew 2026-10-28: keep the club pills on one line, else move it to "Where to?") */}
         </div>
       </article>
     </li>

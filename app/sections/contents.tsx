@@ -4,6 +4,8 @@ import { ContainerScroll } from '@/components/ui/container-scroll-animation';
 import { FlipHeading } from '@/components/site/flip-heading';
 import { FlowButton } from '@/components/ui/flow-button';
 import { TextBlockAnimation } from '@/components/ui/text-block-animation';
+import { TiltFrame } from '@/components/site/tilt-frame';
+import { MarylandIcon } from '@/components/site/umd/maryland-icon';
 import { CompassSpin, FlipOnView } from './contents.client';
 import { ROW_ICONS } from './contents-icons';
 import './contents.css';
@@ -26,6 +28,9 @@ export default function Contents() {
   return (
     <section {...sectionAttrs('contents')} className="contents" aria-labelledby="contents-title">
       <CompassSpin label={CONTENTS.spin} />
+      {/* The cartoon Maryland in the top right corner, tilting toward the pointer (it came from UMD's stop in
+          Along the way, Andrew 2026-10-28). Decoration; wide screens only. */}
+      <TiltFrame className="toc-state" max={14} shift={0} layers={[{ depth: 0, node: <MarylandIcon className="toc-state-svg" /> }]} />
       <FlipOnView id="contents-title" />
       {/* ContainerScroll (components/ui/container-scroll-animation.tsx): the title rises and the
           card of rows tilts from 48deg back (and a little twisted and low) to flat as the section

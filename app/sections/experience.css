@@ -52,6 +52,11 @@
 html:not([data-motion="reduced"]) .experience .xp-crowd .cl-person { animation:xp-bob 1.6s ease-in-out infinite alternate; }
 html:not([data-motion="reduced"]) .experience .xp-crowd .cl-person:nth-child(2n) { animation-delay:-.8s; }
 html:not([data-motion="reduced"]) .experience .xp-crowd .cl-person:nth-child(3n) { animation-duration:1.9s; }
+/* The KCM logo, a sticker on the card's top right, a little turned */
+.experience .xp-card-logo { position:absolute; z-index:2; top:14px; right:16px; width:clamp(56px,5vw,76px); aspect-ratio:1; rotate:6deg; }
+.experience .xp-card-logo img { display:block; width:100%; height:100%; border-radius:50%; border:3px solid #fff; box-sizing:border-box; background:#fff; box-shadow:0 0 0 1px rgb(0 0 0 / .4), 0 3px 6px rgb(0 0 0 / .3); }
+.experience .xp-card-logo:is(:hover,:focus-visible) { scale:1.06; }
+.experience .xp-card-logo:focus-visible { outline:3px solid var(--ring); outline-offset:3px; border-radius:50%; }
 .experience .xp-when { display:inline-flex; align-items:center; min-height:32px; padding:0 14px; margin-bottom:12px; border-radius:var(--r-pill); background:var(--ink); color:var(--fill);
   font:700 14px/1 var(--mono); letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; font-variant-ligatures:none; }
 .experience .xp-role { margin:0; font:700 clamp(28px,2.4vw,34px)/1.06 var(--display); letter-spacing:-.01em; text-transform:uppercase; font-variant-ligatures:none; }
@@ -265,11 +270,24 @@ html[data-motion="reduced"] .experience .xp-umd-flag canvas[data-ready] { transi
 /* The pills: the courses on the card and the clubs in the foot. Flat cream stickers with an ink
    outline and ledge, readable over anything (17:1), so they sit straight on the fire or the flag. */
 .experience :is(.xp-umd-tags,.xp-umd-chips) { list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:8px; }
+/* A club pill's logo, a die-cut sticker at the pill's left edge, a little turned */
+/* The logo is a link: its hit box grows past the sticker to a 44px target, and it lifts on hover */
+.experience .xp-pill-link { position:relative; display:inline-flex; flex:none; }
+.experience .xp-pill-link::after { content:''; position:absolute; inset:-6px; }
+.experience .xp-pill-link .xp-pill-logo { transition:rotate var(--dur-roll) var(--ease-elastic), scale var(--dur-roll) var(--ease-elastic); }
+.experience .xp-pill-link:is(:hover,:focus-visible) .xp-pill-logo { rotate:4deg; scale:1.12; }
+.experience .xp-pill-link:focus-visible { outline:3px solid var(--ring); outline-offset:3px; border-radius:50%; }
+.experience .xp-umd-tags li:has(.xp-pill-logo) { display:inline-flex; align-items:center; gap:8px; padding-left:7px; }
+.experience .xp-pill-logo { flex:none; height:34px; width:auto; max-width:50px; object-fit:contain; margin:-6px 0; border-radius:50%; filter:drop-shadow(0 0 0 #fff) drop-shadow(0 1px 2px rgb(0 0 0 / .35)); rotate:-6deg; }
+.experience .xp-umd-tags li:first-child .xp-pill-logo { border-radius:0; max-width:56px; }
 .experience :is(.xp-umd-tags,.xp-umd-chips) li { padding:7px 13px; border:1px solid var(--ink); border-radius:var(--r-pill); background:var(--card); color:var(--ink); box-shadow:0 3px 0 var(--ink); font:700 14px/1.2 var(--body); }
 
 /* The foot: the club pills (Andrew 2026-10-20: "bring the little chips to the bottom empty space")
    and the cartoon Maryland at the right, tilting toward the pointer (TiltFrame). */
 .experience .xp-umd-foot { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
+/* The club pills stay on one line (Andrew 2026-10-28) */
+.experience .xp-umd-tags { flex-wrap:nowrap; min-width:0; }
+.experience .xp-umd-tags li { white-space:nowrap; }
 .experience .xp-umd-state { flex:none; width:clamp(76px,6vw,96px); }
 .experience .xp-umd-state-svg { display:block; width:100%; height:auto; overflow:visible; }
 .experience .xp-umd-state .tilt-stage { transition:transform 600ms var(--ease-out), translate 450ms var(--ease-spring); }

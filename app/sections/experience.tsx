@@ -1,7 +1,7 @@
 'use client';
 import type { CSSProperties } from 'react';
 import { ArrowDown } from 'lucide-react';
-import { EXPERIENCE_HEAD, JOBS, MICROCOPY, STRIP, sectionAttrs } from '@/lib/site';
+import { EXPERIENCE_HEAD, JOBS, MICROCOPY, STRIP, UMD, sectionAttrs } from '@/lib/site';
 import { FlipHeading } from '@/components/site/flip-heading';
 import { TextBlockAnimation } from '@/components/ui/text-block-animation';
 import { PillFaces } from '@/components/site/pill-faces';
@@ -94,6 +94,12 @@ export default function Experience() {
                 <span className="xp-crowd" aria-hidden="true">
                   {CROWD[job.id].map((p, k) => <BlobPerson key={k} {...p} />)}
                 </span>
+                {/* Kharis Campus Ministry's logo, linked to its Instagram (Andrew 2026-10-28: the KCM logo on the Focus Family one) */}
+                {job.id === 'kcm' && (
+                  <a className="xp-card-logo" href={UMD.tagLinks[1].href} target="_blank" rel="noreferrer" aria-label={UMD.tagLinks[1].label}>
+                    <img src={UMD.tagLogos[1]} alt="" loading="lazy" decoding="async" />
+                  </a>
+                )}
                 <span className="xp-when">{job.when}</span>
                 <h3 className="xp-role" id={`xp-${job.id}`}>{job.role}</h3>
                 <p className="xp-org">{job.org}</p>

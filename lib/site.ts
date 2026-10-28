@@ -85,7 +85,7 @@ export const META = {
 
 // 4.1 Hero
 export const HERO = {
-  chip: 'B.S. Computer Science, Pre-Dental Track UMD 2027', // [R] Andrew's wording 2026-10-06 (B.S. instead of "Major"); 2026-10-28: UMD 2027, no month and no @, then the UMD logo
+  chip: 'B.S. Computer Science, Pre-Dental Track | UMD 2027', // [R] Andrew's wording 2026-10-06 (B.S. instead of "Major"); 2026-10-28: UMD 2027, no month and no @, then the UMD logo
   first: 'ANDREW', // [P]
   last: 'LIU', // [P]
   // His surname in Chinese, the face LIU flips to under the pointer (Andrew 2026-10-06). Simplified;
@@ -822,6 +822,15 @@ export const UMD = {
   when: EDUCATION.expected, // [R] the Coursework card's ink chip, as JOBS[].when on the role cards
   degree: IDENTITY.degree, // [R] derived from IDENTITY
   tags: ['UMD Barbell Club', 'Focus Family at KCM', 'The UMD garden'], // [Andrew 2026-10-06 via lead brief, as EVENING gym][R][Z yard] (needs sign-off)
+  // A logo on each club pill, in the same order as tags (Andrew 2026-10-28: add these and the terrapin
+  // to Along the way): the barbell-club terrapin, Kharis Campus Ministry, the UMD Community Learning Garden
+  tagLogos: ['/images/umd/club-barbell.webp', '/images/umd/kcm.webp', '/images/umd/garden.webp'],
+  // Where each logo goes when pressed (Andrew 2026-10-28), a new tab: the clubs' Instagram pages, in tag order
+  tagLinks: [
+    { href: 'https://www.instagram.com/umdbarbell/', label: 'UMD Barbell Club on Instagram' },
+    { href: 'https://www.instagram.com/umdkcm/', label: 'Kharis Campus Ministry on Instagram' },
+    { href: 'https://www.instagram.com/umdclgarden/', label: 'UMD Community Learning Garden on Instagram' },
+  ],
   courseworkLabel: EDUCATION.courseworkLabel, // [R]
   coursework: EDUCATION.coursework, // [R][Z umd]
   clubsLabel: 'Clubs', // [Andrew 2026-10-20] the club pills' accessible name, now in the stop's foot (needs sign-off)

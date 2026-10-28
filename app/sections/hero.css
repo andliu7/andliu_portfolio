@@ -123,10 +123,8 @@ html[data-motion="reduced"] .hero .hero-liu-track { transition:none; }
 .hero .hero-about { display:grid; gap:14px; justify-items:center; }
 /* The down cue under the degree line: the word and an arrow that bobs over it, no button face
    (Andrew 2026-10-28). Ink on the cream scrim; the arrow holds still under reduced motion. */
-.hero .hero-down { display:grid; justify-items:center; gap:2px; min-height:var(--hit); padding:6px 16px; color:var(--ink); text-decoration:none; font:800 clamp(26px,calc(var(--fs) * .38),60px)/1.05 var(--hp-face,var(--body)); letter-spacing:.12em; padding-left:calc(16px + .12em); text-transform:uppercase; }
-/* a little spread, large enough to read (Andrew 2026-10-28: wide spacing at the smaller size was hard to read); a phone's width takes less. The left padding
-   balances the trailing letter space, so the line stays centred. */
-@media (max-width:759px) { .hero .hero-down { letter-spacing:.06em; padding-left:calc(16px + .06em); } }
+.hero .hero-down { display:grid; justify-items:center; gap:2px; min-height:var(--hit); padding:6px 16px; color:var(--ink); text-decoration:none; font:800 clamp(26px,calc(var(--fs) * .38),60px)/1.05 var(--hp-face,var(--body)); letter-spacing:0; text-transform:uppercase; }
+/* not spread (Andrew 2026-10-28: "don't spread Software engineer"): large and tight, so it reads easily */
 .hero .hero-down-arrow { animation:hero-bob 1.8s ease-in-out infinite; }
 .hero .hero-down:is(:hover,:focus-visible) .hero-down-text { color:var(--berry); }
 @keyframes hero-bob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(7px); } }
