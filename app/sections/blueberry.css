@@ -28,7 +28,7 @@
      edge, half on the chapter and half on Selected work's ground (the hand-off, section 3). */
   padding: clamp(64px, 7cqi, 112px) var(--gutter) 0;
   border-radius: 0 0 var(--bb-close) var(--bb-close);
-  background: radial-gradient(125% 125% at 50% 10%, var(--berry) 40%, var(--berry-deep) 100%);
+  background: var(--berry-deep); /* the same ground as every section around it (gauntlet round 1) */
   will-change: transform;
 }
 @supports (transition-timing-function: linear(0, 1)) {
@@ -46,7 +46,12 @@
 /* Soft grounds (Andrew, 2026-10-06): the band is a radial wash from a paper-lightened tint to
    its own token, so ink text stays AA everywhere on it (ink on sky 13.32 at the darkest point,
    on berry-soft 11.98). Bands only; tiles, cards and buttons stay flat. */
-.bb .bb-screens { background: radial-gradient(120% 120% at 15% 0%, color-mix(in srgb, var(--sky) 55%, var(--paper)) 0%, var(--sky) 65%); }
+/* Gauntlet round 2 (critics, bar linear.app): the light-blue slab was the hardest tone break on the page,
+   so the band is now a dark surface a step lighter than the ground; the cream prints stay as cards on it. */
+.bb .bb-screens { background: transparent; border: 1px solid color-mix(in srgb, var(--on) 20%, transparent); color: var(--on); } /* round 3: no lighter panel, only a hairline edge */
+.bb .bb-screens .pl-string { stroke: var(--berry-soft); }
+.bb .bb-screens :is(.pl-title, .pl-sub, .pl-count, .pl-count b, .pl-link) { color: var(--on); }
+.bb .bb-screens .pl-sub { color: var(--on-2); }
 .bb .eyebrow { margin-bottom: 18px; color: var(--on-2); }
 
 /* ---------- 1. head: headline with stickers, then story beside the fact stickers ---------- */
@@ -120,11 +125,10 @@
    under reduced motion it is one still, wrapped row. Logos are ink on the light chip fills
    (12.6:1 or better), the strip's ink edge frames them. ---------- */
 .bb .bb-stack { margin-top: clamp(40px, 5cqi, 72px); margin-bottom: calc(var(--bb-strip-h) / -2); }
-.bb .bb-strip { margin-inline: calc(var(--band-inset) - var(--gutter)); padding: 14px 0; border-radius: var(--r-pill); background: var(--ink); overflow: hidden; }
+.bb .bb-strip { margin-inline: calc(var(--band-inset) - var(--gutter)); padding: 14px 0; border-radius: var(--r-pill); background: transparent; border: 1px solid color-mix(in srgb, var(--on) 24%, transparent); overflow: hidden; } /* the ground's own colour, hairline edge (round 2) */
 .bb .bb-strip .islider[data-static] { padding-inline: 18px; }
 .bb .bb-pill { --chip-h: 48px; --chip-fs: 15px; }
-.bb .bb-pill:nth-child(3n + 2) { background: var(--apricot); }
-.bb .bb-pill:nth-child(3n) { background: var(--sky); }
+/* one chip style: no apricot or sky chips (round 2) */
 @container (max-width: 759px) {
   .bb { --bb-strip-h: 72px; }
   .bb .bb-strip { border-radius: 28px; }

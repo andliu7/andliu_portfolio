@@ -129,6 +129,8 @@
 .phones [data-fill="apricot"] { background: var(--apricot); }
 .phones [data-fill="sky"] { background: var(--sky); }
 .phones [data-fill="berry-soft"] { background: var(--berry-soft); }
+/* one frame colour (gauntlet round 2): the apricot and sky frames broke the dark field */
+.phones [data-fill] { background: var(--berry-soft); }
 .phones .ph-island { position: absolute; top: 3.6cqi; left: 50%; width: 26cqi; height: 3.4cqi; translate: -50% 0; border-radius: var(--r-pill); background: var(--ink); }
 /* width/height attributes give the intrinsic ratio; height auto plus aspect-ratio reserves the
    box before the image lands, so the page height (and every scroll trigger) never jumps. */

@@ -121,9 +121,8 @@
    not cut off between parts of the page). Both edges hold the flat ground, so a section meets the
    next of its ground with no seam; the darkening sits mid-section, where it separates without
    cutting. Contact opens on berry-deep and settles into ink, the one change of ground below. */
-[data-ground="berry-deep"]:where(:not(html)) { --ground-grad:linear-gradient(to bottom, var(--berry-deep) 0%, color-mix(in srgb, var(--berry-deep) 72%, var(--ink)) 50%, var(--berry-deep) 100%); }
+[data-ground="berry-deep"]:where(:not(html)) { --ground-grad:linear-gradient(var(--berry-deep), var(--berry-deep)); } /* one flat ground (gauntlet round 1, bar: linear.app) */
 [data-ground="ink"]:where(:not(html))        { --ground-grad:linear-gradient(to bottom, var(--ink) 0%, color-mix(in srgb, var(--ink) 78%, var(--berry-deep)) 50%, var(--ink) 100%); }
-#contact { --ground-grad:linear-gradient(to bottom, var(--berry-deep) 0%, var(--ink) 28%, color-mix(in srgb, var(--ink) 78%, var(--berry-deep)) 60%, var(--ink) 100%); }
 :where(main > section[data-ground]:not([data-gradient])) { background-color:var(--ground); background-image:var(--ground-grad); }
 
 /* ---------- Base ---------- */
@@ -308,7 +307,7 @@ section[data-texture] { isolation:isolate; }
 /* The band: once the page has scrolled, a paper strip with a 1px ink rule sits behind the pills,
    so a heading scrolling under them never shows through between them. It leaves and returns
    with the pills. */
-.site-header::before { content:''; position:absolute; z-index:-1; left:calc(-1 * var(--gutter)); right:calc(-1 * var(--gutter)); top:-16px; bottom:-12px; background:var(--paper); border-bottom:1px solid var(--ink); opacity:0; pointer-events:none; transition:opacity var(--dur-ui) var(--ease-ui),translate var(--dur-roll) var(--ease-elastic); }
+.site-header::before { content:''; position:absolute; z-index:-1; left:calc(-1 * var(--gutter)); right:calc(-1 * var(--gutter)); top:-16px; bottom:-12px; background:color-mix(in srgb,var(--ground,var(--paper)) 92%,transparent); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); border-bottom:1px solid color-mix(in srgb,var(--on,var(--ink)) 18%,transparent); opacity:0; pointer-events:none; transition:opacity var(--dur-ui) var(--ease-ui),translate var(--dur-roll) var(--ease-elastic); }
 .site-header[data-band]::before { opacity:1; }
 .site-header[data-hidden]:not([data-menu-open]):not(:focus-within)::before { translate:0 -110%; }
 .site-header[data-menu-open]::before { opacity:0; }

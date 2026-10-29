@@ -58,13 +58,18 @@ export function Terrapin({ label, className, children }: { label?: string; class
         <path d="M128 176 q-22 50 -18 120" fill="none" stroke="#B8844A" strokeWidth="20" strokeLinecap="round" />
         <path d="M312 176 q22 50 18 120" fill="none" stroke="#000000" strokeWidth="30" strokeLinecap="round" />
         <path d="M312 176 q22 50 18 120" fill="none" stroke="#B8844A" strokeWidth="20" strokeLinecap="round" />
-        {/* the bar at mid thigh, two plates a side, then the hands over it */}
+        {/* the bar at mid thigh, four plates a side, then the hands over it */}
         <g transform="translate(0 24)">
-          <rect x="20" y="272" width="400" height="12" rx="6" fill="#B8B8C0" stroke="#000000" strokeWidth="4" />
-          <rect x="28" y="222" width="30" height="112" rx="8" fill="#9A9AA4" stroke="#000000" strokeWidth="5" />
-          <rect x="62" y="236" width="22" height="84" rx="7" fill="#B8B8C0" stroke="#000000" strokeWidth="5" />
-          <rect x="382" y="222" width="30" height="112" rx="8" fill="#9A9AA4" stroke="#000000" strokeWidth="5" />
-          <rect x="356" y="236" width="22" height="84" rx="7" fill="#B8B8C0" stroke="#000000" strokeWidth="5" />
+          <rect x="8" y="272" width="424" height="12" rx="6" fill="#B8B8C0" stroke="#000000" strokeWidth="4" />
+          {/* four plates a side, big to small going in, so he is lifting 4 plates (Andrew 2026-10-28) */}
+          <rect x="14" y="226" width="19" height="104" rx="7" fill="#9A9AA4" stroke="#000000" strokeWidth="5" />
+          <rect x="36" y="234" width="17" height="88" rx="6" fill="#B8B8C0" stroke="#000000" strokeWidth="5" />
+          <rect x="56" y="242" width="15" height="72" rx="6" fill="#9A9AA4" stroke="#000000" strokeWidth="5" />
+          <rect x="74" y="250" width="13" height="56" rx="5" fill="#B8B8C0" stroke="#000000" strokeWidth="5" />
+          <rect x="407" y="226" width="19" height="104" rx="7" fill="#9A9AA4" stroke="#000000" strokeWidth="5" />
+          <rect x="387" y="234" width="17" height="88" rx="6" fill="#B8B8C0" stroke="#000000" strokeWidth="5" />
+          <rect x="369" y="242" width="15" height="72" rx="6" fill="#9A9AA4" stroke="#000000" strokeWidth="5" />
+          <rect x="353" y="250" width="13" height="56" rx="5" fill="#B8B8C0" stroke="#000000" strokeWidth="5" />
           <circle cx="110" cy="278" r="16" fill="#B8844A" stroke="#000000" strokeWidth="5" />
           <circle cx="330" cy="278" r="16" fill="#B8844A" stroke="#000000" strokeWidth="5" />
         </g>

@@ -112,7 +112,7 @@ export function HeroPanel({ icons, tag, main = false }: { icons: Icons; tag?: st
                 {/* In place of the résumé button (Andrew 2026-10-28: "a down arrow hovering with the
                     text"); then "software engineer" took the word's place, in Baloo 2. The header
                     still carries Résumé. Glides to Selected work, so the link is named for that. */}
-                <a className="hero-down" href={main ? '#work' : '/#work'} aria-label={HERO.down}>
+                <a className="hero-down" href={main ? '#contents' : '/#contents'} aria-label={HERO.down}>
                   <span className="hero-down-text">{HERO.role}</span>
                   <ArrowDown className="hero-down-arrow" size={28} aria-hidden="true" />
                 </a>

@@ -1,7 +1,7 @@
 'use client';
 import type { CSSProperties } from 'react';
 import { ArrowDown } from 'lucide-react';
-import { EXPERIENCE_HEAD, JOBS, MICROCOPY, STRIP, UMD, sectionAttrs } from '@/lib/site';
+import { EXPERIENCE_HEAD, JOBS, JOB_LOGOS, MICROCOPY, STRIP, sectionAttrs } from '@/lib/site';
 import { FlipHeading } from '@/components/site/flip-heading';
 import { TextBlockAnimation } from '@/components/ui/text-block-animation';
 import { PillFaces } from '@/components/site/pill-faces';
@@ -94,12 +94,14 @@ export default function Experience() {
                 <span className="xp-crowd" aria-hidden="true">
                   {CROWD[job.id].map((p, k) => <BlobPerson key={k} {...p} />)}
                 </span>
-                {/* Kharis Campus Ministry's logo, linked to its Instagram (Andrew 2026-10-28: the KCM logo on the Focus Family one) */}
-                {job.id === 'kcm' && (
-                  <a className="xp-card-logo" href={UMD.tagLinks[1].href} target="_blank" rel="noreferrer" aria-label={UMD.tagLinks[1].label}>
-                    <img src={UMD.tagLogos[1]} alt="" loading="lazy" decoding="async" />
-                  </a>
-                )}
+                {/* The employer's logo as a sticker on the card's top right (Andrew 2026-10-28), a link where JOB_LOGOS has one */}
+                {JOB_LOGOS[job.id] && (() => {
+                  const logo = JOB_LOGOS[job.id];
+                  const img = <img src={logo.src} alt={logo.href ? '' : logo.label} loading="lazy" decoding="async" />;
+                  return logo.href
+                    ? <a className="xp-card-logo" href={logo.href} target="_blank" rel="noreferrer" aria-label={logo.label}>{img}</a>
+                    : <span className="xp-card-logo">{img}</span>;
+                })()}
                 <span className="xp-when">{job.when}</span>
                 <h3 className="xp-role" id={`xp-${job.id}`}>{job.role}</h3>
                 <p className="xp-org">{job.org}</p>

@@ -88,7 +88,7 @@ export default function Blueberry() {
 
         {/* The band is kept as the line's ground: the string, captions and arrows are ink, which
             needs a light ground (ink on sky 13.32:1), and on the berry it would not read. */}
-        <div className="bb-band bb-screens" data-ground="paper">
+        <div className="bb-band bb-screens" data-ground="berry-deep">
           <PolaroidLineCarousel
             className="bb-line"
             slides={LINE}

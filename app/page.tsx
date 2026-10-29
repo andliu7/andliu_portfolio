@@ -1,7 +1,6 @@
 import Motion from './motion';
 import Hero from './sections/hero';
 import Contents from './sections/contents';
-import Blueberry from './sections/blueberry';
 import Phones from './sections/phones';
 import Projects from './sections/projects';
 import Impact from './sections/impact';
@@ -26,8 +25,8 @@ export default function Home() {
       {/* AfterLoad: the contour canvases start once the loader lifts (components/site/after-load.tsx) */}
       <AfterLoad><ContourBg /></AfterLoad>
       <Hero />
+      {/* "From flashcards to a platform" (the Blueberry chapter) is cut and "Where to?" is back (Andrew 2026-10-29); Blueberry lives on in the phones and the work list */}
       <Contents />
-      <Blueberry />
       <Phones />
       <Projects />
       {/* The stack band, straight across the seam between Projects and Impact (Andrew 2026-10-20);

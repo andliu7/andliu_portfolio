@@ -70,7 +70,10 @@ function ContourCanvas() {
       ctx.setTransform(canvas.width / w, 0, 0, canvas.height / h, 0, 0);
       const cols = Math.ceil(w / CELL) + 1, rows = Math.ceil(h / CELL) + 1;
       const field = new Float32Array(cols * rows);
-      const top = section.offsetTop; // a layout read, but only on mount and resize
+      // One field for every section (Andrew 2026-10-29: the lines "doesn't animate together"): each canvas
+      // is a screen tall and sticky, so sampling from the same origin makes them one continuous sheet that
+      // holds still while the page scrolls over it, with no seam where one section meets the next.
+      const top = 0;
       for (let j = 0; j < rows; j++) {
         const y = j * CELL;
         for (let i = 0; i < cols; i++) {

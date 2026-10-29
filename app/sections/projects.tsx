@@ -144,7 +144,6 @@ function Caption({ project }: { project: Project }) {
           <Links project={project} />
           {project.id === 'blueberry' && (
             <div className="row-actions wk-actions">
-              <a className="pill pill-light" href="#blueberry">{WORK_HEAD.bbChapter} <ArrowUp size={16} aria-hidden="true" /></a>
               <a className="pill pill-light" href="#phones">{WORK_HEAD.bbPhones} <ArrowUp size={16} aria-hidden="true" /></a>
             </div>
           )}

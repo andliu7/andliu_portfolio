@@ -96,7 +96,7 @@ export const HERO = {
   hi: 'Hi, my name is', // [Andrew 2026-10-21] (needs sign-off)
   comma: ',', // [Andrew 2026-10-21] "Andrew Liu," keeps its comma (needs sign-off)
   role: 'SOFTWARE ENGINEER', // [Andrew 2026-10-21] (needs sign-off)
-  down: 'Scroll down to projects', // [Andrew 2026-10-28] the down arrow's accessible name; it shows the role, not these words
+  down: 'Scroll down', // [Andrew 2026-10-28] the down arrow's accessible name; it shows the role, not these words
   // The four cartoon objects around the name, each a link to its project (labels are PROJECTS titles)
   objects: {
     pencil: { label: 'Focus Family Guide', href: '#work-guide' }, // [P] PROJECTS guide
@@ -422,6 +422,15 @@ export const JOBS = [
     dot: 'tile-gold', sort: 202501,
   },
 ] as const;
+
+// A logo on a role card's top right (Andrew 2026-10-28), by job id. `href` makes it a link (new tab);
+// a logo with none is only a picture. KCM's goes to its Instagram; the other two have no link yet.
+export const JOB_LOGOS: Record<string, { src: string; label: string; href?: string }> = {
+  kcm: { src: '/images/umd/kcm.webp', label: 'Kharis Campus Ministry on Instagram', href: 'https://www.instagram.com/umdkcm/' },
+  blueberry: { src: '/images/umd/blueberry-badge.svg', label: 'Blueberry' }, // the berry badge: N's ring, J2's berry, O's shadow (Andrew 2026-10-29)
+  minnodi: { src: '/images/umd/minnodi.webp', label: 'Minnodi LLC' },
+  educationone: { src: '/images/umd/education-one.webp', label: 'Education One' },
+};
 
 export const WORK_HEAD = {
   eyebrow: '03 / Selected work', // [P] renumbered after On a phone took Contents row 02 (2026-10-20)
@@ -859,7 +868,6 @@ export const CONTENTS = {
   rows: [
     // The Blueberry chapter first (Andrew, 2026-10-06: "Where to?" should go into "From flashcards
     // to a platform", numbered 01 as the start of the list).
-    { href: '#blueberry', title: 'From flashcards to a platform', sub: BLUEBERRY_CHAPTER.headlinePlain, meta: BLUEBERRY_TITLE }, // [P] as BB_HEAD.headline; sub and meta derived from BLUEBERRY_CHAPTER and BLUEBERRY_TITLE
     { href: '#phones', title: 'Blueberry on a phone', sub: PHONES.shots.slice(0, 4).map(s => s.title).join(', '), meta: `${PHONES.shots.length} screens` }, // [Andrew 2026-10-20] sub and meta derived from PHONES (needs sign-off)
     { href: '#work', title: FOOTER_SKIP.links[0].a, sub: PROJECTS.slice(0, 4).map(p => p.title).join(', '), meta: `${PROJECTS.length} projects` }, // [UI] derived from FOOTER_SKIP and PROJECTS
     { href: '#impact', title: FOOTER_SKIP.links[1].a, sub: IMPACT.map(p => p.title).join(', '), meta: `${IMPACT.length} panels` }, // [UI] derived from FOOTER_SKIP and IMPACT
@@ -896,7 +904,7 @@ export const SECTIONS = [
   // screens"). A cap now: the old 3.6 floor was scroll length for a pinned phone
   // stage that is long gone, and blueberry.css had to switch it off.
   // [Andrew 2026-10-21] "I want to make it smaller so it's easier to scroll through"
-  { id: 'blueberry', ground: 'berry', gradient: 'berry-deep', label: 'Blueberry', budget: 1.8, kind: 'cap', project: true, pinned: true, texture: true },
+  { id: 'blueberry', ground: 'berry-deep', gradient: 'berry-deep', label: 'Blueberry', budget: 1.8, kind: 'cap', project: true, pinned: true, texture: true },
   // Blueberry on a phone (app/sections/phones.tsx), the chapter's screens at phone size [Andrew 2026-10-20].
   // Budget measured 2026-10-21 at 1440x900: 2,664px (six phones in two rows of three columns,
   // 398px wide, each as tall as the screen allows, plus the centre column's sink room, 20% of a
@@ -907,7 +915,7 @@ export const SECTIONS = [
   { id: 'impact', ground: 'berry-deep', gradient: null, label: 'Impact', budget: 1.3, kind: 'cap', project: true, pinned: false, texture: true },
   { id: 'experience', ground: 'berry-deep', gradient: null, label: 'Experience', budget: 1.0, kind: 'cap', project: false, pinned: false, texture: true },
   // Contact sits between the two horizontal strips (Andrew 2026-10-07: "two horizontal scrolls is a lot").
-  { id: 'contact', ground: 'ink', gradient: null, label: 'Contact', budget: 0.75, kind: 'cap', project: false, pinned: false, texture: true },
+  { id: 'contact', ground: 'berry-deep', gradient: null, label: 'Contact', budget: 0.75, kind: 'cap', project: false, pinned: false, texture: true },
   // The résumé preview, between Contact and the island (2026-10-07); no Contents row on purpose.
   { id: 'resume', ground: 'ink', gradient: null, label: 'Résumé', budget: 0.9, kind: 'cap', project: false, pinned: false, texture: true },
   { id: 'island', ground: 'ink', gradient: null, label: 'Island', budget: 1.3, kind: 'cap', project: false, pinned: false, texture: true },
