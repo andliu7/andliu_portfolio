@@ -12,6 +12,9 @@ import { EMAIL } from '../lib/site.ts';
 import { handle } from './handler.js';
 import { handleContact } from './contact.js';
 
+// The form's daily counter, a Durable Object: its class has to be exported from the entry file.
+export { ContactGate } from './contact.js';
+
 const worker = {
   /** @param {Request} request @param {Record<string, any>} env */
   fetch(request, env) {

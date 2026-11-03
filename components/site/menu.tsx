@@ -18,7 +18,7 @@ import { FlashcardSticker } from './stickers/stickers';
 
 // The full-screen menu (SITE-PLAN.md 6.1). Rendered by the header only while open, so on open it
 // mounts fresh and on close it is gone. While open: focus is trapped inside, Esc closes and
-// returns focus to the menu button, and the page behind cannot scroll.
+// returns focus to the menu button, a click on empty space closes it, and the page behind cannot scroll.
 //
 // The links are plain anchors. In-page ones are routed by the director's link delegate
 // (app/motion.tsx: far targets go through jumpTo) and #island by the island's own delegate. The
@@ -102,8 +102,12 @@ export function Menu({ onClose, home }: Props) {
   // Freeze the page and move focus in on open; the cleanup undoes both when the menu unmounts.
   useEffect(() => {
     freezeScroll(true);
+    // freezeScroll keeps the scrollbar's strip so the page does not widen; that strip shows the
+    // <html> background, so paint it the menu's colour while the menu is up.
+    const root = document.documentElement.style;
+    if (panelRef.current) root.backgroundColor = getComputedStyle(panelRef.current).backgroundColor;
     panelRef.current?.querySelector<HTMLElement>('a, button')?.focus();
-    return () => freezeScroll(false);
+    return () => { freezeScroll(false); root.backgroundColor = ''; };
   }, []);
 
   useEffect(() => {
@@ -123,7 +127,14 @@ export function Menu({ onClose, home }: Props) {
     };
     // Links in the menu, and in the header that stays above it (Résumé).
     const onLinkClick = (event: MouseEvent) => {
-      const link = (event.target as Element | null)?.closest('a');
+      const target = event.target as Element | null;
+      // A click on the menu's empty space, away from every link and control, closes it
+      // (Andrew 2026-11-03: "closes when you click outside of it").
+      if (target && panel.contains(target) && !target.closest('a, button, input, label, [role="switch"], .menu-item, .menu-note')) {
+        requestClose(true);
+        return;
+      }
+      const link = target?.closest('a');
       if (!link || !(panel.contains(link) || link.closest('.site-header'))) return;
       freezeScroll(false); // now, synchronously, before the delegates scroll
       requestClose(false);

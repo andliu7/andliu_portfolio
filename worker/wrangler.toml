@@ -15,12 +15,23 @@ main = "chat.js"
 compatibility_date = "2026-05-01"
 
 [vars]
-# The current Haiku id, confirmed 2026-10-01 with the claude-api skill (its model table is
-# dated 2026-09-25). Change the model here, not in code.
-MODEL = "claude-haiku-4-5"
+# The cheapest current model, Haiku 5.5 ($0.10 in / $0.50 out per million tokens, claude-api
+# skill table cached 2026-10-06; Haiku 4.5 was 10x that). Andrew 2026-11-03. Change it here, not in code.
+MODEL = "claude-haiku-5-5"
 # The contact form's sender (worker/contact.js). Empty means Resend's shared test sender,
 # onboarding@resend.dev; set it to an address on a verified domain later (CONTACT.md).
 CONTACT_FROM = ""
+# Emails a day across everyone. Reaching it suspends the form until 00:00 UTC (worker/contact.js).
+CONTACT_DAILY_CAP = "50"
+
+# The form's daily counter. SQLite-backed, which is the kind the free plan allows.
+[[durable_objects.bindings]]
+name = "CONTACT_GATE"
+class_name = "ContactGate"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["ContactGate"]
 
 # Per-IP rate limit, read as env.CHAT_LIMIT in handler.js: 10 requests per 60 seconds.
 [[ratelimits]]

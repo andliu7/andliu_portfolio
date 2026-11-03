@@ -19,5 +19,9 @@ export function scrollToY(y: number) {
 
 export function freezeScroll(frozen: boolean) {
   if (frozen) lenis?.stop(); else lenis?.start();
-  document.documentElement.style.overflow = frozen ? 'hidden' : '';
+  const root = document.documentElement.style;
+  root.overflow = frozen ? 'hidden' : '';
+  // Keep the scrollbar's strip while frozen, so hiding the scrollbar does not widen the page and
+  // shift everything right (Andrew 2026-11-03: "keep the page the same size when opened").
+  root.scrollbarGutter = frozen ? 'stable' : '';
 }

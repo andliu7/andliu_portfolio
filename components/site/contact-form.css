@@ -15,9 +15,30 @@
   background:var(--card); color:var(--ink); font:500 18px/1.5 var(--body); box-shadow:0 3px 0 var(--ink);
 }
 .cf textarea { resize:vertical; min-block-size:140px; }
+.cf textarea.cf-about { min-block-size:76px; }
+.cf ::placeholder { color:var(--muted); opacity:1; }
+.cf-field-hint { font:500 15px/1.4 var(--body); color:var(--on-2); }
+/* The sending steps. ThinkingIndicator reads two shadcn names this site does not define; without
+   them its label is invisible. */
+.cf-progress { --muted-foreground:var(--berry-deep); --foreground:var(--berry-2); flex:1 1 24ch; min-inline-size:0; font:600 16px/1.4 var(--body); color:var(--berry-deep); }
 .cf :is(input, textarea):disabled { opacity:.7; }
 .cf [data-invalid] :is(input, textarea) { border-color:var(--cf-bad); box-shadow:0 3px 0 var(--cf-bad); }
 .cf-error { min-block-size:1.5em; font:500 15px/1.5 var(--body); color:var(--cf-bad); }
+
+/* Dictation (use-dictation.ts): the mic, what it is doing, the words still settling, then the line
+   saying where speech goes. The berry face and red dot are the "this is recording" signal. */
+.cf-dictate { display:grid; gap:8px; }
+.cf-dictate-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; }
+.cf-mic[data-on] { --face:var(--berry); --face-on:#fff; }
+.cf-mic:disabled { cursor:not-allowed; }
+.cf-dictate-status { display:inline-flex; align-items:center; gap:8px; font:600 15px/1.4 var(--body); color:var(--on-2); }
+.cf-dictate-status:empty { display:none; }
+.cf-dictate-status[data-note] { color:var(--cf-bad); }
+.cf-dictate-status[data-on]::before { content:''; flex:none; inline-size:9px; block-size:9px; border-radius:50%; background:#e0162b; animation:cf-listen 1.4s ease-in-out infinite; }
+@keyframes cf-listen { 50% { opacity:.3; } }
+html[data-motion="reduced"] .cf-dictate-status[data-on]::before { animation:none; }
+/* Full width when it wraps, so the words read as one line of their own. */
+.cf-dictate-live { flex:1 1 24ch; min-inline-size:0; overflow-wrap:anywhere; font:500 15px/1.4 var(--body); font-style:italic; color:var(--on-2); }
 
 /* The honeypot: present for bots, never seen or reached by people. */
 .cf-bot { position:absolute; left:-10000px; inline-size:1px; block-size:1px; overflow:hidden; }
@@ -37,7 +58,19 @@
 /* Sent: the fields give way to a card-coloured sticker, tilted, with a round leaf badge (motion
    pops it in on a spring, contact-form.tsx). Write another brings the fields back. */
 .cf-sent { display:grid; justify-items:start; gap:16px; padding:clamp(20px,3cqi,32px); border:var(--bw) solid var(--ink); border-radius:var(--r-card); background:var(--card); }
-.cf-sent-badge { display:grid; place-items:center; width:56px; height:56px; border:var(--bw) solid var(--ink); border-radius:50%; background:var(--tile-leaf); color:var(--ink); }
+.cf-sent-badge { display:grid; place-items:center; width:56px; height:56px; border:var(--bw) solid var(--ink); border-radius:50%; background:#2a9a4a; color:#fff; }
 .cf-sent-title { font-size:clamp(40px,7cqi,72px); color:var(--ink); }
 .cf-sent-title:focus { outline:none; }
 .cf-sent-title:focus-visible { outline:3px solid var(--berry); outline-offset:4px; }
+
+/* Suspended (Andrew 2026-10-31): the chip, an oval like the CTAs but flat, white with black text, a
+   thin border and a red dot; the one thing on the form still in colour. Everything else goes grey
+   and stops responding (the inputs and Send are disabled in contact-form.tsx). */
+.cf-head { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 16px; }
+.cf-chip { display:inline-flex; align-items:center; gap:8px; padding:7px 14px; border:1px solid #000; border-radius:var(--r-pill); background:#fff; color:#000; font:600 14px/1.2 var(--mono); white-space:nowrap; }
+.cf-chip-dot { flex:none; inline-size:9px; block-size:9px; border-radius:50%; background:#e0162b; }
+.cf[data-suspended] { --cf-grey:#6a6a6a; --on:var(--cf-grey); --on-2:var(--cf-grey); background:#e2e2e2; border-color:#a8a8a8; color:var(--cf-grey); }
+.cf[data-suspended] :is(input, textarea) { opacity:1; border-color:#b4b4b4; background:#efefef; color:var(--cf-grey); box-shadow:none; resize:none; cursor:not-allowed; }
+.cf[data-suspended] .cf-label { cursor:not-allowed; }
+.cf[data-suspended] :is(.cf-send,.cf-mic) { --face:#cdcdcd; --face-on:var(--cf-grey); opacity:1; cursor:not-allowed; box-shadow:0 var(--lip) 0 #a8a8a8; }
+.cf[data-suspended] :is(.cf-send,.cf-mic) > .pill-face { border-color:#a8a8a8; }

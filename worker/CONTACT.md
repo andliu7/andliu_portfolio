@@ -41,12 +41,34 @@ npx wrangler deploy --config wrangler.toml
 Invoke-RestMethod -Method Post -Uri "https://andliu-chat.<your-subdomain>.workers.dev/contact" -Headers @{ Origin = "https://andliu.dev" } -ContentType "application/json" -Body '{"name":"Test","email":"zeus.andrewliu@gmail.com","message":"Testing the contact form.","botcheck":""}'
 ```
 
-It prints `ok : True` and the email arrives within a minute. A 4th try inside a minute answers
-429 (the `CONTACT_LIMIT` binding: 3 per IP per 60 seconds). The unit tests, from the project root:
+It prints `ok : True` and the email arrives within a minute (check spam the first time and mark it
+Not spam). A 4th try inside a minute, or a 5th in a day, answers 429. Check the daily gate too; a healthy gate prints `suspended : False`:
+
+```powershell
+Invoke-RestMethod -Uri "https://andliu-chat.<your-subdomain>.workers.dev/contact" -Headers @{ Origin = "https://andliu.dev" }
+```
+
+`True` under the cap means the gate is failing, and it fails closed: nothing sends until it is fixed.
+
+The unit tests, from the project root:
 
 ```powershell
 node --test worker/chat.test.mjs worker/contact.test.mjs
 ```
+
+## The bombardment limits
+
+- 3 messages a minute per IP (`CONTACT_LIMIT` in `wrangler.toml`).
+- 4 messages a day per IP (`IP_DAILY_CAP` in `contact.js`).
+- 50 messages a day across everyone (`CONTACT_DAILY_CAP` in `wrangler.toml`). Reaching it suspends
+  the form until 00:00 UTC: it goes grey and unusable under an "Email suspended" chip, and the Worker
+  refuses sends whatever a script tries. Email me and Copy email still work.
+
+To reopen early, raise `CONTACT_DAILY_CAP` and run `npx wrangler deploy --config wrangler.toml`.
+
+Testing locally: on this Windows machine `wrangler dev` answers every Durable Object call with
+"internal error" (2026-10-31, wrangler 4.92 and 4.156, even with a two-line Worker), so the form
+reads as suspended there. Plain Miniflare and the unit tests are not affected.
 
 ## 4. Turn the form on in the site
 

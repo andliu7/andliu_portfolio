@@ -125,5 +125,5 @@ void test('a good request streams the model through with the key, model, cap and
   assert.equal(init.headers['x-api-key'], KEY);
   assert.equal(init.headers['anthropic-version'], '2023-06-01');
   const sent = JSON.parse(init.body);
-  assert.deepEqual(sent, { model: 'claude-haiku-4-5', max_tokens: 400, system: 'SYSTEM', messages: ask.messages, stream: true });
+  assert.deepEqual(sent, { model: 'claude-haiku-4-5', max_tokens: 400, output_config: { effort: 'low' }, system: 'SYSTEM', messages: ask.messages, stream: true });
 });

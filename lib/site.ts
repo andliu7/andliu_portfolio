@@ -109,8 +109,7 @@ export const HERO = {
 // 4.1 The hero's tilted marquee bar: short true facts, one line each (needs Andrew's sign-off)
 export const HERO_BAR = [
   `${IDENTITY.degree}, ${IDENTITY.schoolShort} 2027`, // [R] derived from IDENTITY; no month (Andrew 2026-10-28)
-  IDENTITY.line, // [P]
-  `${BLUEBERRY_ROLE} of Blueberry, a team of four`, // [R] four per Andrew 2026-10-06
+  `${BLUEBERRY_ROLE} of Blueberry`, // [R] "a team of four" dropped (Andrew 2026-11-03)
   'Browser Use docs used by 200+ contributors', // [R] Minnodi line
   'SAT students up 100 to 300 points', // [R] Education One line
   'Mentoring 25+ students at KCM ← (Kharis Campus Ministry, see timeline!)', // [R] Kharis line; KCM spelled out once here, explained in JOBS kcm [Andrew 2026-10-17]
@@ -233,9 +232,9 @@ export const BB_HEAD = {
 const PHONE_SHOT = (file: string, where: 'Site' | 'Game', title: string, alt: string) =>
   ({ src: `/work/blueberry-phone/${file}.webp`, w: 780, h: 1688, where, title, alt });
 export const PHONES = {
-  eyebrow: '02 / On a phone', // [Andrew 2026-10-20] (needs sign-off); 02 as its Contents row
-  headline: 'IN YOUR\n*pocket.*', // [Andrew 2026-10-20] (needs sign-off)
-  line: 'Six screens from the live site and the game, captured at phone size: the periodic table, the reaction search, the calendar, the units, the pathway and a lesson.', // [Andrew 2026-10-20] [S] the captures below (needs sign-off)
+  eyebrow: '01 / UI and UX I shipped', // [Andrew 2026-10-29] the screens show real, deployed work (needs sign-off)
+  headline: 'DESIGNED,\nBUILT, *live.*', // [Andrew 2026-10-29] (needs sign-off)
+  line: 'The interface I designed, built and deployed for Blueberry. Six real screens from the live site and game, each one tappable: the periodic table, reaction search, exam calendar, learn page, lesson pathway and a lesson.', // [Andrew 2026-10-29] [S] the captures below (needs sign-off)
   link: 'Open it on your phone', // [Andrew 2026-10-20] (needs sign-off)
   // Blueberry's hidden #/phone page: the real game in a phone frame, with the app stores as
   // plain "coming soon" text. Nothing on Blueberry links to it (Andrew 2026-10-21; built in
@@ -642,8 +641,29 @@ export const CONTACT = {
 export const CONTACT_FORM = {
   heading: 'Or write it here', // [UI] (needs sign-off)
   name: 'Your name (optional)', // [Andrew 2026-10-20] name is optional now (needs sign-off)
-  email: 'Your email', // [UI] (needs sign-off)
+  contact: 'Best way to reach you (optional)', // [Andrew 2026-10-31] requested, not required (needs sign-off)
+  contactPlaceholder: 'Email, phone or LinkedIn', // [Andrew 2026-10-31] (needs sign-off)
+  contactHint: 'Leave one so I can write back.', // [Andrew 2026-10-31] (needs sign-off)
+  about: 'A little about you (optional)', // [Andrew 2026-10-31] (needs sign-off)
+  aboutPlaceholder: 'What you do, or how you found me', // [Andrew 2026-10-31] (needs sign-off)
   message: 'Message', // [UI] (needs sign-off)
+  // The message box starts as a letter the visitor can change (Andrew 2026-10-31).
+  greeting: 'Dear Andrew,', // [Andrew 2026-10-31] (needs sign-off)
+  signoff: 'Best,', // [Andrew 2026-10-31] (needs sign-off)
+  format: "Try this: who you are, why you're writing, and what you'd like to happen next.", // [Andrew 2026-10-31] the suggested format (needs sign-off)
+  // Talking instead of typing. Shown only where the browser has speech recognition (components/site/use-dictation.ts).
+  dictation: {
+    start: 'Dictate', // [UI] (needs sign-off)
+    stop: 'Stop', // [UI] (needs sign-off)
+    listening: 'Listening...', // [UI] (needs sign-off)
+    privacy: 'Your browser may send your voice to its servers to turn it into text.', // [UI] Chrome does; never promise it stays on the device (needs sign-off)
+    blocked: 'The mic is blocked. Allow it in your browser, or just type.', // [UI] (needs sign-off)
+    noMic: 'No mic found. You can still type.', // [UI] (needs sign-off)
+    failed: 'Dictation is not working right now. You can still type.', // [UI] network errors, and browsers with no speech service (needs sign-off)
+    stopped: 'The mic stopped. Press Dictate to keep going.', // [UI] after a minute of quiet, or when the browser ends it (needs sign-off)
+  },
+  // Shown one after another while a message sends; the check mark only follows a real success.
+  steps: ['Checking your message...', "Checking today's limit...", 'Handing it to the mail service...'], // [Andrew 2026-10-31] (needs sign-off)
   botcheck: 'Leave this empty', // [UI] the honeypot's label, read by bots only (needs sign-off)
   send: 'Send', // [UI] (needs sign-off)
   sending: 'Sending', // [UI] (needs sign-off)
@@ -654,13 +674,15 @@ export const CONTACT_FORM = {
   again: 'Write another', // [Andrew 2026-10-20] (needs sign-off)
   viaMail: 'Send opens your mail app with this filled in.', // [Andrew 2026-10-20] the hint when no Worker is set (needs sign-off)
   handoff: 'Your mail app should open with this message. Press send there.', // [Andrew 2026-10-20] (needs sign-off)
+  suspended: 'Email suspended', // [Andrew 2026-10-31] the chip on the greyed-out form once the daily cap is hit (needs sign-off)
   errors: {
     name: 'Keep your name under 100 characters.', // [Andrew 2026-10-20] name is optional now (needs sign-off)
-    email: 'That email address does not look right.', // [UI] (needs sign-off)
-    messageShort: 'A few more words, please: 10 characters at least.', // [UI] (needs sign-off)
+    contact: 'Keep this under 200 characters.', // [Andrew 2026-10-31] (needs sign-off)
+    about: 'Keep this under 500 characters.', // [Andrew 2026-10-31] (needs sign-off)
+    messageShort:'A few more words, please: 10 characters at least.', // [UI] (needs sign-off)
     messageLong: 'Keep it under 5000 characters.', // [UI] (needs sign-off)
     fix: 'Fix the highlighted fields, then send again.', // [UI] (needs sign-off)
-    rate: 'Too many messages from here. Try again in a minute.', // [UI] (needs sign-off)
+    rate: 'Too many messages from here. Try again later.', // [UI] now also the 4-a-day limit, so not "in a minute" (needs sign-off)
     failed: 'That did not send. Tap Email me or copy my address instead.', // [Andrew 2026-10-20] the address is just above the form (needs sign-off)
   },
 } as const;

@@ -102,7 +102,9 @@ export async function handle(request, env, { system, fetchImpl = fetch }) {
     upstream = await fetchImpl(API, {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': API_VERSION },
-      body: JSON.stringify({ model: env.MODEL, max_tokens: LIMITS.maxTokens, system, messages, stream: true }),
+      // Haiku 5.5 thinks by default and max_tokens counts that thinking, so keep effort low: a short
+      // chat answer does not need it, and it would otherwise eat the 400-token cap.
+      body: JSON.stringify({ model: env.MODEL, max_tokens: LIMITS.maxTokens, output_config: { effort: 'low' }, system, messages, stream: true }),
     });
   } catch {
     return sseError(origin, 'upstream', 'Could not reach the model');
