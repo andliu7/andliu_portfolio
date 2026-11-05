@@ -14,22 +14,23 @@ import { useReducedMotion } from '@/components/site/use-reduced-motion';
 // bottom empty space"). One stop, built like this:
 //
 //   the panel   the waving Maryland flag (flag.tsx) is its whole ground, under a shade
-//   Coursework  a smaller card on the flag: the Lava fire ground under its scrim, the date chip,
+//   Coursework  a smaller card on the flag: the Lava fire ground under its scrim (its date is on the line),
 //               the heading, the degree, and the courses as cream pills. It lifts and tilts on hover
 //   the foot    the club pills straight on the flag (the Clubs card is gone), and the cartoon
 //               Maryland at the right, tilting toward the pointer
-//   terrapin    stands on the panel's top edge at the right (press him and he sweats)
+//   terrapin    stands on the timeline over the stop (press him and he sweats)
 //
-// The panel reuses the role cards' parts (.xp-item, .xp-tick, .xp-card, .xp-when, .xp-role,
-// .xp-org from experience.css), so it rises onto the track like the others. Its own rules are the
-// "UMD stop" block at the end of experience.css.
+// The panel reuses the role cards' parts (.xp-item, .xp-stop, .xp-card, .xp-role, .xp-org from
+// experience.css) and is the same .ink-card (2026-11-03): it hangs from its pin on the timeline
+// with its expected graduation above the line. Its own rules are the "UMD stop" block at the end
+// of experience.css.
 //
 // The flag stays the live WebGL cloth, not a still: it is what Andrew asked for on 2026-10-06 ("an
 // animated flowing maryland flag"), it mounts only near the screen and frees its context when far,
 // and until its first frame the panel's own UMD red shows under the shade.
 
-// UMD's gold for the tick's dot (the --umd-* tokens live in app/globals.css).
-const GOLD = { '--dot': 'var(--umd-gold)', '--i': 0 } as CSSProperties;
+// The panel hangs a little crooked from its pin, like the role cards (experience.tsx TILTS).
+const TILT = { '--hang': '-1deg' } as CSSProperties;
 
 // The pills pop in one after another on the site's spring when the stop comes on screen (motion's
 // whileInView, an IntersectionObserver underneath).
@@ -70,17 +71,21 @@ export function UmdStop() {
   const live = useHydrated() && !reduced;
 
   return (
-    <li className="xp-item xp-umd" data-hs-item="" style={GOLD}>
-      <span className="xp-tick" aria-hidden="true">{UMD.place}</span>
-      <article className="xp-card xp-umd-panel" aria-labelledby="xp-umd">
-        <span className="xp-umd-edge"><SweatyTerrapin label={UMD.sweat} /></span>
+    <li className="xp-item xp-umd" data-hs-item="" style={TILT}>
+      <div className="xp-stop" aria-hidden="true">
+        <span className="xp-pin" data-fill="umd-gold" />
+        <span className="xp-date">{UMD.when}</span>
+      </div>
+      {/* On the line over the stop, like the roles' people (a button: press him and he sweats) */}
+      <span className="xp-umd-edge"><SweatyTerrapin label={UMD.sweat} /></span>
+      <article className="xp-card ink-card xp-umd-panel" aria-labelledby="xp-umd">
         <div className="xp-umd-ground" aria-hidden="true">
           <MarylandFlag className="xp-umd-flag" />
           <div className="xp-umd-shade" />
         </div>
         <div className="xp-umd-course">
           <LavaCard className="xp-umd-lava">
-            <span className="xp-when">{UMD.when}</span>
+            <span className="sr-only">{UMD.when}. </span>
             <h3 className="xp-role" id="xp-umd">{UMD.courseworkLabel}</h3>
             <p className="xp-org">{UMD.degree}, {UMD.schoolShort}</p>
             <Pills className="xp-umd-chips" items={UMD.coursework} live={live} />
@@ -88,7 +93,6 @@ export function UmdStop() {
         </div>
         <div className="xp-umd-foot">
           <Pills className="xp-umd-tags" items={UMD.tags} logos={UMD.tagLogos} links={UMD.tagLinks} label={UMD.clubsLabel} live={live} />
-          {/* The cartoon Maryland moved to the Contents section (Andrew 2026-10-28: keep the club pills on one line, else move it to "Where to?") */}
         </div>
       </article>
     </li>

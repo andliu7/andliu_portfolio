@@ -1,6 +1,5 @@
 import { ArrowRight } from 'lucide-react';
 import { CONTENTS, MICROCOPY, sectionAttrs } from '@/lib/site';
-import { ContainerScroll } from '@/components/ui/container-scroll-animation';
 import { FlipHeading } from '@/components/site/flip-heading';
 import { FlowButton } from '@/components/ui/flow-button';
 import { TextBlockAnimation } from '@/components/ui/text-block-animation';
@@ -10,19 +9,20 @@ import { CompassSpin, FlipOnView } from './contents.client';
 import { ROW_ICONS } from './contents-icons';
 import './contents.css';
 
-// The contents (the approved Contents design, fp/project/Contents.dc.html), right after the hero
-// (College Park, between them, was retired 2026-10-20), in the site's own palette: berry-deep ground, paper text, apricot numbers. "Where to?",
-// the short note, then one big numbered row per section that is on the page now (CONTENTS.rows
-// in lib/site.ts). Each row is a plain in-page link; the director's link delegate
-// (app/motion.tsx) scrolls to it, and #island goes through the island's own delegate.
-// The title sits over a dark card holding the rows, and the card scrolls up into place
-// (Andrew 2026-10-06: "make the content page after the flag scroll up like this").
+// The contents, right after the hero: late morning in "one day, scrolled" (Andrew 2026-11-03),
+// so ink type straight on the pale blue sky. "Where to?", the short note, then ONE .ink-card
+// (globals.css, the same object as the project fan cards) holding a numbered row per section on
+// the page (CONTENTS.rows in lib/site.ts), two columns on a wide screen. The rows are lines inside
+// that card, never cards of their own. Each row is a plain in-page link; the director's link
+// delegate (app/motion.tsx) scrolls to it, and #island goes through the island's own delegate.
+// The card tilts up into place as it scrolls in (Andrew 2026-10-06: "make the content page after
+// the flag scroll up like this"), now a CSS view timeline instead of the old dark ContainerScroll
+// frame, which put a card around a card.
 // "WHERE TO?" is a FlipHeading (components/site/flip-heading.tsx): it rolls on hover and focus,
-// and once when it scrolls into view (FlipOnView). Under the card, a second résumé button (the
-// hero's FlowButton) with a short line over it. In the top left corner, a compass sticker that
-// spins when pressed (CompassSpin).
-// A server component: the scroll effect and the roll on view are the client pieces; the hover
-// nudge is CSS.
+// and once when it scrolls into view (FlipOnView). Under the card, the hero's résumé button with a
+// short line over it. The compass sticker (top left) spins when pressed (CompassSpin); Maryland
+// (top right) tilts toward the pointer.
+// A server component: the roll on view and the compass are the client pieces; the rest is CSS.
 
 export default function Contents() {
   return (
@@ -32,43 +32,35 @@ export default function Contents() {
           Along the way, Andrew 2026-10-28). Decoration; wide screens only. */}
       <TiltFrame className="toc-state" max={14} shift={0} layers={[{ depth: 0, node: <MarylandIcon className="toc-state-svg" /> }]} />
       <FlipOnView id="contents-title" />
-      {/* ContainerScroll (components/ui/container-scroll-animation.tsx): the title rises and the
-          card of rows tilts from 48deg back (and a little twisted and low) to flat as the section
-          scrolls up (Andrew 2026-10-12: a stronger angle; flat under reduced motion). It is a
-          client component; this section stays a server component around it. */}
-      <ContainerScroll className="toc-scroll" titleComponent={(
-        <div className="toc-intro">
-          <TextBlockAnimation as="span" className="eyebrow">{CONTENTS.eyebrow}</TextBlockAnimation>
-          <FlipHeading id="contents-title" text={CONTENTS.title} href="#contents" fit={false} className="display toc-title" />
-          <TextBlockAnimation as="p" className="toc-note" delay={0.2}>{CONTENTS.note}</TextBlockAnimation>
-        </div>
-      )}>
-        <nav className="toc-nav" aria-label={CONTENTS.label}>
-          <ol className="toc-list">
-            {CONTENTS.rows.map((row, i) => {
-              const Icon = ROW_ICONS[row.href];
-              return (
-                <li key={row.href}>
-                  <a className="toc-row" href={row.href}>
-                    <span className="toc-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
-                    <span className={`toc-ic toc-ic-${row.href.slice(1)}`} aria-hidden="true">{Icon ? <Icon /> : null}</span>
-                    <span className="toc-text">
-                      <span className="toc-name">{row.title}</span>
-                      <span className="toc-sub">{row.sub}</span>
-                    </span>
-                    <span className="toc-meta">{row.meta}</span>
-                    <ArrowRight className="toc-arrow" size={22} aria-hidden="true" />
-                  </a>
-                </li>
-              );
-            })}
-          </ol>
-        </nav>
-      </ContainerScroll>
+      <div className="toc-intro">
+        <TextBlockAnimation as="span" className="eyebrow">{CONTENTS.eyebrow}</TextBlockAnimation>
+        <FlipHeading id="contents-title" text={CONTENTS.title} href="#contents" fit={false} className="display toc-title" />
+        <TextBlockAnimation as="p" className="toc-note" delay={0.2}>{CONTENTS.note}</TextBlockAnimation>
+      </div>
+      <nav className="toc-nav ink-card" aria-label={CONTENTS.label}>
+        <ol className="toc-list">
+          {CONTENTS.rows.map((row, i) => {
+            const Icon = ROW_ICONS[row.href];
+            return (
+              <li key={row.href}>
+                <a className="toc-row" href={row.href}>
+                  <span className="toc-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+                  <span className={`toc-ic toc-ic-${row.href.slice(1)}`} aria-hidden="true">{Icon ? <Icon /> : null}</span>
+                  <span className="toc-text">
+                    <span className="toc-name">{row.title}</span>
+                    <span className="toc-sub">{row.sub}</span>
+                  </span>
+                  <ArrowRight className="toc-arrow" size={20} aria-hidden="true" />
+                </a>
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
       <div className="toc-cta">
         <p className="toc-cta-line">{CONTENTS.resumeLine}</p>
         {/* Scrolls to the résumé preview rather than opening the PDF: a softer first step (Andrew 2026-10-07). */}
-<FlowButton href="#resume" text={MICROCOPY.resumeShort} />
+        <FlowButton href="#resume" text={MICROCOPY.resumeShort} />
       </div>
     </section>
   );

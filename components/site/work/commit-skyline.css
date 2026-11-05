@@ -1,0 +1,13 @@
+/* The commit skyline card (commit-skyline.tsx). The skyline itself is styled by
+   components/ui/contribution-skyline.css; it takes its height from .impact-chart-days and its
+   tooltip from .impact-tip, which lived in the Impact section's stylesheet until that section was
+   folded into the projects, so both are defined here now. */
+.skc { display:grid; gap:14px; width:min(100%, 980px); margin:clamp(40px, 6vw, 72px) auto 0; } /* no card: the chart sits straight on the golden sky (Andrew 2026-11-03) */
+.skc-head { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 18px; }
+.skc-title { margin:0; font:700 clamp(20px, 2.2vw, 26px)/1.05 var(--display); letter-spacing:-.03em; text-transform:uppercase; font-variant-ligatures:none; color:var(--on); }
+.skc-cap { margin:0; font:500 14px/1.4 var(--body); color:var(--on-2); }
+.skc .impact-chart-days { width:100%; height:440px; }
+.skc .skc-ph { border-radius:12px; background:color-mix(in srgb, var(--line) 35%, transparent); }
+.skc .impact-tip { display:grid; gap:2px; padding:8px 10px; border-radius:10px; background:var(--ink); color:var(--paper); font:500 12px/1.4 var(--display); font-variant-numeric:tabular-nums; box-shadow:0 4px 0 var(--ledge); }
+.skc .impact-tip-x { color:var(--berry-soft); }
+@media (max-width: 699px) { .skc .impact-chart-days { height:360px; } }

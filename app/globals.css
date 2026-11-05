@@ -123,7 +123,9 @@
    cutting. Contact opens on berry-deep and settles into ink, the one change of ground below. */
 [data-ground="berry-deep"]:where(:not(html)) { --ground-grad:linear-gradient(var(--berry-deep), var(--berry-deep)); } /* one flat ground (gauntlet round 1, bar: linear.app) */
 [data-ground="ink"]:where(:not(html))        { --ground-grad:linear-gradient(to bottom, var(--ink) 0%, color-mix(in srgb, var(--ink) 78%, var(--berry-deep)) 50%, var(--ink) 100%); }
-:where(main > section[data-ground]:not([data-gradient])) { background-color:var(--ground); background-image:var(--ground-grad); }
+/* Sections paint no ground of their own (gauntlet "ground", bar: landonorris.com): one backdrop runs
+   under the whole page (components/site/ground.tsx), so no section edge can show a seam. --ground
+   and --ground-grad still set each section's text colours and any card that reads them. */
 
 /* ---------- Base ---------- */
 * { box-sizing:border-box; }
@@ -141,12 +143,9 @@ html { scroll-padding-top:var(--header-h); -webkit-text-size-adjust:100%; overfl
    transparent over it and its text colour is fixed. */
 html { background-color:var(--paper); }
 body { margin:0; color:var(--ink); font:500 18px/1.55 var(--body); -webkit-font-smoothing:antialiased; overflow-x:clip; }
-body::before { content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; background-color:var(--paper); transition:background-color .6s var(--ease-out); }
-html[data-ground="apricot"] > body::before { background-color:var(--apricot); }
-html[data-ground="berry"] > body::before { background-color:var(--berry); }
-html[data-ground="berry-deep"] > body::before { background-color:var(--berry-deep); }
-html[data-ground="ink"] > body::before { background-color:var(--ink); }
-html[data-motion="reduced"] > body::before { transition:none; }
+/* The page colour no longer follows the section under the line: the one backdrop
+   (components/site/ground.tsx) carries every section's colour as long blends. html[data-ground]
+   still themes the chrome (the header, the skip link). */
 /* Sections off screen carry data-away, and their looping animations data-loop (pauseAway in
    app/motion.tsx): the loops hold their current frame instead of restyling every frame unseen,
    and resume when scrolled back. One-shot animations are never marked, so they still finish. */
@@ -648,7 +647,7 @@ html[data-mascot="off"] .mascot { display:none; }
 
 /* ---------- The contact section's base (app/sections/contact.tsx, plan 4.9). The contact piece
    adds the gradient sky over this base. ---------- */
-.contact { display:flex; flex-direction:column; justify-content:flex-end; min-height:calc(var(--budget,.75) * 100svh); padding:calc(var(--header-h) + 12px) var(--gutter) 0; background:var(--ground); color:var(--on); }
+.contact { display:flex; flex-direction:column; justify-content:flex-end; min-height:calc(var(--budget,.75) * 100svh); padding:calc(var(--header-h) + 12px) var(--gutter) 0; color:var(--on); } /* no ground: the one backdrop shows through */
 
 /* ---------- Section stubs (replaced section by section; kept so the page reads end to end).
    Each piece drops the .stub class from its root when it lands; integration deletes these rules
@@ -714,3 +713,19 @@ html[data-motion="reduced"] .roll-row .roll-track { transform:none !important; }
 html[data-motion="reduced"] .roll-row:is(:hover,:focus-visible) .roll-a { color:var(--kw); }
 /* TiltFrame: flat (the component also stops listening). */
 html[data-motion="reduced"] :is(.tilt-stage,.tilt-layer) { transform:none !important; transition:none !important; }
+
+/* ---------- The one container (rethink 2026-11-03: "one day, scrolled") ----------
+   Every boxed thing on the page is this card, the same object as the project fan's cards
+   (app/sections/projects.css .wk-fc): a flat sticker fill, a 1.5px ink outline, the 28px tile
+   radius and a solid ink lip. Pick the fill with data-fill (the fan's palette); ink text reads on
+   all of them. Tilt it with --tilt. Never put a card inside a card. */
+.ink-card { --tilt:0deg; position:relative; border:1.5px solid var(--ink); border-radius:var(--r-tile); background:var(--card); color:var(--ink); box-shadow:0 8px 0 var(--ink); rotate:var(--tilt); }
+.ink-card[data-fill="paper"] { background:var(--card); }
+.ink-card[data-fill="apricot"] { background:var(--apricot); }
+.ink-card[data-fill="sky"] { background:var(--sky); }
+.ink-card[data-fill="berry-soft"] { background:var(--berry-soft); }
+.ink-card[data-fill="tile-teal"] { background:var(--tile-teal); }
+.ink-card[data-fill="tile-gold"] { background:var(--tile-gold); }
+.ink-card[data-fill="tile-pink"] { background:var(--tile-pink); }
+.ink-card[data-fill="tile-leaf"] { background:var(--tile-leaf); }
+.ink-card[data-fill="tile-apricot"] { background:var(--tile-apricot); }

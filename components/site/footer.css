@@ -36,28 +36,21 @@ html:not([data-motion="reduced"]) .ft[data-fits] { position:sticky; bottom:0; }
 .ft-blurb-row { display:flex; align-items:flex-end; justify-content:flex-end; gap:14px; }
 @media (max-width:760px) { .ft-blurb-row { justify-content:flex-start; } }
 .ft-testudo { flex:none; width:clamp(48px,5vw,64px); height:auto; rotate:-4deg; pointer-events:none; user-select:none; }
-.ft-in { max-width:1200px; margin:0 auto; padding:56px var(--gutter) 64px; display:grid; grid-template-columns:minmax(0,1.8fr) minmax(0,1fr); gap:40px 56px; }
-@media (max-width:760px) { .ft-in { grid-template-columns:minmax(0,1fr); padding-block:40px 48px; gap:32px; } }
+.ft-in { max-width:1200px; margin:0 auto; padding:40px var(--gutter) 48px; }
 
-/* Left: the skip-ahead list. */
-.ft-h { margin:0 0 6px; font:600 13px/1.4 var(--mono); letter-spacing:.16em; text-transform:uppercase; color:#D6D3D1; }
-.ft-note { margin:0 0 16px; font:500 16px/1.5 var(--body); color:#A8A29E; }
-.ft-links { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 20px; }
-@media (max-width:560px) { .ft-links { grid-template-columns:minmax(0,1fr); gap:2px; } }
-.ft-links a { display:flex; align-items:center; gap:12px; min-height:var(--hit); padding:8px 10px; margin:0 -10px; border-radius:var(--r-control); color:inherit; text-decoration:none;
-  transition:background-color .15s ease, transform .15s ease; }
-.ft-links a:hover, .ft-links a:focus-visible { background:rgba(255,255,255,.07); transform:translateX(2px); }
-.ft-links a:active { transform:translateX(2px) translateY(1px); }
-.ft-ico { flex:none; display:grid; place-items:center; width:36px; height:36px; border-radius:10px; background:rgba(255,255,255,.09); color:#fff; transition:background-color .15s ease, color .15s ease; }
-.ft-links a:hover .ft-ico, .ft-links a:focus-visible .ft-ico { background:#fff; color:#0C0A09; }
-.ft-q { display:block; font:500 16px/1.35 var(--body); color:#D6D3D1; }
-.ft-a { display:block; margin-top:2px; font:700 13px/1.3 var(--mono); letter-spacing:.04em; text-transform:uppercase; color:#fff; }
-
-/* Right: the mark on its paper card (the header's, so LIU keeps its berry at AA: 7.6 on card),
-   the one-line blurb, the copyright, GitHub and LinkedIn. Right-aligned beside the links; under
-   them, left-aligned, on a phone. */
-.ft-brand { display:flex; flex-direction:column; align-items:flex-end; gap:14px; text-align:right; }
-@media (max-width:760px) { .ft-brand { align-items:flex-start; text-align:left; } }
+/* One band (2026-11-03): the mark on its paper card (the header's, so LIU keeps its berry at AA:
+   7.6 on card) and the line beside it on the left; the icons and the copyright on the right.
+   Stacked and left-aligned on a phone. The grid areas let the mark, the line, the icons and the
+   meta stay flat children of .ft-brand. */
+.ft-brand { display:grid; grid-template-columns:auto minmax(0,1fr) auto; grid-template-areas:"mark blurb social" "mark blurb meta"; align-items:center; gap:6px 28px; }
+.ft-brand > .ft-mark-host { grid-area:mark; }
+.ft-brand > .ft-blurb-row { grid-area:blurb; justify-content:flex-start; }
+.ft-brand > .ft-social { grid-area:social; }
+.ft-brand > .ft-meta { grid-area:meta; justify-self:end; }
+@media (max-width:760px) {
+  .ft-brand { grid-template-columns:minmax(0,1fr); grid-template-areas:"mark" "blurb" "social" "meta"; gap:16px; justify-items:start; }
+  .ft-brand > .ft-meta { justify-self:start; }
+}
 /* The card itself (outline, lip, colours, press) is the header's rule in globals.css; here only
    its bigger size. The flame round it (components/site/flame/) needs the room above it. */
 .ft .ft-brand .ft-mark { --mark-size:30px; padding:8px 11px 9px; }
@@ -73,8 +66,7 @@ html:not([data-motion="reduced"]) .ft[data-fits] { position:sticky; bottom:0; }
 
 .ft :is(a,button):focus-visible { outline:2px solid var(--berry-soft); outline-offset:2px; }
 button.ft-btn { cursor:pointer; } /* the copy button: a <button>, so it needs the pointer the links get for free */
-html[data-motion="reduced"] .ft :is(.ft-links a,.ft-ico,.ft-btn) { transition:none; }
-html[data-motion="reduced"] .ft .ft-links a:is(:hover,:focus-visible,:active) { transform:none; }
+html[data-motion="reduced"] .ft .ft-btn { transition:none; }
 /* The social buttons expand from icon to word (components/site/social-button.tsx); their own
    label margin spaces the word, so the button's gap would leave the collapsed icon off centre. */
 .ft-btn.sbtn { gap:0; padding-inline:13px; }

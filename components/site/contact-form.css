@@ -1,28 +1,64 @@
-/* The contact form (contact-form.tsx), the centrepiece of the contact page (2026-10-20), in its
-   own full-width part of the card, under the one-tap row. Every
-   selector starts with .cf. Slush's colour-as-fill: the form is its own sky panel with the 2px
-   ink outline, laid on the apricot card; fields are card-coloured with the same outline and a
-   flat ink lip; labels speak in the small mono voice of the eyebrows. Contrast on sky: ink 13.3,
-   berry-deep 10.9, error red #8a1c2b 6.8; inside the fields, ink on card 17.1. */
-.cf { --cf-bad:#8a1c2b; --on:var(--ink); --on-2:var(--berry-deep); position:relative; display:grid; gap:16px; padding:clamp(18px,3cqi,32px); border:var(--bw) solid var(--ink); border-radius:var(--r-panel); background:var(--sky); color:var(--ink); }
-.cf-title { font:700 clamp(22px,3cqi,34px)/1 var(--display); letter-spacing:-.03em; text-transform:uppercase; font-variant-ligatures:none; }
-.cf-fields { display:grid; gap:12px; }
-.cf-pair { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr)); gap:12px 16px; }
-.cf-field { display:grid; gap:6px; align-content:start; }
-.cf-label { font:600 13px/1.4 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--on-2); }
-.cf :is(input, textarea) {
-  inline-size:100%; min-block-size:var(--hit); padding:10px 14px; border:var(--bw) solid var(--ink); border-radius:var(--r-control);
-  background:var(--card); color:var(--ink); font:500 18px/1.5 var(--body); box-shadow:0 3px 0 var(--ink);
+/* The contact form (contact-form.tsx). Rethink 2026-11-03: the form is the letter itself, the
+   site's one card (.ink-card in app/globals.css: 1.5px ink outline, 28px radius, solid ink lip),
+   in paper and level (no tilt, Andrew 2026-11-03), standing on the twilight sky. Nothing inside it is boxed: the fields
+   are plain boxed inputs, and a stamp and postmark sit in the top
+   corner. Every selector starts with .cf.
+
+   The card sits on a dark ground, whose tokens it would otherwise inherit (paper text, apricot
+   keyword, apricot primary face, apricot ring), so it sets the paper ones back here.
+   Contrast on card #fbf8f1: ink 17.1, berry-deep 13.5, berry 7.6, muted 6.4, error #8a1c2b 9.0. */
+.cf {
+  --cf-bad:#8a1c2b; --cf-rule:var(--line); --cf-lh:30px;
+  --on:var(--ink); --on-2:var(--berry-deep); --kw:var(--berry); --ring:var(--berry);
+  --pb-face:var(--berry); --pb-on:#fff; --pb-back:var(--apricot); --pb-back-on:var(--ink); --pl-back:var(--berry-soft);
+
+  display:grid; gap:18px; min-inline-size:0; padding:clamp(22px,3.4cqi,44px); padding-block-start:clamp(26px,3.4cqi,40px);
 }
-.cf textarea { resize:vertical; min-block-size:140px; }
-.cf textarea.cf-about { min-block-size:76px; }
+/* Its own compositor layer: drawn flat, then turned, so the 1.5px rules stay whole lines instead of
+   breaking into dashes when rasterised at an angle. */
+.cf.ink-card { --tilt:0deg; } /* straight, so the letter's text runs level (Andrew 2026-11-03) */
+.cf :focus-visible { outline:3px solid var(--berry); outline-offset:2px; }
+
+/* The head: the title, the suspended chip beside it, and room on the right for the stamp. */
+.cf-head { display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; min-block-size:64px; padding-inline-end:clamp(104px,16cqi,150px); }
+.cf-title { font:700 clamp(22px,3.2cqi,32px)/1 var(--display); letter-spacing:-.03em; text-transform:uppercase; font-variant-ligatures:none; color:var(--ink); }
+
+/* The stamp and postmark (Stationery in contact-form.tsx), in the card's top right corner, level
+   like the card, so its text runs horizontal. */
+.cf-stamp { position:absolute; top:clamp(12px,2cqi,22px); right:clamp(12px,2cqi,24px); inline-size:clamp(110px,18cqi,160px); block-size:auto; pointer-events:none; }
+.cf-stamp-paper rect { fill:var(--apricot); }
+.cf-stamp-frame { fill:none; stroke:var(--ink); stroke-width:1.2; stroke-dasharray:2 2.5; opacity:.55; }
+.cf-stamp-berry { fill:var(--berry); stroke:var(--ink); stroke-width:1.5; }
+.cf-stamp-crown { fill:none; stroke:var(--ink); stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+.cf-stamp-shine { fill:var(--card); opacity:.8; }
+.cf-postmark { fill:none; stroke:var(--ink); stroke-width:1.4; opacity:.5; }
+.cf-postmark text { fill:var(--ink); stroke:none; font:700 6.6px var(--mono); letter-spacing:.06em; } /* level lines inside the ring (Andrew 2026-11-04: the letter's text runs horizontal) */
+
+.cf-fields { display:grid; gap:14px; }
+.cf-pair { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:14px 28px; }
+.cf-field { display:grid; gap:4px; align-content:start; }
+.cf-label { font:600 13px/1.4 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--on-2); }
+.cf-field-hint { font:500 15px/1.4 var(--body); color:var(--muted); }
+
+/* The fields: plain boxed inputs (Andrew 2026-11-04: "just make it a normal text input", no lined paper). */
+.cf :is(input, textarea) {
+  inline-size:100%; min-block-size:var(--hit); padding:12px 14px; border:1.5px solid var(--ink-2); border-radius:12px;
+  background:#fff; color:var(--ink); font:500 18px/1.5 var(--body);
+  transition:border-color var(--dur-ui) var(--ease-ui);
+}
+.cf :is(input, textarea):focus { border-color:var(--berry); }
+.cf :is(input, textarea):focus-visible { outline:3px solid var(--berry); outline-offset:2px; }
 .cf ::placeholder { color:var(--muted); opacity:1; }
-.cf-field-hint { font:500 15px/1.4 var(--body); color:var(--on-2); }
+.cf textarea { resize:vertical; min-block-size:calc(var(--cf-lh) * 7); }
+.cf textarea.cf-about { min-block-size:calc(var(--cf-lh) * 2.5); }
+
 /* The sending steps. ThinkingIndicator reads two shadcn names this site does not define; without
    them its label is invisible. */
 .cf-progress { --muted-foreground:var(--berry-deep); --foreground:var(--berry-2); flex:1 1 24ch; min-inline-size:0; font:600 16px/1.4 var(--body); color:var(--berry-deep); }
 .cf :is(input, textarea):disabled { opacity:.7; }
-.cf [data-invalid] :is(input, textarea) { border-color:var(--cf-bad); box-shadow:0 3px 0 var(--cf-bad); }
+/* Errors are calm: the line turns the error colour and says what to change under it. */
+.cf [data-invalid] :is(input, textarea) { border:2px solid var(--cf-bad); }
+.cf [data-invalid] .cf-label { color:var(--cf-bad); }
 .cf-error { min-block-size:1.5em; font:500 15px/1.5 var(--body); color:var(--cf-bad); }
 
 /* Dictation (use-dictation.ts): the mic, what it is doing, the words still settling, then the line
@@ -37,40 +73,51 @@
 .cf-dictate-status[data-on]::before { content:''; flex:none; inline-size:9px; block-size:9px; border-radius:50%; background:#e0162b; animation:cf-listen 1.4s ease-in-out infinite; }
 @keyframes cf-listen { 50% { opacity:.3; } }
 html[data-motion="reduced"] .cf-dictate-status[data-on]::before { animation:none; }
+@media (prefers-reduced-motion:reduce) { .cf-dictate-status[data-on]::before { animation:none; } }
 /* Full width when it wraps, so the words read as one line of their own. */
 .cf-dictate-live { flex:1 1 24ch; min-inline-size:0; overflow-wrap:anywhere; font:500 15px/1.4 var(--body); font-style:italic; color:var(--on-2); }
 
 /* The honeypot: present for bots, never seen or reached by people. */
 .cf-bot { position:absolute; left:-10000px; inline-size:1px; block-size:1px; overflow:hidden; }
 
-.cf-foot { display:flex; flex-wrap:wrap; align-items:center; gap:12px 20px; }
-/* Send at the far end of the row, the hint taking the rest (Andrew 2026-10-20: the form got its
-   own full-width part); on a phone the hint wraps above it. */
+.cf-foot { display:flex; flex-wrap:wrap; align-items:center; gap:12px 20px; padding-block-start:4px; }
+/* Send at the far end of the row, the hint taking the rest; on a phone the hint wraps above it. */
 .cf-send { margin-inline-start:auto; }
 .cf-send:disabled { cursor:progress; opacity:.75; }
 .cf-hint { flex:1 1 18ch; font:500 15px/1.45 var(--body); color:var(--on-2); }
 .cf-status { display:inline-flex; align-items:center; gap:8px; min-block-size:1.5em; font:600 17px/1.5 var(--body); color:var(--on); }
 /* Empty, it takes no height; it stays in the page so screen readers keep listening to it. */
-.cf-status:empty { min-block-size:0; margin-top:-16px; }
+.cf-status:empty { min-block-size:0; margin-top:-18px; }
 .cf-status[data-kind="error"] { color:var(--cf-bad); }
 .cf-status[data-kind="sent"] { color:var(--berry-deep); }
 
-/* Sent: the fields give way to a card-coloured sticker, tilted, with a round leaf badge (motion
-   pops it in on a spring, contact-form.tsx). Write another brings the fields back. */
-.cf-sent { display:grid; justify-items:start; gap:16px; padding:clamp(20px,3cqi,32px); border:var(--bw) solid var(--ink); border-radius:var(--r-card); background:var(--card); }
-.cf-sent-badge { display:grid; place-items:center; width:56px; height:56px; border:var(--bw) solid var(--ink); border-radius:50%; background:#2a9a4a; color:#fff; }
-.cf-sent-title { font-size:clamp(40px,7cqi,72px); color:var(--ink); }
+/* Sent: the fields give way to the reply on the same sheet, no box of its own (one card, never a
+   card in a card): a round leaf check, inked on like a postmark, and "Got it." in display type
+   (motion pops it in on a spring, contact-form.tsx). Write another brings the fields back. */
+.cf-sent { display:grid; justify-items:start; align-content:center; gap:16px; min-block-size:calc(var(--cf-lh) * 8); padding-block:8px 4px; }
+.cf-sent-badge { display:grid; place-items:center; width:64px; height:64px; border:1.5px solid var(--ink); border-radius:50%; background:var(--tile-leaf); color:var(--ink); box-shadow:0 4px 0 var(--ink); }
+.cf-sent-title { font-size:clamp(48px,9cqi,96px); line-height:.9; color:var(--ink); }
 .cf-sent-title:focus { outline:none; }
 .cf-sent-title:focus-visible { outline:3px solid var(--berry); outline-offset:4px; }
 
 /* Suspended (Andrew 2026-10-31): the chip, an oval like the CTAs but flat, white with black text, a
-   thin border and a red dot; the one thing on the form still in colour. Everything else goes grey
-   and stops responding (the inputs and Send are disabled in contact-form.tsx). */
-.cf-head { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 16px; }
+   thin border and a red dot; the one thing on the letter still in colour. The sheet goes grey,
+   the stamp fades to a grey impression, and everything stops responding (the inputs and Send are
+   disabled in contact-form.tsx). Grey #6a6a6a on #e2e2e2 is 4.6:1. */
 .cf-chip { display:inline-flex; align-items:center; gap:8px; padding:7px 14px; border:1px solid #000; border-radius:var(--r-pill); background:#fff; color:#000; font:600 14px/1.2 var(--mono); white-space:nowrap; }
 .cf-chip-dot { flex:none; inline-size:9px; block-size:9px; border-radius:50%; background:#e0162b; }
-.cf[data-suspended] { --cf-grey:#6a6a6a; --on:var(--cf-grey); --on-2:var(--cf-grey); background:#e2e2e2; border-color:#a8a8a8; color:var(--cf-grey); }
-.cf[data-suspended] :is(input, textarea) { opacity:1; border-color:#b4b4b4; background:#efefef; color:var(--cf-grey); box-shadow:none; resize:none; cursor:not-allowed; }
+.cf.ink-card[data-suspended] { --cf-grey:#6a6a6a; --cf-rule:#c4c4c4; --on:var(--cf-grey); --on-2:var(--cf-grey); --muted:var(--cf-grey); background:#e2e2e2; border-color:#8a8a8a; box-shadow:0 8px 0 #8a8a8a; color:var(--cf-grey); }
+.cf[data-suspended] .cf-title { color:var(--cf-grey); }
+.cf[data-suspended] .cf-stamp { filter:grayscale(1); opacity:.55; }
+.cf[data-suspended] :is(input, textarea) { opacity:1; border-color:#a8a8a8; background:#ececec; color:var(--cf-grey); resize:none; cursor:not-allowed; }
 .cf[data-suspended] .cf-label { cursor:not-allowed; }
 .cf[data-suspended] :is(.cf-send,.cf-mic) { --face:#cdcdcd; --face-on:var(--cf-grey); opacity:1; cursor:not-allowed; box-shadow:0 var(--lip) 0 #a8a8a8; }
 .cf[data-suspended] :is(.cf-send,.cf-mic) > .pill-face { border-color:#a8a8a8; }
+
+/* A phone: flat (a tilted sheet this narrow pokes past the gutter and breaks its thin rules into
+   dashes), and a smaller stamp. */
+@container (max-width:560px) {
+  .cf.ink-card { --tilt:0deg; }
+  .cf-head { padding-inline-end:92px; min-block-size:56px; }
+  .cf-stamp { inline-size:96px; }
+}

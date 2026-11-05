@@ -3,15 +3,12 @@ import Hero from './sections/hero';
 import Contents from './sections/contents';
 import Phones from './sections/phones';
 import Projects from './sections/projects';
-import Impact from './sections/impact';
 import Experience from './sections/experience';
 import Island from './sections/island';
 import Contact from './sections/contact';
 import Resume from './sections/resume';
 import { SiteFooter } from '@/components/site/footer';
-import { StackBand } from '@/components/site/stack-band';
-import ContourBg from '@/components/site/contour-bg';
-import { AfterLoad } from '@/components/site/after-load';
+import Ground from '@/components/site/ground';
 
 // The landing page (SITE-PLAN.md 1.1): the director, then the sections in SECTIONS order
 // (lib/site.ts), then the one site footer, which the page slides up off (components/site/footer.tsx). Each section is its own file under app/sections/ with its own CSS, so pieces
@@ -22,22 +19,21 @@ export default function Home() {
   return (
     <>
       <Motion />
-      {/* AfterLoad: the contour canvases start once the loader lifts (components/site/after-load.tsx) */}
-      <AfterLoad><ContourBg /></AfterLoad>
       <Hero />
       {/* "From flashcards to a platform" (the Blueberry chapter) is cut and "Where to?" is back (Andrew 2026-10-29); Blueberry lives on in the phones and the work list */}
       <Contents />
       <Phones />
       <Projects />
-      {/* The stack band, straight across the seam between Projects and Impact (Andrew 2026-10-20);
-          not a section, so it is not in SECTIONS (components/site/stack-band.tsx) */}
-      <StackBand />
-      <Impact />
+      {/* Measured impact and the stack strip live in the project captions now (2026-11-03, "one
+          day, scrolled"): each project shows its own numbers and its own stack, said once. */}
       <Experience />
       <Contact />
       <Resume />
       <Island />
       <SiteFooter />
+      {/* The one ground under every section, hero to footer (components/site/ground.tsx). After the
+          footer in the page so it paints over the footer's sticky layer and under everything else. */}
+      <Ground />
     </>
   );
 }

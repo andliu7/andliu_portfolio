@@ -1,94 +1,216 @@
 'use client';
-import { useRef, type CSSProperties } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react';
 import Image from 'next/image';
-import { motion, useScroll, useTransform } from 'motion/react';
-import { HOVER, type PhoneShot } from '@/lib/site';
+import { ArrowUpRight, Play, Undo2 } from 'lucide-react';
+import { HOVER, PHONES, type PhoneShot } from '@/lib/site';
 import { useReducedMotion } from '@/components/site/use-reduced-motion';
 
-// The phone columns (phones.tsx). One scroll progress for the whole gallery, 0 when its top
-// enters at the bottom of the screen and 1 when its bottom leaves at the top, mapped to two
-// vertical shifts: on the three-column grid (two rows of three, Andrew 2026-10-21) the left
-// and right columns rise and the centre column sinks, so the centre slides past both sides
-// (Andrew 2026-10-20, the landonorris.com style opposing columns).
-//   - One list, one item per phone, in reading order. phones.css picks which items rise or sink
-//     and on which screens they move at all (only on three columns), so the breakpoints live in
-//     one place (the CSS).
-//   - This file only publishes the two shifts as CSS variables (--rise, --sink) on the list.
-//     Each item reads one in `translate`, a percentage of its own height: transform only, no
-//     layout reads per frame. The left and right columns read the same variable, so they move
-//     identically and the grid stays symmetric (Andrew 2026-10-21: "I thought I chose the one
-//     that said it would be symmetric").
-//   - No cutoff (Andrew 2026-10-20: "there is no cuttoff"): nothing clips the list, so the
-//     travel is sized to stay inside the section's own bands instead: the centre column ends
-//     sunk SINK_TO, which the list's bottom pad in phones.css holds (keep the two in step).
-//   - The centre always sits lower than the sides, by more as the page scrolls (Andrew
-//     2026-10-21: "stagger them a little bit more"). The old run (sides 4 to -6, centre -4 to
-//     12) crossed level about a third of the way in, so the stagger vanished there; starting
-//     the centre below the sides keeps it readable at every scroll position. Measured at
-//     1440x900, centre minus sides at start/middle/end: -37/43/102px before (the centre still
-//     higher at the start), 46/117/170 after.
-//   - The centre column travels further than the sides (Andrew 2026-10-20: "the middle should
-//     move down faster"). The run is the gallery's own height, so the shear starts with the
-//     first pixels of scroll.
-//   - Lenis eases the real window scroll (app/motion.tsx), so window-based useScroll follows the
-//     smoothed position with no extra wiring: no `container`, no second rAF loop.
-//   - Reduced motion (and no JavaScript): the variables stop moving (or never arrive), and
-//     phones.css holds a still, staggered grid over them.
-//
-// Pattern: useScroll + useTransform. useScroll gives progress as a MotionValue, useTransform maps
-// it to a CSS length, and motion.ul writes it into the style each frame without re-rendering
-// React. A MotionValue on a `--name` key is set as a CSS custom property.
+// The feature list and its one phone (phones.tsx; rebuild 2026-11-03, Andrew: "a feature list
+// driving ONE phone" plus "Try it live"). Replaces the hand of six phones, which read as a second
+// project fan.
+//   - The list is a WAI-ARIA tablist: each feature is a tab, the phone is the one tabpanel.
+//     Arrow keys move between tabs (roving tabindex), Home and End jump; hovering with a mouse,
+//     focusing or tapping a row selects it.
+//   - The phone stacks all six captures and crossfades to the selected one (opacity and a small
+//     rise, phones.css). Under reduced motion it swaps with no movement.
+//   - Auto-advance: every ADVANCE_MS while at least half the stage is on screen, and never again
+//     once the visitor hovers, focuses, taps or presses a key in it. Off under reduced motion.
+//   - "Try it live" swaps the screen for Blueberry itself in an iframe, mounted only on press.
+//     The page is laid out at LIVE_W css px and scaled to the screen's width (a ResizeObserver
+//     publishes --ph-scale), so it renders as on a real phone. A cross-origin frame cannot report
+//     a refusal (X-Frame-Options), so if load never fires within LIVE_TIMEOUT the phone says so
+//     and offers a new tab. github.io frames fine today (checked 2026-11-03).
 
-// Percent of one phone's height, positive is down. The sides rise about four times as fast as
-// they did (Andrew 2026-10-23: "I want the side ones to scroll up much faster"; was 3 to -5).
-// They still start above the centre (5), so the centre stays the lower column throughout.
-const RISE_FROM = 3, RISE_TO = -27; // the left and right columns: 30 in all
-const SINK_FROM = 5, SINK_TO = 20; // the centre column (the two site pages): 15 in all
+const ADVANCE_MS = 5000;
+const LIVE_W = 360;
+const LIVE_TIMEOUT = 15000;
 
-// Flat sticker fills for the phone bodies (phones.css [data-fill]), mirrored across the centre
-// column so each row's halves match: sky down the centre (the site pages), apricot on the
-// sides of the first row, berry-soft on the sides of the second.
-const fillAt = (n: number) => (n % 3 === 1 ? 'sky' : Math.floor(n / 3) % 2 ? 'berry-soft' : 'apricot');
+// Flat sticker fills from the project fan's palette (globals.css .ink-card[data-fill]): the two
+// site pages on paper, the game screens alternating apricot and berry-soft.
+const fills = (shots: readonly PhoneShot[]) => {
+  let game = 0;
+  return shots.map(s => (s.where === 'Site' ? 'paper' : game++ % 2 ? 'berry-soft' : 'apricot'));
+};
 
-export function PhoneColumns({ shots, label }: { shots: readonly PhoneShot[]; label: string }) {
-  const ref = useRef<HTMLUListElement>(null);
+type Live = 'off' | 'loading' | 'ready' | 'failed';
+
+export function PhoneStage({ shots, label, children }: { shots: readonly PhoneShot[]; label: string; children: ReactNode }) {
+  const [sel, setSel] = useState(0);
+  const [auto, setAuto] = useState(true);
+  const [inView, setInView] = useState(false);
+  const [live, setLive] = useState<Live>('off');
   const reduced = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
-  const rise = useTransform(scrollYProgress, [0, 1], [`${RISE_FROM}%`, `${RISE_TO}%`]);
-  const sink = useTransform(scrollYProgress, [0, 1], [`${SINK_FROM}%`, `${SINK_TO}%`]);
-  // A cast because motion's style type does not list custom properties, though it sets them.
-  const style = (reduced ? undefined : { '--rise': rise, '--sink': sink }) as CSSProperties | undefined;
+  const stageRef = useRef<HTMLDivElement>(null);
+  const screenRef = useRef<HTMLDivElement>(null);
+  const tabs = useRef<(HTMLButtonElement | null)[]>([]);
+  const fill = fills(shots);
+  const shot = shots[sel];
+  const hover = HOVER.phones[shot.title];
+
+  const stop = useCallback(() => setAuto(false), []);
+  const pick = (n: number) => { stop(); setSel(n); };
+
+  // In view: auto-advance runs only while at least half the stage shows.
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.5 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!auto || !inView || reduced || live !== 'off') return;
+    const t = window.setInterval(() => setSel(n => (n + 1) % shots.length), ADVANCE_MS);
+    return () => window.clearInterval(t);
+  }, [auto, inView, reduced, live, shots.length]);
+
+  // The live page's scale: the screen's width over LIVE_W.
+  useEffect(() => {
+    const el = screenRef.current;
+    if (!el || live === 'off') return;
+    const ro = new ResizeObserver(([e]) => el.style.setProperty('--ph-scale', String(e.contentRect.width / LIVE_W)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [live]);
+
+  useEffect(() => {
+    if (live !== 'loading') return;
+    const t = window.setTimeout(() => setLive(l => (l === 'loading' ? 'failed' : l)), LIVE_TIMEOUT);
+    return () => window.clearTimeout(t);
+  }, [live]);
+
+  const onKey = (e: KeyboardEvent<HTMLButtonElement>) => {
+    const last = shots.length - 1;
+    const next = { ArrowDown: sel + 1, ArrowRight: sel + 1, ArrowUp: sel - 1, ArrowLeft: sel - 1, Home: 0, End: last }[e.key];
+    if (next === undefined) return;
+    e.preventDefault();
+    const n = next < 0 ? last : next > last ? 0 : next;
+    pick(n);
+    tabs.current[n]?.focus();
+  };
 
   return (
-    <motion.ul ref={ref} className="ph-cols" aria-label={label} style={style}>
-      {shots.map((shot, n) => (
-        <li key={shot.src} className="ph-item">
-          <figure className="ph-shot">
-            {/* Each phone opens its screen on the live site (Andrew 2026-10-20, the hover bubble:
-                "focus on what the user can DO with it"). The link's name starts with the same
-                action words the bubble shows, then the screenshot's description. */}
-            <a
-              className="ph-phone"
-              data-fill={fillAt(n)}
-              href={HOVER.phones[shot.title].href}
-              target="_blank"
-              rel="noreferrer"
-              data-bubble={HOVER.phones[shot.title].text}
-              data-bubble-icon={HOVER.phones[shot.title].icon}
+    <div ref={stageRef} className="ph-stage">
+      {children}
+      <div className="ph-list ink-card" role="tablist" aria-label={label} aria-orientation="vertical">
+        {shots.map((s, n) => (
+          <button
+            key={s.src}
+            ref={el => { tabs.current[n] = el; }}
+            type="button"
+            role="tab"
+            id={`ph-tab-${n}`}
+            className="ph-tab"
+            aria-selected={n === sel}
+            aria-controls="ph-panel"
+            tabIndex={n === sel ? 0 : -1}
+            onClick={() => pick(n)}
+            onKeyDown={onKey}
+            onFocus={() => pick(n)}
+            onPointerEnter={e => { if (e.pointerType === 'mouse') pick(n); }}
+          >
+            <span className="ph-tab-top">
+              <span className="ph-num" aria-hidden="true">{String(n + 1).padStart(2, '0')}</span>
+              <span className="ph-name">{s.title}</span>
+              <span className="ph-where">{s.where}</span>
+            </span>
+            <span className="ph-why">{s.why}</span>
+          </button>
+        ))}
+      </div>
+
+      <div
+        className="ph-device"
+        role="tabpanel"
+        id="ph-panel"
+        aria-labelledby={`ph-tab-${sel}`}
+        onPointerEnter={e => { if (e.pointerType === 'mouse') stop(); }}
+      >
+        {/* Under 900px the tabs are chips with no room for the line, so it shows here. */}
+        <p className="ph-why-m">{shot.why}</p>
+        <div className="ph-shot">
+          <div className="ph-phone ink-card" data-fill={fill[sel]}>
+            <span className="ph-island" aria-hidden="true" />
+            <div ref={screenRef} className="ph-screen" data-live={live}>
+              {/* The screenshot: opens the selected screen on the live site. */}
+              <a
+                className="ph-screen-link"
+                href={hover.href}
+                target="_blank"
+                rel="noreferrer"
+                data-bubble={live === 'off' ? hover.text : undefined}
+                data-bubble-icon={live === 'off' ? hover.icon : undefined}
+                tabIndex={live === 'off' ? 0 : -1}
+                onFocus={stop}
+                aria-hidden={live === 'off' ? undefined : true}
+              >
+                <span className="sr-only">{hover.text}</span>
+                {shots.map((s, n) => (
+                  // unoptimized: the export is static, so the WebP is served as captured (a plain img).
+                  <Image
+                    key={s.src}
+                    className="ph-img"
+                    src={s.src}
+                    width={s.w}
+                    height={s.h}
+                    alt={n === sel ? s.alt : ''}
+                    aria-hidden={n === sel ? undefined : true}
+                    data-on={n === sel}
+                    loading={n === 0 ? 'eager' : 'lazy'}
+                    unoptimized
+                  />
+                ))}
+              </a>
+              {live !== 'off' && (
+                <iframe
+                  className="ph-frame"
+                  src={PHONES.live}
+                  title={PHONES.liveTitle}
+                  loading="lazy"
+                  // Its own origin, so scripts plus same-origin cannot reach this page; forms and
+                  // popups so signing in and outbound links still work.
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+                  allow="clipboard-write"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  style={{ '--ph-live-w': `${LIVE_W}px` } as CSSProperties}
+                  onLoad={() => setLive(l => (l === 'loading' || l === 'failed' ? 'ready' : l))}
+                />
+              )}
+              {(live === 'loading' || live === 'failed') && (
+                <div className="ph-veil">
+                  <output className="ph-veil-note">
+                    {live === 'loading' ? <><span className="ph-dot" aria-hidden="true" />{PHONES.loadingLive}</> : PHONES.liveFailed}
+                  </output>
+                  {live === 'failed' && (
+                    <a className="ph-veil-link" href={PHONES.live} target="_blank" rel="noreferrer">
+                      {PHONES.newTab} <ArrowUpRight size={16} aria-hidden="true" />
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="ph-live-row">
+            <button
+              type="button"
+              className="pill pill-light ph-try"
+              onClick={() => { stop(); setLive(l => (l === 'off' ? 'loading' : 'off')); }}
             >
-              <span className="sr-only">{HOVER.phones[shot.title].text}, </span>
-              <span className="ph-island" aria-hidden="true" />
-              {/* unoptimized: the export is static, so the WebP is served as captured (a plain img). */}
-              <Image src={shot.src} width={shot.w} height={shot.h} alt={shot.alt} unoptimized />
-            </a>
-            <figcaption className="ph-cap">
-              <span className="ph-where">{shot.where}</span> {shot.title}
-            </figcaption>
-          </figure>
-        </li>
-      ))}
-    </motion.ul>
+              {live === 'off'
+                ? <><Play size={16} aria-hidden="true" /> {PHONES.tryLive}</>
+                : <><Undo2 size={16} aria-hidden="true" /> {PHONES.backToShots}</>}
+            </button>
+            {live === 'ready' && (
+              <a className="ph-newtab" href={PHONES.live} target="_blank" rel="noreferrer">
+                {PHONES.newTab} <ArrowUpRight size={14} aria-hidden="true" />
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
-export default PhoneColumns;
+export default PhoneStage;

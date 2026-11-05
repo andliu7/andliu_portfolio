@@ -1,156 +1,176 @@
-/* Blueberry on a phone (phones.tsx). Every selector starts with .phones, the section root.
-   Ground berry-deep: --on paper (12.58:1), --on-2 berry-soft (9.54:1). The phones are Slush
-   stickers: flat token fills (apricot, sky, berry-soft) with a 2px ink outline and a big
-   radius, no shadows, no gradients. The caption tags are card with ink text (17.06:1) and a berry
-   label (7.2:1). Display type is Fira Code 700 (--display), small labels --mono.
-   Reduced motion is html[data-motion="reduced"] (see app/globals.css). */
+/* Blueberry on a phone (phones.tsx, phones.client.tsx). Every selector starts with .phones, the
+   section root. Noon on the shared sky (rethink 2026-11-03: "one day, scrolled"): the ground is
+   paper in lib/site.ts, so --on is ink and --on-2 ink-2 over the light blue sky. The list and the
+   phone body are the shared .ink-card (globals.css, the project fan's card): a flat sticker fill,
+   a 1.5px ink outline and the solid ink lip. Reduced motion is html[data-motion="reduced"] (see
+   app/globals.css), which the BOOT script also sets from prefers-reduced-motion.
+   Contrast (WCAG 2.x, computed): ink #12142b on card #fbf8f1 17.06:1, on berry-soft #c9d1f4
+   12.5:1; ink-2 #3b3a4f on card 10.9:1, on berry-soft 8.0:1; berry #3b4f9e on card 7.2:1, on
+   berry-soft 5.0:1; white on berry 7.6:1. */
 
 .phones {
-  --tile-line: var(--bw) solid var(--ink);
-  display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: clamp(32px, 4cqi, 64px);
+  --tile-line: 1.5px solid var(--ink);
   color: var(--on);
   overflow-x: clip;
 }
 /* The seam with the Blueberry chapter (blueberry.css, the hand-off): this section starts under
    the chapter's rounded foot (pulled up by the corner's size), and its top pad clears the stack
-   strip (76px, half of it hanging over). Selected work below starts flush (projects.css), so the
-   bottom pad is only breathing room; the room the sinking centre column needs is the list's own
-   bottom pad (section 2).
-   The ground is flat berry-deep from top to bottom (Andrew 2026-10-28: the background changed as
-   the sticky screen arrived, and cut off before Selected work), so it is the same colour at both
-   seams and all the way through the pin. The soft berry glow that sat behind the phones is gone. */
+   strip (76px, half of it hanging over). Selected work below starts flush (projects.css). */
 .phones {
   --ph-tuck: clamp(40px, 6cqi, 96px);
   margin-top: calc(-1 * var(--ph-tuck));
-  padding: calc(var(--ph-tuck) + 38px + clamp(40px, 5cqi, 80px)) var(--gutter) clamp(24px, 3cqi, 48px);
-  background-color: var(--ground);
-  background-image: none;
+  padding: calc(var(--ph-tuck) + 38px + clamp(32px, 4cqi, 64px)) var(--gutter) clamp(32px, 4cqi, 64px);
+  /* no ground: the one backdrop (components/site/ground.tsx) shows through */
 }
 
-/* ---------- 1. head ---------- */
-.phones .ph-head { display: grid; gap: 14px; width: 100%; max-width: 1180px; margin-inline: auto; }
+/* ---------- the stage ----------
+   Phones: head, chips, the line, the phone, stacked. From 900px: the head over the list on the
+   left and the one phone on the right, standing beside both. The phone's width follows the
+   window's height (--ph-w) so the whole stage is about one screen tall. */
+.phones .ph-stage {
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "head" "list" "device";
+  gap: 22px clamp(36px, 5cqi, 80px);
+  width: 100%; max-width: 1240px; margin-inline: auto;
+  --ph-w: min(72vw, 290px);
+}
+.phones .ph-head { grid-area: head; }
+.phones .ph-list { grid-area: list; }
+.phones .ph-device { grid-area: device; }
+@media (min-width: 900px) {
+  .phones .ph-stage {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "head device" "list device";
+    grid-template-rows: auto 1fr;
+    row-gap: clamp(24px, 2.5cqi, 36px);
+    --ph-w: clamp(230px, calc((100svh - 190px) / 2.25), 320px);
+  }
+  .phones .ph-device { align-self: center; }
+}
+
+/* ---------- 1. head ----------
+   The eyebrow, the headline (globals.css .fit, capped at 96px in phones.tsx so head and list
+   share one column), then the line with the pill beside it on a wide screen. */
+.phones .ph-head { display: grid; gap: 14px; }
 .phones .ph-head .eyebrow { color: var(--on-2); }
 .phones .ph-intro { display: grid; gap: 22px; justify-items: start; margin-top: 10px; }
-.phones .ph-line { max-inline-size: 46ch; margin: 0; font: 400 clamp(19px, 1.5cqi, 22px)/1.55 var(--body); color: var(--on); }
+.phones .ph-line { max-inline-size: 58ch; margin: 0; font: 400 clamp(18px, 1.4cqi, 20px)/1.55 var(--body); color: var(--on); }
 .phones .ph-live { --pill-pad: 22px; font: 600 15px/1 var(--mono); }
-@container (min-width: 900px) {
-  .phones .ph-intro { grid-template-columns: minmax(0, 46ch) auto; align-items: end; column-gap: 48px; }
-}
-
-/* ---------- 2. the gallery ----------
-   Six phones in two rows of three columns, as big as the screen allows (Andrew 2026-10-21: "the
-   phones should have at least two rows (three columns) ... make it larger"; the 10-20 single row
-   of six left each phone about 216px wide at 1440). The section is about three screens of scroll
-   at 1440x900. --ph-n is the number of columns and --ph-w a column's width: the full bleed width
-   (the list steps out of the section's gutter to a small one of its own) shared by --ph-n phones,
-   but never so wide that one phone is taller than the screen, so every phone can be seen whole
-   (about 400px a phone at 1440x900, 480 at 1920x1080). --ph-k is a phone's height over its width
-   (frame, screen and the caption's overhang, measured 2026-10-21), so the travel room below can
-   be sized in phone heights.
-     under 760px   two columns of three rows, still: three across a 375px phone is about 105px
-                   a phone, too small to read; two across is about 165px
-     760 and up    three columns of two rows, drifting (below)
-   One list item per phone in reading order (lib/site.ts PHONES): the two site pages are the
-   second and fifth, the centre column, and the four game screens mirror each other on the sides.
-   On three columns each item moves by translate, reading --rise or --sink, which
-   phones.client.tsx sets from the scroll: the left and right columns rise by the same amount (the
-   same variable, so they stay level with each other), the centre column sinks, and further, so it
-   slides against both (Andrew 2026-10-21: "I thought I chose the one that said it would be
-   symmetric"; 10-20: "the middle should move down faster"). Nothing clips the list (Andrew
-   2026-10-20: "there is no cuttoff"): the bottom pad is the room the sinking column ends in
-   (SINK_TO in phones.client.tsx, 20% of a phone); the centre starts below the sides, so it never
-   rises into the head's gap.
-   More stagger and a little more spread (Andrew 2026-10-21: "stagger them a little bit more and
-   spread them slightly"): the centre now always sits lower than the sides (phones.client.tsx), the
-   still stagger is 15% (was 10%), and the column gap is about a third wider (53px at 1440, was 40;
-   64 at 1920, was 48). The phones keep their size wherever the screen's height caps them.
-   Under reduced motion --rise is 0 and --sink a fixed stagger (the pin at the end of this file):
-   the centre column sits lower, a still, symmetric grid. With no JavaScript the server render's
-   first values stay (sides 3% down, centre 5% down), also still and symmetric. */
-.phones .ph-cols {
-  --rise: 0%; --sink: 15%;
-  --ph-n: 2; --ph-edge: 16px; --ph-k: 2.2;
-  --ph-gap: clamp(16px, 5.5cqi, 32px);
-  --ph-w: min(calc((100cqi + 2 * var(--gutter) - 2 * var(--ph-edge) - (var(--ph-n) - 1) * var(--ph-gap)) / var(--ph-n)), calc((100svh - 24px) / var(--ph-k)));
-  display: grid; grid-template-columns: repeat(var(--ph-n), var(--ph-w)); justify-content: center; align-items: start;
-  gap: clamp(28px, 4cqi, 64px) var(--ph-gap);
-  margin: 0 calc(var(--ph-edge) - var(--gutter)); padding: 0; list-style: none;
-}
-.phones .ph-item { translate: none; }
-/* The caption tags lean out from the centre line by the same angle, mirrored. */
-.phones .ph-item:nth-child(odd) .ph-cap { rotate: -3deg; }
-.phones .ph-item:nth-child(even) .ph-cap { rotate: 3deg; }
-@media (min-width: 760px) {
-  .phones .ph-cols {
-    --ph-n: 3; --ph-edge: 24px; --ph-gap: clamp(22px, 4cqi, 64px);
-    padding-bottom: calc(var(--ph-w) * var(--ph-k) * .20);
-  }
-  .phones .ph-item { translate: 0 var(--rise); }
-  .phones .ph-item:nth-child(3n+2) { translate: 0 var(--sink); }
-  .phones .ph-item:nth-child(3n+1) .ph-cap { rotate: -3deg; }
-  .phones .ph-item:nth-child(3n+2) .ph-cap { rotate: none; }
-  .phones .ph-item:nth-child(3n) .ph-cap { rotate: 3deg; }
-}
-
-/* A wide screen (Andrew 2026-10-28: "in your pocket sticky to the left and then when you scrolled the
-   screens scrolled on the right. keep it for viewing from a phone though"): the head stays pinned
-   under the header on the left while the phones run past it in two drifting columns on the right,
-   the left column rising and the right sinking. Phones and tablets keep the layout above. The
-   section stays a grid, so the sticky head holds for as long as the phones are beside it. */
 @media (min-width: 1100px) {
-  .phones {
-    --ph-headw: clamp(320px, 30cqi, 460px);
-    --ph-colgap: clamp(32px, 4cqi, 64px);
-    grid-template-columns: var(--ph-headw) minmax(0, 1fr); column-gap: var(--ph-colgap); align-items: start;
-  }
-  .phones .ph-head { position: sticky; top: calc(var(--header-h) + 28px); max-width: none; margin: 0; align-self: start; }
-  .phones .ph-intro { grid-template-columns: minmax(0, 1fr); }
-  .phones .ph-cols {
-    --ph-n: 2; --ph-edge: 0px; --ph-gap: clamp(22px, 3cqi, 48px);
-    --ph-w: min(calc((100cqi - var(--ph-headw) - var(--ph-colgap) - var(--ph-gap)) / 2), calc((100svh - 24px) / var(--ph-k)));
-    margin: 0;
-  }
-  .phones .ph-item:nth-child(odd) { translate: 0 var(--rise); }
-  .phones .ph-item:nth-child(even) { translate: 0 var(--sink); }
-  .phones .ph-item:nth-child(odd) .ph-cap { rotate: -3deg; }
-  .phones .ph-item:nth-child(even) .ph-cap { rotate: 3deg; }
+  .phones .ph-intro { grid-template-columns: minmax(0, 58ch) auto; column-gap: clamp(24px, 3cqi, 44px); align-items: end; margin-top: 4px; }
 }
 
-/* A phone: the body is a flat sticker fill with an ink outline; the screen sits inside a bezel
-   with an ink island in its forehead (not over the capture, which has the site's own header at
-   the top). Sizes are in cqi of the figure, so the frame keeps its proportions at any width. */
-.phones .ph-shot { container-type: inline-size; position: relative; display: grid; justify-items: center; margin: 0; }
+/* ---------- 2. the list ----------
+   One .ink-card on card, the six features as rows split by ink hairlines. The selected row
+   takes the berry-soft fill and a berry bar on its left; there is no separate hover look,
+   because a mouse hover selects. */
+.phones .ph-list { display: grid; overflow: hidden; align-self: start; }
+.phones .ph-tab {
+  position: relative; display: grid; gap: 3px; min-height: var(--hit);
+  padding: 10px 22px 11px 26px; border: 0; border-top: var(--tile-line);
+  background: transparent; color: var(--ink); text-align: left; cursor: pointer;
+  font: inherit; -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--dur-ui) var(--ease-ui);
+}
+.phones .ph-tab:first-child { border-top: 0; }
+.phones .ph-tab::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 6px; background: var(--berry);
+  transform: scaleX(0); transform-origin: left; transition: transform var(--dur-ui) var(--ease-ui);
+}
+.phones .ph-tab[aria-selected="true"] { background: var(--berry-soft); }
+.phones .ph-tab[aria-selected="true"]::before { transform: none; }
+.phones .ph-tab:focus-visible { outline: 3px solid var(--ring); outline-offset: -5px; border-radius: 12px; }
+.phones .ph-tab-top { display: flex; align-items: baseline; gap: 12px; }
+.phones .ph-num { font: 500 12px/1 var(--mono); letter-spacing: .08em; color: var(--berry); }
+.phones .ph-name { font: 700 clamp(18px, 1.35cqi, 21px)/1.2 var(--body); }
+.phones .ph-where { margin-left: auto; font: 500 11px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--berry); }
+.phones .ph-why { padding-left: 27px; max-inline-size: none; font: 400 15px/1.4 var(--body); color: var(--ink-2); }
+.phones .ph-why-m { display: none; }
+
+/* Phones and tablets: the list is a wrapping row of chips (no sideways scroll), the line for
+   the selected one sits under it. */
+@media (max-width: 899.98px) {
+  .phones .ph-list { display: flex; flex-wrap: wrap; gap: 8px; overflow: visible; border: 0; border-radius: 0; background: none; box-shadow: none; }
+  .phones .ph-tab {
+    padding: 0 16px; border: var(--tile-line); border-radius: var(--r-pill);
+    background: var(--card); place-content: center;
+  }
+  .phones .ph-tab:first-child { border-top: var(--tile-line); }
+  .phones .ph-tab::before, .phones .ph-num, .phones .ph-where, .phones .ph-why { display: none; }
+  .phones .ph-tab[aria-selected="true"] { background: var(--berry); color: #fff; }
+  .phones .ph-tab:focus-visible { outline-offset: 3px; border-radius: var(--r-pill); }
+  .phones .ph-name { font-size: 15px; }
+  .phones .ph-why-m { display: block; margin: 0 0 22px; max-inline-size: 46ch; font: 400 16px/1.5 var(--body); color: var(--on); min-height: 4.5em; }
+}
+
+/* ---------- 3. the phone ----------
+   The .ink-card body (fill from data-fill, eased between features) with a phone's radius; the
+   screen sits inside a bezel with an ink island in its forehead. Sizes are in cqi of the figure,
+   so the frame keeps its proportions at any width. */
+.phones .ph-device { display: grid; justify-items: center; }
+.phones .ph-shot { container-type: inline-size; position: relative; display: grid; justify-items: center; width: var(--ph-w); }
 .phones .ph-phone {
-  position: relative; display: block; width: 100%;
+  display: block; width: 100%;
   padding: 10cqi 4cqi 5cqi;
-  border: var(--tile-line); border-radius: 15cqi;
-  transition: rotate var(--dur-roll) var(--ease-elastic), translate var(--dur-roll) var(--ease-elastic);
+  border-radius: 15cqi;
+  transition: background-color .45s var(--ease-ui);
 }
-.phones [data-fill="apricot"] { background: var(--apricot); }
-.phones [data-fill="sky"] { background: var(--sky); }
-.phones [data-fill="berry-soft"] { background: var(--berry-soft); }
-/* one frame colour (gauntlet round 2): the apricot and sky frames broke the dark field */
-.phones [data-fill] { background: var(--berry-soft); }
 .phones .ph-island { position: absolute; top: 3.6cqi; left: 50%; width: 26cqi; height: 3.4cqi; translate: -50% 0; border-radius: var(--r-pill); background: var(--ink); }
-/* width/height attributes give the intrinsic ratio; height auto plus aspect-ratio reserves the
-   box before the image lands, so the page height (and every scroll trigger) never jumps. */
-.phones .ph-phone img { display: block; width: 100%; height: auto; aspect-ratio: 780 / 1688; border: var(--tile-line); border-radius: 11cqi; background: var(--berry-deep); }
-/* The caption: a card tag stuck over the phone's chin, tilted a little each (collage). */
-.phones .ph-cap {
-  position: relative; z-index: 1; margin-top: -18px;
-  display: inline-flex; align-items: baseline; gap: 8px; max-width: 100%;
-  padding: 8px 16px; border: var(--tile-line); border-radius: var(--r-pill);
-  background: var(--card); color: var(--ink);
-  font: 600 clamp(13px, 5cqi, 16px)/1.2 var(--body);
+/* The screen reserves the capture's ratio, so nothing jumps as images or the frame arrive. */
+.phones .ph-screen {
+  position: relative; overflow: hidden; aspect-ratio: 780 / 1688;
+  border: var(--tile-line); border-radius: 11cqi; background: var(--berry-deep);
 }
-.phones .ph-where { font: 500 11px/1.2 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--berry); }
-/* A small springy lean on hover, the Slush roll's ease, a fine pointer only. Each phone is a
-   link to its live screen (2026-10-20), and the hover bubble says so. */
-@media (hover: hover) {
-  html:not([data-motion="reduced"]) .phones .ph-shot:hover .ph-phone { rotate: -2deg; translate: 0 -6px; }
+.phones .ph-screen-link { position: absolute; inset: 0; display: block; }
+.phones .ph-screen-link:focus-visible { outline: 3px solid var(--ring); outline-offset: -6px; border-radius: inherit; }
+/* Crossfade: every capture is stacked; the selected one fades in and settles up from 3%. */
+.phones .ph-img {
+  position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; translate: 0 3%;
+  transition: opacity .45s var(--ease-out), translate .6s var(--ease-out);
 }
+.phones .ph-img[data-on="true"] { opacity: 1; translate: 0 0; z-index: 1; }
 
-/* Reduced motion: phones.client.tsx stops driving the variables, but the first (server shaped)
-   render has already written them inline and motion leaves them there, so this pins the still
-   stagger above over them (measured 2026-10-20: the inline values stay under reduced motion). */
-html[data-motion="reduced"] .phones .ph-cols { --rise: 0% !important; --sink: 15% !important; }
+/* Live: Blueberry laid out at --ph-live-w (360px) and scaled to the screen (--ph-scale from
+   phones.client.tsx), hidden until its first load so the screenshot holds the place. */
+.phones .ph-frame {
+  position: absolute; top: 0; left: 0; z-index: 2;
+  width: var(--ph-live-w); height: calc(100% / var(--ph-scale, .7));
+  border: 0; background: #fff;
+  transform: scale(var(--ph-scale, .7)); transform-origin: 0 0;
+  opacity: 0; transition: opacity .35s var(--ease-out);
+}
+.phones .ph-screen[data-live="ready"] .ph-frame { opacity: 1; }
+.phones .ph-screen[data-live="loading"] .ph-img,
+.phones .ph-screen[data-live="failed"] .ph-img { filter: saturate(.4) brightness(.8); }
+.phones .ph-veil {
+  position: absolute; inset: 0; z-index: 3; display: grid; place-content: center; justify-items: center; gap: 10px;
+  padding: 12px; text-align: center;
+}
+.phones .ph-veil-note {
+  display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px;
+  border: var(--tile-line); border-radius: var(--r-pill); background: var(--card); color: var(--ink);
+  font: 600 14px/1.2 var(--body);
+}
+.phones .ph-veil-link {
+  display: inline-flex; align-items: center; gap: 6px; min-height: var(--hit); padding: 0 16px;
+  border: var(--tile-line); border-radius: var(--r-pill); background: var(--card); color: var(--berry);
+  font: 700 14px/1 var(--body); text-decoration: underline; text-underline-offset: 3px;
+}
+.phones .ph-veil-link:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; }
+.phones .ph-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--berry); animation: ph-pulse 1s var(--ease-ui) infinite alternate; }
+@keyframes ph-pulse { from { opacity: .25; scale: .7; } to { opacity: 1; scale: 1; } }
+
+/* "Try it live": a secondary pill stuck over the phone's chin and lip, like the old caption tag. */
+.phones .ph-live-row { position: relative; z-index: 1; display: grid; justify-items: center; gap: 8px; margin-top: -18px; }
+.phones .ph-try { --pill-pad: 18px; font: 600 14px/1 var(--mono); }
+.phones .ph-try:focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+.phones .ph-newtab {
+  display: inline-flex; align-items: center; gap: 3px; min-height: var(--hit);
+  color: var(--berry); font: 700 14px/1 var(--body); text-decoration: underline; text-underline-offset: 3px;
+}
+.phones .ph-newtab:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; border-radius: 6px; }
+
+/* Reduced motion: features swap with no rise or fade, and the loading dot holds still. */
+html[data-motion="reduced"] .phones :is(.ph-img, .ph-frame, .ph-phone, .ph-tab, .ph-tab::before) { transition: none; }
+html[data-motion="reduced"] .phones .ph-dot { animation: none; }

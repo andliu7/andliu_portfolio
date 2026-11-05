@@ -1,20 +1,17 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useEffect, useRef } from 'react';
 import './contour-bg.css';
 
-// Topographic contour lines behind the berry-deep sections only (Where to?, Projects, Impact,
-// Experience), after landonorris.com: thin lines a little lighter than the ground. Andrew asked
-// for it on "that dark blue background" only; he turned down lines on the hero, so no other
-// ground gets them. They hold still (Andrew 2026-10-07: the lines should not move at all).
-//
-// Mounted once in app/page.tsx. It finds every berry-deep section, appends one empty host <div>
-// to each, and renders a canvas into each host, so no section file has to know about it.
+// Topographic contour lines, after landonorris.com: thin lines a little lighter than the ground.
+// One canvas for the whole page, drawn once (Andrew 2026-10-07: the lines never animate). It lives
+// in the one backdrop (components/site/ground.tsx), in a pane that sticks to the screen from the
+// foot of the hero down (he turned down lines on the hero), so it is one continuous sheet under
+// every dark section. The pane drifts it up slowly as the page scrolls (a CSS scroll timeline in
+// ground.css), so the terrain moves at its own speed under the content, never redrawn.
 //
 // How the frame is drawn: a grid of gradient-noise values (one every CELL px) is sampled over the
 // canvas (one screen tall, sticky), and marching squares traces where the field crosses each of
-// LEVELS heights; every crossing is a short line segment, all stroked in one go. The section's
-// page offset seeds the sample position, so each section shows its own patch of the map.
+// LEVELS heights; every crossing is a short line segment, all stroked in one go.
 // Cost: one draw on mount, and again only when the canvas resizes or the device pixel ratio
 // changes. No animation loop and no pointer or scroll work, so reduced motion needs no branch.
 // The backing store is the device pixel ratio snapped to whole pixels, so 1px lines stay sharp
@@ -27,39 +24,16 @@ const DETAIL = 0.12; // weight of a second, finer noise layer; kept low so it be
 const TURN = 0.6; // radians the noise is rotated, so its square lattice does not lean the shapes along the axes
 const COS = Math.cos(TURN), SIN = Math.sin(TURN);
 
-export default function ContourBg() {
-  const [hosts, setHosts] = useState<HTMLElement[]>([]);
-
-  useEffect(() => {
-    const made = Array.from(document.querySelectorAll<HTMLElement>('main section[id][data-ground="berry-deep"]')).map(section => {
-      const host = document.createElement('div');
-      host.className = 'contour-host';
-      host.setAttribute('aria-hidden', 'true');
-      section.appendChild(host);
-      return host;
-    });
-    // Setting state from an effect is fine here: the hosts only exist after the page is in the DOM.
-    setHosts(made);
-    return () => made.forEach(h => h.remove());
-  }, []);
-
-  // createPortal renders a React child into a DOM node outside this component's own place in the
-  // tree (here, the host inside each section), while React still owns and cleans it up.
-  return <>{hosts.map((host, i) => createPortal(<ContourCanvas />, host, String(i)))}</>;
-}
-
-function ContourCanvas() {
+export function ContourCanvas() {
   const ref = useRef<HTMLCanvasElement>(null);
 
   // One effect draws the still frame and redraws it on resize; its cleanup removes the observers.
   useEffect(() => {
     const canvas = ref.current;
-    const host = canvas?.parentElement;
-    const section = host?.parentElement;
     const ctx = canvas?.getContext('2d');
-    if (!canvas || !host || !section || !ctx) return;
+    if (!canvas || !ctx) return;
 
-    const colour = getComputedStyle(host).getPropertyValue('--contour').trim() || 'rgba(201,209,244,.16)';
+    const colour = getComputedStyle(canvas).getPropertyValue('--contour').trim() || 'rgba(201,209,244,.16)';
 
     const draw = () => {
       const dpr = window.devicePixelRatio || 1;
@@ -70,9 +44,8 @@ function ContourCanvas() {
       ctx.setTransform(canvas.width / w, 0, 0, canvas.height / h, 0, 0);
       const cols = Math.ceil(w / CELL) + 1, rows = Math.ceil(h / CELL) + 1;
       const field = new Float32Array(cols * rows);
-      // One field for every section (Andrew 2026-10-29: the lines "doesn't animate together"): each canvas
-      // is a screen tall and sticky, so sampling from the same origin makes them one continuous sheet that
-      // holds still while the page scrolls over it, with no seam where one section meets the next.
+      // One field, one canvas (Andrew 2026-10-29: the lines "doesn't animate together"), so there is no
+      // seam where one section meets the next.
       const top = 0;
       for (let j = 0; j < rows; j++) {
         const y = j * CELL;

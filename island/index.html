@@ -89,7 +89,9 @@ body:has(#start:not([hidden])) .hud{opacity:0;pointer-events:none}
 #start .pill.read{background:#ffd98a}
 #start .keys{font:500 12px/1.6 Fredoka,system-ui,sans-serif;color:var(--ink-2);text-align:center}
 #start .keys kbd{font:600 11px/1 Fredoka,system-ui,sans-serif;background:var(--ink);color:var(--paper);border-radius:6px;padding:3px 6px}
-#start .loading{font:500 12px/1 Fredoka,system-ui,sans-serif;color:var(--ink-2)}
+#start .loading{font:600 15px/1 Fredoka,system-ui,sans-serif;color:var(--ink-2)}
+#start .loading::after{content:'';display:inline-block;width:1.2em;text-align:left;animation:dots 1.2s steps(4) infinite}
+@keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}}
 @media (pointer:coarse){#start .keys{display:none}}
 #game-root{position:fixed;inset:0;z-index:8;pointer-events:none}
 #game-root > *{pointer-events:auto}
@@ -104,13 +106,10 @@ body:has(#start:not([hidden])) .hud{opacity:0;pointer-events:none}
     <p class="tag">My résumé, as a small island you can drive around. CS and pre-dental at Maryland, co-founder of Blueberry.</p>
   </div>
   <div class="dock">
-    <div class="row">
-      <button class="pill dark" id="go-sound" type="button">Start with sound</button>
-      <button class="pill" id="go-quiet" type="button">Start quietly</button>
-      <a class="pill read" href="https://andliu.dev/andrew-liu-resume.pdf" target="_blank" rel="noreferrer">Just read the résumé</a>
-    </div>
+    <!-- A loading screen, not a menu (Andrew 2026-11-04): no "Start with sound", the game starts
+         quietly on its own once the island is built (main.js); sound is the HUD's Sound button. -->
     <div class="keys"><kbd>WASD</kbd> or arrows to drive · <kbd>Shift</kbd> boost · <kbd>Space</kbd> brake · <kbd>F</kbd> interact · <kbd>H</kbd> honk · <kbd>M</kbd> map · <kbd>R</kbd> reset</div>
-    <div class="loading" id="loading">Building the island…</div>
+    <div class="loading" id="loading">Building the island</div>
   </div>
 </div>
 

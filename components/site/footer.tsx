@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { SocialButton } from './social-button';
 import { usePathname } from 'next/navigation';
-import { Briefcase, ChartColumn, Check, Coffee, Copy, FileText, LayoutGrid, Mail } from 'lucide-react';
+import { Check, Copy, FileText } from 'lucide-react';
 import { A11Y, CONTACT, FOOTER_SKIP, MICROCOPY, RESUME } from '@/lib/site';
 import { getLenis } from '@/app/smooth';
 import { Flame } from './flame/flame';
@@ -26,8 +26,8 @@ import './footer.css';
 //             below): taller than the window, its top would stay under the page for good. Without
 //             JavaScript, or under reduced motion, it is simply in flow at the end of the page
 //
-// Every word comes from FOOTER_SKIP in lib/site.ts. On About the in-page targets live on the home
-// page, so "#work" becomes "/#work" there.
+// Every word comes from FOOTER_SKIP in lib/site.ts. The "In a hurry? Skip ahead" grid left on
+// 2026-11-03 (the menu already does that); what stays is the mark, the line and the icons.
 //
 // The AND/LIU mark is the header's, behaviour and all: the same paper card, the letters roll on
 // hover and focus (.flip-head; a tap or Enter via the director), the card dances (.ft-mark-host
@@ -35,11 +35,8 @@ import './footer.css';
 // far enough to uncover the footer (`revealed` below); stuck under the page it is on screen to
 // the browser, but nobody can see it.
 
-const ICONS = { work: LayoutGrid, impact: ChartColumn, experience: Briefcase, resume: FileText, email: Mail, fun: Coffee } as const;
-
 export function SiteFooter() {
   const home = usePathname() === '/';
-  const at = (href: string) => (!home && href.startsWith('#') ? `/${href}` : href);
   const seamRef = useRef<HTMLDivElement>(null);
   const footRef = useRef<HTMLElement>(null);
   const [fits, setFits] = useState(false);
@@ -125,25 +122,6 @@ export function SiteFooter() {
       </div>
       <footer ref={footRef} className="ft" data-fits={fits ? '' : undefined} onFocus={reveal}>
         <div className="ft-in">
-          <div className="ft-skip">
-            <h2 className="ft-h">{FOOTER_SKIP.heading}</h2>
-            <p className="ft-note">{FOOTER_SKIP.note}</p>
-            <nav aria-label={FOOTER_SKIP.label}>
-              <ul className="ft-links">
-                {FOOTER_SKIP.links.map(link => {
-                  const Icon = ICONS[link.icon];
-                  return (
-                    <li key={link.href}>
-                      <a href={at(link.href)} {...(link.external ? { target: '_blank', rel: 'noreferrer' } : {})}>
-                        <span className="ft-ico"><Icon size={18} aria-hidden="true" /></span>
-                        <span><span className="ft-q">{link.q}</span><span className="ft-a">{link.a}</span></span>
-                      </a>
-                    </li>
-                  );
-                })}
-              </ul>
-            </nav>
-          </div>
           <div className="ft-brand">
             <Flame className="ft-mark-host" height={20} spread={9} radius={12} paused={!revealed}>
               <a className="ft-mark flip-head" href={home ? '#top' : '/'} aria-label={A11Y.home}><Mark /></a>

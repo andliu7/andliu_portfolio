@@ -65,7 +65,7 @@ const EXTRAS: Record<string, Extra> = {
   blueberry: { images: ['bbHome'], links: [{ label: MICROCOPY.visitBlueberry, href: BLUEBERRY.live, external: true }] },
   // Used once lib/site.ts has the 'blueberryRole' rule (reported as a needs patch); harmless before.
   blueberryRole: { images: ['bbLesson'], links: [{ label: MICROCOPY.visitBlueberry, href: BLUEBERRY.live, external: true }] },
-  projects: { images: ['bbHome', 'mechanismTrainer', 'focusFamilyGuide'], links: [jump('work'), jump('impact')] },
+  projects: { images: ['bbHome', 'mechanismTrainer', 'focusFamilyGuide'], links: [jump('work')] },
   experience: { images: [], links: [jump('experience')] },
   education: { images: [], links: [about] },
   dental: { images: [], links: [about] },

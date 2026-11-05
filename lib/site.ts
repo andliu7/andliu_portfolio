@@ -225,12 +225,13 @@ export const BB_HEAD = {
 // (Andrew 2026-10-20: "only include the most important screens ... the periodic table and the
 // reactions search. also the schedule and the learn tab. and then maybe a couple more"): those
 // four, plus the game's Pathway (its front door: the mascot and the trail of lessons) and a
-// Lesson (the chemistry itself, a drawn molecule and a real question). Listed row by row for
-// three columns (phones.css), so the two site pages sit in the middle column and the four game
-// screens mirror each other on the sides. `where` and `title` make each phone's caption tag;
-// `alt` says what the screen shows.
-const PHONE_SHOT = (file: string, where: 'Site' | 'Game', title: string, alt: string) =>
-  ({ src: `/work/blueberry-phone/${file}.webp`, w: 780, h: 1688, where, title, alt });
+// Lesson (the chemistry itself, a drawn molecule and a real question). Listed in the order of
+// the feature list (phones.client.tsx), the two site pages second and fifth. `where` and `title` make each
+// phone's caption tag; `alt` says what the screen shows; `why` is the one line under the
+// feature's name in the list (rebuild 2026-11-03: "a feature list driving ONE phone"), why
+// Andrew built it, drawn only from what the screen and the copy above show (needs sign-off).
+const PHONE_SHOT = (file: string, where: 'Site' | 'Game', title: string, alt: string, why: string) =>
+  ({ src: `/work/blueberry-phone/${file}.webp`, w: 780, h: 1688, where, title, alt, why });
 export const PHONES = {
   eyebrow: '01 / UI and UX I shipped', // [Andrew 2026-10-29] the screens show real, deployed work (needs sign-off)
   headline: 'DESIGNED,\nBUILT, *live.*', // [Andrew 2026-10-29] (needs sign-off)
@@ -240,14 +241,26 @@ export const PHONES = {
   // plain "coming soon" text. Nothing on Blueberry links to it (Andrew 2026-10-21; built in
   // grignard-app-source 88387f1, live once that repo's next push to main lands).
   href: `${BB_LIVE}#/phone`, // [Andrew 2026-10-21]
-  label: 'Blueberry screens on a phone', // [Andrew 2026-10-20] the gallery's accessible name (needs sign-off)
+  label: 'Blueberry screens on a phone', // [Andrew 2026-10-20] the feature list's accessible name (needs sign-off)
+  // "Try it live" (rebuild 2026-11-03): the phone swaps its screenshot for the real site in an
+  // iframe. Not #/phone above: to anyone signed out (every visitor) that page, and every game
+  // route, is the sign-in card (checked 2026-11-03). The Learn page is public and has the tab
+  // bar, so it is the live app a visitor can actually use. github.io sends no X-Frame-Options or
+  // frame-ancestors, so it frames.
+  live: `${BB_LIVE}#/learn`, // [Andrew 2026-11-03] (needs sign-off)
+  tryLive: 'Try it live', // [Andrew 2026-11-03] (needs sign-off)
+  backToShots: 'Back to screenshots', // (needs sign-off)
+  loadingLive: 'Loading Blueberry', // (needs sign-off)
+  liveFailed: 'It would not load in here.', // (needs sign-off)
+  newTab: 'Open in a new tab', // (needs sign-off)
+  liveTitle: 'Blueberry, running live', // the iframe's accessible name (needs sign-off)
   shots: [
-    PHONE_SHOT('game-periodic', 'Game', 'Periodic table', "Blueberry's periodic table on a phone: colour-coded elements by category with carbon selected, showing atomic number 6, mass 12.011 and its electron configuration"), // [S] live game tool (needs sign-off)
-    PHONE_SHOT('site-learn', 'Site', 'Learn', "Blueberry's Learn page on a phone: a banner showing butadiene and HBr giving 1-bromobut-2-ene, then Up next, Dienes and Diels-Alder, with a Start Unit 1 button"), // [S] live #/learn (needs sign-off)
-    PHONE_SHOT('game-search', 'Game', 'Reaction search', "Blueberry's reaction search on a phone: a search box and tappable chips for reagents like PCC and NaBH4, starting groups like ketone, and named reactions like Grignard and Diels-Alder"), // [S] live game tool (needs sign-off)
-    PHONE_SHOT('game-path', 'Game', 'Pathway', "Blueberry's learning game on a phone: the Organic Chemistry II Unit 1 pathway, a glowing start node beside the berry mascot and a trail of locked lessons down to a trophy"), // [S] live #/app/pathway (needs sign-off)
-    PHONE_SHOT('site-schedule', 'Site', 'Schedule', "Blueberry's Schedule page on a phone: an October 2026 month calendar for CHEM241 exams and deadlines, with today's date circled"), // [S] live #/schedule (needs sign-off)
-    PHONE_SHOT('game-lesson', 'Game', 'Lesson', 'A Blueberry game lesson on a phone: the berry asks which of two products wins, with a drawing of 1-bromobut-2-ene and four answer choices about kinetic and thermodynamic control'), // [S] live #/app/lesson/u1-kvt (needs sign-off)
+    PHONE_SHOT('game-periodic', 'Game', 'Periodic table', "Blueberry's periodic table on a phone: colour-coded elements by category with carbon selected, showing atomic number 6, mass 12.011 and its electron configuration", 'So nobody has to leave a lesson to look up an element. Tap one and its number, mass and electron configuration are right there.'), // [S] live game tool (needs sign-off)
+    PHONE_SHOT('site-learn', 'Site', 'Learn', "Blueberry's Learn page on a phone: a banner showing butadiene and HBr giving 1-bromobut-2-ene, then Up next, Dienes and Diels-Alder, with a Start Unit 1 button", "One place to start. The next unit's notes sit up top with the reaction they cover drawn out, and one button begins them."), // [S] live #/learn (needs sign-off)
+    PHONE_SHOT('game-search', 'Game', 'Reaction search', "Blueberry's reaction search on a phone: a search box and tappable chips for reagents like PCC and NaBH4, starting groups like ketone, and named reactions like Grignard and Diels-Alder", 'Find a reaction by what you already have: a reagent like PCC, a starting group like a ketone, or a name like Grignard.'), // [S] live game tool (needs sign-off)
+    PHONE_SHOT('game-path', 'Game', 'Pathway', "Blueberry's learning game on a phone: the Organic Chemistry II Unit 1 pathway, a glowing start node beside the berry mascot and a trail of locked lessons down to a trophy", "The game's front door. Lessons run in order down one trail, so you always know what comes next."), // [S] live #/app/pathway (needs sign-off)
+    PHONE_SHOT('site-schedule', 'Site', 'Schedule', "Blueberry's Schedule page on a phone: an October 2026 month calendar for CHEM241 exams and deadlines, with today's date circled", 'Exams and deadlines for CHEM241 on one calendar, so the next test is never a surprise.'), // [S] live #/schedule (needs sign-off)
+    PHONE_SHOT('game-lesson', 'Game', 'Lesson', 'A Blueberry game lesson on a phone: the berry asks which of two products wins, with a drawing of 1-bromobut-2-ene and four answer choices about kinetic and thermodynamic control', 'Chemistry you answer, not just read: a real question with the molecule drawn, like which product wins and why.'), // [S] live #/app/lesson/u1-kvt (needs sign-off)
   ],
 } as const;
 export type PhoneShot = (typeof PHONES.shots)[number];
@@ -397,7 +410,7 @@ export const STUDIO_FLOW = {
   spec: { name: 'The spec', line: "Interactive chemistry figures for a professor's online textbook" }, // [Z studio][R]
 } as const;
 
-// `dot` names the Stage token for the role's 10px tile dot (decoration only, plan 4.7).
+// `dot` names the role's .ink-card fill on the timeline (globals.css .ink-card[data-fill]), also its pin. Ink text on every one.
 export const JOBS = [
   {
     id: 'blueberry', when: 'Aug 2026 to now', role: titleCase(BLUEBERRY_TITLE), org: 'Blueberry', place: 'College Park, MD', // [P][R] role derived from BLUEBERRY_TITLE
@@ -412,7 +425,7 @@ export const JOBS = [
   {
     id: 'educationone', when: 'Jun 2025 to Jan 2026', role: 'Math and Sciences Tutor', org: 'Education One', place: 'Darnestown, MD', // [P][R]
     line: 'Taught anatomy, biology, genetics, chemistry and physics. SAT students improved 100 to 300 points on data-driven practice. Automated grading, duplicate checks and billing alerts in Apps Script: about 30% better margins and $2,000+ in losses caught.', // [P][R]
-    dot: 'tile-apricot', sort: 202506.5,
+    dot: 'sky', sort: 202506.5, // sky, not apricot: an apricot card vanished into the dusk sky behind the timeline (2026-11-03)
   },
   {
     id: 'kcm', when: 'Jan 2025 to now', role: 'Focus Family Leader', org: 'Kharis Campus Ministry (KCM)', place: 'College Park, MD', // [P][R]
@@ -432,43 +445,54 @@ export const JOB_LOGOS: Record<string, { src: string; label: string; href?: stri
 };
 
 export const WORK_HEAD = {
-  eyebrow: '03 / Selected work', // [P] renumbered after On a phone took Contents row 02 (2026-10-20)
+  eyebrow: '02 / Selected work', // [P] renumbered after On a phone took Contents row 02 (2026-10-20)
   headline: 'SELECTED *work.*', // [P]
   label: 'Selected work', // [P] as headline, plain, for the Projects section's visually hidden heading
-  hint: 'hover!', // [UI] Andrew 2026-10-06 ("add a little 'hover!' icon"); the sticker over the project fan (needs sign-off)
-  hintTouch: 'tap!', // [UI] the same sticker on touch screens, which have no hover (needs sign-off)
-  // The fan of projects 01 to 06 and its Carousel / Desk switch (Andrew 2026-10-07: "maybe 2
-  // through 6 can be a carousel too"; "toggle a view so that you can turn off the carousel";
-  // 2026-10-20: "include 01 the blueberry as a card in the carousel fan")
+  // The fan of projects 01 to 06 (Andrew 2026-10-07: "maybe 2 through 6 can be a carousel too";
+  // 2026-10-20: "include 01 the blueberry as a card in the carousel fan"). The text index above it
+  // and the Carousel / Desk switch were cut 2026-11-03 ("one day, scrolled": say each thing once).
   fan: 'Projects, one card each', // [UI] the carousel's accessible name (needs sign-off)
+  stack: (title: string) => `What ${title} is built with`, // [UI] a caption's chip list, read by screen readers (needs sign-off)
+  stats: (title: string) => `${title} in numbers`, // [UI] a caption's number list, read by screen readers (needs sign-off)
+  // The one number across every repo, beside the eyebrow: IMPACT 'all' folded in 2026-11-03.
+  skyline: { title: 'Commits, day by day', unit: 'commits', caption: 'Every commit I authored, in every repo, one block per day.' }, // [D] the old Impact chart's own words, back under the fan (Andrew 2026-11-03) (needs sign-off)
+  allRepos: { commits: (since: string) => `commits across all my repos since ${since}`, streak: 'days, my longest streak' }, // [D] the numbers come from lib/impact.json all.days and all.streak (needs sign-off)
   bbChapter: 'Read the chapter', // [Andrew 2026-10-20] the Blueberry card's caption link to #blueberry (needs sign-off)
   bbPhones: 'See it on a phone', // [Andrew 2026-10-20] the Blueberry card's caption link to #phones (needs sign-off)
   prev: 'Previous project', // [UI] arrow button name (needs sign-off)
   next: 'Next project', // [UI] arrow button name (needs sign-off)
   slideOf: (n: number, total: number) => `${n} of ${total}`, // [UI] each card's position, read with its title
-  views: 'Layout', // [UI] the switch's group name (needs sign-off)
-  carousel: 'Carousel', // [UI] Andrew's word for the fan (needs sign-off)
-  desk: 'Desk', // [UI] the floating tabs view (needs sign-off)
 } as const;
 
-// The projects as floating windows (components/site/work/floating-tabs.tsx), Andrew 2026-10-07:
-// "floating tabs you can drag around and minimize and change the size of ... it shows you text
-// saying click to flip with a curved arrow". All [UI], needs sign-off.
-export const FLOAT_TABS = {
-  label: 'Projects as windows', // [UI] the desk's accessible name (needs sign-off)
-  flip: 'click to flip', // [UI] Andrew 2026-10-07, his words; the hover hint (needs sign-off)
-  tidy: 'Tidy up', // [UI] re-stacks the windows in a grid (needs sign-off)
-  keys: 'Enter flips the window. Arrow keys move it. Shift and an arrow key resizes it.', // [UI] keyboard help, read by screen readers (needs sign-off)
-  dock: 'Minimized windows', // [UI] the dock row's accessible name (needs sign-off)
-  minimize: (title: string) => `Minimize ${title}`, // [UI] title bar button (needs sign-off)
-  reset: (title: string) => `Put ${title} back where it started`, // [UI] title bar button: first size, place and side (needs sign-off)
-  open: (title: string) => `Open ${title}`, // [UI] a dock chip (needs sign-off)
-} as const;
+// Measured impact, folded into the project captions (2026-11-03; the Impact section is gone).
+// Each entry names a series in lib/impact.json (and IMPACT below) and the word printed after its
+// number; `point` picks one bar of a per-item series. The number is always read from the JSON,
+// never written here, and a series the JSON lacks is simply not shown.
+export const WORK_STATS: Record<string, readonly { series: string; point?: string; label: string }[]> = {
+  blueberry: [
+    { series: 'bb.commitsTotal', label: 'commits' }, // [D]
+    { series: 'bb.content', point: 'questions', label: 'questions' }, // [D]
+    { series: 'bb.tests', label: 'test files' }, // [D]
+    { series: 'bb.packages', label: 'packages' }, // [D]
+  ],
+  brain: [
+    { series: 'brain.memories', label: 'memories' }, // [D]
+    { series: 'brain.rows', label: 'indexed rows' }, // [D]
+    { series: 'brain.files', label: 'files indexed' }, // [D]
+    { series: 'brain.wiki', label: 'wiki pages' }, // [D]
+  ],
+  guide: [
+    { series: 'ff.commitsTotal', label: 'commits' }, // [D]
+    { series: 'ff.words', label: 'words' }, // [D]
+    { series: 'ff.sections', label: 'sections' }, // [D]
+  ],
+};
 
 export const EXPERIENCE_HEAD = {
-  eyebrow: '05 / Along the way', // [P] renumbered after Impact, then after On a phone (2026-10-20)
+  eyebrow: '03 / Along the way', // [P] renumbered after Impact, then after On a phone (2026-10-20)
   headline: 'ALONG THE *way*', // [P]
   hint: 'Scroll to move through time', // [UI] from the approved timeline design (needs sign-off)
+  now: 'Today', // [UI] the last pin on the timeline, where the résumé pill hangs (2026-11-03, needs sign-off)
 } as const;
 
 // ---------------------------------------------------------------------------------------------
@@ -613,7 +637,7 @@ export const EVENING = {
 // ---------------------------------------------------------------------------------------------
 
 export const CONTACT = {
-  eyebrow: '06 / Contact me', // renumbered after On a phone (2026-10-20); [UI] Andrew 2026-10-07 ("make it more of a contact me"; was 'Say hi') (needs sign-off)
+  eyebrow: '04 / Contact me', // renumbered after On a phone (2026-10-20); [UI] Andrew 2026-10-07 ("make it more of a contact me"; was 'Say hi') (needs sign-off)
   headline: "LET'S COMPARE *notes.*", // [P]
   invite: 'Hiring, building something, or stuck on a mechanism? Email me.', // [UI] Andrew 2026-10-07, the one-line invitation under the headline (needs sign-off)
   down: 'Résumé below', // [UI] the bobbing cue under the card (Andrew 2026-10-12, needs sign-off)
@@ -639,7 +663,7 @@ export const CONTACT = {
 // (worker/CONTACT.md); without it, Send opens the visitor's mail app with the message filled in.
 // All new [UI] wording: NEEDS ANDREW'S SIGN-OFF. Limits match worker/contact.js.
 export const CONTACT_FORM = {
-  heading: 'Or write it here', // [UI] (needs sign-off)
+  heading: 'Or write me a letter', // [UI] 2026-11-03, the form is a letter card now (needs sign-off)
   name: 'Your name (optional)', // [Andrew 2026-10-20] name is optional now (needs sign-off)
   contact: 'Best way to reach you (optional)', // [Andrew 2026-10-31] requested, not required (needs sign-off)
   contactPlaceholder: 'Email, phone or LinkedIn', // [Andrew 2026-10-31] (needs sign-off)
@@ -697,7 +721,6 @@ export const FOOTER_SKIP = {
   label: 'Skip ahead', // [UI] the link list's accessible name (needs sign-off)
   links: [
     { q: 'I want to see what he built.', a: 'Projects', href: '#work', icon: 'work', external: false }, // [UI] (needs sign-off)
-    { q: 'Show me the numbers.', a: 'Impact', href: '#impact', icon: 'impact', external: false }, // [UI] (needs sign-off)
     { q: 'Where has he worked?', a: 'Timeline', href: '#experience', icon: 'experience', external: false }, // [UI] (needs sign-off)
     { q: 'I need his résumé.', a: 'Résumé (PDF)', href: RESUME, icon: 'resume', external: true }, // [UI][P] (needs sign-off)
     { q: 'How do I reach him?', a: 'Email', href: `mailto:${EMAIL}`, icon: 'email', external: false }, // [UI][P] (needs sign-off)
@@ -745,7 +768,7 @@ export const RESUME_PREVIEW = {
 
 // The island, project 07: the page's finale (app/sections/island.tsx).
 export const ISLAND = {
-  eyebrow: '07 / The island', // [P] renumbered after On a phone (2026-10-20); numbered as its Contents row, like every other eyebrow (calibrate F1, 2026-10-08)
+  eyebrow: '05 / The island', // [P] renumbered after On a phone (2026-10-20); numbered as its Contents row, like every other eyebrow (calibrate F1, 2026-10-08)
   titleTop: 'THE RÉSUMÉ', // [inventory 2.4]
   titleBottom: 'ISLAND', // [inventory 2.4]
   tagline: 'Every place on the island is one line of the résumé.', // [Z]
@@ -753,6 +776,7 @@ export const ISLAND = {
   gameTitle: "Andrew Liu's island, a small driving game", // [P] app/island-section.tsx iframe title
   src: '/island/index.html', // [plan 4.10]
   poster: 'islandS3', // IMAGES key
+  door: 'The résumé island: open the game', // [UI] the 3D island's link name, since the canvas has no text (needs sign-off)
   confirm: { question: 'Head to the island?', enter: 'Enter the island', stay: 'Stay here' }, // [UI] the poster's confirm popup, Andrew 2026-10-06 (needs sign-off)
 } as const;
 
@@ -892,8 +916,7 @@ export const CONTENTS = {
     // to a platform", numbered 01 as the start of the list).
     { href: '#phones', title: 'Blueberry on a phone', sub: PHONES.shots.slice(0, 4).map(s => s.title).join(', '), meta: `${PHONES.shots.length} screens` }, // [Andrew 2026-10-20] sub and meta derived from PHONES (needs sign-off)
     { href: '#work', title: FOOTER_SKIP.links[0].a, sub: PROJECTS.slice(0, 4).map(p => p.title).join(', '), meta: `${PROJECTS.length} projects` }, // [UI] derived from FOOTER_SKIP and PROJECTS
-    { href: '#impact', title: FOOTER_SKIP.links[1].a, sub: IMPACT.map(p => p.title).join(', '), meta: `${IMPACT.length} panels` }, // [UI] derived from FOOTER_SKIP and IMPACT
-    { href: '#experience', title: FOOTER_SKIP.links[2].a, sub: [UMD.schoolShort, ...JOBS.map(j => j.org)].join(', '), meta: `${JOBS.length} roles` }, // [UI] derived from FOOTER_SKIP and JOBS; UMD added [Andrew 2026-10-20] first, as it now opens the timeline (needs sign-off)
+    { href: '#experience', title: FOOTER_SKIP.links[1].a, sub: [UMD.schoolShort, ...JOBS.map(j => j.org)].join(', '), meta: `${JOBS.length} roles` }, // [UI] derived from FOOTER_SKIP and JOBS; UMD added [Andrew 2026-10-20] first, as it now opens the timeline (needs sign-off)
     { href: '#contact', title: 'Say hi', sub: CONTACT.links.map(l => l.label).join(', '), meta: null }, // [P][Z contact] as CONTACT.eyebrow, links derived
     // One row for the island finale, which also holds Off the clock's evening reel (2026-10-07).
     { href: '#island', title: ISLAND.previewTitle, sub: ISLAND.tagline, meta: OFF_CLOCK.title }, // [plan 4.10][Z] tagline; meta [P][Z yard] as OFF_CLOCK.title
@@ -918,7 +941,7 @@ export const GROUND_LUMINANCE: Record<Ground, number> = {
 // The island finale is the last section; Off the clock's evening lives inside it (2026-10-07).
 export const SECTIONS = [
   { id: 'top', ground: 'paper', gradient: 'paper-apricot', label: null, budget: 1.0, kind: 'cap', project: false, pinned: false, texture: true },
-  { id: 'contents', ground: 'berry-deep', gradient: null, label: null, budget: 1.0, kind: 'cap', project: false, pinned: false, texture: true },
+  { id: 'contents', ground: 'paper', gradient: null, label: null, budget: 1.0, kind: 'cap', project: false, pinned: false, texture: true },
   // Budget measured 2026-10-21 at 1440x900: 1,561px (the head, the line of prints alone on its
   // band, the stack strip), down from 1,732px with FOR REAL! and the website carousel; 1,355px at
   // 375x812, down from 1,968px; 1,370px at 1366x768 (1.78), down from 1,529 (1.99, over the cap)
@@ -928,23 +951,22 @@ export const SECTIONS = [
   // [Andrew 2026-10-21] "I want to make it smaller so it's easier to scroll through"
   { id: 'blueberry', ground: 'berry-deep', gradient: 'berry-deep', label: 'Blueberry', budget: 1.8, kind: 'cap', project: true, pinned: true, texture: true },
   // Blueberry on a phone (app/sections/phones.tsx), the chapter's screens at phone size [Andrew 2026-10-20].
-  // Budget measured 2026-10-21 at 1440x900: 2,664px (six phones in two rows of three columns,
-  // 398px wide, each as tall as the screen allows, plus the centre column's sink room, 20% of a
-  // phone since the stagger grew; it was 2,594 at 12%).
-  // [Andrew 2026-10-21] "the phones should have at least two rows (three columns)" (needs sign-off)
-  { id: 'phones', ground: 'berry-deep', gradient: null, label: 'Blueberry', budget: 3.0, kind: 'cap', project: true, pinned: false, texture: true },
-  { id: 'work', ground: 'berry-deep', gradient: null, label: 'Projects', budget: 4.2, kind: 'floor', project: true, pinned: false, texture: true },
-  { id: 'impact', ground: 'berry-deep', gradient: null, label: 'Impact', budget: 1.3, kind: 'cap', project: true, pinned: false, texture: true },
-  { id: 'experience', ground: 'berry-deep', gradient: null, label: 'Experience', budget: 1.0, kind: 'cap', project: false, pinned: false, texture: true },
+  // Budget measured 2026-11-03 at 1440x900: 1,193px (the six phones fanned as one hand of cards,
+  // 246px each, under a two-line head; it was 3,128 with the pinned head and two drifting columns).
+  // [rethink 2026-11-03] "one day, scrolled": cut to about one and a half screens (needs sign-off)
+  { id: 'phones', ground: 'paper', gradient: null, label: 'Blueberry', budget: 1.6, kind: 'cap', project: true, pinned: false, texture: true },
+  { id: 'work', ground: 'apricot', gradient: null, label: 'Projects', budget: 4.2, kind: 'floor', project: true, pinned: false, texture: true },
+  // Impact (#impact) was folded into the project captions 2026-11-03 (WORK_STATS); its section is gone.
+  { id: 'experience', ground: 'apricot', gradient: null, label: 'Experience', budget: 1.0, kind: 'cap', project: false, pinned: false, texture: true },
   // Contact sits between the two horizontal strips (Andrew 2026-10-07: "two horizontal scrolls is a lot").
-  { id: 'contact', ground: 'berry-deep', gradient: null, label: 'Contact', budget: 0.75, kind: 'cap', project: false, pinned: false, texture: true },
+  { id: 'contact', ground: 'berry', gradient: null, label: 'Contact', budget: 0.75, kind: 'cap', project: false, pinned: false, texture: true },
   // The résumé preview, between Contact and the island (2026-10-07); no Contents row on purpose.
-  { id: 'resume', ground: 'ink', gradient: null, label: 'Résumé', budget: 0.9, kind: 'cap', project: false, pinned: false, texture: true },
+  { id: 'resume', ground: 'berry-deep', gradient: null, label: 'Résumé', budget: 0.9, kind: 'cap', project: false, pinned: false, texture: true },
   { id: 'island', ground: 'ink', gradient: null, label: 'Island', budget: 1.3, kind: 'cap', project: false, pinned: false, texture: true },
 ] as const satisfies readonly {
   id: string; ground: Ground; gradient: Gradient | null; label: string | null;
   budget: number; kind: 'cap' | 'floor'; project: boolean; pinned: boolean; texture: boolean;
-}[]; // [plan 1.1, 1.2] labels are the section names [P] plus Impact (A8)
+}[]; // [plan 1.1, 1.2] labels are the section names [P]
 
 export type SectionId = (typeof SECTIONS)[number]['id'];
 
@@ -952,8 +974,8 @@ export const BUDGET = {
   viewport: 900, // px, the 1440x900 reference viewport
   maxTotal: 18.0, // viewports
   plannedTotal: 17.75,
-  projectIds: ['blueberry', 'phones', 'work', 'impact'],
-  projectShareMin: 0.48, // (#blueberry + #phones + #work + #impact) over the total
+  projectIds: ['blueberry', 'phones', 'work'],
+  projectShareMin: 0.48, // (#blueberry + #phones + #work) over the total
   experienceMaxPx: 900, // #experience at 1440x900 (plan A10)
   maxPins: 3,
   sections: Object.fromEntries(SECTIONS.map(s => [s.id, { budget: s.budget, kind: s.kind }])) as Record<SectionId, { budget: number; kind: 'cap' | 'floor' }>,
@@ -1118,11 +1140,10 @@ export const MICROCOPY = {
   domain: 'andliu.dev', // [P] public/CNAME; shown in caps beside the header's centre berry on hover (needs sign-off)
 } as const;
 
-// Where each MICROCOPY.nav label goes. Far targets go through jumpTo (components/site/jump.ts);
+// Where each MICROCOPY.nav label goes (nav[1], Impact, has no row since its section folded into Projects, 2026-11-03). Far targets go through jumpTo (components/site/jump.ts);
 // #island goes through the island piece's own delegate.
 export const NAV = [
   { label: MICROCOPY.nav[0], href: '#work' },
-  { label: MICROCOPY.nav[1], href: '#impact' },
   { label: MICROCOPY.nav[2], href: '#experience' },
   { label: MICROCOPY.nav[3], href: '/about' },
   { label: MICROCOPY.nav[4], href: '#contact' },

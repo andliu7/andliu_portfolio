@@ -98,6 +98,42 @@ function ding(audio: AudioContext) {
   window.setTimeout(() => void audio.close(), 900);
 }
 
+// The stamp and the postmark in the letter's top corner (2026-11-03). Drawn here, decoration only:
+// a perforated apricot stamp with a blueberry on it, and a College Park postmark whose wavy
+// cancellation lines run off to the left.
+const PERFS = Array.from({ length: 7 }, (_, i) => i);
+function Stationery() {
+  return (
+    <svg className="cf-stamp" viewBox="0 0 150 96" aria-hidden="true" focusable="false">
+      <defs>
+        <mask id="cf-perf">
+          <rect x="70" y="6" width="68" height="82" fill="#fff" />
+          {PERFS.map(i => <circle key={`t${i}`} cx={74 + i * 10} cy="6" r="3.2" fill="#000" />)}
+          {PERFS.map(i => <circle key={`b${i}`} cx={74 + i * 10} cy="88" r="3.2" fill="#000" />)}
+          {PERFS.slice(0, 7).map(i => <circle key={`l${i}`} cx="70" cy={11 + i * 12} r="3.2" fill="#000" />)}
+          {PERFS.slice(0, 7).map(i => <circle key={`r${i}`} cx="138" cy={11 + i * 12} r="3.2" fill="#000" />)}
+        </mask>
+      </defs>
+      <g className="cf-stamp-paper" mask="url(#cf-perf)">
+        <rect x="70" y="6" width="68" height="82" />
+      </g>
+      <rect className="cf-stamp-frame" x="78" y="14" width="52" height="66" rx="3" />
+      {/* The blueberry: a round fruit with its five-point crown. */}
+      <circle className="cf-stamp-berry" cx="104" cy="50" r="15" />
+      <path className="cf-stamp-crown" d="M98 37.5 l3 3.4 3-4.4 3 4.4 3-3.4" />
+      <circle className="cf-stamp-shine" cx="98.5" cy="45" r="3" />
+      <g className="cf-postmark">
+        <circle cx="60" cy="50" r="34" />
+        {/* level text, not bent round the ring, so it reads horizontally (Andrew 2026-11-04) */}
+        <text x="60" y="44" textAnchor="middle">COLLEGE PARK</text>
+        <text x="60" y="54" textAnchor="middle">MD</text>
+        <text x="60" y="64" textAnchor="middle">ANDLIU.DEV</text>
+        <path d="M2 40 q6 -5 12 0 t12 0 t12 0 M2 50 q6 -5 12 0 t12 0 t12 0 M2 60 q6 -5 12 0 t12 0 t12 0" />
+      </g>
+    </svg>
+  );
+}
+
 export function ContactForm() {
   const reduced = useReducedMotion();
   const [values, setValues] = useState<Values>(EMPTY);
@@ -294,7 +330,9 @@ export function ContactForm() {
   });
 
   return (
-    <form className="cf" onSubmit={onSubmit} noValidate aria-labelledby="cf-title" aria-busy={sending} data-suspended={suspended ? '' : undefined}>
+    // The form is the letter itself: the site's one card (.ink-card in app/globals.css), in paper.
+    <form className="cf ink-card" data-fill="paper" onSubmit={onSubmit} noValidate aria-labelledby="cf-title" aria-busy={sending} data-suspended={suspended ? '' : undefined}>
+      <Stationery />
       <div className="cf-head">
         <h3 className="cf-title" id="cf-title">{CONTACT_FORM.heading}</h3>
         {/* The live region stays mounted so a screen reader hears the chip when it appears. */}
@@ -308,7 +346,7 @@ export function ContactForm() {
         {status.kind === 'sent' ? (
           <motion.div
             key="sent" className="cf-sent"
-            initial={{ opacity: 0, scale: .7, rotate: -6 }} animate={{ opacity: 1, scale: 1, rotate: -2 }} exit={{ opacity: 0, scale: .9 }}
+            initial={{ opacity: 0, scale: .7 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: .9 }}
             transition={transition}
           >
             {/* The green check draws itself once the card has popped in. */}

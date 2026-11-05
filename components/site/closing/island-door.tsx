@@ -4,16 +4,17 @@ import { ISLAND, MICROCOPY } from '@/lib/site';
 import { getLenis } from '@/app/smooth';
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
-// The island poster as a door (Andrew 2026-10-06), in the island finale (app/sections/island.tsx):
+// The island (the 3D stage, or the poster) as a door (Andrew 2026-10-06), in the island finale (app/sections/island.tsx):
 // clicking it asks before leaving the page. It is a real link to the game (ISLAND.src), so without
 // JavaScript it simply goes there; with JavaScript the click opens a confirm popup instead. The popup
 // is components/ui/alert-dialog.tsx (Base UI): it traps focus inside, closes on Esc, and hands focus
 // back to the poster on close. Styles are in app/sections/island.css.
 // Pattern: a controlled dialog. `open` lives here in state; the dialog reports Esc through
 // onOpenChange and the "stay" button sets it false, so this component stays the one source of truth.
-// Pattern: children as a slot. The caller passes the <img> in as children, so this stays a door.
+// Pattern: children as a slot. The caller passes the stage in as children, so this stays a door;
+// `label` names the link when the children are pictures with no text (the 3D island).
 
-export function IslandDoor({ children }: { children: ReactNode }) {
+export function IslandDoor({ children, label }: { children: ReactNode; label?: string }) {
   const [open, setOpen] = useState(false);
 
   // Hold the smooth scroller still while the popup is up, so the wheel cannot move the page under it.
@@ -26,7 +27,7 @@ export function IslandDoor({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <a className="il-door" href={ISLAND.src} onClick={event => { event.preventDefault(); setOpen(true); }}>
+      <a className="il-door" href={ISLAND.src} aria-label={label} onClick={event => { event.preventDefault(); setOpen(true); }}>
         {children}
       </a>
       <AlertDialog open={open} onOpenChange={setOpen}>

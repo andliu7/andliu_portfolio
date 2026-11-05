@@ -1,277 +1,243 @@
 /* Experience, the timeline (app/sections/experience.tsx). Every selector starts at .experience.
-   Two layouts, as in Off the clock:
+   Rebuilt 2026-11-03: one ink line through time, a pin and its dates above the line for each stop,
+   and each role hanging from its pin on a short string as an .ink-card (globals.css).
+   Two layouts:
      pinned  .experience[data-pin] (components/site/use-horizontal-scroll.ts, full motion, phones
-             too since 2026-10-11): a sticky 100svh frame; the head row stays, the cards slide left.
-     stack   reduced motion, before JavaScript: the head, then the cards one per row. */
+             too): a sticky 100svh frame; the head stays, the strip slides left along the line.
+     stack   reduced motion, before JavaScript: the same stops down a vertical line.
 
-.experience { background-color:var(--ground); color:var(--on); }
-.experience .xp-frame { display:grid; grid-template-columns:minmax(0,1fr); gap:28px; align-content:start; padding:calc(var(--header-h) + 12px) var(--gutter) 64px; }
+   The section sits at dusk on the one shared sky (rose to salmon, about #f2a98a to #e79a86), with
+   data-ground apricot, so --on is ink. Measured (WCAG 2.x):
+     ink #12142b on #f2a98a  9.3:1    ink on #e79a86  8.1:1     the heading, the dates
+     berry-deep #1d2654 on #e79a86   6.4:1                     the eyebrow (--on-2)
+     paper #f4efe6 on the ink year chip  15.8:1
+     ink on the card fills: berry-soft 12.0, sky 13.3, tile-teal 5.5, tile-gold 7.5:1
 
-/* ---------- The head row: eyebrow and heading left, hint and progress right ---------- */
-.experience .xp-head { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:16px 32px; min-width:0; }
-.experience .xp-head-text { display:grid; gap:12px; min-width:0; }
-/* Back toward its giant size (Andrew, 2026-10-06: "along the way should be bigger"); the 80px cap came
-   from fitting the pinned strip's head row, which still fits one screen at this size at 1440x900. */
+   Geometry, in custom properties on the section so both layouts and the media queries share them:
+     --gap     between stops (the line runs on through it; the year chip sits in it)
+     --pin-x   the pin's distance from its stop's left edge
+     --rail-y  the line's height inside a stop's head zone, --rail-h that zone's height; the card
+               hangs below it, so its string is --rail-h minus --rail-y long. */
+
+.experience { --gap:104px; --pin-x:56px; --rail-y:44px; --rail-h:72px; --line:3px; color:var(--on); }
+.experience .xp-frame { position:relative; isolation:isolate; display:grid; grid-template-columns:minmax(0,1fr); gap:28px; align-content:start; padding:calc(var(--header-h) + 12px) var(--gutter) 64px; }
+
+/* ---------- The head ---------- */
+.experience .xp-head { display:grid; gap:12px; justify-items:start; min-width:0; }
 .experience .xp-title { font-size:clamp(56px,8.4vw,136px); line-height:.9; }
-.experience .xp-meter { display:none; justify-items:end; gap:10px; }
-.experience .xp-hint { font:500 12px/1.5 var(--mono); letter-spacing:.12em; text-transform:uppercase; color:var(--on-2); }
-.experience .xp-progress { display:none; }
 
-/* ---------- The progress bar (2026-10-25, Andrew: "make the progress bar clearer and stuck at the
-   bottom of the screen"): while the strip pins, one full-width bar along the frame's foot, the
-   gutter in from each side, 10px tall with an outlined track, apricot filling it as the strip
-   runs (--p from use-horizontal-scroll.ts), and Skip section at its right end. It was a 220 x 6px
-   bar at the head row's right. The frame's bottom pad below makes room for the row. ---------- */
-.experience[data-pin] .xp-progress { display:flex; align-items:center; gap:14px; position:absolute; z-index:3; left:var(--gutter); right:var(--gutter); bottom:max(12px,env(safe-area-inset-bottom)); }
-.experience .xp-progress .xp-bar { flex:1 1 auto; }
-/* The foot now belongs to the progress row, so the clock and briefcase stickers (corner-stickers.css,
-   bottom corners on a wide screen) step aside while the strip pins: they sat on the bar's start and
-   behind Skip. They stay in the stacked layout (reduced motion). */
-@media (min-width:700px) { .experience[data-pin] .cs-experience :is(.cs-1,.cs-2) { display:none; } }
-.experience .xp-bar { display:block; height:10px; border-radius:5px; background:color-mix(in srgb,var(--berry-soft) 18%,transparent); box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--on) 50%,transparent); overflow:hidden; }
-.experience .xp-bar-fill { display:block; height:100%; border-radius:5px; background:var(--apricot); transform-origin:0 50%; transform:scaleX(var(--p,0)); }
-
-/* ---------- The track and its cards (both layouts) ---------- */
-.experience .xp-track { position:relative; margin:0; padding:0; list-style:none; display:grid; gap:24px; }
-.experience .xp-item { position:relative; display:grid; gap:14px; align-content:start; }
-.experience .xp-tick { display:none; }
-
-/* A card: a pastel of the role's tile colour, 1px ink outline, the Duolingo ink ledge.
-   Ink text on all four pastels is 9:1 or better; the chip's pastel text on ink is 9:1 or better.
-   Sized to read from a step back (Andrew, 2026-10-06: "make it larger so it's easy to read"):
-   20px body, a 28 to 34px role, an 18px org, a 14px date chip, in every layout. */
-.experience .xp-card { --fill:color-mix(in srgb,var(--dot) 50%,var(--card));
-  display:grid; gap:4px; justify-items:start; align-content:start; padding:26px 30px 30px; border:1px solid var(--ink); border-radius:var(--r-card);
-  background:var(--fill); color:var(--ink); box-shadow:0 6px 0 var(--ink); }
-/* The island's people (experience.tsx CROWD) standing on the card's top edge at the right, feet
-   just over the outline. They bob a little, each out of step; still under reduced motion. */
-.experience .xp-card { position:relative; }
-.experience .xp-crowd { position:absolute; right:26px; bottom:calc(100% - 3px); display:flex; align-items:flex-end; gap:2px; pointer-events:none; }
-.experience .xp-crowd .cl-person { width:auto; height:clamp(60px,5.2vw,84px); transform-origin:50% 100%; }
+/* ---------- A stop's head zone: the line, the pin, the dates, the year, the people ---------- */
+.experience .xp-track { position:relative; margin:0; padding:0; list-style:none; display:grid; gap:28px; }
+.experience .xp-item { position:relative; display:grid; align-content:start; min-width:0; }
+.experience .xp-stop { position:relative; }
+.experience .xp-pin { position:absolute; z-index:1; width:24px; height:24px; box-sizing:border-box; border:3px solid var(--ink); border-radius:50%; background:var(--card); box-shadow:0 3px 0 var(--ink); }
+.experience .xp-pin[data-fill="berry-soft"] { background:var(--berry-soft); }
+.experience .xp-pin[data-fill="sky"] { background:var(--sky); }
+.experience .xp-pin[data-fill="tile-teal"] { background:var(--tile-teal); }
+.experience .xp-pin[data-fill="tile-gold"] { background:var(--tile-gold); }
+.experience .xp-pin[data-fill="umd-gold"] { background:var(--umd-gold); }
+/* Today: a bigger pin, the berry inside a paper ring, the line's end */
+.experience .xp-pin-now { width:34px; height:34px; border-width:3px; background:radial-gradient(circle, var(--berry) 0 6px, var(--card) 7px); }
+.experience .xp-date { font:700 14px/1.2 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--on); white-space:nowrap; font-variant-ligatures:none; }
+/* Where the year turns: an ink chip on the line */
+.experience .xp-year { display:inline-flex; align-items:center; height:30px; padding:0 12px; border-radius:var(--r-pill); background:var(--ink); color:var(--paper); font:700 15px/1 var(--mono); letter-spacing:.06em; font-variant-ligatures:none; white-space:nowrap; }
+.experience .xp-crowd { display:flex; align-items:flex-end; gap:2px; pointer-events:none; }
+.experience .xp-crowd .cl-person { width:auto; height:clamp(52px,4.6vw,72px); transform-origin:50% 100%; }
 @keyframes xp-bob { from { transform:translateY(0) scaleY(1); } to { transform:translateY(-3px) scaleY(1.03); } }
 html:not([data-motion="reduced"]) .experience .xp-crowd .cl-person { animation:xp-bob 1.6s ease-in-out infinite alternate; }
 html:not([data-motion="reduced"]) .experience .xp-crowd .cl-person:nth-child(2n) { animation-delay:-.8s; }
 html:not([data-motion="reduced"]) .experience .xp-crowd .cl-person:nth-child(3n) { animation-duration:1.9s; }
-/* The KCM logo, a sticker on the card's top right, a little turned */
-.experience .xp-card-logo { position:absolute; z-index:2; top:14px; right:16px; width:clamp(56px,5vw,76px); aspect-ratio:1; rotate:6deg; }
-.experience .xp-card-logo img { display:block; width:100%; height:100%; border-radius:50%; border:3px solid #fff; box-sizing:border-box; background:#fff; box-shadow:0 0 0 1px rgb(0 0 0 / .4), 0 3px 6px rgb(0 0 0 / .3); }
-.experience .xp-card-logo:is(:hover,:focus-visible) { scale:1.06; }
-.experience .xp-card-logo:focus-visible { outline:3px solid var(--ring); outline-offset:3px; border-radius:50%; }
-.experience .xp-when { display:inline-flex; align-items:center; min-height:32px; padding:0 14px; margin-bottom:12px; border-radius:var(--r-pill); background:var(--ink); color:var(--fill);
-  font:700 14px/1 var(--mono); letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; font-variant-ligatures:none; }
-.experience .xp-role { margin:0; font:700 clamp(28px,2.4vw,34px)/1.06 var(--display); letter-spacing:-.01em; text-transform:uppercase; font-variant-ligatures:none; }
-.experience .xp-org { margin:2px 0 12px; font:700 18px/1.3 var(--body); }
-.experience .xp-gloss { margin:0 0 12px; max-inline-size:60ch; font:italic 600 16px/1.45 var(--body); }
-.experience .xp-line { max-inline-size:60ch; font:500 clamp(19px,1.4vw,20px)/1.55 var(--body); text-wrap:pretty; }
-.experience .xp-end { align-content:center; justify-items:start; }
 
-/* The stack on a wide screen (reduced motion): two cards a row, so no card runs 1300px wide. */
-@media (min-width:900px) {
-  .experience:not([data-pin]) .xp-track { grid-template-columns:repeat(2,minmax(0,1fr)); }
+/* ---------- The card: an .ink-card hanging from its pin ----------
+   .ink-card gives the 1.5px ink outline, the 28px radius, the 8px ink lip, the fill (data-fill)
+   and the tilt (--tilt). The tilt comes from the stop (--hang, experience.tsx), because .ink-card
+   resets --tilt on itself. */
+.experience .xp-card { --tilt:var(--hang,0deg); display:grid; gap:4px; justify-items:start; align-content:start; padding:26px 30px 30px; }
+.experience .xp-card-logo { position:absolute; z-index:2; top:16px; right:18px; width:clamp(52px,4.4vw,68px); aspect-ratio:1; rotate:6deg; }
+.experience .xp-card-logo img { display:block; width:100%; height:100%; border-radius:50%; border:3px solid #fff; box-sizing:border-box; background:#fff; box-shadow:0 0 0 1.5px var(--ink); }
+.experience .xp-card-logo:is(:hover,:focus-visible) { scale:1.06; }
+.experience .xp-card-logo:focus-visible { outline:3px solid var(--ink); outline-offset:3px; border-radius:50%; }
+.experience .xp-role { margin:0; max-inline-size:calc(100% - 72px); font:700 clamp(26px,2.2vw,32px)/1.04 var(--display); letter-spacing:-.01em; text-transform:uppercase; font-variant-ligatures:none; text-wrap:balance; }
+.experience .xp-org { margin:4px 0 12px; font:700 18px/1.3 var(--body); }
+.experience .xp-gloss { margin:0 0 12px; max-inline-size:60ch; font:italic 600 16px/1.45 var(--body); }
+.experience .xp-line { margin:0; max-inline-size:60ch; font:500 clamp(17px,1.3vw,19px)/1.55 var(--body); text-wrap:pretty; }
+/* The lip deepens on hover, as on the project fan cards (projects.css .wk-fc) */
+@media (hover:hover) {
+  html:not([data-motion="reduced"]) .experience .xp-item:not(.xp-umd) .xp-card { transition:box-shadow .5s var(--ease-elastic), translate .5s var(--ease-elastic); }
+  html:not([data-motion="reduced"]) .experience .xp-item:not(.xp-umd) .xp-card:hover { translate:0 -4px; box-shadow:0 12px 0 var(--ink); }
 }
+
+/* ---------- The end: today, and the résumé pill hanging from it ---------- */
+.experience .xp-end { justify-items:start; }
+.experience .xp-resume { --pill-pad:clamp(28px,3vw,48px); min-height:clamp(68px,6.4vw,88px); font-size:clamp(20px,2vw,28px); gap:.5em; }
+.experience .xp-resume > :is(.pill-face,.pill-back) { min-height:clamp(68px,6.4vw,88px); }
+.experience .xp-resume svg { width:1.1em; height:1.1em; }
+
+/* ---------- Stack: a vertical timeline (reduced motion, before JavaScript) ----------
+   The line runs down the left at --pin-v; each stop's pin sits on it with its dates beside, the
+   card to the right. */
+.experience:not([data-pin]) { --pin-v:15px; --indent:48px; }
+.experience:not([data-pin]) .xp-track { max-width:780px; gap:36px; }
+.experience:not([data-pin]) .xp-track::before { content:''; position:absolute; top:14px; bottom:calc(clamp(68px,6.4vw,88px) + 32px); left:calc(var(--pin-v) - var(--line) / 2); width:var(--line); border-radius:2px; background:var(--ink); }
+.experience:not([data-pin]) .xp-stop { display:flex; align-items:center; gap:12px; min-height:36px; margin-bottom:14px; padding-left:var(--indent); }
+.experience:not([data-pin]) .xp-pin { left:var(--pin-v); top:50%; translate:-50% -50%; }
+.experience:not([data-pin]) .xp-crowd { margin-left:auto; }
+.experience:not([data-pin]) .xp-crowd .cl-person { height:44px; }
+.experience:not([data-pin]) :is(.xp-card,.xp-resume) { margin-left:var(--indent); }
+.experience:not([data-pin]) .xp-umd-edge { position:absolute; top:-30px; right:20px; width:72px; }
 
 /* ---------- Pinned ---------- */
 .experience[data-pin] { height:calc(100svh + var(--run,0px)); }
-.experience[data-pin] .xp-frame { touch-action:pan-y; position:sticky; top:0; height:100svh; overflow:clip; align-content:center; padding:calc(var(--header-h) + 8px) 0 72px; gap:clamp(24px,5svh,48px); } /* 72px, was 32: room for the progress row */
+.experience[data-pin] .xp-frame { touch-action:pan-y; position:sticky; top:0; height:100svh; overflow:clip; align-content:center; padding:calc(var(--header-h) + 8px) 0 76px; gap:clamp(16px,4svh,40px); }
 .experience[data-pin] .xp-head { padding-inline:var(--gutter); }
-.experience[data-pin] .xp-meter { display:grid; }
-.experience[data-pin] .xp-track { display:flex; align-items:stretch; gap:32px; width:max-content; justify-self:start; padding-inline:var(--gutter); will-change:transform; }
-/* Over the corner stickers' layer (z-index 1), so on a short screen a card reaching the frame's
-   foot covers the clock and the briefcase rather than wearing them (2026-10-20). */
-.experience[data-pin] .xp-track { z-index:2; }
-/* The dated track: one line along the whole strip at the ticks' height, a dot and a month above
-   each card. */
-.experience[data-pin] .xp-track::before { content:''; position:absolute; left:0; right:0; top:30px; height:2px; background:color-mix(in srgb,var(--berry-soft) 45%,transparent); }
-/* Cards 560 to 620px wide: four of them run well past the screen, so the strip really travels
-   (about 1.4k px at 1440 wide; the runway is that overflow, one px down per px left). */
-.experience[data-pin] .xp-item { width:clamp(560px,42vw,620px); flex:none; grid-template-rows:auto 1fr; }
-.experience[data-pin] .xp-tick { display:block; position:relative; padding:0 0 24px 2px; font:500 13px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--on-2); font-variant-ligatures:none; }
-.experience[data-pin] .xp-tick::after { content:''; position:absolute; left:0; top:24px; width:14px; height:14px; border:2px solid var(--ink); border-radius:50%; background:var(--dot); }
-.experience[data-pin] .xp-end { width:auto; grid-template-rows:none; align-content:center; padding:44px 24px 0 8px; }
-/* The résumé pill at the end of the strip, much bigger (Andrew, 2026-10-12: "make the CTA resume
-   button on the horizontal scroll much bigger"): it is where the timeline ends, so it reads as
-   the next step rather than a footnote. The arrow scales with the type. */
-.experience .xp-resume { --pill-pad:clamp(32px,3.4vw,52px); min-height:clamp(72px,7vw,96px); font-size:clamp(20px,2.2vw,30px); gap:.5em; }
-.experience .xp-resume > :is(.pill-face,.pill-back) { min-height:clamp(72px,7vw,96px); }
-.experience .xp-resume svg { width:1.1em; height:1.1em; }
-/* Fitting the frame's height (Andrew 2026-10-20: "I was trying to scroll down to see the full card
-   and it scrolled right", "the page does get cut off at the end at least on my computer"). The
-   runway's sideways math was right: measured at 1440x900, 1920x1080 and 1366x768, with and without
-   a classic scrollbar, the résumé pill ends a full gutter inside the frame. What cut him off was
-   the frame's height: it is exactly one screen (100svh) with overflow:clip, and the heading was
-   sized by width alone, so on a wide but short window (a laptop screen less the browser's bars,
-   1366x650 measured 15px over at the foot and 47px under the header at the top) the cards ran
-   off the bottom, and scrolling down to see them slid the strip instead. So the heading is capped
-   by height too, and on short screens the cards widen a little and their type steps down, so the
-   tallest card fits the frame with room under its ledge. */
-.experience[data-pin] .xp-title { font-size:clamp(48px,min(8.4vw,14svh),136px); }
+.experience[data-pin] .xp-title { font-size:clamp(48px,min(8.4vw,13svh),136px); }
+.experience[data-pin] .xp-track { z-index:2; display:flex; align-items:flex-start; gap:var(--gap); width:max-content; justify-self:start; padding-inline:var(--gutter); will-change:transform; }
+.experience[data-pin] .xp-item { flex:none; width:clamp(480px,38vw,560px); grid-template-rows:var(--rail-h) auto; }
+.experience[data-pin] .xp-stop { height:var(--rail-h); }
+/* The line: each stop draws its stretch and the gap after it, so it reads as one line; it comes in
+   from the frame's left edge and stops at today's pin. */
+.experience[data-pin] .xp-stop::before { content:''; position:absolute; top:calc(var(--rail-y) - var(--line) / 2); left:0; right:calc(-1 * var(--gap)); height:var(--line); background:var(--ink); }
+.experience[data-pin] .xp-item:first-child .xp-stop::before { left:calc(-1 * var(--gutter)); }
+.experience[data-pin] .xp-end .xp-stop::before { right:auto; width:var(--pin-x); }
+.experience[data-pin] .xp-pin { left:var(--pin-x); top:var(--rail-y); translate:-50% -50%; }
+.experience[data-pin] .xp-date { position:absolute; left:calc(var(--pin-x) - 12px); bottom:calc(var(--rail-h) - var(--rail-y) + 18px); }
+.experience[data-pin] .xp-year { position:absolute; left:calc(var(--gap) / -2); top:var(--rail-y); translate:-50% -50%; }
+/* The people stand on the line over the stop's right side */
+.experience[data-pin] .xp-crowd { position:absolute; right:28px; bottom:calc(var(--rail-h) - var(--rail-y) + var(--line) / 2); }
+/* The string: from the pin down to the card, drawn by the card so it swings with it (the card
+   turns about the pin, transform-origin). */
+.experience[data-pin] .xp-card { transform-origin:var(--pin-x) calc(var(--rail-y) - var(--rail-h)); }
+.experience[data-pin] .xp-card::before { content:''; position:absolute; left:calc(var(--pin-x) - 1.5px - var(--line) / 2); bottom:100%; width:var(--line); height:calc(var(--rail-h) - var(--rail-y) + 1.5px); background:var(--ink); }
+/* Today's string, and the pill hanging from it with the pin a little inside its left end */
+.experience[data-pin] .xp-end { width:auto; }
+.experience[data-pin] .xp-end .xp-stop::after { content:''; position:absolute; left:calc(var(--pin-x) - var(--line) / 2); top:var(--rail-y); height:calc(var(--rail-h) - var(--rail-y)); width:var(--line); background:var(--ink); }
+.experience[data-pin] .xp-resume { margin-left:calc(var(--pin-x) - 44px); }
+
+/* ---------- The foot: the progress bar, the key hint and Skip section ---------- */
+.experience .xp-progress { display:flex; align-items:center; gap:16px; position:absolute; z-index:3; left:var(--gutter); right:var(--gutter); bottom:max(14px,env(safe-area-inset-bottom)); }
+.experience .xp-bar { display:block; flex:1 1 auto; height:10px; border-radius:5px; background:color-mix(in srgb,var(--card) 45%,transparent); box-shadow:inset 0 0 0 1.5px var(--ink); overflow:hidden; }
+.experience .xp-bar-fill { display:block; height:100%; border-radius:5px; background:var(--ink); transform-origin:0 50%; transform:scaleX(var(--p,0)); }
+.experience .xp-esc { color:var(--on); }
+.experience .xp-skip { --pill-pad:14px; flex:none; font-size:12px; }
+
+/* ---------- Short screens: the tallest card fits the frame ---------- */
 @media (min-width:700px) and (max-height:860px) {
-  .experience[data-pin] .xp-frame { gap:clamp(16px,3svh,28px); padding-bottom:64px; }
-  .experience[data-pin] .xp-item:not(.xp-end) { width:clamp(600px,46vw,660px); }
+  .experience { --rail-y:38px; --rail-h:62px; }
+  .experience[data-pin] .xp-frame { gap:clamp(12px,2.6svh,24px); padding-bottom:68px; }
+  .experience[data-pin] .xp-item:not(.xp-end) { width:clamp(540px,42vw,620px); }
   .experience[data-pin] .xp-card { padding:20px 26px 22px; }
-  .experience[data-pin] .xp-when { margin-bottom:8px; }
-  .experience[data-pin] .xp-role { font-size:clamp(24px,2vw,28px); }
+  .experience[data-pin] .xp-role { font-size:clamp(22px,1.9vw,27px); }
   .experience[data-pin] .xp-org { margin-bottom:8px; font-size:16px; }
   .experience[data-pin] .xp-gloss { margin-bottom:8px; font-size:14px; }
-  .experience[data-pin] .xp-line { font-size:17px; line-height:1.5; }
-  .experience[data-pin] .xp-crowd .cl-person { height:56px; }
+  .experience[data-pin] .xp-line { font-size:16px; line-height:1.5; }
+  .experience[data-pin] .xp-crowd .cl-person { height:50px; }
 }
 @media (min-width:700px) and (max-height:700px) {
-  .experience[data-pin] .xp-line { font-size:16px; line-height:1.45; }
-  .experience[data-pin] .xp-tick { padding-bottom:20px; }
-  .experience[data-pin] .xp-tick::after { top:20px; }
-  .experience[data-pin] .xp-track::before { top:26px; }
+  .experience[data-pin] .xp-line { font-size:15px; line-height:1.45; }
+  .experience[data-pin] .xp-head .eyebrow { display:none; }
 }
 
-/* Pinned on a phone (Andrew 2026-10-11 kept the pin on phones; 2026-10-20 the cards ran past the
-   screen's foot at 320x640 and 375x812): the heading on one line, the meter and the auto-play
-   button on one row beside each other, a card nearly the screen's width (the next one still peeks
-   in) and type a step smaller, so the head row and the tallest card fit one 100svh frame. Esc
-   means nothing without a keyboard, so its hint goes, and so does the scroll hint (the bar stays). */
+/* ---------- Phones (pinned): one card nearly the screen's width, the next peeking in ---------- */
 @media (max-width:699px) {
-  .experience[data-pin] .xp-frame { gap:14px; padding-bottom:64px; }
-  .experience[data-pin] .xp-head { gap:10px; }
-  .experience[data-pin] .xp-head-text { gap:6px; }
+  .experience { --gap:64px; --pin-x:30px; --rail-y:34px; --rail-h:54px; }
+  .experience[data-pin] .xp-frame { gap:12px; padding-bottom:66px; }
+  .experience[data-pin] .xp-head { gap:6px; }
   .experience[data-pin] .xp-title { font-size:min(10.4vw,44px); white-space:nowrap; }
-  .experience[data-pin] .xp-side { display:flex; align-items:center; gap:12px; width:100%; }
-  .experience[data-pin] .xp-meter { flex:1 1 auto; justify-items:stretch; }
-  .experience[data-pin] .xp-hint { display:none; }
-  .experience[data-pin] .xp-ctl .sa-btn { margin-bottom:4px; padding:0 12px; font-size:11px; }
-  .experience[data-pin] .xp-skip { --pill-pad:10px; font-size:11px; }
-  .experience[data-pin] .sa-esc { display:none; }
-  /* The clock sticker (corner-stickers.css) sits at the top right on a phone, which the one-line
-     heading and the button row now reach, so it steps aside while the strip pins. */
-  .experience[data-pin] .cs-experience .cs-1 { display:none; }
-  .experience[data-pin] .xp-track { gap:14px; }
-  .experience[data-pin] .xp-item { width:88vw; }
-  .experience[data-pin] .xp-tick { padding-bottom:20px; font-size:12px; }
-  .experience[data-pin] .xp-tick::after { top:20px; }
-  .experience[data-pin] .xp-track::before { top:26px; }
-  .experience[data-pin] .xp-card { padding:16px 18px 18px; }
-  .experience[data-pin] .xp-when { min-height:28px; padding:0 12px; margin-bottom:8px; font-size:12px; }
-  .experience[data-pin] .xp-role { font-size:20px; }
-  .experience[data-pin] .xp-org { font-size:14px; margin-bottom:6px; }
-  .experience[data-pin] .xp-gloss { font-size:13px; line-height:1.4; margin-bottom:6px; }
-  .experience[data-pin] .xp-line { font-size:15px; line-height:1.45; }
+  .experience[data-pin] .xp-item:not(.xp-end) { width:84vw; }
+  .experience[data-pin] .xp-date { font-size:12px; bottom:calc(var(--rail-h) - var(--rail-y) + 16px); }
+  .experience .xp-year { height:26px; padding:0 9px; font-size:13px; }
+  .experience .xp-pin { width:20px; height:20px; }
+  .experience .xp-pin-now { width:28px; height:28px; }
   .experience[data-pin] .xp-crowd { right:16px; }
-  .experience[data-pin] .xp-crowd .cl-person { height:48px; }
+  .experience[data-pin] .xp-crowd .cl-person { height:42px; }
+  .experience .xp-card { padding:16px 18px 18px; box-shadow:0 6px 0 var(--ink); }
+  .experience .xp-card-logo { top:12px; right:12px; width:44px; }
+  .experience .xp-role { font-size:20px; max-inline-size:calc(100% - 52px); }
+  .experience .xp-org { font-size:14px; margin-bottom:6px; }
+  .experience .xp-gloss { font-size:13px; line-height:1.4; margin-bottom:6px; }
+  .experience .xp-line { font-size:15px; line-height:1.45; }
+  .experience[data-pin] .xp-resume { margin-left:calc(var(--pin-x) - 36px); }
+  .experience .xp-progress { gap:10px; }
+  .experience .xp-skip { --pill-pad:10px; font-size:11px; }
+  .experience .xp-esc { display:none; }
 }
-/* A short phone (320x640 measured): the eyebrow goes (the heading under it says the same), and
-   the reading type steps down once more. */
+/* A short phone (320x640): the eyebrow goes and the reading type steps down once more */
 @media (max-width:699px) and (max-height:700px) {
-  /* the progress row lower and its bar slimmer, so the tallest card clears it at 320x640 */
-  .experience[data-pin] .xp-frame { gap:8px; padding-bottom:64px; }
-  .experience[data-pin] .xp-card { padding:12px 16px 14px; }
-  .experience[data-pin] .xp-when { min-height:24px; margin-bottom:6px; }
-  .experience[data-pin] .xp-role { font-size:18px; }
-  .experience[data-pin] .xp-progress { bottom:max(8px,env(safe-area-inset-bottom)); }
-  .experience[data-pin] .xp-bar { height:6px; }
-  .experience[data-pin] .xp-tick { padding-bottom:14px; }
-  .experience[data-pin] .xp-tick::after { top:14px; }
-  .experience[data-pin] .xp-track::before { top:20px; }
+  .experience[data-pin] .xp-frame { gap:8px; }
   .experience[data-pin] .xp-head .eyebrow { display:none; }
-  .experience[data-pin] .xp-line { font-size:12.5px; line-height:1.35; }
+  .experience[data-pin] .xp-card { padding:12px 16px 14px; }
+  .experience[data-pin] .xp-role { font-size:18px; }
+  .experience[data-pin] .xp-line { font-size:13px; line-height:1.35; }
   .experience[data-pin] .xp-gloss { font-size:11.5px; }
+  .experience[data-pin] .xp-bar { height:6px; }
 }
 
 /* ---------- Motion ----------
-   Each card rises from below the frame to meet the timeline bar as it comes into the strip (.hs-in
-   from the hook), settling on the spring from a slight turn; its dot pops (Andrew 2026-10-20:
-   "emphasizing the cards coming up to meet the horizontal bar as you scroll"). The hook also holds
-   .hs-in back until the section has come most of the way up the screen, so the first stops rise
-   as the strip arrives. Cards are never hidden: only their offset and tilt change, and only with
-   full motion (the frame's overflow:clip cuts a low card off at the foot until it rises).
-   Gentler since 2026-10-25 (Andrew: "a little less on the pop factor when the timeline cards slide
-   up. like start closer"): from 24 to 48px below and a 1deg turn on a plain ease-out, was 140 to
-   320px and 4deg on the overshooting spring, which left only the heading on screen at first. */
-html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-card { transform:translateY(clamp(24px,5svh,48px)) rotate(1deg); transition:transform .7s var(--ease-out); }
-html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-item.hs-in .xp-card { transform:none; }
-html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-tick::after { scale:0; transition:scale .6s var(--ease-spring) .15s; }
-html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-item.hs-in .xp-tick::after { scale:1; }
-html[data-motion="reduced"] .experience :is(.xp-card,.xp-tick) { transition:none; }
+   As a stop comes into the strip (.hs-in from the hook), its pin pops and its card swings down
+   from a steeper angle to its resting tilt on the spring, turning about the pin like a tag on a
+   nail. Cards are never hidden, only turned. Still under reduced motion (nothing pins there). */
+html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-card { rotate:calc(var(--tilt) * -3); transition:rotate .9s var(--ease-spring); }
+html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-item.hs-in .xp-card { rotate:var(--tilt); }
+html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-pin { scale:0; transition:scale .5s var(--ease-spring) .1s; }
+html.js:not([data-motion="reduced"]) .experience[data-pin] .xp-item.hs-in .xp-pin { scale:1; }
+@keyframes xp-now { 0% { box-shadow:0 3px 0 var(--ink), 0 0 0 0 color-mix(in srgb,var(--berry) 55%,transparent); } 100% { box-shadow:0 3px 0 var(--ink), 0 0 0 14px transparent; } }
+html:not([data-motion="reduced"]) .experience .xp-end.hs-in .xp-pin-now { animation:xp-now 1.8s var(--ease-out) infinite; }
+html[data-motion="reduced"] .experience :is(.xp-card,.xp-pin) { transition:none; }
 
-/* ---------- The way through (2026-10-07): the Esc hint and the auto-play button ----------
-   Under the meter at the head row's right; both render only while the strip pins. */
-.experience .xp-side { display:grid; justify-items:end; gap:14px; }
-.experience .xp-ctl { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:12px; color:var(--on-2); }
-.experience .xp-ctl .sa-btn { margin-bottom:4px; }
-.experience .xp-skip { --pill-pad:14px; flex:none; font-size:12px; }
-
-/* ---------- The hand-off shadow (2026-10-07) ----------
-   Contact, next, sits on ink; this ground is berry-deep. A gradient from clear through berry-deep
-   to ink lies along the frame's foot. Pinned, it grows in with the strip's progress (--p, from
-   use-horizontal-scroll.ts): opacity and a scaleY from the foot, nothing that lays out again. In
-   the stack (reduced motion) there is no progress, so it sits there at full strength.
-   z-index -1 inside the frame keeps it under the cards and over the contour lines. */
-.experience .xp-frame { position:relative; isolation:isolate; }
-.experience .xp-frame::after { content:''; position:absolute; z-index:-1; left:0; right:0; bottom:0; height:clamp(160px,32svh,320px); pointer-events:none;
-  background:linear-gradient(to bottom, transparent, color-mix(in srgb,var(--berry-deep) 60%,var(--ink)) 55%, var(--ink));
-  transform-origin:50% 100%; opacity:var(--p,1); transform:scaleY(calc(.4 + var(--p,1) * .6)); }
-
-/* ---------- The UMD stop (experience.umd.tsx, 2026-10-20) ----------
-   The retired College Park section, now the strip's first stop: a panel whose ground is the
-   waving flag, holding the Coursework card, the club pills along its foot with the cartoon
-   Maryland beside them, and the terrapin on its top edge. It reuses the role cards' rules above;
-   this block adds the flag, the Lava and the figures. Colours are the --umd-* tokens (globals.css).
+/* ---------- The UMD stop (experience.umd.tsx, 2026-10-20; an .ink-card since 2026-11-03) ----------
+   The retired College Park section, now the strip's first stop: an .ink-card whose ground is the
+   waving flag, holding the Coursework card and the club pills along its foot; the terrapin stands
+   on the line above it. Colours are the --umd-* tokens (globals.css).
 
    Colour, measured (WCAG 2.x relative luminance), carried over from the old umd.css:
      white on Lava under at least 50% black            6.8:1  worst case (Lava's #FF9F21)
      white on the ember ground (no WebGL)               14:1
      ink on the cream pills (--card)                    17:1   so the pills need no shade at all
-     gold on the ink chip                               14:1
    No text sits on the bare flag: only the cream pills and the Coursework card, which carries its
    own scrim. The flag's shade is there so the card and the pills stand off the busy cloth. */
 
 /* A little wider than a role card: the course pills want the room. */
-.experience[data-pin] .xp-umd { width:clamp(580px,44vw,660px); }
+.experience[data-pin] .xp-umd { width:clamp(560px,42vw,640px); }
 
-/* The panel: the flag is its ground (clipped to its corners by .xp-umd-ground, so the terrapin can
-   still stand above the edge). A column: the card on top, the foot pushed to the bottom, so when
-   the strip stretches every card to the tallest, the spare room lands between them. */
-.experience .xp-card.xp-umd-panel { --fill:var(--umd-gold); isolation:isolate; display:flex; flex-direction:column; justify-content:space-between; align-items:stretch; gap:18px;
+/* The panel: the flag is its ground, clipped to its corners by .xp-umd-ground. A column: the card
+   on top, the club pills at the foot. */
+.experience .xp-card.xp-umd-panel { isolation:isolate; display:flex; flex-direction:column; justify-content:space-between; align-items:stretch; gap:18px;
   padding:22px; background:var(--umd-red); color:var(--umd-white); }
-.experience .xp-umd-ground { position:absolute; inset:0; z-index:-1; overflow:hidden; border-radius:calc(var(--r-card) - 1px); }
+.experience .xp-umd-ground { position:absolute; inset:0; z-index:-1; overflow:hidden; border-radius:calc(var(--r-tile) - 1.5px); }
 
 /* The flag (components/site/umd/flag.tsx) and its shade. The live canvas stays clipped away, so
-   the panel's own UMD red shows, until its first frame; then it wipes in from the top, each time it
-   comes back. */
+   the panel's own UMD red shows, until its first frame; then it wipes in from the top. */
 .experience .xp-umd-flag { position:absolute; inset:0; display:block; }
 .experience .xp-umd-flag canvas { display:block; width:100%; height:100%; clip-path:inset(0 0 100% 0); }
 .experience .xp-umd-flag canvas[data-ready] { clip-path:inset(0 0 0 0); transition:clip-path 900ms var(--ease-out); }
 html[data-motion="reduced"] .experience .xp-umd-flag canvas[data-ready] { transition:none; }
 .experience .xp-umd-shade { position:absolute; inset:0; pointer-events:none; background:color-mix(in srgb,var(--umd-black) 38%,transparent); }
 
-/* The terrapin standing on the panel's top edge at the right, like the role cards' crowd (a
-   button: press it and he sweats, sweaty-terrapin.tsx). */
-.experience .xp-umd-edge { position:absolute; z-index:2; right:22px; bottom:calc(100% - 12px); width:clamp(84px,7vw,104px); }
+/* The terrapin standing on the line over the stop's right side, like the roles' people. */
+.experience[data-pin] .xp-umd-edge { position:absolute; z-index:3; right:24px; top:calc(var(--rail-y) + 12px); translate:0 -100%; width:clamp(76px,6vw,96px); }
 
-/* Coursework: a card on the flag, its whole ground the Lava (lava-card.tsx). The card is a flex
-   column and the Lava grows to fill it (flex:1), so the fire reaches the foot however tall the card
-   gets; before, a grid row sized to the text left a flat gold band under it. It lifts and tilts on
-   hover (Andrew 2026-10-20: "I also really liked how the coursework lifted and tilted on hover"),
-   on translate and rotate, so it never fights the panel's own rise (transform, below). */
-.experience .xp-umd-course { position:relative; display:flex; flex-direction:column; border:1px solid var(--ink); border-radius:18px; box-shadow:0 5px 0 var(--ink);
+/* Coursework: a card on the flag, its whole ground the Lava (lava-card.tsx), growing to fill it.
+   It lifts and tilts on hover (Andrew 2026-10-20: "I also really liked how the coursework lifted
+   and tilted on hover"). */
+.experience .xp-umd-course { position:relative; display:flex; flex-direction:column; border:1.5px solid var(--ink); border-radius:20px; box-shadow:0 5px 0 var(--ink);
   transition:translate .5s var(--ease-spring), rotate .5s var(--ease-spring); }
 @media (hover:hover) {
   html:not([data-motion="reduced"]) .experience .xp-umd-course:hover { translate:0 -8px; rotate:-1.5deg; }
 }
 .experience .umd-lava { position:relative; isolation:isolate; overflow:hidden; background:var(--umd-ember); color:var(--umd-white); }
 .experience .umd-lava-bg { position:absolute; inset:0; z-index:-1; }
-/* The scrim is darkest at the top behind the heading and eases to 50% at the foot, where only the
-   cream pills sit, so the fire glows there (never under 50%: 6.8:1). */
+/* The scrim is darkest at the top behind the heading and eases to 50% at the foot (6.8:1). */
 .experience .umd-lava-scrim { position:absolute; inset:0; z-index:-1;
   background:linear-gradient(to bottom, color-mix(in srgb,var(--umd-black) 72%,transparent) 30%, color-mix(in srgb,var(--umd-black) 50%,transparent)); }
 .experience .umd-lava-body { position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:4px; }
-.experience .xp-umd-lava { flex:1 1 auto; padding:20px 24px 22px; border-radius:17px; }
-.experience .xp-umd-course .xp-when { margin-bottom:10px; }
-.experience .xp-umd-course .xp-role { font-size:clamp(24px,2vw,30px); }
+.experience .xp-umd-lava { flex:1 1 auto; padding:20px 24px 22px; border-radius:18.5px; }
+.experience .xp-umd-course .xp-role { max-inline-size:none; font-size:clamp(24px,2vw,30px); }
 .experience .xp-umd-course .xp-org { margin-bottom:10px; font-size:16px; }
 
 /* The pills: the courses on the card and the clubs in the foot. Flat cream stickers with an ink
-   outline and ledge, readable over anything (17:1), so they sit straight on the fire or the flag. */
+   outline and ledge, readable over anything (17:1). */
 .experience :is(.xp-umd-tags,.xp-umd-chips) { list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:8px; }
-/* A club pill's logo, a die-cut sticker at the pill's left edge, a little turned */
-/* The logo is a link: its hit box grows past the sticker to a 44px target, and it lifts on hover */
+/* A club pill's logo is a link: its hit box grows past the sticker to a 44px target, and it lifts on hover */
 .experience .xp-pill-link { position:relative; display:inline-flex; flex:none; }
 .experience .xp-pill-link::after { content:''; position:absolute; inset:-6px; }
 .experience .xp-pill-link .xp-pill-logo { transition:rotate var(--dur-roll) var(--ease-elastic), scale var(--dur-roll) var(--ease-elastic); }
@@ -282,41 +248,28 @@ html[data-motion="reduced"] .experience .xp-umd-flag canvas[data-ready] { transi
 .experience .xp-umd-tags li:first-child .xp-pill-logo { border-radius:0; max-width:56px; }
 .experience :is(.xp-umd-tags,.xp-umd-chips) li { padding:7px 13px; border:1px solid var(--ink); border-radius:var(--r-pill); background:var(--card); color:var(--ink); box-shadow:0 3px 0 var(--ink); font:700 14px/1.2 var(--body); }
 
-/* The foot: the club pills (Andrew 2026-10-20: "bring the little chips to the bottom empty space")
-   and the cartoon Maryland at the right, tilting toward the pointer (TiltFrame). */
-.experience .xp-umd-foot { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
-/* The club pills stay on one line (Andrew 2026-10-28) */
+/* The foot: the club pills on one line (Andrew 2026-10-28). */
+.experience .xp-umd-foot { display:flex; align-items:flex-end; gap:12px; }
 .experience .xp-umd-tags { flex-wrap:nowrap; min-width:0; }
 .experience .xp-umd-tags li { white-space:nowrap; }
-.experience .xp-umd-state { flex:none; width:clamp(76px,6vw,96px); }
-.experience .xp-umd-state-svg { display:block; width:100%; height:auto; overflow:visible; }
-.experience .xp-umd-state .tilt-stage { transition:transform 600ms var(--ease-out), translate 450ms var(--ease-spring); }
-.experience .xp-umd-state[data-tilting] .tilt-stage { translate:0 -6px; transition:transform 140ms linear, translate 450ms var(--ease-spring); }
 
-/* A short screen (see "Fitting the frame's height" above): the pills a step smaller. */
 @media (min-width:700px) and (max-height:860px) {
   .experience .xp-card.xp-umd-panel { padding:18px; gap:14px; }
   .experience .xp-umd-lava { padding:16px 20px 18px; }
   .experience .xp-umd-course .xp-role { font-size:clamp(22px,1.8vw,26px); }
   .experience .xp-umd-course .xp-org { font-size:15px; margin-bottom:8px; }
   .experience :is(.xp-umd-tags,.xp-umd-chips) li { padding:5px 11px; font-size:13px; }
-  .experience .xp-umd-state { width:72px; }
 }
-/* Pinned on a phone: tighter padding and smaller type, so the stop fits the frame. */
 @media (max-width:699px) {
-  .experience[data-pin] .xp-umd { width:88vw; }
+  .experience[data-pin] .xp-umd { width:84vw; }
   .experience .xp-card.xp-umd-panel { padding:12px; gap:10px; }
-  .experience .xp-umd-lava { padding:12px 14px 14px; }
-  .experience .xp-umd-course { border-radius:14px; }
-  .experience .xp-umd-lava { border-radius:13px; }
+  .experience .xp-umd-lava { padding:12px 14px 14px; border-radius:14.5px; }
+  .experience .xp-umd-course { border-radius:16px; }
   .experience .xp-umd-course .xp-role { font-size:20px; }
   .experience .xp-umd-course .xp-org { font-size:13px; margin-bottom:6px; }
   .experience :is(.xp-umd-tags,.xp-umd-chips) { gap:5px 4px; }
   .experience :is(.xp-umd-tags,.xp-umd-chips) li { padding:4px 8px; font-size:12px; box-shadow:0 2px 0 var(--ink); }
-  .experience .xp-umd-edge { width:64px; right:14px; }
-  .experience .xp-umd-course .xp-when { margin-bottom:6px; }
   .experience .xp-umd-chips li { padding:3px 8px; line-height:1.15; }
-  /* The cartoon Maryland does not fit cleanly beside the pills at this width (it pushed them to a
-     third row and the stop past the screen's foot), so on a phone the terrapin stands alone. */
-  .experience .xp-umd-state { display:none; }
+  .experience .xp-umd-tags { flex-wrap:wrap; }
+  .experience[data-pin] .xp-umd-edge { width:60px; right:14px; top:calc(var(--rail-y) + 8px); }
 }

@@ -1,0 +1,73 @@
+/* The one ground (components/site/ground.tsx). It sits in <main> after the footer at z-index -1,
+   so it paints above the footer (z -1, earlier in the page) and below every section, all of which
+   are transparent. It ends at the footer's top, so the page still slides up off the footer.
+   main is the containing block, so the backdrop's top is the page's top. */
+main:has(> .ground) { position:relative; }
+.ground { position:absolute; z-index:-1; left:0; right:0; top:0; bottom:0; overflow:clip; pointer-events:none; /* clip, not hidden: hidden would make this the sticky pane's scroller */
+  /* Before the first measure (and with no script): the same day in rough proportions. The light
+     part runs long (to 70%) so the timeline's ink text never lands on the twilight. */
+  background-color:#0b0d1f;
+  background-image:linear-gradient(to bottom,
+    #87ceeb 0, #87ceeb 4%, #cfe2f5 7%, #b4d1f0 20%, #ffe2ae 34%, #ffc98a 42%, #f6b892 48%, #e8a08c 66%,
+    #4d4a94 72%, var(--berry) 79%, var(--berry-deep) 82%, #0f1230 90%, #0b0d1f 100%); }
+.ground[data-ready] { bottom:auto; }
+
+/* Layer 2, the glows: a radial gradient each, no filter. The scroll timeline pushes each one down
+   by k of the scroll, so it travels at (1 - k) of the page's speed. */
+.ground-glow { position:absolute; aspect-ratio:1; translate:-50% -50%; border-radius:50%;
+  background:radial-gradient(closest-side, var(--c), transparent); }
+@supports (animation-timeline: scroll()) {
+  .ground-glow { animation:ground-drift linear both; animation-timeline:scroll(root block); }
+}
+@keyframes ground-drift { from { transform:translateY(0); } to { transform:translateY(calc(var(--travel, 0px) * var(--k, 0))); } }
+
+/* Layer 3, the contour lines: two long strips, each with a pane one screen tall that sticks to the
+   screen and holds a canvas 1.3 screens tall that the scroll timeline lifts by 0.3 of a screen over
+   the whole page. The day strip (hero foot to dusk) draws ink at low alpha, the night strip (dusk
+   to the footer) paper at low alpha; they overlap by --fade and cross-fade there through masks,
+   so no line changes colour at an edge. contour-bg.tsx reads --contour once, when it mounts. */
+.ground-lines { position:absolute; left:0; right:0; }
+.ground-lines[data-tone="day"] { -webkit-mask-image:linear-gradient(to bottom, #000 calc(100% - var(--fade, 480px)), transparent); mask-image:linear-gradient(to bottom, #000 calc(100% - var(--fade, 480px)), transparent); }
+.ground-lines[data-tone="night"] { bottom:0; -webkit-mask-image:linear-gradient(to bottom, transparent, #000 var(--fade, 480px)); mask-image:linear-gradient(to bottom, transparent, #000 var(--fade, 480px)); }
+/* Ink at .07 over the palest sky (#cfe2f5) is about #c3d5e7: ink on it still 12:1. Paper at .07
+   over berry is about #4a5ca5: paper on it 5.6:1. Texture only. */
+.ground-lines[data-tone="day"] .contour-canvas { --contour:rgb(18 20 43 / .07); }
+.ground-lines[data-tone="night"] .contour-canvas { --contour:rgb(244 239 230 / .07); }
+.ground-lines-pane { position:sticky; top:0; height:100lvh; overflow:hidden; }
+.ground-lines-pane .contour-canvas { height:130lvh; will-change:transform; }
+@supports (animation-timeline: scroll()) {
+  .ground-lines-pane .contour-canvas { animation:ground-lift linear both; animation-timeline:scroll(root block); }
+}
+@keyframes ground-lift { from { transform:translateY(0); } to { transform:translateY(-30lvh); } }
+
+/* Layer 4, the stars: only behind the island, from its top to the footer, fading in over the
+   first 360px so none reach the résumé above. Three tiles of tiny radial gradients at prime-ish
+   sizes, so the repeat does not read as a grid; a second, sparser set twinkles (opacity only, on
+   the compositor). Reduced motion: the stars hold still at full strength. */
+.ground-stars { position:absolute; left:0; right:0; bottom:0;
+  -webkit-mask-image:linear-gradient(to bottom, transparent, #000 360px); mask-image:linear-gradient(to bottom, transparent, #000 360px);
+  background-image:
+    radial-gradient(circle at 23px 41px, rgb(244 239 230 / .85) 0 1.0px, transparent 1.7px),
+    radial-gradient(circle at 131px 97px, rgb(244 239 230 / .7) 0 0.8px, transparent 1.4px),
+    radial-gradient(circle at 67px 163px, rgb(255 230 190 / .8) 0 1.3px, transparent 2.1px),
+    radial-gradient(circle at 199px 13px, rgb(201 209 244 / .75) 0 0.8px, transparent 1.4px),
+    radial-gradient(circle at 89px 211px, rgb(244 239 230 / .6) 0 1.0px, transparent 1.7px),
+    radial-gradient(circle at 251px 141px, rgb(201 209 244 / .7) 0 0.8px, transparent 1.4px),
+    radial-gradient(circle at 307px 59px, rgb(244 239 230 / .9) 0 1.4px, transparent 2.2px);
+  background-size:229px 233px, 211px 197px, 263px 251px, 241px 223px, 307px 281px, 331px 293px, 397px 359px;
+  background-repeat:repeat; }
+.ground-stars::after { content:''; position:absolute; inset:0;
+  background-image:
+    radial-gradient(circle at 37px 71px, rgb(255 250 240 / .95) 0 1.7px, transparent 2.8px),
+    radial-gradient(circle at 173px 29px, rgb(255 230 190 / .9) 0 1.4px, transparent 2.2px),
+    radial-gradient(circle at 113px 187px, rgb(201 209 244 / .9) 0 1.5px, transparent 2.5px);
+  background-size:419px 383px, 467px 431px, 509px 461px;
+  animation:ground-twinkle 3.6s ease-in-out infinite alternate; }
+@keyframes ground-twinkle { from { opacity:.25; } to { opacity:1; } }
+
+/* Reduced motion: no drift at all; the glows are placed at rest (ground.tsx), the lines hold and
+   the stars stay lit */
+@media (prefers-reduced-motion: reduce) {
+  .ground-glow, .ground-lines-pane .contour-canvas, .ground-stars::after { animation:none; }
+}
+html[data-motion="reduced"] :is(.ground-glow, .ground-lines-pane .contour-canvas), html[data-motion="reduced"] .ground-stars::after { animation:none; }

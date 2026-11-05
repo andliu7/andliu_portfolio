@@ -1,86 +1,69 @@
 /* The island finale (app/sections/island.tsx). Every selector starts at .island, except the
-   confirm popup, which is portalled to <body>. Prefixes: il- the window and the door
-   (components/site/closing/island-door.tsx), er- the evening reel (components/site/closing/evening-reel.tsx). */
-.island { display:flex; flex-direction:column; align-items:stretch; gap:20px; padding:8px var(--gutter) var(--gutter); }
+   confirm popup, which is portalled to <body>. Prefix il-: the text, the stage
+   (components/site/island3d/island-stage.tsx) and the door (components/site/closing/island-door.tsx).
+   No panel: the words sit straight on the shared night sky, so the section paints no ground. */
+section.island { position:relative; isolation:isolate; color:var(--on); overflow-x:clip; } /* the containing block and stacking context of the sea's canvas */
+.island { display:grid; align-items:center; min-height:100svh; padding:calc(var(--header-h, 64px) + 16px) var(--gutter) clamp(48px,6vw,96px); }
+.island { cursor:grab; touch-action:pan-y; } /* drag to turn round the island (island-scene.tsx Framing) */
+.island[data-dragging] { cursor:grabbing; user-select:none; }
 
-.island .il-window { display:grid; grid-template-columns:minmax(0,40fr) minmax(0,60fr); gap:clamp(24px,3.4vw,56px); align-items:center;
-  padding:clamp(24px,3.4vw,52px); border-radius:var(--card-r); background:var(--berry); color:var(--on); }
-.island .il-text { display:flex; flex-direction:column; align-items:flex-start; gap:20px; min-width:0; }
-.island .il-title { font-size:clamp(44px,6vw,92px); line-height:.94; } /* room for the accents on RÉSUMÉ */
-.island .il-tagline { max-inline-size:30ch; font:500 clamp(19px,1.6vw,23px)/1.45 var(--body); color:var(--on); }
-.island .il-go { margin-top:8px; }
-
-/* A light stick before the footer (Andrew, 2026-10-12: "make the island screen stick ... it's a
-   light stick though"; then "center the resume island screen ... with a bit more of the
-   background upper margin"). The window sits in .il-stick, a box one screen tall that centres
-   it (grid, align-content), and that box is sticky inside a section 35svh taller than itself: it
-   holds for that short stretch, then the page lifts off the footer as before. Centred, the window
-   gets an even band of the page's ground above and below it. CSS only. Only where the window
-   fits on one screen (wide and 900px tall or more; a stacked phone layout would have its foot
-   hidden while stuck) and with motion on; elsewhere .il-stick is a plain block. */
-@media (min-width:900px) and (min-height:900px) {
-  html:not([data-motion="reduced"]) .island { min-height:calc(100svh + 35svh); }
-  html:not([data-motion="reduced"]) .island .il-stick { position:sticky; top:0; display:grid; align-content:center; min-height:100svh; }
+/* Desktop: the words and the button on the left, the island on the right, larger.
+   Phone: the words, the island, then the button. */
+.island .il-wrap { display:grid; grid-template-columns:minmax(0,36fr) minmax(0,64fr); grid-template-rows:auto auto; grid-template-areas:"text island" "go island";
+  column-gap:clamp(16px,3vw,48px); row-gap:28px; align-items:center; width:100%; max-width:1440px; margin:0 auto; }
+.island .il-text { grid-area:text; align-self:end; display:flex; flex-direction:column; align-items:flex-start; gap:20px; min-width:0; position:relative; z-index:1; }
+.island .il-title { margin:0; font-size:clamp(52px,6.2vw,104px); line-height:.98; color:var(--on); } /* .98: room for the accents on RÉSUMÉ */
+/* A soft pool of night behind the words (no edge, no box): the close island runs out under them,
+   so its lights and roads dim there and the title keeps clean ground. */
+@media (min-width:861px) {
+  .island .il-text::before { content:''; position:absolute; z-index:-1; inset:-22% -30% -26% -40%; pointer-events:none;
+    background:radial-gradient(closest-side, rgb(10 14 40 / .8), rgb(10 14 40 / .5) 60%, transparent); }
 }
+.island .il-kw { color:var(--kw); } /* apricot on ink, 11.9:1 */
+.island .il-tagline { margin:0; max-inline-size:28ch; font:500 clamp(19px,1.6vw,24px)/1.45 var(--body); color:var(--on); }
+/* The words stand on the sea, where the moon's path can run behind them: a soft night shadow
+   (no box) keeps them clear of the glitter without reading as a panel. */
+.island :is(.il-title, .il-tagline, .eyebrow) { text-shadow:0 2px 18px rgb(8 12 36 / .7), 0 0 2px rgb(8 12 36 / .5); }
+.island .il-go-row { grid-area:go; align-self:start; position:relative; z-index:3; } /* above the landmarks' labels */
+.island .il-island { grid-area:island; min-width:0; }
 
-/* The poster, framed as a sticker print: 2px ink outline, a slight turn. */
-.island .il-shot { margin:0; min-width:0; }
-.island .il-shot img { width:100%; height:auto; aspect-ratio:16 / 9; object-fit:cover; border-radius:20px; border:2px solid var(--ink); rotate:1.5deg; transition:rotate .6s var(--ease-spring); }
-@media (hover:hover) and (pointer:fine) { .island .il-shot:hover img { rotate:0deg; } }
-html[data-motion="reduced"] .island .il-shot img { transition:none; }
-
-/* The poster's door: a link around the image, with the site's focus ring. */
-.island .il-door { display:block; border-radius:20px; }
+/* The stage: a box beside the words, the door's click target, where the scene puts the island. The
+   canvas itself (.il-gl) is not positioned by the box: it covers the whole section, so the sea runs
+   edge to edge with its horizon behind the words. It takes no clicks (the box under it does), and
+   its foot fades out so the sea melts into the ground before the footer. Above the horizon the
+   canvas is transparent, so the page's sky and stars show through. It waits invisible until its
+   first frame is drawn (data-ready), then fades in, so the sea arrives instead of popping. */
+.island .il-door { display:block; border-radius:32px; }
 .island .il-door:focus-visible { outline:3px solid var(--ring,var(--apricot)); outline-offset:4px; }
+.island .il-stage { width:100%; aspect-ratio:5 / 4; }
+.island .il-gl { position:absolute; inset:0; z-index:-1; pointer-events:none; opacity:0; transition:opacity .9s var(--ease-out, ease-out);
+  -webkit-mask-image:linear-gradient(to bottom, #000 84%, rgb(0 0 0 / .6) 94%, transparent); mask-image:linear-gradient(to bottom, #000 84%, rgb(0 0 0 / .6) 94%, transparent); } /* scene r4: the land runs nearly to the foot, only the last strip melts into the footer */
+.island .il-stage[data-ready] .il-gl { opacity:1; }
+html[data-motion="reduced"] .island .il-gl { transition:none; }
 
-/* ---------- Off the clock: small, under "Go to the game?", centred in the left column ---------- */
-.island .il-evening { align-self:stretch; display:grid; justify-items:center; gap:12px; width:min(100%,420px); margin:clamp(12px,2vw,28px) auto 0; }
-/* The title in the display font, small, tilted a hair like FOR REAL! */
-.island .il-evening-title { margin:0; font:700 clamp(26px,2.4vw,36px)/.9 var(--display); letter-spacing:-.02em; text-transform:uppercase; font-variant-ligatures:none; color:var(--on); rotate:-2deg; }
-.island .er { display:grid; gap:10px; width:100%; }
+/* The landmarks' name buttons (island-stage.tsx): a layer over the whole section, like the canvas,
+   that takes no clicks itself; each button sits on its building (the scene writes its transform
+   and size every frame) and shows a level paper label with the name on hover, focus or a click.
+   The labels never take the pointer, and "Go to the game?" sits above them. */
+.island .il-marks { position:absolute; inset:0; z-index:2; pointer-events:none; }
+.island .il-mark { position:absolute; left:0; top:0; width:0; height:0; padding:0; border:0; border-radius:16px; background:transparent; cursor:pointer;
+  pointer-events:auto; -webkit-tap-highlight-color:transparent; }
+.island .il-mark:focus-visible { outline:3px solid var(--apricot); outline-offset:2px; }
+.island .il-mark-label { position:absolute; left:50%; bottom:100%; translate:-50% -4px; white-space:nowrap; padding:7px 12px 6px; border:1.5px solid var(--ink); border-radius:999px;
+  background:var(--paper); color:var(--ink); font:700 14px/1 var(--body); box-shadow:0 3px 0 var(--ink); pointer-events:none; opacity:0; scale:.92; transform-origin:50% 100%;
+  transition:opacity .16s ease-out, scale .2s var(--ease-elastic, ease-out); }
+.island .il-mark:is(:hover, :focus-visible, [data-on]) .il-mark-label { opacity:1; scale:1; }
+.island .il-mark:is(:hover, :focus-visible, [data-on]) { z-index:1; }
+html[data-motion="reduced"] .island .il-mark-label { transition:none; }
 
-/* The stage: a flat paper band with a darker ground strip, the scenes standing on it. Only one
-   scene shows at a time; the others wait right ("next") or have left ("was"), faded out. */
-.island .er-stage { --ground-h:28px; position:relative; height:clamp(120px,11vw,150px); overflow:hidden; border:1px solid var(--ink); border-radius:var(--r-control); background:var(--sky); }
-.island .er-ground { position:absolute; inset:auto 0 0; height:var(--ground-h); background:color-mix(in srgb,var(--sky) 70%,var(--ink)); border-top:1px solid var(--ink); }
-.island .er-scene { position:absolute; z-index:1; left:0; right:0; bottom:calc(var(--ground-h) - 6px); display:flex; justify-content:center; align-items:flex-end; gap:10px;
-  transition:translate .9s var(--ease-spring), opacity .6s linear; }
-.island .er-scene[data-place="now"] { translate:0 0; opacity:1; }
-.island .er-scene[data-place="next"] { translate:45% 0; opacity:0; }
-.island .er-scene[data-place="was"] { translate:-45% 0; opacity:0; }
-.island .er-crowd { display:flex; align-items:flex-end; gap:4px; }
-.island .er-who { display:block; width:clamp(30px,2.8vw,40px); }
-.island .er-who .st { display:block; width:100%; }
-.island .er-art { display:flex; align-items:flex-end; gap:6px; width:clamp(76px,7vw,100px); }
-.island .er-art .st { width:100%; }
-.island .er-cook .er-art { width:clamp(104px,10vw,130px); }
-.island .er-cook .er-art .er-herb { flex:none; width:34%; }
-.island .er-cook .er-art .er-st { flex:1; min-width:0; }
-.island :is(.er-gym,.er-eat) .er-art { width:clamp(90px,8.5vw,116px); }
-
-/* The bar: prev, the caption, next. */
-.island .er-bar { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:10px; }
-.island .er-btn { display:grid; place-items:center; width:44px; height:44px; padding:0; border:2px solid var(--ink); border-radius:50%; background:var(--card); color:var(--ink); box-shadow:0 3px 0 var(--ink); cursor:pointer; }
-.island .er-btn:active { translate:0 3px; box-shadow:0 0 0 var(--ink); }
-.island .er-btn:focus-visible { outline:3px solid var(--apricot); outline-offset:3px; }
-.island .er-cap { margin:0; min-height:2.9em; font:500 16px/1.45 var(--body); color:var(--on); text-align:center; text-wrap:pretty; }
-.island .er-cap-in { display:inline-block; }
-.island .er-when { font:500 12px/1 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--berry-soft); }
-.island .er-voice em { font-style:normal; font-weight:700; color:var(--apricot); } /* apricot on berry 5.2:1 */
-
-/* Motion: the people bob out of step and blink; the caption fades in each scene. */
-@keyframes er-idle { from { translate:0 0; scale:1 1; } to { translate:0 -4px; scale:.97 1.03; } }
-@keyframes er-blink { 0%, 92%, 100% { scale:1 1; } 96% { scale:1 .1; } }
-@keyframes er-in { from { opacity:0; } to { opacity:1; } }
-html:not([data-motion="reduced"]) .island .er-who { transform-origin:50% 100%; animation:er-idle calc(1.1s + var(--k,0) * .25s) ease-in-out calc(var(--k,0) * -.4s) infinite alternate; }
-html:not([data-motion="reduced"]) .island .er-cap-in { animation:er-in .5s linear; }
-html:not([data-motion="reduced"]) .island .er-who .cl-eyes { transform-box:fill-box; transform-origin:50% 50%; animation:er-blink calc(3.4s + var(--k,0) * .9s) linear infinite; }
-/* Reduced motion: no slide, a plain cross-fade, and nothing bobs. */
-html[data-motion="reduced"] .island .er-scene { translate:none; transition:opacity .3s linear; }
+/* No WebGL: the game's poster, cropped round with a sand rim, so it still reads as a round island. */
+.island .il-poster { display:block; position:relative; top:7%; margin:0 auto; width:auto; height:86%; aspect-ratio:1; object-fit:cover; border-radius:50%;
+  border:10px solid #f1d6a0; box-shadow:0 0 0 6px #3aa9b4, 0 24px 0 -4px #1d2654; }
 
 @media (max-width:860px) {
-  .island .il-window { grid-template-columns:minmax(0,1fr); }
-  .island .il-shot img { rotate:0deg; }
+  .island .il-wrap { grid-template-columns:minmax(0,1fr); grid-template-rows:auto auto auto; grid-template-areas:"text" "island" "go"; row-gap:8px; }
+  .island .il-stage { aspect-ratio:1 / .86; }
+  .island .il-go-row { justify-self:start; margin-top:20px; }
 }
 
 /* The door's confirm popup: portalled to <body>, so these selectors cannot start at .island. It

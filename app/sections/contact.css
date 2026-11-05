@@ -5,72 +5,66 @@
    jump) and clips sideways so nothing in it can widen the page. */
 section.contact { padding-top:24px; overflow-x:clip; }
 /* The stars (contact.tsx) fill the home section; the frame comes after them, so it paints on top. */
-section#contact { position:relative; }
+section#contact { position:relative; padding-top:clamp(200px, 30vh, 340px); } /* room for the dusk to fade into twilight before the first line (ground.tsx) */
 /* ---------- The contact page (Andrew 2026-10-20: "the let's compare notes can be expanded to a
-   page"). On the home page the card is at least one screen tall, its content centred in it, so
-   scrolling to it lands on a whole page whose job is to get an email to him. About keeps its
-   card at content height. ---------- */
+   page"). On the home page it is at least one screen tall, its content centred in it, so
+   scrolling to it lands on a whole page whose job is to get an email to him. ---------- */
 section#contact .ct-card { display:flex; flex-direction:column; justify-content:center; min-height:calc(100svh - 48px); }
 
-.contact .ct-card { position:relative; container-type:inline-size; border-radius:var(--card-r); background:var(--ground); color:var(--on); }
-.contact .ct-body { display:grid; gap:24px; padding:clamp(24px,3.2vw,48px); container-type:inline-size; }
-.contact .ct-top { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; }
-/* The headline keeps .fit's sizing against the card, except in a narrow card, where .fit would
+/* Rethink 2026-11-03: twilight. No box: the page's type stands on the section's sky (berry at
+   home, ink on About), so it reads the ground's tokens. Paper on berry 7.2:1, berry-soft on berry
+   4.6:1 (used at 17px and up), apricot on berry 6.2:1. The one card is the letter. */
+.contact .ct-card { position:relative; container-type:inline-size; color:var(--on); }
+.contact .ct-body { display:grid; gap:20px; padding-block:clamp(16px,3vw,40px); }
+.contact .ct-body > .eyebrow { color:var(--on-2); }
+/* The headline keeps .fit's sizing against the page, except where narrow, where .fit would
    shrink it under 48px: there it holds 48px and FlipHeading wraps between words instead. */
-.contact .ct-body .flip-heading { margin-block:4px; }
+.contact .ct-body .flip-heading { margin-block:0 4px; }
 @container (max-width:560px) { .contact .ct-body .flip-heading { font-size:48px; } }
+/* "notes." in the twilight's apricot (6.2:1 on berry), the one warm word on the sky. */
+.contact .ct-body .flip-heading .fh-kw .fh-a .fh-kw-text { color:var(--kw); }
 
-/* The one-tap part: its label, Email me and Copy email, the address, the note, then GitHub and
-   LinkedIn, stacked in a narrow card. From a wide card up it is one row across the card (the
-   buttons, the address with the note under it, the pills at the right end), since the form no
-   longer shares the width (Andrew 2026-10-20: "lower it to it's own part"). */
-.contact .ct-reach { display:grid; gap:14px; align-content:start; justify-items:start; }
-@container (min-width:860px) {
-  .contact .ct-reach { grid-template-columns:auto minmax(0,1fr) auto; grid-template-areas:"quick quick quick" "actions email links" ". note links"; align-items:center; gap:10px 32px; }
-  .contact .ct-quick { grid-area:quick; }
-  .contact .ct-actions { grid-area:actions; }
-  .contact .ct-email { grid-area:email; }
-  .contact .ct-note { grid-area:note; align-self:start; }
-  .contact .ct-reach .ct-links { grid-area:links; justify-self:end; margin-top:0; }
+/* The quick way and the letter. Stacked on a phone (the quick way first, it is the fastest);
+   side by side from a wide page up, the letter taking the larger share. */
+.contact .ct-split { display:grid; gap:40px; align-items:start; }
+@container (min-width:960px) {
+  .contact .ct-split { grid-template-columns:minmax(280px,.8fr) minmax(0,1.5fr); gap:clamp(40px,5cqi,80px); }
 }
-/* The form's own part (2026-10-20): the full width of the card under the one-tap row, a little
-   further down than the body's gap so it reads as a part of its own. */
-.contact .ct-body > .cf { margin-top:12px; }
 
-/* The links: each a big outlined pill (Slush's 2px ink outline), letters rolling on hover. The
-   roll is FlipLink's own (.flip in globals.css); the two rules below extend it to the whole pill
-   so the padding around the word rolls it too. */
-.contact .ct-links { display:flex; flex-wrap:wrap; gap:12px; margin-top:10px; padding:0; list-style:none; }
-.contact .ct-pill { display:inline-flex; align-items:center; min-height:var(--hit); padding:.16em .5em; border:2px solid var(--ink); border-radius:var(--r-pill); font-size:clamp(26px,3.4cqi,44px); } /* 3.4cqi of the card body (the nearest container) */
+/* The quick way, on the sky: the invitation, Email me and Copy email, the address and its note,
+   then GitHub, LinkedIn and the résumé in one row. */
+.contact .ct-reach { display:grid; gap:16px; align-content:start; justify-items:start; }
+.contact .ct-invite { max-inline-size:34ch; margin:0 0 8px; font:500 clamp(20px,1.9cqi,26px)/1.4 var(--body); color:var(--on); }
+.contact .ct-actions { margin:0; }
+
+/* The links: GitHub and LinkedIn as outlined rounds in the sky's own text colour (the old ink
+   outline vanished on berry), letters rolling on hover; the résumé is the light pill after them. */
+.contact .ct-links { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin:8px 0 0; padding:0; list-style:none; }
+.contact .ct-pill { display:inline-flex; align-items:center; min-height:var(--hit); padding:.16em .5em; border:2px solid currentColor; border-radius:var(--r-pill); font-size:26px; }
 .contact .ct-pill .flip { font-size:1em; }
 @media (hover:hover) and (pointer:fine) {
   html:not([data-motion="reduced"]) .contact .ct-pill:hover .flip-row-a .flip-ch { transform:translateY(-110%); }
   html:not([data-motion="reduced"]) .contact .ct-pill:hover .flip-row-b .flip-ch { transform:translateY(0); }
 }
-/* The address itself, set in display type inside the card (Slush's crushed type on a saturated
-   card), as the mailto link; Copy email sits with Email me. Kept lowercase: it is an address. */
-.contact .ct-email { display:flex; flex-wrap:wrap; align-items:center; gap:12px 18px; margin:0; }
-.contact .ct-mail { display:inline-flex; align-items:center; min-height:var(--hit); font-size:clamp(16px,2.2cqi,28px); /* 24 Fira characters at .6em each: small enough to stay on one line from 320px up */ line-height:1.1; text-transform:none; overflow-wrap:anywhere; text-decoration:underline; text-decoration-thickness:3px; text-underline-offset:.16em; text-decoration-color:var(--berry); }
-.contact .ct-mail:hover { color:var(--berry); }
-.contact .ct-note { margin:0; font:500 17px/1.5 var(--body); color:var(--on-2); }
-/* The invitation under the headline, first person, at reading width (ink on apricot 12.6:1). */
-.contact .ct-invite { max-inline-size:52ch; margin:-8px 0 0; font:500 clamp(19px,1.7cqi,24px)/1.45 var(--body); color:var(--on); }
-/* "Email me" (the berry primary, white on berry 8.1:1) and Copy email, above the address. */
-.contact .ct-actions { margin:0; }
+/* The address itself in display type, as the mailto link, underlined in the keyword colour.
+   Kept lowercase: it is an address. */
+.contact .ct-email { display:flex; flex-wrap:wrap; align-items:center; gap:12px 18px; margin:0; max-inline-size:100%; }
+.contact .ct-mail { display:inline-flex; align-items:center; min-height:var(--hit); font-size:clamp(17px,1.9cqi,24px); /* 24 Fira characters at .6em each: one line from 320px up */ line-height:1.1; color:var(--on); text-transform:none; overflow-wrap:anywhere; text-decoration:underline; text-decoration-thickness:3px; text-underline-offset:.16em; text-decoration-color:var(--kw); }
+.contact .ct-mail:hover { color:var(--kw); }
+.contact .ct-note { margin:-6px 0 0; font:500 17px/1.5 var(--body); color:var(--on-2); }
 
-/* About only: the pill back home, at the card's bottom left. */
-.contact .ct-home { margin:0 clamp(24px,3.2vw,48px) clamp(24px,3.2vw,48px); }
+/* About only: the pill back home, under the page. */
+.contact .ct-home { margin:0 0 clamp(24px,3.2vw,48px); align-self:flex-start; }
 
-/* About's stack band (components/site/stack-band.tsx) under its card, full-bleed: the section's
+/* About's stack band (components/site/stack-band.tsx) under the page, full-bleed: the section's
    gutters are undone with a negative margin. On the home page the band lives between Projects and
    Impact instead (Andrew 2026-10-20). */
 .contact .ct-band { margin:40px calc(-1 * var(--gutter)) 36px; }
 @media (max-width:640px) {
-  .contact .ct-pill { font-size:26px; }
   .contact .ct-band { margin-top:28px; }
 }
 /* GitHub and LinkedIn are expanding icon buttons (components/site/social-button.tsx) inside the
-   big outlined pills: the icon scales with the pill's type, the word slides out on hover. */
+   outlined rounds: the icon scales with the type, the word slides out on hover. */
 .contact .ct-pill:has(.ct-social) { padding:0; }
 .contact .ct-social { min-height:var(--hit); padding:.16em .42em; color:inherit; font-family:var(--display); font-weight:700; text-transform:uppercase; letter-spacing:-.03em; }
 .contact .ct-social .sbtn-icon { width:.8em; height:.8em; }
@@ -89,13 +83,14 @@ section#contact .ct-card { display:flex; flex-direction:column; justify-content:
 .contact .ct-toy { position:absolute; display:block; width:var(--s); height:var(--s); padding:0; border:0; background:none; cursor:pointer; pointer-events:auto; rotate:var(--r); touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
 .contact .ct-toy-art { position:relative; display:block; width:100%; height:100%; }
 .contact .ct-toy svg { display:block; width:100%; height:100%; overflow:visible; }
-/* 2026-10-17: off the word, not on it. "notes." spans about 67% to 94% of the card's width (the
-   headline is fitted to the card), so both are placed in cqw of the card: the envelope just
-   overlaps the bottom left of the N, the plane the top right of the full stop. */
-.contact .ct-envelope { --s:clamp(96px,9vw,130px); --r:-8deg; --k:0; left:calc(66.5cqw - var(--s) * .7); top:calc(56px + 8cqw); }
-.contact .ct-plane { --s:clamp(76px,7vw,100px); --r:14deg; --k:1; right:6.5cqw; top:calc(58px + 2cqw); } /* on the top of NOTES (2026-10-17) */
+/* The plane sits on the top of NOTES (2026-10-17; the headline is fitted to the page, so it is
+   placed in cqw). The envelope used to overlap the N; with the letter card under the headline it
+   would land on the letter's title, so since 2026-11-03 it rests on the sky under the quick-way
+   column, beside the letter, and is shown only while the two sit side by side. */
+.contact .ct-envelope { --s:clamp(96px,9vw,130px); --r:-8deg; --k:0; left:8cqw; top:calc(8cqw + 500px); }
+.contact .ct-plane { --s:clamp(76px,7vw,100px); --r:14deg; --k:1; right:6.5cqw; top:calc(58px + 2cqw); }
+@container (max-width:959px) { .contact .ct-envelope { display:none; } }
 @media (max-width:699px) {
-  .contact .ct-envelope { display:none; }
   .contact .ct-plane { --s:64px; right:6%; top:46px; }
 }
 @keyframes ct-bob { from { translate:0 0; rotate:calc(var(--r) - 3deg); } to { translate:0 -8px; rotate:calc(var(--r) + 3deg); } }
@@ -170,7 +165,7 @@ html:not([data-motion="reduced"]) .contact .ct-plane[data-play] .ct-toy-art { an
    card's apricot, centred under the card. ---------- */
 .contact .ct-cue { position:relative; z-index:3; align-self:center; display:flex; flex-direction:column; align-items:center; gap:4px; margin:44px 0 28px; }
 /* Brighter face, an ink outline and a dark ledge so it reads on the night sky (2026-10-17) */
-.contact .ct-down { --face:var(--card); --face-on:var(--ink); --roll:var(--apricot); --roll-on:var(--ink); border:2px solid var(--ink); box-shadow:0 5px 0 rgb(0 0 0 / .45); }
+.contact .ct-down { --face:var(--card); --face-on:var(--ink); --roll:var(--apricot); --roll-on:var(--ink); border:2px solid var(--ink); box-shadow:0 5px 0 var(--ink); }
 .contact .ct-arrow { display:block; overflow:visible; animation:ct-nudge 1.4s var(--ease-spring) infinite; }
 @keyframes ct-nudge { 0%, 100% { transform:translateY(0); } 50% { transform:translateY(10px); } }
 html[data-motion="reduced"] .contact .ct-arrow { animation:none; }

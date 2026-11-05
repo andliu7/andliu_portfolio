@@ -16,8 +16,7 @@ export function createHud(ctx){
     state.started = true; $('start').hidden = true; ctx.renderer.domElement.focus?.();
     bus.emit('started', { withSound });
   }
-  $('go-sound').addEventListener('click', () => begin(true));
-  $('go-quiet').addEventListener('click', () => begin(false));
+  // No start buttons any more: main.js calls begin(false) once the island is ready.
 
   /* Zone card. Its x closes it (Andrew, 2026-10-11: on a phone it covers the view). Closing only
      hides it: state.activeZone stays, so it comes back once you leave that zone and return. */

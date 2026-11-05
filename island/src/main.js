@@ -158,7 +158,9 @@ function fallbackCamera(){
     if(id && ctx.zones.some(z => z.id === id)) ctx.modes.teleport(id);
   });
 
-  ctx.hud.loading.textContent = 'Ready.';
+  ctx.hud.loading.textContent = 'Ready';
   loop.start();
-  requestAnimationFrame(() => requestAnimationFrame(() => { api.ready = true; bus.emit('ready'); }));
+  // Straight in (Andrew 2026-11-04): the start screen is only a loading page, so begin quietly as
+  // soon as the first frames are drawn.
+  requestAnimationFrame(() => requestAnimationFrame(() => { api.ready = true; bus.emit('ready'); ctx.hud.begin(false); }));
 })();
