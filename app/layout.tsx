@@ -7,6 +7,7 @@ import { Loader } from '@/components/site/loader';
 import ChatDock from '@/components/chat/chat-dock';
 import MascotSlot from '@/components/mascot/mascot-slot';
 import HoverBubble from '@/components/site/hover-bubble';
+import Review from '@/components/review/review';
 import './globals.css';
 
 // Three voices (plan 3.1's two, plus Karla for reading, 2026-10-06):
@@ -74,6 +75,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <MascotSlot />
         {/* The one hover bubble, for every picture marked data-bubble (components/site/hover-bubble.tsx) */}
         <HoverBubble />
+        {/* The design review layer (components/review/): dev server only, never in a build */}
+        {process.env.NODE_ENV !== 'production' && <Review />}
       </body>
     </html>
   );

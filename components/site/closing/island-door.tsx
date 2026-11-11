@@ -27,7 +27,7 @@ export function IslandDoor({ children, label }: { children: ReactNode; label?: s
 
   return (
     <>
-      <a className="il-door" href={ISLAND.src} aria-label={label} onClick={event => { event.preventDefault(); setOpen(true); }}>
+      <a className="il-door" href={ISLAND.src} aria-label={label} onClick={event => { event.preventDefault(); if (!event.currentTarget.closest('section')?.hasAttribute('data-dragged')) setOpen(true); }} draggable={false}>
         {children}
       </a>
       <AlertDialog open={open} onOpenChange={setOpen}>

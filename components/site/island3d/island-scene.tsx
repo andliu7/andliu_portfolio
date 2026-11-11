@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useLayoutEffect, useMemo, useRef, type RefObject, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject, type ReactNode } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { S, townLayout, type TownLayout } from './town-layout';
@@ -610,20 +610,20 @@ function buildNature(L: TownLayout) {
     };
     // Groves: a slow sine mask picks where trees may clump, the shore pulls them toward the water,
     // and each accepted spot drops a small cluster of two to four.
-    for (let tries = 0; tries < 30000 && placed < 330; tries++) {
+    for (let tries = 0; tries < 60000 && placed < 950; tries++) { // denser groves (Andrew 2026-11-04: "there should be trees")
       const cx = (rnd() * 2 - 1) * 172, cz = (rnd() * 2 - 1) * 172;
       const csd = L.sdAt(cx, cz);
       if (csd > -5) continue;
       const shore = 1 - THREE.MathUtils.smoothstep(-csd, 8, 26);
       const forest = Math.sin(cx * 0.045 + 1.3) * Math.sin(cz * 0.05 + 0.4) + 0.4 * Math.sin((cx + cz) * 0.09);
-      if (rnd() > 0.05 + 0.75 * shore * (forest > -0.2 ? 1 : 0.3)) continue;
+      if (rnd() > 0.18 + 0.75 * shore * (forest > -0.2 ? 1 : 0.4)) continue;
       const n = 2 + Math.floor(rnd() * 3);
-      for (let t = 0; t < n && placed < 330; t++) {
+      for (let t = 0; t < n && placed < 950; t++) {
       const x = cx + (rnd() - 0.5) * 9, z = cz + (rnd() - 0.5) * 9;
       const sd = L.sdAt(x, z);
       if (sd > -4 || L.roadDistAt(x, z) < SHOULDER_HALF + 2.5 || !clear(x, z)) continue;
       placed++;
-      const X = x * S, Z = z * S, h = (0.55 + rnd() * 0.5) * 0.2, kind = rnd(), y0 = heightAt(sd);
+      const X = x * S, Z = z * S, h = (0.55 + rnd() * 0.5) * 0.3, kind = rnd(), y0 = heightAt(sd); // a third taller, so they read from the wide camera
       const nearWater = sd > -11;
       if (nearWater ? kind < 0.6 : kind < 0.12) { palm(x, z, 0.15, rnd() * 6.3); continue; }
       trunks.push({ p: [X, y0 + h * 0.25, Z], s: [0.008, h * 0.5, 0.008], c: C.trunk });
@@ -639,7 +639,7 @@ function buildNature(L: TownLayout) {
     }
     // Bushes: a few low round shrubs along the roadsides, a few in blossom.
     const bushCols = ['#3f6f45', '#4a7d4c', '#56844f', '#335f3e', '#5d7f4a'];
-    for (let k = 0, n = 0; k < 20000 && n < 220; k++) {
+    for (let k = 0, n = 0; k < 30000 && n < 420; k++) {
       const x = (rnd() * 2 - 1) * 172, z = (rnd() * 2 - 1) * 172, sd = L.sdAt(x, z), rd = L.roadDistAt(x, z);
       if (sd > -5 || rd < SHOULDER_HALF + 1 || !clear(x, z, -12)) continue;
       if (rd > 12 && rnd() > 0.25) continue; // mostly along the roads
@@ -840,9 +840,9 @@ const SKY = {
 const moonDir = new THREE.Vector3(-0.2, 0.1, -1).normalize();
 
 function ringGeometry() {
-  const SEG = 240;
+  const SEG = 144;
   const radii: number[] = [];
-  for (let r = 0.06; r < 14; r += 0.11) radii.push(r);
+  for (let r = 0.06; r < 14; r += 0.18) radii.push(r);
   for (let r = 14; r < 860; r *= 1.055) radii.push(r);
   radii.push(860);
   const pos = new Float32Array(radii.length * (SEG + 1) * 3);
@@ -869,7 +869,7 @@ function ringGeometry() {
 // Each wave's sine splits into an x part and a y part, so the 256 x 256 pixels cost only
 // multiply-adds: a few milliseconds, once.
 function waterNormals(gl: THREE.WebGLRenderer) {
-  const N = 256, W = 48, TAU = Math.PI * 2;
+  const N = 128, W = 40, TAU = Math.PI * 2; // lighter (Andrew 2026-11-04: the island took too long to load)
   const rnd = seeded(11);
   const kx = new Int16Array(W), ky = new Int16Array(W), amp = new Float32Array(W);
   for (let i = 0; i < W; i++) {
@@ -1355,12 +1355,8 @@ export type Focus = { x: number; y: number; w: number; h: number };
 // back, so its glitter path runs down the water straight at the island and the island stands
 // against it (the ocean bar: the subject in the middle distance on the glint road), while the
 // words to the left sit on calm dark water.
-// Motion (never with `still`): the camera glides in as the section scrolls up (it starts a little
-// further back along its own line of sight, so the island grows in place instead of sliding), a
-// slow idle drift that breathes, and a sway after the pointer, side to side and up and down, eased
-// like a spring so it lags and settles. The camera turns only about the vertical (a slight look
-// toward the pointer), never tilts or rolls, so the horizon stays dead level and the island
-// parallaxes against it.
+// Motion (never with `still`): none of its own. A drag turns the camera round the island, up to
+// about 40 degrees either way, about the vertical only, so the horizon stays level.
 // Scene r4 (Bruno's bar): a low, close camera on one landmark instead of a high overview. A long
 // lens (about 44 degrees tall on desktop) a couple of island units from the Schoolhouse, which
 // stands large in the lower right third; grass, trees and lamps run off the bottom and right
@@ -1368,18 +1364,26 @@ export type Focus = { x: number; y: number; w: number; h: number };
 // horizon about a fifth of the way down, so almost no empty sky is left.
 // Andrew 2026-11-04 ("zoom out a lot more lol"): back to the whole island in the ocean. The pivot
 // is the island's middle and the 'hero' is the whole island, about 14 units across.
-const VIEW_ANGLE = deg(17); // low enough that the horizon and the moon stay in frame above the island (Andrew 2026-11-04)
+// Andrew 2026-11-04: closer and lower, "the end is almost at the waterline" while the whole island
+// still shows, filling most of the right side.
+const VIEW_ANGLE = deg(11);
 const HERO_W = 14; // the island's width in island units (about 400 m at 28.8 m a unit)
 const HUB: [number, number] = [0, 0.4]; // x, z in island units: the island's middle
 const HUB_Y = 0;
 function Framing({ focus, still }: { focus: Focus | null; still: boolean }) {
   const { camera, size, invalidate, gl } = useThree();
   const base = useRef(new THREE.Vector3());
-  const pointer = useRef({ x: 0, y: 0 });
-  const eased = useRef({ x: 0, y: 0, vx: 0, vy: 0, k: 1.18 });
   const section = useRef<HTMLElement | null>(null);
   // Click and drag to turn round the island, within reason (Andrew 2026-11-04): yaw only, clamped.
   const yaw = useRef({ v: 0, target: 0 });
+  // Design review, round 2 (components/review): the closer framing while <html> carries rvf-island.
+  // The review panel fires rv:flags when a switch flips. Remove with the review folder.
+  const [close, setClose] = useState(() => document.documentElement.classList.contains('rvf-island'));
+  useEffect(() => {
+    const read = () => setClose(document.documentElement.classList.contains('rvf-island'));
+    window.addEventListener('rv:flags', read);
+    return () => window.removeEventListener('rv:flags', read);
+  }, []);
   useLayoutEffect(() => {
     const cam = camera as THREE.PerspectiveCamera;
     const W = size.width, H = size.height;
@@ -1390,10 +1394,10 @@ function Framing({ focus, still }: { focus: Focus | null; still: boolean }) {
     // narrow screen still holds the hero and a little of the town round it
     const f = wide ? Math.min(H * 1.1, W * 0.8) : Math.min(H * 0.8, W * 1.4);
     // the hero's screen width, so its distance: about a sixth of a desktop, under a third of a phone
-    const heroPx = wide ? Math.min(W * 0.6, H * 1.1) : W * 0.92;
+    const heroPx = (wide ? Math.min(W * 0.72, H * 1.3) : W * 0.95) * (close ? 1.4 : 1);
     const D = (f * HERO_W) / heroPx;
-    const angle = wide ? VIEW_ANGLE : deg(30);
-    const px = wide ? box.x + box.w * 0.62 : W * 0.5; // the island's column: right of the words on desktop
+    const angle = wide ? VIEW_ANGLE : deg(18);
+    const px = wide ? W * 0.64 : W * 0.5; // the island's column: the right side on desktop
     const ty = wide ? Math.max(H * 0.6, box.y + box.h * 0.58) : box.y + box.h * 0.7; // the island's row
     const py = ty - f * Math.tan(angle); // the horizon row
     const fullW = 2 * Math.max(px, W - px), fullH = 2 * Math.max(py, H - py);
@@ -1404,36 +1408,35 @@ function Framing({ focus, still }: { focus: Focus | null; still: boolean }) {
     cam.updateProjectionMatrix();
     const h = HUB_Y + D * Math.sin(angle);
     base.current.set(HUB[0], h, HUB[1] + D * Math.cos(angle));
-    cam.position.copy(base.current);
-    cam.rotation.set(0, 0, 0);
+    { // keep any turn the visitor has dragged in
+      const v = yaw.current.v, c = Math.cos(v), sn = Math.sin(v), oz = base.current.z - HUB[1];
+      cam.position.set(HUB[0] + oz * sn, h, HUB[1] + oz * c);
+      cam.rotation.set(0, v, 0);
+    }
     // The moon, placed by where it should appear on screen: just left of the island's centre on
     // desktop, so its path runs down to the island; on a phone, where the words fill the sky above
     // the horizon, low on the right.
     const mx = wide ? px - 0.2 * box.w : W * 0.76, my = py - f * Math.tan(deg(wide ? 1.7 : 3.4)); // the long desktop lens (r4): lower, so it clears the header
     moonDir.set((mx - px) / f, (py - my) / f, -1).normalize();
     invalidate();
-  }, [camera, size, focus, invalidate]);
+  }, [camera, size, focus, invalidate, close]);
   useEffect(() => {
     section.current = gl.domElement.closest('section');
     if (still) return;
-    const onMove = (e: PointerEvent) => {
-      if (e.pointerType === 'touch') return; // a finger scrolling the page is not a look around
-      pointer.current.x = (e.clientX / window.innerWidth) * 2 - 1;
-      pointer.current.y = (e.clientY / window.innerHeight) * 2 - 1;
-    };
-    const onLeave = () => { pointer.current.x = 0; pointer.current.y = 0; };
-    window.addEventListener('pointermove', onMove, { passive: true });
-    document.documentElement.addEventListener('pointerleave', onLeave);
-    // Drag: anywhere on the section that is not a link or button turns the camera round the island.
+    // Drag: anywhere on the section, the island (the door link) included, turns the camera round the
+    // island; a click that never moved still opens the door (island-door.tsx reads data-dragged).
+    // No pointer sway, no drift and no glide in (Andrew 2026-11-04: "don't make it move with the mouse
+    // hover", "you almost have to chase it"): only a drag moves it.
     const sec = section.current;
     let drag: { x: number; start: number; id: number } | null = null;
     const onDown = (e: PointerEvent) => {
-      if (e.button !== 0 || (e.target as Element).closest('a, button, input, textarea, label')) return;
+      if (e.button !== 0 || (e.target as Element).closest('button, input, textarea, label, a:not(.il-door)')) return;
       drag = { x: e.clientX, start: yaw.current.target, id: e.pointerId };
-      sec?.setAttribute('data-dragging', '');
+      sec?.removeAttribute('data-dragged');
     };
     const onDrag = (e: PointerEvent) => {
       if (!drag || e.pointerId !== drag.id) return;
+      if (Math.abs(e.clientX - drag.x) > 6) { sec?.setAttribute('data-dragging', ''); sec?.setAttribute('data-dragged', ''); }
       yaw.current.target = THREE.MathUtils.clamp(drag.start - (e.clientX - drag.x) * 0.004, -0.7, 0.7);
     };
     const onUp = () => { drag = null; sec?.removeAttribute('data-dragging'); };
@@ -1442,36 +1445,18 @@ function Framing({ focus, still }: { focus: Focus | null; still: boolean }) {
     window.addEventListener('pointerup', onUp);
     window.addEventListener('pointercancel', onUp);
     return () => {
-      window.removeEventListener('pointermove', onMove); document.documentElement.removeEventListener('pointerleave', onLeave);
       sec?.removeEventListener('pointerdown', onDown); window.removeEventListener('pointermove', onDrag);
       window.removeEventListener('pointerup', onUp); window.removeEventListener('pointercancel', onUp);
     };
   }, [still, gl]);
   useFrame((state, delta) => {
     if (still) return;
-    const dt = Math.min(delta, 0.05); // a long frame (a tab coming back) never kicks the spring
-    const t = state.clock.elapsedTime, e = eased.current, b = base.current;
-    // arrival: 0 while the section's top is at the foot of the screen, 1 once it reaches the top
-    const r = section.current?.getBoundingClientRect(), vh = window.innerHeight || 1;
-    const p = r ? THREE.MathUtils.clamp(1 - r.top / vh, 0, 1) : 1;
-    const k = 1 + 0.18 * (1 - p) ** 3;
-    e.k += (k - e.k) * (1 - Math.exp(-dt * 2.2));
-    // The sway: a soft, slightly underdamped spring toward the pointer plus a slow figure-eight
-    // drift, so the island seems to float on the swell rather than track the mouse.
-    // sized to the camera's distance, so the close camera sways as much on screen as the far one did
-    const reach = Math.max(1, b.z - HUB[1]) / 9.7;
-    const tx = (pointer.current.x * 0.6 + Math.sin(t * 0.13) * 0.3) * reach;
-    const ty = (-pointer.current.y * 0.3 + Math.sin(t * 0.26) * 0.07) * reach;
-    const stiff = 7, damp = 4.2;
-    e.vx += ((tx - e.x) * stiff - e.vx * damp) * dt; e.x += e.vx * dt;
-    e.vy += ((ty - e.y) * stiff - e.vy * damp) * dt; e.y += e.vy * dt;
-    const yw = yaw.current;
-    yw.v += (yw.target - yw.v) * (1 - Math.exp(-dt * 6));
-    const ox = (b.x - HUB[0]) * e.k + e.x, oz = (b.z - HUB[1]) * e.k;
-    const c = Math.cos(yw.v), sn = Math.sin(yw.v);
-    state.camera.position.set(HUB[0] + ox * c + oz * sn, HUB_Y + (b.y - HUB_Y) * e.k + e.y, HUB[1] - ox * sn + oz * c);
-    // a slight look back toward the island as the camera slides, so it swings round it a touch
-    state.camera.rotation.set(0, yw.v + (e.x / reach) * 0.012, 0);
+    const yw = yaw.current, b = base.current;
+    if (Math.abs(yw.target - yw.v) < 1e-4) return; // at rest: the camera stays where Framing put it
+    yw.v += (yw.target - yw.v) * (1 - Math.exp(-Math.min(delta, 0.05) * 6));
+    const ox = b.x - HUB[0], oz = b.z - HUB[1], c = Math.cos(yw.v), sn = Math.sin(yw.v);
+    state.camera.position.set(HUB[0] + ox * c + oz * sn, b.y, HUB[1] - ox * sn + oz * c);
+    state.camera.rotation.set(0, yw.v, 0);
   });
   return null;
 }
@@ -1481,6 +1466,38 @@ function FirstFrame({ onReady }: { onReady: () => void }) {
   const done = useRef(false);
   useFrame(() => { if (!done.current) { done.current = true; requestAnimationFrame(onReady); } });
   return null;
+}
+
+// A few low-poly clouds (Andrew 2026-11-04: "clouds maybe"): puffs of flat-shaded spheres, moonlit
+// lilac, kept off the town centre: behind the island toward the horizon and over its edges, swaying
+// slowly side to side (still under reduced motion).
+const CLOUDS: { x: number; y: number; z: number; s: number }[] = [
+  { x: -2, y: 2.4, z: -26, s: 1.1 }, { x: 9, y: 7.8, z: -34, s: 1.4 }, { x: 21, y: 3.4, z: -30, s: 0.9 },
+  { x: 13, y: 4.6, z: -16, s: 0.6 }, { x: 1, y: 10.5, z: -44, s: 1.9 },
+];
+function Clouds({ still }: { still: boolean }) {
+  const group = useRef<THREE.Group>(null);
+  const puffs = useMemo(() => {
+    const rnd = seeded(7);
+    return CLOUDS.map(c => Array.from({ length: 5 }, (_, i) => ({
+      p: [c.x + (i - 2) * 0.42 * c.s + (rnd() - 0.5) * 0.2, c.y + (rnd() - 0.3) * 0.18 * c.s, c.z + (rnd() - 0.5) * 0.3] as [number, number, number],
+      r: (0.32 + rnd() * 0.22) * c.s * (i === 2 ? 1.35 : i === 1 || i === 3 ? 1.1 : 0.8),
+    }))).flat();
+  }, []);
+  useFrame(state => {
+    if (still || !group.current) return;
+    group.current.position.x = Math.sin(state.clock.elapsedTime * 0.025) * 2.5; // a slow sway, never a jump
+  });
+  return (
+    <group ref={group}>
+      {puffs.map((q, i) => (
+        <mesh key={i} position={q.p} scale={[q.r * 1.25, q.r * 0.75, q.r]}>
+          <icosahedronGeometry args={[1, 1]} />
+          <meshLambertMaterial color="#8f96cf" emissive="#1e2458" flatShading transparent opacity={0.6} depthWrite={false} />
+        </mesh>
+      ))}
+    </group>
+  );
 }
 
 function Town({ still }: { still: boolean }) {
@@ -1495,6 +1512,7 @@ function Town({ still }: { still: boolean }) {
     <Tufts L={L} />
     <Lanterns L={L} />
     <Fireflies L={L} still={still} />
+    <Clouds still={still} />
   </>;
 }
 
@@ -1506,7 +1524,7 @@ export default function IslandScene({ still, paused, focus, onReady, marks }: {
     <Canvas
       flat
       shadows
-      dpr={[1, 1.5]}
+      dpr={[1, 1.25]}
       frameloop={still ? 'demand' : paused ? 'never' : 'always'}
       camera={{ manual: true, fov: 40, near: 0.3, far: 1400, position: [0, 4, 18], rotation: [0, 0, 0] }}
       gl={{ antialias: true, alpha: true, powerPreference: 'low-power' }}

@@ -103,6 +103,16 @@ export function IslandStage() {
     return () => document.removeEventListener('pointerdown', away);
   }, [open]);
 
+  // Fetch the scene's code early, once the visitor reaches Contact ("compare notes"), two sections
+  // above, so it is ready by the time they scroll down (Andrew 2026-11-04).
+  useEffect(() => {
+    const contact = document.querySelector('#contact');
+    if (!contact) return;
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { void import('./island-scene'); io.disconnect(); } });
+    io.observe(contact);
+    return () => io.disconnect();
+  }, []);
+
   // Pause the render loop while the section (all of it is sea) is off screen; it may still be
   // mounted within the margin.
   useEffect(() => {
@@ -132,7 +142,7 @@ export function IslandStage() {
   return (
     <div ref={ref} className="il-stage" data-ready={ready || gl === false ? '' : undefined}>
       {gl === false ? <Poster /> : gl === null ? null : (
-        <NearViewport placeholder={null} margin="60%" unmountMargin="150%" className="il-gl">
+        <NearViewport placeholder={null} margin="150%" unmountMargin="250%" className="il-gl">
           <Boundary fallback={<Poster />} onError={() => setFailed(true)}>
             <Scene still={still} paused={!onScreen} focus={focus} onReady={() => setReady(true)} marks={marks} />
           </Boundary>

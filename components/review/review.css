@@ -1,0 +1,240 @@
+/* =============================================================================================
+   The design review layer (components/review/review.tsx). DEV ONLY.
+   Every proposal's rules start with html.rvf-<id>, the class its switch puts on <html>, so a
+   switch that is off leaves the site exactly as committed. Reduced motion is the site's own
+   html[data-motion="reduced"]: each moving proposal is gated on its absence and rests in place.
+   ============================================================================================= */
+
+/* ---------- 01 The day rail ---------------------------------------------------------------
+   A paper capsule in the right gutter (it reads on every ground, day or night, because it
+   brings its own paper and ink). Not pressable as a whole, so no ledge: outline only. */
+.rv-rail { position:fixed; z-index:55; right:max(14px,calc(var(--gutter) / 2 - 13px)); top:50%; translate:0 -50%; transition:opacity .4s var(--ease-ui); }
+html:not(.is-loaded) .rv-rail { opacity:0; pointer-events:none; }
+@media (max-width:999px) { .rv-rail { display:none; } }
+.rv-rail-track { position:relative; width:26px; height:min(46vh,380px); border:1.5px solid var(--ink); border-radius:var(--r-pill); background:var(--card); touch-action:none; cursor:ns-resize; }
+/* the line the sun rides, inset so the sun never leaves the capsule */
+.rv-rail-track::before { content:''; position:absolute; left:50%; top:14px; bottom:14px; width:2px; translate:-50% 0; border-radius:2px; background:color-mix(in srgb,var(--ink) 22%,transparent); }
+/* A section's dot: a real link. The hit box is 44 by 28 and reaches left, over the label. */
+.rv-tick { position:absolute; left:50%; width:44px; height:28px; translate:-50% -50%; display:grid; place-items:center; color:var(--ink); text-decoration:none; }
+.rv-tick::before { content:''; width:8px; height:8px; border-radius:50%; background:var(--ink); transition:scale .3s var(--ease-spring),background-color var(--dur-ui) var(--ease-ui); }
+.rv-tick:is(:hover,:focus-visible)::before { scale:1.6; background:var(--berry); }
+.rv-tick:focus-visible { outline:3px solid var(--berry); outline-offset:0; border-radius:8px; }
+.rv-tick-label { position:absolute; right:calc(100% - 4px); top:50%; translate:8px -50%; padding:5px 10px; border:1.5px solid var(--ink); border-radius:var(--r-pill); background:var(--card); font:600 12px/1 var(--mono); letter-spacing:.04em; text-transform:uppercase; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity var(--dur-ui) var(--ease-ui),translate .35s var(--ease-spring); }
+.rv-tick:is(:hover,:focus-visible) .rv-tick-label { opacity:1; translate:0 -50%; }
+/* The ticks and the sun sit in one inset box, 14px in from each end, like the line. */
+.rv-rail-in { position:absolute; inset:14px 0; }
+
+/* The sun: gold by day, a paper moon with a crescent bite by night (--night, 0 to 1, written by
+   the rail's scroll handler on this one element). */
+.rv-sun { position:absolute; left:50%; width:0; height:0; pointer-events:none; }
+.rv-sun-disc { position:absolute; left:0; top:0; width:26px; height:26px; translate:-50% -50%; box-sizing:border-box; overflow:hidden; border:1.5px solid var(--ink); border-radius:50%;
+  background:color-mix(in srgb,#f4efe6 calc(var(--night,0) * 100%),#ffd98a);
+  box-shadow:0 0 0 calc((1 - var(--night,0)) * 5px) color-mix(in srgb,#ffd98a 45%,transparent); transition:scale .3s var(--ease-spring); }
+.rv-sun-disc i { position:absolute; inset:-2px; left:38%; top:-22%; border-radius:50%; background:var(--berry-deep); opacity:var(--night,0); }
+.rv-rail-track[data-drag] .rv-sun-disc { scale:1.2; }
+.rv-time { position:absolute; right:22px; top:0; translate:0 -50%; padding:5px 9px; border:1.5px solid var(--ink); border-radius:var(--r-pill); background:var(--card); color:var(--ink); font:600 12px/1 var(--mono); letter-spacing:.02em; white-space:nowrap; font-variant-numeric:tabular-nums; }
+/* a label and the clock never stack: the clock steps aside while a dot is hovered */
+.rv-rail-track:has(.rv-tick:is(:hover,:focus-visible)) .rv-time { opacity:0; }
+html[data-motion="reduced"] .rv-tick::before, html[data-motion="reduced"] .rv-tick-label, html[data-motion="reduced"] .rv-sun-disc { transition:none; }
+
+/* ---------- 02 Rows wear their hour ---------------------------------------------------------
+   The sky colours are the ground's own stops (components/site/ground.tsx). Contrast, computed:
+   ink on #b4d1f0 11.5, on #ffd9a0 13.1, on #f6b892 10.0; paper on #4d4a94 6.6, on #1d2654 12.6. */
+html.rvf-hours .contents .toc-row { position:relative; --hour-bg:var(--berry-soft); --hour-on:var(--ink); }
+html.rvf-hours .contents .toc-row[href="#phones"] { --hour:'12:00 PM'; --hour-bg:#b4d1f0; }
+html.rvf-hours .contents .toc-row[href="#work"] { --hour:'5:30 PM'; --hour-bg:#ffd9a0; }
+html.rvf-hours .contents .toc-row[href="#experience"] { --hour:'7:15 PM'; --hour-bg:#f6b892; }
+html.rvf-hours .contents .toc-row[href="#contact"] { --hour:'8:30 PM'; --hour-bg:#4d4a94; --hour-on:var(--paper); }
+html.rvf-hours .contents .toc-row[href="#island"] { --hour:'11:30 PM'; --hour-bg:#1d2654; --hour-on:var(--paper); }
+html.rvf-hours .contents .toc-row:is(:hover,:focus-visible) { background-color:var(--hour-bg); color:var(--hour-on); }
+html.rvf-hours .contents .toc-row:is(:hover,:focus-visible) :is(.toc-num,.toc-sub,.toc-arrow) { color:var(--hour-on); }
+html.rvf-hours .contents .toc-row::after { content:var(--hour,''); position:absolute; right:46px; top:50%; translate:10px -50%; padding:6px 10px; border:1.5px solid var(--ink); border-radius:var(--r-pill); background:var(--card); color:var(--ink); font:600 12px/1 var(--mono); letter-spacing:.02em; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity var(--dur-ui) var(--ease-ui),translate .4s var(--ease-spring); }
+html.rvf-hours .contents .toc-row:is(:hover,:focus-visible)::after { opacity:1; translate:0 -50%; }
+html.rvf-hours[data-motion="reduced"] .contents .toc-row::after { transition:none; translate:0 -50%; }
+@media (max-width:599px) { html.rvf-hours .contents .toc-row::after { display:none; } }
+
+/* ---------- 03 The name opens like doors ----------------------------------------------------
+   A CSS scroll-driven animation: the browser ties each keyframe to the first 85% of a screen of
+   scroll and runs it on the compositor, so it costs no script. The pointer drift (Follow, in
+   hero.client.tsx) writes `transform`; these write `translate` and `scale`, which are separate
+   properties, so the two add up instead of fighting. No support (Firefox today): nothing moves. */
+@supports (animation-timeline:scroll()) {
+  html.rvf-hero:not([data-motion="reduced"]) .hp[data-icons="a"] :is(.hp-back,.hp-front,.hp-photo,.hp-icons) { animation-timing-function:linear; animation-fill-mode:both; animation-timeline:scroll(root block); animation-range:0px 85vh; }
+  html.rvf-hero:not([data-motion="reduced"]) .hp[data-icons="a"] .hp-back { animation-name:rv-door-l; }
+  html.rvf-hero:not([data-motion="reduced"]) .hp[data-icons="a"] .hp-front { animation-name:rv-door-r; }
+  html.rvf-hero:not([data-motion="reduced"]) .hp[data-icons="a"] .hp-photo { animation-name:rv-step; transform-origin:50% 100%; }
+  html.rvf-hero:not([data-motion="reduced"]) .hp[data-icons="a"] .hp-icons { animation-name:rv-drift; }
+}
+@keyframes rv-door-l { to { translate:-7vw 0; } }
+@keyframes rv-door-r { to { translate:7vw 0; } }
+@keyframes rv-step { from { translate:-50% 0; scale:1; } to { translate:-50% 0; scale:1.2; } }
+@keyframes rv-drift { to { scale:1.25; opacity:0; } }
+
+/* ---------- 04 One job in the light ---------------------------------------------------------
+   Only while pinned (the sideways strip). The card already turns about its pin (transform-origin
+   in experience.css), so a smaller scale reads as hanging further back. UMD keeps its own look. */
+html.rvf-spot:not([data-motion="reduced"]) .experience[data-pin] .xp-item:not(.xp-end):not(.xp-umd) .xp-card { transition:scale .6s var(--ease-elastic),opacity .35s var(--ease-ui),box-shadow .5s var(--ease-elastic),translate .5s var(--ease-elastic); }
+html.rvf-spot:not([data-motion="reduced"]) .experience[data-pin] .xp-item:not(.xp-end):not(.xp-umd):not(.rv-lit) .xp-card { scale:.93; opacity:.7; }
+html.rvf-spot:not([data-motion="reduced"]) .experience[data-pin] .xp-pin { transition:scale .5s var(--ease-elastic); }
+html.rvf-spot:not([data-motion="reduced"]) .experience[data-pin] .rv-lit .xp-pin { scale:1.4; }
+@keyframes rv-hop { 0% { transform:translateY(0) scaleY(1); } 35% { transform:translateY(-14px) scaleY(1.08); } 70% { transform:translateY(0) scaleY(.94); } 100% { transform:translateY(0) scaleY(1); } }
+html.rvf-spot:not([data-motion="reduced"]) .experience[data-pin] .rv-lit .xp-crowd .cl-person { animation:rv-hop .55s var(--ease-ui) 1, xp-bob 1.6s ease-in-out .55s infinite alternate; }
+html.rvf-spot:not([data-motion="reduced"]) .experience[data-pin] .rv-lit .xp-crowd .cl-person:nth-child(2) { animation-delay:.08s,.63s; }
+html.rvf-spot:not([data-motion="reduced"]) .experience[data-pin] .rv-lit .xp-crowd .cl-person:nth-child(3) { animation-delay:.16s,.71s; }
+html.rvf-spot:not([data-motion="reduced"]) .experience[data-pin] .rv-lit .xp-crowd .cl-person:nth-child(4) { animation-delay:.24s,.79s; }
+
+/* ---------- 05 The résumé lands -------------------------------------------------------------
+   Before: off its place and unseen. .rv-landed (set once, by an IntersectionObserver) plays the
+   drop as a one-shot animation, so the card's own hover (straighten and grow) is untouched. */
+html.rvf-land:not([data-motion="reduced"]) .resume:not(.rv-landed) .rs-card { translate:0 60vh; rotate:-16deg; opacity:0; }
+html.rvf-land:not([data-motion="reduced"]) .resume.rv-landed .rs-card { animation:rv-land 1.1s var(--ease-elastic) backwards; }
+@keyframes rv-land { from { translate:0 60vh; rotate:-16deg; opacity:0; } 20% { opacity:1; } }
+html.rvf-land:not([data-motion="reduced"]) .resume:not(.rv-landed) .rs-click { opacity:0; }
+html.rvf-land:not([data-motion="reduced"]) .resume.rv-landed .rs-click { animation:rv-note .5s var(--ease-spring) .9s backwards; }
+@keyframes rv-note { from { opacity:0; scale:.6; } }
+html.rvf-land:not([data-motion="reduced"]) .resume.rv-landed .rs-click path { stroke-dasharray:130; animation:rv-draw .7s var(--ease-out) 1.3s backwards; }
+@keyframes rv-draw { from { stroke-dashoffset:130; } }
+
+/* ---------- 06 Thumb bar on phones ----------------------------------------------------------
+   The container is a tray, not a button, so it is flat with an outline; only Résumé, the one
+   primary action, gets the berry fill and the ledge. It steps down out of view on the hero (the
+   name is the point there), in the pinned timeline (Skip section lives at the bottom) and in
+   contact and the résumé (it would sit on Send, and on Open PDF and Download). */
+.rv-thumb { display:none; }
+@media (max-width:760px) {
+  .rv-thumb { position:fixed; z-index:58; left:50%; bottom:max(12px,env(safe-area-inset-bottom)); translate:-50% 0; display:flex; align-items:center; gap:4px; padding:6px; border:1.5px solid var(--ink); border-radius:var(--r-pill); background:var(--card); transition:translate .55s var(--ease-elastic); }
+  html:not(.is-loaded) .rv-thumb, html[data-section="top"] .rv-thumb, html[data-section="experience"] .rv-thumb, html[data-section="contact"] .rv-thumb, html[data-section="resume"] .rv-thumb, html[data-section="island"] .rv-thumb { translate:-50% 180%; }
+  .rv-thumb a { display:inline-flex; align-items:center; justify-content:center; min-height:var(--hit); min-width:64px; padding:0 16px; border-radius:var(--r-pill); color:var(--ink); font:700 13px/1 var(--mono); letter-spacing:.05em; text-transform:uppercase; text-decoration:none; white-space:nowrap; transition:background-color var(--dur-ui) var(--ease-ui); }
+  .rv-thumb a:focus-visible { outline:3px solid var(--berry); outline-offset:2px; }
+  .rv-thumb .rv-thumb-main { background:var(--berry); color:#fff; box-shadow:0 3px 0 var(--berry-press); margin-bottom:3px; transition:translate var(--dur-press) linear,box-shadow var(--dur-press) linear; } /* white on berry 7.2:1 */
+  .rv-thumb .rv-thumb-main:active { translate:0 2px; box-shadow:0 1px 0 var(--berry-press); }
+  html[data-section="work"] .rv-thumb a[data-for="work"] { background:var(--berry-soft); } /* ink on berry-soft 12:1 */
+  html[data-motion="reduced"] .rv-thumb { transition:none; }
+}
+
+/* ---------- The review panel itself ---------------------------------------------------------
+   Calm on purpose (the Paper dialect: hairlines, soft shadow, one accent), so it never competes
+   with what it is reviewing. Folds to a pill, and remembers that. */
+.rv-panel { position:fixed; z-index:120; left:16px; bottom:16px; width:340px; max-width:calc(100vw - 32px); color:var(--ink); font:500 14px/1.45 var(--body); }
+.rv-panel[data-open] { border:1px solid var(--line); border-radius:16px; background:#fff; box-shadow:0 10px 34px rgba(18,20,43,.18); overflow:hidden; }
+.rv-fold { display:flex; align-items:center; gap:8px; width:100%; min-height:var(--hit); padding:0 14px; border:1px solid var(--line); border-radius:var(--r-pill); background:#fff; color:var(--ink); font:700 13px/1 var(--mono); letter-spacing:.04em; text-transform:uppercase; box-shadow:0 6px 20px rgba(18,20,43,.16); }
+.rv-panel:not([data-open]) { width:auto; }
+.rv-panel[data-open] .rv-fold { border:0; border-bottom:1px solid var(--line); border-radius:0; box-shadow:none; }
+.rv-fold:focus-visible, .rv-panel :is(a,button):focus-visible { outline:3px solid var(--berry); outline-offset:-3px; }
+.rv-dot { width:10px; height:10px; border-radius:50%; background:var(--berry); }
+.rv-count { margin-left:auto; padding-left:12px; font-weight:500; color:var(--muted); text-transform:none; letter-spacing:0; }
+.rv-body { max-height:min(62vh,560px); overflow-y:auto; overscroll-behavior:contain; padding:12px 14px 14px; display:grid; gap:12px; }
+.rv-ab { display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px; border-radius:12px; background:var(--sh-muted); }
+.rv-ab button { min-height:36px; border:0; border-radius:9px; background:none; color:var(--ink-2); font:700 13px/1 var(--mono); letter-spacing:.04em; text-transform:uppercase; }
+.rv-ab button[aria-pressed="true"] { background:#fff; color:var(--ink); box-shadow:0 1px 3px rgba(18,20,43,.18); }
+.rv-list { list-style:none; margin:0; padding:0; display:grid; }
+.rv-list li { padding:10px 0; border-top:1px solid var(--line); }
+.rv-list li:first-child { border-top:0; padding-top:0; }
+.rv-row { display:flex; align-items:center; gap:10px; }
+.rv-num { font:500 12px/1 var(--mono); color:var(--berry); }
+.rv-title { flex:1; font:700 15px/1.2 var(--body); }
+.rv-why { margin:6px 0 0; color:var(--ink-2); font-size:13.5px; }
+.rv-list li:not([data-on]) :is(.rv-title,.rv-why) { color:var(--muted); }
+.rv-meta { display:flex; align-items:center; gap:10px; margin:6px 0 0; font:500 12px/1.3 var(--mono); color:var(--muted); }
+.rv-meta a { color:var(--berry); font-weight:700; text-underline-offset:3px; }
+/* The switch: green means on, fill only, as everywhere else in the system */
+.rv-switch { position:relative; flex:none; width:44px; height:26px; padding:0; border:1.5px solid var(--ink); border-radius:var(--r-pill); background:var(--sh-muted); transition:background-color var(--dur-ui) var(--ease-ui); }
+.rv-switch i { position:absolute; left:2px; top:2px; width:19px; height:19px; border-radius:50%; background:var(--ink); transition:translate var(--dur-ui) var(--ease-ui); }
+.rv-switch[aria-checked="true"] { background:var(--tile-leaf); }
+.rv-switch[aria-checked="true"] i { translate:18px 0; }
+.rv-copy { min-height:var(--hit); border:1.5px solid var(--ink); border-radius:var(--r-control); background:var(--berry); color:#fff; font:700 13px/1 var(--mono); letter-spacing:.04em; text-transform:uppercase; }
+.rv-copy:active { translate:0 1px; }
+@media (max-width:760px) { .rv-panel { left:8px; bottom:auto; top:calc(var(--header-h) + 4px); max-width:calc(100vw - 16px); } .rv-body { max-height:56vh; } }
+html[data-motion="reduced"] .rv-switch, html[data-motion="reduced"] .rv-switch i { transition:none; }
+
+/* =============================================================================================
+   ROUND 2 (2026-11-10), from Andrew's notes on round 1. Same rule: every selector is gated on
+   its flag class, html.rvf-<id>.
+   ============================================================================================= */
+
+/* The rail: no text selection or link ghost while dragging the sun (the drag fix is in review.tsx) */
+.rv-rail-track, .rv-tick { user-select:none; -webkit-user-select:none; -webkit-user-drag:none; }
+.rv-round-title { margin:0 0 8px; font:600 11px/1 var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+.rv-round + .rv-round { padding-top:12px; border-top:2px solid var(--ink); }
+
+/* ---------- 07 The page is the hero (desktop) ------------------------------------------------
+   Columns of one third and two thirds, so the page's centre falls on the two-thirds line. The
+   card is no longer sized to fit the screen's height: it is 720px wide (was 520), pinned to the
+   top of its cell, and its foot runs off the page (.rs-page clips), which says "there is more"
+   and makes the top half readable in place. The title is a label now: 68px at most, was 184. */
+@media (min-width:761px) {
+  html.rvf-page .resume .rs-wrap { grid-template-columns:minmax(0,1fr) minmax(0,2fr); column-gap:clamp(24px,4vw,72px); }
+  html.rvf-page .resume .rs-title { font-size:clamp(40px,4.4vw,68px); line-height:1; }
+  html.rvf-page .resume .rs-line { font-size:clamp(18px,1.5vw,22px); }
+  html.rvf-page .resume .rs-card-cell { place-items:start center; }
+  html.rvf-page .resume .rs-card { width:min(720px,100cqw); }
+  html.rvf-page .resume .rs-card:is(:hover,:focus-visible) { scale:1.03; } /* already large: a nod, not a jump */
+  html.rvf-page .resume .rs-click { --cw:min(720px,100cqw); top:6px; }
+}
+
+/* ---------- 08 The letter in the middle (desktop) --------------------------------------------
+   One centred column. The quick way becomes a single centred row (the invitation over the
+   buttons); the letter sits under it at a reading width. The written-out address and its note
+   are hidden here: Email me and Copy email carry the same address one row up.
+   The toys are placed from the letter itself with CSS anchor positioning (the plane leaving its
+   right edge under the stamp, the envelope leaning on its bottom left corner), so they follow the
+   letter at any width; margins, not translate, because their bob animates translate. Where anchor
+   positioning is missing they stay where they were. */
+@media (min-width:1000px) {
+  html.rvf-letter .contact .ct-body { gap:28px; }
+  html.rvf-letter .contact .ct-split { grid-template-columns:minmax(0,1fr); justify-items:center; gap:36px; }
+  html.rvf-letter .contact .ct-reach { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:14px 12px; text-align:center; }
+  html.rvf-letter .contact .ct-invite { flex:0 0 100%; max-inline-size:none; margin:0; }
+  html.rvf-letter .contact :is(.ct-email,.ct-note) { display:none; }
+  html.rvf-letter .contact .ct-links { margin:0; }
+  html.rvf-letter .contact .cf { width:min(100%,800px); }
+  @supports (anchor-name:--a) {
+    /* An anchor must live inside the positioned element's containing block. The toys' layer was
+       that block and the letter is outside it, so the layer steps aside (static) and the toys
+       are placed in .ct-card, which holds both. */
+    html.rvf-letter .contact .ct-toys { position:static; }
+    html.rvf-letter .contact .ct-toy { z-index:2; }
+    html.rvf-letter .contact .cf { anchor-name:--rv-letter; }
+    html.rvf-letter .contact .ct-plane { position-anchor:--rv-letter; left:anchor(right); top:anchor(top); right:auto; margin:150px 0 0 -26px; }
+    html.rvf-letter .contact .ct-envelope { position-anchor:--rv-letter; left:anchor(left); top:anchor(bottom); margin:-96px 0 0 -92px; }
+  }
+}
+
+/* ---------- 10 Commits, pocket-size (desktop) ------------------------------------------------
+   The same lazy skyline, small, in the section's top right corner under the sentence it
+   illustrates. Its caption, legend and 2D/3D switch are hidden at this size; it sits under the
+   fan's layer, so a fanned card passes over it, never behind. */
+@media (min-width:1100px) {
+  html.rvf-commits .work .skc { position:absolute; z-index:0; top:calc(clamp(48px,6cqi,96px) + 44px); right:var(--gutter); width:290px; margin:0; gap:6px; }
+  html.rvf-commits .work .skc-head { justify-content:flex-end; }
+  html.rvf-commits .work .skc-title { font:600 12px/1 var(--mono); letter-spacing:.1em; }
+  html.rvf-commits .work :is(.skc-cap,.skyline-bar) { display:none; }
+  html.rvf-commits .work .skc .impact-chart-days { height:168px; }
+}
+
+/* ---------- 11 Pick, read, see (desktop) -----------------------------------------------------
+   The list keeps only names (six short rows, narrower), and the selected feature's line shows
+   once, in a note beside the phone with a tail pointing at it. That note is .ph-why-m, the
+   element phones.client.tsx already renders for small screens. Hover selects a row, so rows
+   must never change height under the pointer: here none of them do. */
+@media (min-width:1160px) {
+  html.rvf-bubble .phones .ph-list { max-width:400px; }
+  html.rvf-bubble .phones .ph-tab { padding-block:14px; }
+  html.rvf-bubble .phones .ph-why { display:none; }
+  html.rvf-bubble .phones .ph-device { position:relative; }
+  html.rvf-bubble .phones .ph-why-m { display:block; position:absolute; z-index:2; right:calc(100% + 30px); top:56%; width:clamp(230px,21vw,300px); min-height:0; margin:0; padding:18px 20px 20px; box-sizing:border-box;
+    border:1.5px solid var(--ink); border-radius:22px; background:var(--card); color:var(--ink); font:500 17px/1.5 var(--body); box-shadow:0 6px 0 var(--ink); rotate:-1.5deg; }
+  html.rvf-bubble .phones .ph-why-m::after { content:''; position:absolute; left:100%; top:34px; width:16px; height:16px; translate:-8px 0; rotate:45deg; background:var(--card); border:1.5px solid var(--ink); border-left:0; border-bottom:0; }
+}
+
+/* ---------- 12 A quieter rail -----------------------------------------------------------------
+   At rest: the sun and the clock only. The capsule, its line and the dots fade in when the
+   pointer nears the right edge (a wider invisible hover zone), on keyboard focus, and while
+   dragging. */
+html.rvf-quiet .rv-rail::before { content:''; position:absolute; inset:-28px -16px -28px -48px; }
+html.rvf-quiet .rv-rail-track { border-color:transparent; background-color:transparent; transition:border-color .3s var(--ease-ui),background-color .3s var(--ease-ui); }
+html.rvf-quiet .rv-rail-track::before, html.rvf-quiet .rv-tick { opacity:0; transition:opacity .3s var(--ease-ui); }
+html.rvf-quiet .rv-rail:is(:hover,:focus-within) .rv-rail-track, html.rvf-quiet .rv-rail-track[data-drag] { border-color:var(--ink); background-color:var(--card); }
+html.rvf-quiet .rv-rail:is(:hover,:focus-within) .rv-tick, html.rvf-quiet .rv-rail-track[data-drag] .rv-tick { opacity:1; }
+html.rvf-quiet .rv-rail:is(:hover,:focus-within) .rv-rail-track::before, html.rvf-quiet .rv-rail-track[data-drag]::before { opacity:1; }
+html.rvf-quiet[data-motion="reduced"] :is(.rv-rail-track,.rv-tick) { transition:none; }
