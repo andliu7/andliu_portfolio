@@ -672,7 +672,7 @@ export const EVENING = {
 export const CONTACT = {
   eyebrow: '04 / Contact me', // renumbered after On a phone (2026-10-20); [UI] Andrew 2026-10-07 ("make it more of a contact me"; was 'Say hi') (needs sign-off)
   headline: "LET'S COMPARE *notes.*", // [P]
-  invite: 'Hiring, building something, or need tutoring? Email is the best way to reach me :)', // [Andrew 2026-11-11] his wording; it was "...or stuck on a mechanism? Email me." (2026-10-07), the one-line invitation under the headline (needs sign-off)
+  invite: 'Hiring, building something, need tutoring, or have feedback? Email is the best way to reach me :)', // [Andrew 2026-11-12] feedback added; 2026-11-11 his wording; it was "...or stuck on a mechanism? Email me." (2026-10-07), the one-line invitation under the headline (needs sign-off)
   down: 'Résumé below', // [UI] the bobbing cue under the card (Andrew 2026-10-12, needs sign-off)
   emailCta: 'Email me', // [UI] the primary button; opens the letter's full version since 2026-11-11 (it was a mailto link) (needs sign-off)
   // Shown beside the word when the GitHub and LinkedIn pills open on hover (components/site/social-button.tsx)
@@ -845,6 +845,9 @@ export const ISLAND = {
   gameTitle: "Andrew Liu's island, a small driving game", // [P] app/island-section.tsx iframe title
   src: '/island/index.html', // [plan 4.10]
   poster: 'islandS3', // IMAGES key
+  play: 'Play', // [Andrew 2026-11-12] the button in the middle of the island's place; the 3D island loads only when it is pressed (needs sign-off)
+  playName: 'Show the 3D island', // [UI] its accessible name (needs sign-off)
+  loading: 'Building the island...', // [UI] while the scene loads after Play (needs sign-off)
   door: 'The résumé island: open the game', // [UI] the 3D island's link name, since the canvas has no text (needs sign-off)
   confirm: { question: 'Head to the island?', enter: 'Enter the island', stay: 'Stay here' }, // [UI] the poster's confirm popup, Andrew 2026-10-06 (needs sign-off)
 } as const;

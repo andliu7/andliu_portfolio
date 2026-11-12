@@ -1,6 +1,7 @@
 'use client';
 import { Component, lazy, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { Play } from 'lucide-react';
 import { IMAGES, ISLAND } from '@/lib/site';
 import type { Focus } from './island-scene';
 import { LANDMARKS } from './landmarks';
@@ -10,9 +11,14 @@ import { useReducedMotion } from '@/components/site/use-reduced-motion';
 // The island's stage in #island (app/sections/island.tsx): the round 3D island in its night sea
 // (island-scene.tsx), or the game's poster where that cannot run.
 //
-//   WebGL           the scene, downloaded (its own chunk: three.js and @react-three/fiber) only
-//                   when the section comes within 60% of a screen of the viewport, unmounted again
-//                   past 150% (which frees the WebGL context), and paused while off screen.
+//   before Play     nothing 3D at all (Andrew 2026-11-12: the island "seems to be making the entire
+//                   page slower ... maybe just load in the moon ... a play button in the center").
+//                   A moon drawn in CSS and a Play button stand where the island will be. Until
+//                   then no scene code is downloaded, no shaders are compiled and no WebGL context
+//                   exists, so the rest of the page pays nothing for the island.
+//   after Play      the scene, downloaded then (its own chunk: three.js and @react-three/fiber),
+//                   unmounted again past 250% of a screen away (which frees the WebGL context),
+//                   and paused while off screen.
 //                   The canvas covers the whole section (the sea runs edge to edge, behind the
 //                   words); this box stays the door's click target, and the scene frames the
 //                   island inside it from the box measured here. The canvas fades in once its
@@ -90,6 +96,8 @@ export function IslandStage() {
   const [failed, setFailed] = useState(false);
   const [host, setHost] = useState<HTMLElement | null>(null);
   const [open, setOpen] = useState<number | null>(null);
+  // The visitor pressed Play: only then does the 3D scene load.
+  const [played, setPlayed] = useState(false);
   const marks = useRef<(HTMLElement | null)[]>([]);
 
   // The marks' layer, beside the door in .il-island (island.tsx).
@@ -102,16 +110,6 @@ export function IslandStage() {
     document.addEventListener('pointerdown', away);
     return () => document.removeEventListener('pointerdown', away);
   }, [open]);
-
-  // Fetch the scene's code early, once the visitor reaches Contact ("compare notes"), two sections
-  // above, so it is ready by the time they scroll down (Andrew 2026-11-04).
-  useEffect(() => {
-    const contact = document.querySelector('#contact');
-    if (!contact) return;
-    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { void import('./island-scene'); io.disconnect(); } });
-    io.observe(contact);
-    return () => io.disconnect();
-  }, []);
 
   // Pause the render loop while the section (all of it is sea) is off screen; it may still be
   // mounted within the margin.
@@ -141,7 +139,7 @@ export function IslandStage() {
 
   return (
     <div ref={ref} className="il-stage" data-ready={ready || gl === false ? '' : undefined}>
-      {gl === false ? <Poster /> : gl === null ? null : (
+      {gl === false ? <Poster /> : gl === null || !played ? null : (
         <NearViewport placeholder={null} margin="150%" unmountMargin="250%" className="il-gl">
           <Boundary fallback={<Poster />} onError={() => setFailed(true)}>
             <Scene still={still} paused={!onScreen} focus={focus} onReady={() => setReady(true)} marks={marks} />
@@ -149,6 +147,20 @@ export function IslandStage() {
         </NearViewport>
       )}
       {gl && ready && !failed && host && <Marks host={host} els={marks} open={open} setOpen={setOpen} />}
+      {/* Until the scene's first frame: the CSS moon, and Play (or a loading line once pressed), laid
+          over the stage's own box. They sit in the marks' layer, beside the door and not inside it,
+          so the button is not a button inside a link. */}
+      {gl && !(played && ready) && !failed && host && focus && createPortal(
+        <div className="il-pre" style={{ left: focus.x, top: focus.y, width: focus.w, height: focus.h }}>
+          <span className="il-moon" aria-hidden="true" />
+          {played
+            ? <p className="il-loading" role="status">{ISLAND.loading}</p>
+            : <button type="button" className="pill pill-light pill-big il-play" aria-label={ISLAND.playName} onClick={e => { e.stopPropagation(); setPlayed(true); }}>
+                <Play size={18} aria-hidden="true" /> {ISLAND.play}
+              </button>}
+        </div>,
+        host,
+      )}
     </div>
   );
 }
