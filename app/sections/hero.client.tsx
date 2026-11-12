@@ -91,6 +91,14 @@ export function HeroFx() {
     // LIU to 刘 under the pointer, or for 1.6s after a tap
     const offs: (() => void)[] = [];
     panels.forEach(panel => {
+      // The role line pulses once per press. Taking the attribute off, reading a layout value and
+      // putting it back restarts the CSS animation (hero.css, hero-pulse).
+      const role = panel.querySelector<HTMLElement>('.hero-down');
+      if (role) {
+        const pulse = () => { role.removeAttribute('data-pulse'); void role.offsetWidth; role.setAttribute('data-pulse', ''); };
+        role.addEventListener('click', pulse);
+        offs.push(() => role.removeEventListener('click', pulse));
+      }
       const name = panel.querySelector<HTMLElement>('.hp-name');
       const liu = panel.querySelector<HTMLElement>('.hero-liu');
       if (!name || !liu) return;

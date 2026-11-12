@@ -58,7 +58,6 @@ export default function Contents() {
         </ol>
       </nav>
       <div className="toc-cta">
-        <p className="toc-cta-line">{CONTENTS.resumeLine}</p>
         {/* Scrolls to the résumé preview rather than opening the PDF: a softer first step (Andrew 2026-10-07). */}
         <FlowButton href="#resume" text={MICROCOPY.resumeShort} />
       </div>

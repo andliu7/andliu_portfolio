@@ -111,11 +111,13 @@ export function HeroPanel({ icons, tag, main = false }: { icons: Icons; tag?: st
               <div className="hero-about hero-rise" style={{ '--d': 1 } as CSSProperties}>
                 {/* In place of the résumé button (Andrew 2026-10-28: "a down arrow hovering with the
                     text"); then "software engineer" took the word's place, in Baloo 2. The header
-                    still carries Résumé. Glides to Selected work, so the link is named for that. */}
-                <a className="hero-down" href={main ? '#contents' : '/#contents'} aria-label={HERO.down}>
+                    still carries Résumé. It was a link that glided to Where to?; now a press goes
+                    nowhere and the words pulse once (Andrew 2026-11-12; hero.client.tsx sets
+                    data-pulse). Plain text to a screen reader, so it is not a control. */}
+                <span className="hero-down">
                   <span className="hero-down-text">{HERO.role}</span>
                   <ArrowDown className="hero-down-arrow" size={28} aria-hidden="true" />
-                </a>
+                </span>
               </div>
             </div>
           </div>

@@ -171,3 +171,11 @@ html[data-motion="reduced"] .hero .hero-mq-item { line-height:36px; }
 html.js:not(.is-loaded):not([data-motion="reduced"]) .hero .hero-c { opacity:0; transform:translateX(-.25em); }
 html.js:not(.is-loaded):not([data-motion="reduced"]) .hero .hero-rise { opacity:0; translate:0 3em; }
 html[data-motion="reduced"] .hero :is(.hero-c,.hero-rise) { transition:none; }
+
+/* "Software engineer" is not a link any more: a press pulses the words once and goes nowhere
+   (Andrew 2026-11-12). No berry on hover, since nothing happens. */
+.hero .hero-down { cursor:default; }
+.hero .hero-down:is(:hover,:focus-visible) .hero-down-text { color:inherit; }
+.hero .hero-down[data-pulse] .hero-down-text { animation:hero-pulse .5s var(--ease-spring); }
+@keyframes hero-pulse { 0% { scale:1; } 40% { scale:1.12; } 100% { scale:1; } }
+html[data-motion="reduced"] .hero .hero-down[data-pulse] .hero-down-text { animation:none; }

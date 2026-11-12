@@ -978,7 +978,6 @@ export const CONTENTS = {
   title: 'WHERE TO?', // [UI] from the approved design (needs sign-off)
   note: 'You do not have to read this front to back. Pick the part you came for.', // [UI] from the approved design (needs sign-off)
   label: 'Contents', // [UI] the list's accessible name (needs sign-off)
-  resumeLine: 'Or skip the tour and take the one-page version.', // [UI] the line over the contents' résumé button (needs sign-off)
   spin: 'Spin the compass', // [UI] the compass sticker's button name (needs sign-off)
   rows: [
     // The Blueberry chapter first (Andrew, 2026-10-06: "Where to?" should go into "From flashcards
