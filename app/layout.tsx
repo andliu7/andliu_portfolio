@@ -8,6 +8,7 @@ import ChatDock from '@/components/chat/chat-dock';
 import MascotSlot from '@/components/mascot/mascot-slot';
 import HoverBubble from '@/components/site/hover-bubble';
 import Review from '@/components/review/review';
+import { RV_FLAGS } from '@/components/review/flags';
 import './globals.css';
 
 // Three voices (plan 3.1's two, plus Karla for reading, 2026-10-06):
@@ -64,7 +65,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     // hydrates, and components/site/section-state.ts keeps changing data-section and data-ground
     // after.
     // The font variables live on <html> because globals.css reads them on :root.
-    <html lang="en" className={`${karla.variable} ${fira.variable} ${antic.variable}`} data-ground="paper" data-section="top" suppressHydrationWarning>
+    <html lang="en" className={`${karla.variable} ${fira.variable} ${antic.variable} ${RV_FLAGS}`} data-ground="paper" data-section="top" suppressHydrationWarning>
       <head><script dangerouslySetInnerHTML={{ __html: BOOT }} /></head>
       <body>
         <a className="skip-link" href="#main">{MICROCOPY.skip}</a>
@@ -75,8 +76,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <MascotSlot />
         {/* The one hover bubble, for every picture marked data-bubble (components/site/hover-bubble.tsx) */}
         <HoverBubble />
-        {/* The design review layer (components/review/): dev server only, never in a build */}
-        {process.env.NODE_ENV !== 'production' && <Review />}
+        {/* The approved review proposals (components/review/), on for everyone since 2026-11-11:
+            the day rail, the thumb bar and two small scroll effects. Their layouts are the rvf-
+            classes on <html> above. */}
+        <Review />
       </body>
     </html>
   );

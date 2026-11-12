@@ -5,7 +5,7 @@
    jump) and clips sideways so nothing in it can widen the page. */
 section.contact { padding-top:24px; overflow-x:clip; }
 /* The stars (contact.tsx) fill the home section; the frame comes after them, so it paints on top. */
-section#contact { position:relative; padding-top:clamp(200px, 30vh, 340px); } /* room for the dusk to fade into twilight before the first line (ground.tsx) */
+section#contact { position:relative; padding-top:clamp(300px, 48vh, 520px); } /* was clamp(200px, 30vh, 340px): more sky, so the sunset has the distance to change slowly (2026-11-11) */ /* room for the dusk to fade into twilight before the first line (ground.tsx) */
 /* ---------- The contact page (Andrew 2026-10-20: "the let's compare notes can be expanded to a
    page"). On the home page it is at least one screen tall, its content centred in it, so
    scrolling to it lands on a whole page whose job is to get an email to him. ---------- */

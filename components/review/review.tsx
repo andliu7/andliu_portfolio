@@ -4,8 +4,16 @@ import { Moon, Sun } from 'lucide-react';
 import { getLenis } from '@/app/smooth';
 import './review.css';
 
-// The design review layer (2026-11-09). DEV ONLY: app/layout.tsx mounts it only when
-// NODE_ENV is not production, so it can never ship by accident.
+// The design review layer (2026-11-09). It began as a dev-only panel of switches.
+//
+// LOCKED (Andrew 2026-11-11: "I approve all of those changes"): every proposal is now on for
+// everyone, in builds too. app/layout.tsx puts every flag class on <html> itself (RV_FLAGS in flags.ts), so the
+// approved layouts are there from the first paint, and mounts this component for the parts that
+// need script (the day rail, the thumb bar, the timeline's spotlight, the resume's landing). The
+// panel, the switches and localStorage are not used while LOCKED is true. Set it to false to get
+// the panel back on the dev server and try a new proposal.
+// Still to do, some quiet day: move each proposal's CSS from review.css into its section's own
+// file and delete this folder. Nothing depends on that; it is tidying.
 //
 // Each proposal is a switch. A switch that is on puts the flag class rvf-<id> on <html> (rvf, not rv: the rail and thumb bar own .rv-rail and .rv-thumb), and every
 // proposal's CSS in review.css is gated on its class, so "off" is exactly the site as committed.
@@ -48,11 +56,13 @@ const PROPOSALS: Proposal[] = [
     why: 'The page ran off the foot of the screen. Here all of it shows, on the left where the eye lands first, with the title and the two buttons beside its middle. The section grows taller than one screen to fit it.' },
 ];
 
+const LOCKED = true;
 const KEY = 'rv:v1';
 type Saved = { on: Record<string, boolean>; after: boolean; open: boolean };
 const DEFAULTS: Saved = { on: Object.fromEntries(PROPOSALS.map(p => [p.id, true])), after: true, open: true };
 
 function load(): Saved {
+  if (LOCKED) return { ...DEFAULTS, open: false };
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return DEFAULTS;
@@ -79,6 +89,7 @@ export default function Review() {
     const root = document.documentElement;
     PROPOSALS.forEach(p => root.classList.toggle(`rvf-${p.id}`, state.after && !!state.on[p.id]));
     window.dispatchEvent(new Event('rv:flags')); // the island scene re-frames on this (island-scene.tsx Framing)
+    if (LOCKED) return; // the classes are the page's own now: nothing to remember, nothing to take back
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* private window: fine */ }
     return () => PROPOSALS.forEach(p => root.classList.remove(`rvf-${p.id}`));
   }, [state]);
@@ -97,7 +108,7 @@ export default function Review() {
     <>
       {live('rail') && <DayRail />}
       {live('thumb') && <ThumbBar />}
-      <aside className="rv-panel" data-open={state.open ? '' : undefined} aria-label="Design review">
+      {!LOCKED && <aside className="rv-panel" data-open={state.open ? '' : undefined} aria-label="Design review">
         <button type="button" className="rv-fold" aria-expanded={state.open} onClick={() => setState({ ...state, open: !state.open })}>
           <span className="rv-dot" aria-hidden="true" />
           Design review
@@ -136,7 +147,7 @@ export default function Review() {
             <button type="button" className="rv-copy" onClick={copy}>{copied ? 'Copied. Paste it to Claude.' : 'Copy my choices'}</button>
           </div>
         )}
-      </aside>
+      </aside>}
     </>
   );
 }

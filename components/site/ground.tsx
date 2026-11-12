@@ -46,6 +46,13 @@ const shown = (sel: string) => !!document.querySelector<HTMLElement>(sel)?.getCl
 // timeline's last line on the sky (its skip hint, 30px above the section's foot when the pin ends;
 // the frame is sticky, so it is not measured live) and contact's eyebrow (measured).
 // Over the timeline's last screen the rose only deepens to mauve, so the drop at the seam is short.
+/** Contact's empty sky: from the section's top down to its first line, in px (300 if unmeasured). */
+function skyGap() {
+  const section = document.querySelector<HTMLElement>('#contact');
+  const first = section?.querySelector<HTMLElement>('.eyebrow');
+  if (!section || !first) return 300;
+  return Math.max(120, first.getBoundingClientRect().top - section.getBoundingClientRect().top);
+}
 const SKY = '#87ceeb'; // Cloudscape's own sky (components/ui/cloudscape.tsx), under the hero's fade
 const STOPS: Stop[] = [
   { at: '#top', dy: 0, colour: SKY },
@@ -68,7 +75,14 @@ const STOPS: Stop[] = [
   // (contact.css), so it reads on a lighter violet (paper on #6f5c9b 5.4:1) and the blend can run
   // on behind the big headline (paper and apricot, large type, 4.2:1 or more) and only reach
   // twilight by the invitation's small type. About twice the distance for the same change.
-  { at: '#contact', dy: 150, colour: '#a67b9c' },
+  // A sunset, in small steps (Andrew 2026-11-11, later: "smoothly, in small increments that
+  // wouldn't really be noticed ... it's like a sun setting"). Rose goes to violet through three
+  // in-between colours spaced evenly down contact's empty sky (skyGap: the distance from the
+  // section's top to its first line), each about the same small step darker and bluer than the
+  // last, so no one stretch does the changing. contact.css gives that sky more room for it.
+  { at: '#contact', dy: () => skyGap() * 0.2, colour: '#ba849a' },
+  { at: '#contact', dy: () => skyGap() * 0.45, colour: '#a37a9d' },
+  { at: '#contact', dy: () => skyGap() * 0.72, colour: '#8a6c9e' },
   { at: '#contact .eyebrow|#contact', dy: -6, colour: '#6f5c9b' },
   { at: '#contact .eyebrow/|#contact', dy: 110, colour: '#5d5199' },
   { at: '#contact .ct-invite|#contact', dy: -12, colour: '#4d4a94' }, // twilight by the first small line under the headline
