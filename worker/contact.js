@@ -54,6 +54,34 @@ function json(origin, status, body) {
   });
 }
 
+// What the form sends as the name when the visitor signed nothing (CONTACT_FORM.anonName in
+// lib/site.ts; keep the two the same). The email then leaves the "From:" line out.
+export const ANON_NAME = 'A visitor to andliu.dev';
+
+const escapeHtml = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+/**
+ * The email as HTML, so the labels can be bold (Andrew 2026-11-11). Everything the visitor typed
+ * is escaped; the only markup is ours. The plain text version still goes with it.
+ * @param {{ name: string, contact: string, about: string, message: string, signature: string }} clean
+ */
+export function contactHtml(clean) {
+  const line = (label, value) => `<p style="margin:0 0 4px"><b>${label}</b> ${escapeHtml(value)}</p>`;
+  // "Looking for: A, B" arrives as one string: bold its label too.
+  const about = /^([^:]{1,40}:)\s*(.*)$/s.exec(clean.about);
+  return [
+    `<div style="font:16px/1.55 -apple-system,'Segoe UI',Helvetica,Arial,sans-serif;color:#12142b">`,
+    `<div style="white-space:pre-wrap;margin:0 0 20px">${escapeHtml(clean.message)}</div>`,
+    `<hr style="border:0;border-top:1px solid #d9d6cf;margin:0 0 14px">`,
+    ...(clean.name && clean.name !== ANON_NAME ? [line('From:', clean.name)] : []),
+    line('Reach them at:', clean.contact || 'not given'),
+    ...(clean.about ? [about ? line(about[1], about[2]) : line('About them:', clean.about)] : []),
+    // The drawn signature, shown in the email itself: the attachment carries content_id "signature".
+    ...(clean.signature ? [`<p style="margin:10px 0 0"><b>Signed:</b><br><img src="cid:signature" alt="Their signature" style="max-width:280px;height:auto;margin-top:6px"></p>`] : []),
+    `</div>`,
+  ].join('');
+}
+
 const fail = (origin, status, type, message, fields) =>
   json(origin, status, { ok: false, error: fields ? { type, message, fields } : { type, message } });
 
@@ -219,13 +247,16 @@ export async function handleContact(request, env, { to, fetchImpl = fetch }) {
           clean.message,
           '',
           '---',
-          `From: ${clean.name}`,
+          // No "From:" line when they signed no name (the form then sends ANON_NAME).
+          ...(clean.name !== ANON_NAME ? [`From: ${clean.name}`] : []),
           `Reach them at: ${clean.contact || 'not given'}`,
-          ...(clean.about ? [`About them: ${clean.about}`] : []),
+          // The form's own line reads "Looking for: ..."; anything else keeps the old label.
+          ...(clean.about ? [/^[^:]{1,40}:/.test(clean.about) ? clean.about : `About them: ${clean.about}`] : []),
           ...(clean.signature ? ['Signed: see signature.png, attached'] : []),
         ].join('\n'),
+        html: contactHtml(clean),
         // The drawn signature, as a file on the email (Resend takes base64 content).
-        ...(clean.signature ? { attachments: [{ filename: 'signature.png', content: clean.signature }] } : {}),
+        ...(clean.signature ? { attachments: [{ filename: 'signature.png', content: clean.signature, content_id: 'signature' }] } : {}),
       }),
     });
   } catch {

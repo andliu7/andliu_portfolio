@@ -1461,6 +1461,9 @@ export type Focus = { x: number; y: number; w: number; h: number };
 // still shows, filling most of the right side.
 const VIEW_ANGLE = deg(11);
 const HERO_W = 14; // the island's width in island units (about 400 m at 28.8 m a unit)
+// Blueberry and Second Brain stand at bearings -92 and -44 degrees; the camera looks from +90.
+// Turning the island -158 degrees puts the point midway between them straight toward the camera.
+const ISLAND_TURN = (-158 * Math.PI) / 180;
 const HUB: [number, number] = [0, 0.4]; // x, z in island units: the island's middle
 const HUB_Y = 0;
 function Framing({ focus, still }: { focus: Focus | null; still: boolean }) {
@@ -1633,8 +1636,11 @@ export default function IslandScene({ still, paused, focus, onReady, marks }: {
       <directionalLight color={C.peach} intensity={0.14} position={[5, 3.5, 9]} />
       <pointLight color={C.peach} intensity={0.5} distance={1.4} decay={1.6} position={[0, GROUND + 0.5, 0]} />
       <Sky />
-      {/* seen from the south, as the game's overview is: the lake at top centre, the dock bottom right */}
-      <group>
+      {/* Turned so the near shore is the projects' side (Andrew 2026-11-11: "have the closer side of
+          the island be the side with things like blueberry and second brain"): Blueberry front right,
+          Second Brain front left. It was seen from the south, as the game's overview is, which put
+          Education One, Minnodi and UMD in front and Blueberry at the back. */}
+      <group rotation={[0, ISLAND_TURN, 0]}>
         <Town still={still} />
         <Shadows>
           <Landmarks L={getLayout()} still={still} anchors={anchors} />

@@ -16,7 +16,7 @@ section#contact .ct-card { display:flex; flex-direction:column; justify-content:
    4.6:1 (used at 17px and up), apricot on berry 6.2:1. The one card is the letter. */
 .contact .ct-card { position:relative; container-type:inline-size; color:var(--on); }
 .contact .ct-body { display:grid; gap:20px; padding-block:clamp(16px,3vw,40px); }
-.contact .ct-body > .eyebrow { color:var(--on-2); }
+.contact .ct-body > .eyebrow { color:var(--on); } /* paper, so the sky behind it can still be mid-blend (ground.tsx) */
 /* The headline keeps .fit's sizing against the page, except where narrow, where .fit would
    shrink it under 48px: there it holds 48px and FlipHeading wraps between words instead. */
 .contact .ct-body .flip-heading { margin-block:0 4px; }

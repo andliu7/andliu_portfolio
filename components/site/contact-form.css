@@ -291,3 +291,59 @@ form.cf > .cf-head { padding-inline-end:clamp(200px, 30cqi, 250px); }
 .cf-count[data-level="some"] { background:#f4c84a; color:var(--ink); }
 .cf-count[data-level="good"] { background:var(--tile-leaf); color:var(--ink); }
 html[data-motion="reduced"] .cf-count { transition:none; }
+
+/* ---------- The sent scene (SentScene in contact-form.tsx) ----------
+   One SVG, played once (Andrew 2026-11-11): a large envelope comes up from below the card and
+   closes round the letter (0 to .7s), the flap folds shut (.7 to 1.05s), a seal stamps it
+   (1.05 to 1.45s), the whole thing shrinks and flies into the mailbox's mouth (1.6 to 2.45s), the
+   box rocks and the red flag swings up (2.45 to 3s). The title and the button wait for the flag.
+   transform-box fill-box lets each part turn about its own edge. Reduced motion: the end state. */
+.cf-sent { justify-items:center; text-align:center; gap:12px; }
+.cf-sent .cf-sent-title { font-size:clamp(30px, 5.4cqi, 54px); line-height:1; }
+.cf-post { inline-size:min(100%, 460px); block-size:auto; overflow:visible; }
+.cf-post-ground { fill:none; stroke:var(--ink); stroke-width:2; stroke-linecap:round; opacity:.35; }
+.cf-post-pole { fill:#6b4a2f; stroke:var(--ink); stroke-width:1.5; }
+.cf-post-body { fill:#17181f; stroke:var(--ink); stroke-width:1.5; }
+.cf-post-mouth { fill:#2b2d3a; stroke:var(--ink); stroke-width:1.5; }
+.cf-post-flag rect { fill:#d6312b; stroke:var(--ink); stroke-width:1.5; }
+.cf-post-back { fill:var(--berry-soft); stroke:var(--ink); stroke-width:1.5; }
+.cf-post-front { fill:var(--card); stroke:var(--ink); stroke-width:1.5; stroke-linejoin:round; }
+.cf-post-flap { fill:var(--apricot); stroke:var(--ink); stroke-width:1.5; stroke-linejoin:round; }
+.cf-post-sheet rect { fill:#fff; stroke:var(--ink); stroke-width:1.5; }
+.cf-post-sheet path { fill:none; stroke:var(--ink-2); stroke-width:3; stroke-linecap:round; opacity:.45; }
+.cf-post-seal circle { fill:#c5362f; stroke:var(--ink); stroke-width:1.5; }
+.cf-post-seal .cf-post-seal-ring { fill:none; stroke:#fff; stroke-width:1.5; opacity:.6; }
+.cf-post-seal path { fill:none; stroke:#fff; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+.cf-post :is(.cf-post-pack, .cf-post-rise, .cf-post-sheet, .cf-post-flap, .cf-post-seal, .cf-post-flag, .cf-post-box) { transform-box:fill-box; }
+.cf-post-rise { animation:cf-post-rise .7s cubic-bezier(.2,.8,.2,1) both; }
+.cf-post-sheet { animation:cf-post-sheet .7s cubic-bezier(.3,0,.2,1) both; }
+.cf-post-flap { transform-origin:50% 100%; animation:cf-post-flap .35s cubic-bezier(.4,0,.2,1) .7s both; }
+.cf-post-seal { transform-origin:50% 50%; animation:cf-post-seal .4s cubic-bezier(.3,1.5,.5,1) 1.05s both; }
+.cf-post-pack { transform-origin:50% 60%; animation:cf-post-fly .85s cubic-bezier(.5,0,.3,1) 1.6s both; }
+.cf-post-box { transform-origin:50% 100%; animation:cf-post-rock .5s ease-out 2.45s both; }
+.cf-post-flag { transform-origin:3px 100%; animation:cf-post-flag .5s var(--ease-spring) 2.5s both; }
+/* From under the card (and, on most screens, under the screen's foot) up to its place. */
+@keyframes cf-post-rise { from { translate:0 460px; } to { translate:0 0; } }
+/* The sheet settles down into the envelope as it arrives. */
+@keyframes cf-post-sheet { from { translate:0 0; } to { translate:0 44px; } }
+/* The flap: standing open, then folded down over the front (it turns about its lower edge). */
+@keyframes cf-post-flap { from { scale:1 1; } to { scale:1 -0.92; } }
+/* The seal: comes down large and lands with a small bounce. */
+@keyframes cf-post-seal { 0% { scale:2.6; opacity:0; } 60% { scale:.86; opacity:1; } 100% { scale:1; opacity:1; } }
+@keyframes cf-post-fly {
+  0% { translate:0 0; scale:1; rotate:0deg; opacity:1; }
+  30% { translate:40px -70px; scale:.62; rotate:-9deg; opacity:1; }
+  88% { translate:192px -34px; scale:.2; rotate:5deg; opacity:1; }
+  100% { translate:200px -30px; scale:.1; rotate:5deg; opacity:0; }
+}
+@keyframes cf-post-rock { 0% { rotate:0deg; } 30% { rotate:3deg; } 60% { rotate:-2deg; } 100% { rotate:0deg; } }
+@keyframes cf-post-flag { from { rotate:90deg; } to { rotate:0deg; } }
+/* The words and the button come in once the flag is up. */
+.cf-sent :is(.cf-sent-title, .cf-again) { animation:cf-post-words .4s var(--ease-ui) 2.8s both; }
+@keyframes cf-post-words { from { opacity:0; translate:0 8px; } to { opacity:1; translate:0 0; } }
+html[data-motion="reduced"] .cf-post :is(.cf-post-box, .cf-post-flag), html[data-motion="reduced"] .cf-sent :is(.cf-sent-title, .cf-again) { animation:none; }
+html[data-motion="reduced"] .cf-post-pack { display:none; }
+@media (prefers-reduced-motion:reduce) {
+  .cf-post :is(.cf-post-box, .cf-post-flag), .cf-sent :is(.cf-sent-title, .cf-again) { animation:none; }
+  .cf-post-pack { display:none; }
+}

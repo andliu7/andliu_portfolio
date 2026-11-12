@@ -39,10 +39,13 @@ export function CommitSkyline({ points, unit, title, caption }: Props) {
 
   const placeholder = <div className="skc-ph" aria-hidden="true" />;
   return (
-    <figure className="skc ink-card" data-ground="paper">
+    // A press anywhere on the card opens the popup (Andrew 2026-11-11). React hands the popup's own
+    // clicks up to this figure too, although it is drawn elsewhere in the page, so only a press that
+    // is really inside the card counts. Keyboard users have the Open button.
+    <figure className="skc ink-card" data-ground="paper" onClick={event => { if (event.currentTarget.contains(event.target as Node)) setOpen(true); }}>
       <NearViewport placeholder={placeholder} margin="100%">
         <Suspense fallback={placeholder}>
-          <Skyline points={points} unit={unit} reduced={reduced} labels={SKYLINE} title={title} />
+          <Skyline points={points} unit={unit} reduced={reduced} labels={SKYLINE} title={title} pinnable={false} />
         </Suspense>
       </NearViewport>
       <figcaption className="sr-only">{caption}</figcaption>

@@ -8,6 +8,7 @@ import { cleanDictation } from '@/lib/dictation';
 import { CONTACT, CONTACT_FORM } from '@/lib/site';
 import { ThinkingIndicator } from '@/components/ui/thinking-indicator';
 import { PillFaces } from './pill-faces';
+import { OPEN_LETTER } from './open-letter';
 import { SignaturePad } from './signature-pad';
 import { useDictation } from './use-dictation';
 import { useReducedMotion } from './use-reduced-motion';
@@ -177,6 +178,50 @@ function Stationery() {
   );
 }
 
+// The sent scene (Andrew 2026-11-11): a large envelope comes up from below and closes round the
+// letter, the flap folds shut, a seal stamps it, the whole thing shrinks and flies into a black
+// mailbox, and the red flag goes up. All CSS keyframes on one SVG (contact-form.css, .cf-post),
+// about 3 seconds, played once when the card appears.
+// Decoration only: the words beside it say what happened. Reduced motion: the end state, still.
+function SentScene() {
+  return (
+    <svg className="cf-post" viewBox="0 0 480 280" aria-hidden="true" focusable="false">
+      {/* the ground line, the post and the mailbox: a black body, a dark mouth, a red flag */}
+      <path className="cf-post-ground" d="M12 268 H468" />
+      <rect className="cf-post-pole" x="404" y="158" width="14" height="110" rx="2" />
+      <g className="cf-post-box">
+        <path className="cf-post-body" d="M346 168 V130 a30 30 0 0 1 30 -30 H438 a30 30 0 0 1 30 30 V168 Z" />
+        <path className="cf-post-mouth" d="M346 168 V130 a30 30 0 0 1 60 0 V168 Z" />
+        <g className="cf-post-flag">
+          <rect x="436" y="84" width="6" height="52" rx="2" />
+          <rect x="442" y="84" width="26" height="16" rx="2" />
+        </g>
+      </g>
+      {/* the letter and its envelope: everything in here shrinks and flies as one */}
+      <g className="cf-post-pack">
+        {/* the envelope's back rises from under the card, behind the sheet */}
+        <g className="cf-post-rise">
+          <rect className="cf-post-back" x="60" y="104" width="240" height="150" rx="8" />
+        </g>
+        <g className="cf-post-sheet">
+          <rect x="84" y="56" width="192" height="150" rx="5" />
+          <path d="M104 84 H256 M104 104 H256 M104 124 H256 M104 144 H212" />
+        </g>
+        {/* its front rises with it, in front of the sheet; then the flap folds and the seal lands */}
+        <g className="cf-post-rise">
+          <path className="cf-post-front" d="M60 112 a8 8 0 0 1 3 -6 L180 190 L297 106 a8 8 0 0 1 3 6 V246 a8 8 0 0 1 -8 8 H68 a8 8 0 0 1 -8 -8 Z" />
+          <path className="cf-post-flap" d="M63 106 L180 14 L297 106 Z" />
+          <g className="cf-post-seal">
+            <circle cx="180" cy="186" r="19" />
+            <circle className="cf-post-seal-ring" cx="180" cy="186" r="12" />
+            <path d="M173 186 l5 5 l9 -10" />
+          </g>
+        </g>
+      </g>
+    </svg>
+  );
+}
+
 export function ContactForm() {
   const reduced = useReducedMotion();
   const [values, setValues] = useState<Values>(EMPTY);
@@ -319,6 +364,19 @@ export function ContactForm() {
     const first = FIELDS.find(field => found[field]);
     if (first) refs[first].current?.focus();
   };
+
+  // "Email me" beside the card (open-letter.tsx) opens the full version. After a send, it starts a
+  // new letter first.
+  useEffect(() => {
+    const open = () => {
+      setStatus(now => (now.kind === 'sent' ? { kind: 'idle', text: '' } : now));
+      setAwayH(miniRef.current?.offsetHeight ?? 0);
+      setOpenOn('message');
+      setExpanded(true);
+    };
+    window.addEventListener(OPEN_LETTER, open);
+    return () => window.removeEventListener(OPEN_LETTER, open);
+  }, []);
 
   // Hold the smooth scroller still while a popup is up, so the wheel cannot move the page under it.
   useEffect(() => {
@@ -648,17 +706,8 @@ export function ContactForm() {
               initial={{ opacity: 0, scale: .7 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: .9 }}
               transition={transition}
             >
-              {/* The green check draws itself once the card has popped in. */}
-              <span className="cf-sent-badge" aria-hidden="true">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                  <motion.path
-                    d="M5 12.5 10 17.5 19.5 7"
-                    stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"
-                    initial={{ pathLength: reduced ? 1 : 0 }} animate={{ pathLength: 1 }}
-                    transition={reduced ? { duration: 0 } : { duration: .38, delay: .12, ease: 'easeOut' }}
-                  />
-                </svg>
-              </span>
+              {/* The letter goes into its envelope and the envelope into the mailbox. */}
+              <SentScene />
               {/* Focus moves here when it mounts (the callback ref), so a keyboard user is not left
                   on a button that no longer exists. */}
               <p className="display cf-sent-title" tabIndex={-1} ref={el => el?.focus()}>{CONTACT_FORM.sentTitle}</p>

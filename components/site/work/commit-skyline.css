@@ -9,10 +9,15 @@
 /* Smaller (Andrew 2026-11-11), and its foot tucks under the tops of the fan's cards: the negative
    margin pulls the fan up over it, and projects.css puts the head under the fan's layer. Open sits
    in the top right corner, so no card covers it. */
-.skc { position:relative; justify-self:end; display:grid; gap:8px; width:min(100%, 330px); margin:0 0 clamp(-64px, -4.5cqi, -36px); padding:14px 16px 14px; }
+.skc { position:relative; justify-self:end; display:grid; gap:8px; width:330px; max-width:100%; cursor:pointer; margin:0 0 clamp(-64px, -4.5cqi, -36px); padding:14px 16px 14px; }
 .skc .skyline { gap:6px; }
 .skc .skyline-head { display:grid; gap:2px; padding-inline-end:84px; }
-.skc .skyline-read { margin:0; font-size:12px; line-height:18px; }
+/* A fixed width and a one-line readout that cuts off instead of pushing: the card sat in a column
+   sized by its content, so each new readout under the pointer resized the whole card and its
+   canvas (Andrew 2026-11-11: "it still shrinks oddly every time I hover"). Now only the bars move. */
+.skc .skyline-read { margin:0; font-size:12px; line-height:18px; min-inline-size:0; overflow:hidden; text-overflow:ellipsis; }
+.skc .skyline-head { min-block-size:40px; }
+.skc .skyline-canvas { cursor:pointer; }
 .skc .skyline-stage { height:100px; }
 .skc .skc-ph { height:164px; border-radius:8px; background:color-mix(in srgb, var(--line) 35%, transparent); } /* 20 head + 10 gap + 120 stage */
 :is(.skc, .skc-dialog) .impact-tip { display:flex; gap:8px; padding:5px 9px; border-radius:8px; background:var(--ink); color:var(--paper); font:500 12px/1.4 var(--display); font-variant-numeric:tabular-nums; box-shadow:0 3px 0 var(--ledge); }

@@ -5,6 +5,7 @@ import { FlipLink } from '@/components/ui/flip-links';
 import { SocialButton, socialKind } from '@/components/site/social-button';
 import { StackBand } from '@/components/site/stack-band';
 import { ContactForm } from '@/components/site/contact-form';
+import { OpenLetter } from '@/components/site/open-letter';
 import { TextBlockAnimation } from '@/components/ui/text-block-animation';
 import { PillFaces } from '@/components/site/pill-faces';
 import CopyEmail from '../copy-email';
@@ -45,9 +46,10 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
           <div className="ct-reach">
             <TextBlockAnimation as="p" className="ct-invite" delay={0.2}>{CONTACT.invite}</TextBlockAnimation>
             <div className="row-actions ct-actions">
-              <a className="pill pill-berry press pill-big ct-cta" href={mailto}>
+              {/* Opens the letter's full version (components/site/open-letter.tsx), not a mail app. */}
+              <OpenLetter className="pill pill-berry press pill-big ct-cta">
                 {CONTACT.emailCta} <Mail size={20} aria-hidden="true" />
-              </a>
+              </OpenLetter>
               <CopyEmail email={CONTACT.email} />
             </div>
             <p className="ct-email">

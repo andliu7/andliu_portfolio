@@ -764,8 +764,8 @@ export const CONTACT_FORM = {
   sent: 'Sent. It is in my inbox now.', // [UI] (needs sign-off)
   // The Worker needs a name for the subject line; a blank one is sent as this.
   anonName: 'A visitor to andliu.dev', // [Andrew 2026-10-20] (needs sign-off)
-  sentTitle: 'Got it.', // [Andrew 2026-10-20] the card that replaces the form once sent (needs sign-off)
-  again: 'Write another', // [Andrew 2026-10-20] (needs sign-off)
+  sentTitle: 'Message received.', // [Andrew 2026-11-11] under the mailbox, once the envelope is in; was 'Got it.' (needs sign-off)
+  again: 'Send another', // [Andrew 2026-11-11] was 'Write another' (needs sign-off)
   viaMail: 'Send opens your mail app with this filled in.', // [Andrew 2026-10-20] the hint when no Worker is set (needs sign-off)
   handoff: 'Your mail app should open with this message. Press send there.', // [Andrew 2026-10-20] (needs sign-off)
   suspended: 'Email suspended', // [Andrew 2026-10-31] the chip on the greyed-out form once the daily cap is hit (needs sign-off)

@@ -62,9 +62,16 @@ const STOPS: Stop[] = [
   // mauve, under the timeline's skip hint at the end of its pin (berry-deep 5.18); with no hint
   // (phones), the blend starts 200px higher and runs longer
   { at: '#experience/', dy: () => (shown('#experience .xp-esc') ? -24 : -200), colour: '#c98a95' },
-  { at: '#contact', dy: 170, colour: '#93709f' }, // the middle of dusk into twilight, on contact's empty top (Andrew 2026-11-03: "smoother to compare notes")
-  { at: '#contact .eyebrow|#contact', dy: -6, colour: '#5a4e98' }, // twilight by contact's first line (berry-soft 4.67)
-  { at: '#contact .eyebrow/|#contact', dy: 120, colour: '#4d4a94' },
+  // Dusk into twilight, slower (Andrew 2026-11-11: "make the pink to purple gradient transition more
+  // smoothly"; and 2026-11-03: "smoother to compare notes"). The whole drop used to finish by
+  // contact's eyebrow, in the 300px of empty sky above it. The eyebrow is paper now, not berry-soft
+  // (contact.css), so it reads on a lighter violet (paper on #6f5c9b 5.4:1) and the blend can run
+  // on behind the big headline (paper and apricot, large type, 4.2:1 or more) and only reach
+  // twilight by the invitation's small type. About twice the distance for the same change.
+  { at: '#contact', dy: 150, colour: '#a67b9c' },
+  { at: '#contact .eyebrow|#contact', dy: -6, colour: '#6f5c9b' },
+  { at: '#contact .eyebrow/|#contact', dy: 110, colour: '#5d5199' },
+  { at: '#contact .ct-invite|#contact', dy: -12, colour: '#4d4a94' }, // twilight by the first small line under the headline
   { at: '#contact/', dy: -500, colour: 'var(--berry)' },
   { at: '#resume', dy: 360, colour: 'var(--berry-deep)' }, // night
   { at: '#resume/', dy: -100, colour: 'color-mix(in srgb, var(--berry-deep) 45%, var(--ink))' },

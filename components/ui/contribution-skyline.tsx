@@ -29,7 +29,7 @@ type Labels = {
   released: string;
 };
 // headroom: px above the grid for the bars to rise into. The popup's larger strip passes more.
-type Props = { points: Day[]; unit: string; reduced: boolean; labels: Labels; title?: string; headroom?: number };
+type Props = { points: Day[]; unit: string; reduced: boolean; labels: Labels; title?: string; headroom?: number; pinnable?: boolean };
 
 const FOOT = 14; // px under the grid for the month names
 const REACH = 1.05; // the bump's width, in cells (the bell's sigma), across weeks and down days
@@ -49,7 +49,7 @@ const shade = (rgb: number[], k: number) => `rgb(${rgb.map(v => Math.round(v * k
 
 type Engine = { kick: () => void; at: (x: number, y: number) => { pos: number; row: number; week: number; day: number | null } };
 
-export default function ContributionSkyline({ points, unit, reduced, labels, title, headroom: HEADROOM = 22 }: Props) {
+export default function ContributionSkyline({ points, unit, reduced, labels, title, headroom: HEADROOM = 22, pinnable = true }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const tip = useRef<HTMLDivElement>(null);
@@ -323,7 +323,8 @@ export default function ContributionSkyline({ points, unit, reduced, labels, tit
     const from = down.current;
     down.current = null;
     const spot = scrub(event);
-    if (from && spot && Math.hypot(event.clientX - from.x, event.clientY - from.y) < TAP_PX) togglePin(spot.week);
+    // pinnable false (the corner card): a press belongs to the card, which opens its popup.
+    if (pinnable && from && spot && Math.hypot(event.clientX - from.x, event.clientY - from.y) < TAP_PX) togglePin(spot.week);
     // A finger has no hover: lifting it ends the scrub (a pinned week stays up).
     if (event.pointerType !== 'mouse') clearScrub();
   };
@@ -334,6 +335,7 @@ export default function ContributionSkyline({ points, unit, reduced, labels, tit
       return;
     }
     if (event.key === 'Enter' || event.key === ' ') {
+      if (!pinnable) return;
       event.preventDefault();
       const on = active ?? points.length - 1;
       ptr.current = null;

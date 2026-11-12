@@ -41,7 +41,7 @@
    card's left edge at its foot, one per line, so the numbers and their drawing read as one group.
    On a phone it is one column: eyebrow, numbers, then the card at column width. */
 /* z-index 0: the fan's layer (z 1, pointer-events none outside its cards) passes over the card's foot. */
-.work .wk-head:has(.skc) { z-index: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, auto) auto; align-items: start; gap: 12px 28px; margin-bottom: clamp(20px, 3cqi, 36px); }
+.work .wk-head:has(.skc) { z-index: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, 330px); align-items: start; gap: 12px 28px; margin-bottom: clamp(20px, 3cqi, 36px); }
 .work .wk-head:has(.skc) .wk-all { align-self: end; max-inline-size: 26ch; padding-bottom: 8px; }
 .work .wk-head:has(.skc) .wk-all > span { display: block; }
 @container (max-width: 699px) {

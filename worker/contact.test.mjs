@@ -232,3 +232,16 @@ void test('CONTACT_FROM overrides the sender', async () => {
   await run(post(good), env({ CONTACT_FROM: 'Andrew <hi@andliu.dev>' }), f);
   assert.equal(JSON.parse(f.calls[0].init.body).from, 'Andrew <hi@andliu.dev>');
 });
+
+void test('the html body bolds the labels, escapes what was typed, and drops From for an unsigned letter', async () => {
+  const { contactHtml, ANON_NAME } = await import('./contact.js');
+  const html = contactHtml({ name: 'Ada <b>', contact: 'ada@example.com', about: 'Looking for: A website, Tutoring', message: 'Hi <script>x</script>\nSecond line', signature: '' });
+  assert.match(html, /<b>From:<\/b> Ada &lt;b&gt;/);
+  assert.match(html, /<b>Reach them at:<\/b> ada@example\.com/);
+  assert.match(html, /<b>Looking for:<\/b> A website, Tutoring/);
+  assert.equal(html.includes('<script>'), false);
+  assert.equal(html.includes('cid:signature'), false);
+  const anon = contactHtml({ name: ANON_NAME, contact: '3015550199', about: '', message: 'Hello there, a test.', signature: 'AAAA' });
+  assert.equal(anon.includes('From:'), false);
+  assert.match(anon, /cid:signature/);
+});
