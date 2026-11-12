@@ -45,7 +45,7 @@ html:not([data-motion="reduced"]) .resume .rs-page { position:sticky; top:0; }
    scale and rotate are transforms, so no layout. */
 /* 2026-11-03: the card is the shared .ink-card (globals.css), the same object as the project fan's
    cards; here only its size, the clip, the tilt and the hover. */
-.resume .rs-card { --tilt:2deg; display:block; width:min(520px,100cqw,(100cqh - 48px) * .7726); padding:0; overflow:hidden;
+.resume .rs-card { --tilt:0deg; /* upright (Andrew 2026-11-12: "don't tilt my resume"); it was 2deg */ display:block; width:min(520px,100cqw,(100cqh - 48px) * .7726); padding:0; overflow:hidden;
   cursor:zoom-in; transition:rotate .6s var(--ease-spring), scale .6s var(--ease-spring); }
 .resume .rs-card img { display:block; width:100%; height:auto; aspect-ratio:880 / 1139; }
 @media (hover:hover) and (pointer:fine) { .resume .rs-card:hover { rotate:0deg; scale:1.15; } }

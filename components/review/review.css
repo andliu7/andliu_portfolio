@@ -104,7 +104,7 @@ html.rvf-spot:not([data-motion="reduced"]) .experience[data-pin] .rv-lit .xp-cro
 /* ---------- 05 The résumé lands -------------------------------------------------------------
    Before: off its place and unseen. .rv-landed (set once, by an IntersectionObserver) plays the
    drop as a one-shot animation, so the card's own hover (straighten and grow) is untouched. */
-html.rvf-land:not([data-motion="reduced"]) .resume:not(.rv-landed) .rs-card { translate:0 60vh; rotate:-16deg; opacity:0; }
+html.rvf-land:not([data-motion="reduced"]) .resume:not(.rv-landed) .rs-card { translate:0 60vh; opacity:0; } /* drops in upright: no -16deg turn (Andrew 2026-11-12) */
 html.rvf-land:not([data-motion="reduced"]) .resume.rv-landed .rs-card { animation:rv-land 1.1s var(--ease-elastic) backwards; }
 @keyframes rv-land { from { translate:0 60vh; rotate:-16deg; opacity:0; } 20% { opacity:1; } }
 html.rvf-land:not([data-motion="reduced"]) .resume:not(.rv-landed) .rs-click { opacity:0; }
