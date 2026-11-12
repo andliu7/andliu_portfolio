@@ -192,6 +192,7 @@ export async function init(ctx){
 
   function setArea(a, fromId){
     if(cur && cur !== a){ try { cur.onExit?.(ctx, a.id); } catch(e){ console.error(`[space] ${cur.id}.onExit threw`, e); } }
+    exitLock();                                        // a captured mouse (mouseLook areas) never follows you out
     cur = a; rt.currentId = a.id;
     room.scene = a.scene; room.camera = a.camera;
     a.camera.aspect = innerWidth/innerHeight; a.camera.updateProjectionMatrix();
@@ -233,6 +234,7 @@ export async function init(ctx){
   // room.onExit: core calls it from exitInterior, whoever asked (our pad, Esc, the menu, a game).
   function leftSpace(){
     session++;
+    exitLock();
     const byPad = leavingByPad; leavingByPad = false;
     try { cur?.onExit?.(ctx, 'island'); } catch(e){ console.error(`[space] ${cur?.id}.onExit threw`, e); }
     cur = null; rt.currentId = null; rt.player = null; rt.busy = false; warp = null; arrive = 0;
@@ -418,14 +420,78 @@ export async function init(ctx){
     if(!active || e.repeat || e.defaultPrevented) return;
     if(!(e.code === 'Escape' || e.key === 'Escape' || e.key === 'Esc')) return;
     if(ctx.modules.dialog?.busy?.() || ctx.modules.menu?.isOpen?.() || ctx.modules.inventory?.isOpen?.() || ctx.modules.tracker?.isOpen?.()) return;
+    // A captured mouse: the first Esc only frees it (most browsers take that Esc themselves and never send it).
+    if(locked()){ e.stopPropagation(); e.preventDefault(); exitLock(); return; }
     if(rt.busy){ e.stopPropagation(); e.preventDefault(); return; }
     if(cur && cur.id !== 'hub'){ e.stopPropagation(); e.preventDefault(); go('hub'); }
   }, true);
   let dragging = null;
-  ctx.renderer.domElement.addEventListener('pointerdown', e => { if(active && e.button === 0) dragging = { x:e.clientX, y:e.clientY }; });
-  addEventListener('pointermove', e => { if(!dragging || !active) return; drag.dx += e.clientX - dragging.x; drag.dy += e.clientY - dragging.y; dragging.x = e.clientX; dragging.y = e.clientY; });
+  ctx.renderer.domElement.addEventListener('pointerdown', e => { if(e.pointerType !== 'mouse') touchAt = performance.now(); if(active && e.button === 0) dragging = { x:e.clientX, y:e.clientY }; });
+  addEventListener('pointermove', e => {
+    if(!active) return;
+    // Mouse look: the captured cursor never moves, so read the raw movement, button or not.
+    if(locked()){ if(wantsLook()){ drag.dx += (e.movementX || 0)*LOOK_K; drag.dy += (e.movementY || 0)*LOOK_K; } return; }
+    if(!dragging) return;
+    drag.dx += e.clientX - dragging.x; drag.dy += e.clientY - dragging.y; dragging.x = e.clientX; dragging.y = e.clientY;
+  });
   addEventListener('pointerup', () => { dragging = null; });
   addEventListener('pointercancel', () => { dragging = null; });
+
+  /* ---------- mouse look and the two mouse buttons (Andrew 2026-11-11, for the Wormhole Lab) ---------- */
+  // An area that returns mouseLook:true gets a Minecraft-style mouse while its view is first
+  // person: a click on the canvas captures the mouse (Pointer Lock), the view then turns with the
+  // mouse, A / D step sideways (view.strafe), Esc frees it. Each press of the left or right button
+  // calls area.onClick(0 | 2). The click that captures the mouse only captures. If the browser
+  // refuses the lock, dragging still looks (above) and a click without a drag still reaches
+  // onClick, so the area stays playable. camera.js already stops the canvas's context menu.
+  const canvas = ctx.renderer.domElement;
+  const LOOK_K = 0.6;                                  // locked mouse px to drag px: 0.0024 rad per px against the drag's 0.004
+  const locked = () => document.pointerLockElement === canvas;
+  const wantsLook = () => active && !!cur?.mouseLook && !!cur.rig?.view?.fp;
+  const uiOpen = () => !!(ctx.modules.dialog?.busy?.() || ctx.modules.menu?.isOpen?.() || ctx.modules.inventory?.isOpen?.() || ctx.modules.tracker?.isOpen?.());
+  let lockAsked = -1e9, lockFailed = false, lockSaid = false, touchAt = -1e9, press = null;
+  const lockPending = () => performance.now() - lockAsked < 1000;
+  function exitLock(){ try { if(locked()) document.exitPointerLock?.(); } catch(e){ /* nothing to free */ } }
+  function requestLock(){
+    if(!canvas.requestPointerLock){ lockFailed = true; return; }
+    lockAsked = performance.now();
+    try { const p = canvas.requestPointerLock(); if(p?.catch) p.catch(() => { lockAsked = -1e9; lockFailed = true; }); }
+    catch(e){ lockAsked = -1e9; lockFailed = true; }
+  }
+  document.addEventListener('pointerlockchange', () => {
+    lockAsked = -1e9;
+    if(!locked() || !wantsLook()) return;
+    lockFailed = false;
+    if(!lockSaid){ lockSaid = true; toast('Mouse captured. Esc frees it'); }
+  });
+  document.addEventListener('pointerlockerror', () => { lockAsked = -1e9; lockFailed = true; });
+  function click(button){
+    if(rt.busy || uiOpen() || !cur?.onClick) return;
+    try { cur.onClick(button); } catch(e){ console.error(`[space] ${cur.id}.onClick threw`, e); }
+  }
+  // mousedown, not pointerdown: with one button already held, a second one sends no pointerdown.
+  // A finger's tap also sends a mousedown afterwards; touchAt drops those (phones use the area's own buttons).
+  canvas.addEventListener('mousedown', e => {
+    if(!wantsLook() || (e.button !== 0 && e.button !== 2) || performance.now() - touchAt < 800) return;
+    if(locked()){ click(e.button); return; }
+    press = { x:e.clientX, y:e.clientY, button:e.button, moved:0 };
+    if(!uiOpen()) requestLock();
+  });
+  addEventListener('mousemove', e => { if(press) press.moved = Math.max(press.moved, Math.hypot(e.clientX - press.x, e.clientY - press.y)); });
+  addEventListener('mouseup', e => {
+    const p = press; if(!p || e.button !== p.button) return;
+    press = null;
+    // Not captured: fire only once a lock has been refused (or cannot be asked for), and only for a click, not a drag.
+    if(wantsLook() && !locked() && p.moved < 8 && (lockFailed || !lockPending())) click(p.button);
+  });
+  // Every frame in space: free the mouse when the view leaves first person or a menu or the talk
+  // box opens, and tell the walker whether the mouse is doing the turning.
+  ctx.onUpdate((dt, t, mode) => {
+    if(!active || mode !== 'interior' || state.interior !== room) return;
+    const look = wantsLook();
+    if(locked() && (!look || uiOpen())) exitLock();
+    const v = cur?.rig?.view; if(v) v.strafe = look && locked();
+  }, 79);
 
   /* ---------- API and critic hooks ---------- */
   const api = {
@@ -445,6 +511,7 @@ export async function init(ctx){
       const P = rt.player;
       return { active, area:cur?.id ?? null, busy:rt.busy, shards:count(), unlocked:save.unlocked, lifting:!!lift, padArmed,
         player:P ? { kind:P.kind, x:+P.pos.x.toFixed(2), y:+P.pos.y.toFixed(2), z:+P.pos.z.toFixed(2), grounded:P.grounded, fp:!!cur?.rig?.view?.fp } : null,
+        mouse:{ look:wantsLook(), locked:locked(), failed:lockFailed },
         imported:Object.keys(mods), built:Object.keys(areas), placeholders:Object.values(areas).filter(a => a.placeholder).map(a => a.id), near:nearUse?.label ?? null };
     },
     // on foot, 4 m north of the pad, facing it

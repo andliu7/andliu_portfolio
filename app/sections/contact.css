@@ -34,7 +34,8 @@ section#contact .ct-card { display:flex; flex-direction:column; justify-content:
 /* The quick way, on the sky: the invitation, Email me and Copy email, the address and its note,
    then GitHub, LinkedIn and the résumé in one row. */
 .contact .ct-reach { display:grid; gap:16px; align-content:start; justify-items:start; }
-.contact .ct-invite { max-inline-size:34ch; margin:0 0 8px; font:500 clamp(20px,1.9cqi,26px)/1.4 var(--body); color:var(--on); }
+/* In the display face (Andrew 2026-11-11: "I don't like the font"; it was Karla 500), sentence case. */
+.contact .ct-invite { max-inline-size:30ch; margin:0 0 8px; font:600 clamp(18px,1.6cqi,22px)/1.45 var(--display); letter-spacing:-.02em; font-variant-ligatures:none; color:var(--on); }
 .contact .ct-actions { margin:0; }
 
 /* The links: GitHub and LinkedIn as outlined rounds in the sky's own text colour (the old ink

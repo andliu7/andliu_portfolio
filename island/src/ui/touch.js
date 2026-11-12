@@ -4,8 +4,8 @@
 //    character.js read, and also the plain ctx.input.keys (up/down/left/right past a third of the
 //    way), so everything that only knows keys (the drone, games) still works. The right one looks
 //    around, as a drag on the screen does (camera.js orbitPx). A row of context buttons sits above
-//    the right stick (Honk while driving; Run and Jump on foot). Every finger is tracked by
-//    pointerId, so both sticks and a button can be held at once.
+//    the right stick (Honk while driving; Call car, Run and Jump on foot). Every finger is tracked
+//    by pointerId, so both sticks and a button can be held at once.
 //  - Everywhere (phone and desktop): a quick tap or click on the canvas (under 8 px of movement
 //    and 350 ms) acts on what it hits, so camera drags never trigger anything:
 //      driver or own car while driving -> hop out     car on foot -> get in (called over first if far)
@@ -145,7 +145,7 @@ const CSS = `
 @media (max-width:359px){.stick{width:108px;height:108px}.stick .knob{width:50px;height:50px;margin:-25px 0 0 -25px}}
 #touch2 button{appearance:none;border:0;margin:0;padding:0;pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;cursor:pointer;
   color:#1f2a44;background:#fffaf0;box-shadow:0 5px 0 #0000001f;transition:transform .06s,box-shadow .06s,background .06s}
-#touch2 .ctxrow button{height:46px;padding:0 16px;border-radius:999px;font:600 14px/1 Fredoka,system-ui,sans-serif;letter-spacing:.02em}
+#touch2 .ctxrow button{height:46px;padding:0 16px;border-radius:999px;font:600 14px/1 Fredoka,system-ui,sans-serif;letter-spacing:.02em;white-space:nowrap}
 #touch2 .ctxrow button[data-k="honk"]{background:#ffd98a}
 #touch2 .ctxrow button[data-k="boost"]{background:#e98a5a;color:#fffaf0}
 #touch2 .ctxrow button[data-k="brake"]{background:#6fae4a;color:#fffaf0}
@@ -286,12 +286,17 @@ export function init(ctx){
     if(sticks[0].active()) setMove({ ...lastMove, on:true });
   }, 5);
 
-  // Context row: Honk while driving, Run and Jump on foot (and inside rooms).
+  // Context row: Honk while driving; Call car, Run and Jump on foot; Run and Jump inside rooms.
+  // The first button fires the same 'honk' action as H either way: on foot that whistles the car
+  // over (car.js startCall). It used to hide on foot, which left a phone with no way to call the
+  // car unless the car happened to be on screen to tap (Andrew 2026-11-11: "idk how to get the car
+  // to come to me anymore").
   const ctxBtn = k => root.querySelector(`.ctxrow [data-k="${k}"]`);
   let shownFor = '';
   function syncRow(){
     const m = state.mode; if(m === shownFor) return; shownFor = m;
-    ctxBtn('honk').hidden = m !== 'drive';
+    const honk = ctxBtn('honk'), label = m === 'drive' ? 'Honk' : 'Call car';
+    honk.hidden = m === 'interior'; honk.textContent = label; honk.setAttribute('aria-label', label);
     ctxBtn('boost').hidden = ctxBtn('brake').hidden = m === 'drive';
   }
   syncRow();
@@ -409,6 +414,7 @@ export function init(ctx){
 
   function tapAt(x, y){
     hideCard();
+    if(document.pointerLockElement) return { act:'none' };   // mouse look: the cursor is hidden, a click is not a tap on anything
     if(busy() || state.mode === 'interior'){ ripple(x, y, false); return { act:'none' }; }
     const tg = resolve(x, y), P = state.player;
     const dist = tg?.kind === 'building' ? doorDist(tg.id)

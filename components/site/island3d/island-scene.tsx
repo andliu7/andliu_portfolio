@@ -3,6 +3,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject, 
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { S, townLayout, type TownLayout } from './town-layout';
+import { isle, isleU, keyDir, KEY_ELEV } from './island-shading';
 
 // The résumé island as a 3D diorama in a night sea that runs to the horizon, in #island (Andrew
 // 2026-11-03: "give the island a real shape with real 3D-ness ... where the major pieces are
@@ -48,13 +49,13 @@ function mat(color: string, opts: { glow?: number; opacity?: number; smooth?: bo
   const key = `${color}|${opts.glow ?? 0}|${opts.opacity ?? 1}|${opts.smooth ? 1 : 0}|${opts.double ? 1 : 0}`;
   let m = mats.get(key);
   if (!m) {
-    m = new THREE.MeshStandardMaterial({
+    m = isle(new THREE.MeshStandardMaterial({
       color, roughness: 0.9, metalness: 0, flatShading: !opts.smooth,
       emissive: opts.glow ? color : '#000000', emissiveIntensity: opts.glow ?? 0,
       transparent: opts.opacity !== undefined && opts.opacity < 1, opacity: opts.opacity ?? 1,
       depthWrite: !(opts.opacity !== undefined && opts.opacity < 1),
       side: opts.double ? THREE.DoubleSide : THREE.FrontSide,
-    });
+    }), 'built');
     mats.set(key, m);
   }
   return m;
@@ -71,6 +72,11 @@ const G = {
   ball: new THREE.IcosahedronGeometry(1, 1),
   smooth: new THREE.SphereGeometry(1, 20, 14),
   dodec: new THREE.DodecahedronGeometry(1, 0),
+  blob: (() => { // the 20-face ball again, but with rounded normals: a bush shades as one soft mass
+    const g = new THREE.IcosahedronGeometry(1, 0);
+    g.setAttribute('normal', g.getAttribute('position').clone());
+    return g;
+  })(),
   dome: new THREE.SphereGeometry(1, 20, 8, 0, Math.PI * 2, 0, Math.PI / 2),
   torus: new THREE.TorusGeometry(1, 0.16, 8, 24),
   arch: new THREE.TorusGeometry(1, 0.05, 4, 16, Math.PI).rotateY(Math.PI / 2), // a half ring across x, standing up
@@ -94,10 +100,13 @@ function seeded(seed: number) {
 type V3 = [number, number, number];
 const deg = (d: number) => (d * Math.PI) / 180;
 
+// Round shapes shade round (their own smooth normals) unless a part says otherwise, so the moon
+// slides round a tower, a column or a dome instead of stepping across its facets.
+const ROUND = new Set<THREE.BufferGeometry>([G.cyl, G.disc, G.ball, G.smooth, G.dome, G.torus, G.vault]);
 function Part({ geo, color, p = [0, 0, 0], s = [1, 1, 1], r = [0, 0, 0], glow, opacity, smooth, double }: {
   geo: THREE.BufferGeometry; color: string; p?: V3; s?: V3 | number; r?: V3; glow?: number; opacity?: number; smooth?: boolean; double?: boolean;
 }) {
-  return <mesh geometry={geo} material={mat(color, { glow, opacity, smooth, double })} position={p} scale={s} rotation={r} />;
+  return <mesh geometry={geo} material={mat(color, { glow, opacity, smooth: smooth ?? ROUND.has(geo), double })} position={p} scale={s} rotation={r} />;
 }
 
 // Spins its children about one axis (the reel, the tooth's ring); still under reduced motion.
@@ -308,10 +317,16 @@ function Chapel() {
 // The landmarks in LANDMARKS order (landmarks.ts): zone i of town-layout's ZONES, with each one's
 // height (for its hotspot and label) and the colour of the glowing rim round its pad.
 type Landmark = { h: number; rim: string; el: (still: boolean) => ReactNode };
-// The buildings above are modelled about 1 unit (29 m) wide; drawn at this scale they come out
-// near the game's 10 to 12 m, so they sit on the island as small scattered props (Andrew's game
-// overview), not shoulder to shoulder round the rim.
-const LANDMARK_SCALE = 0.36;
+// The buildings above are modelled about 1 unit (29 m) wide. At 0.36 they came out at the game's
+// own 10 to 12 m and, seen from the page's far, low camera, read as flat props (Andrew 2026-11-11:
+// "make the buildings and trees taller too"). So they are drawn a little bigger than the game's
+// (13 m wide) and stretched upward by LANDMARK_TALL: a chapel of 16 m is now 24 m. From this
+// distance that reads the way the game's buildings do from its close camera.
+const LANDMARK_SCALE = 0.46;
+const LANDMARK_TALL = 1.2;
+const LANDMARK_XYZ: V3 = [LANDMARK_SCALE, LANDMARK_SCALE * LANDMARK_TALL, LANDMARK_SCALE];
+// The inner town (modelled in metres): wider by a quarter and taller by a half, for the same reason.
+const TOWN_XYZ: V3 = [S * 1.25, S * 1.5, S * 1.25];
 const LANDMARK_SET: Landmark[] = [
   { h: 0.98, rim: '#3b4f9e', el: () => <Lab /> },
   { h: 0.72, rim: '#d6689a', el: () => <Greenhouse /> },
@@ -477,7 +492,7 @@ function useTerrain(L: TownLayout) {
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
     geo.setIndex(idx);
     geo.computeVertexNormals();
-    const material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 });
+    const material = isle(new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 }), 'ground');
     return { geo, material };
   }, [L]);
 }
@@ -523,19 +538,22 @@ function useRoads(L: TownLayout) {
 }
 
 // An InstancedMesh filled once: n instances, each given a matrix and a colour by fill().
+// 'std' is the faceted one (trunks, rocks, planks, posts); 'leaf' is foliage, shaded round with
+// leaf clumps and the moon through its edges (island-shading.ts); 'glow' is unlit light.
+type InstKind = 'std' | 'leaf' | 'glow';
 const instMats = new Map<string, THREE.Material>();
-function instMat(kind: 'std' | 'glow') {
+function instMat(kind: InstKind) {
   let m = instMats.get(kind);
   if (!m) {
-    m = kind === 'std'
-      ? new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.9, metalness: 0, flatShading: true })
+    m = kind === 'std' ? isle(new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.9, metalness: 0, flatShading: true }), 'built')
+      : kind === 'leaf' ? isle(new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.82, metalness: 0 }), 'leaf')
       : new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false });
     instMats.set(kind, m);
   }
   return m;
 }
 type Inst = { p: V3; s: V3; r?: V3; c: string };
-function instanced(geo: THREE.BufferGeometry, list: Inst[], kind: 'std' | 'glow' = 'std') {
+function instanced(geo: THREE.BufferGeometry, list: Inst[], kind: InstKind = 'std') {
   const mesh = new THREE.InstancedMesh(geo, instMat(kind), Math.max(1, list.length));
   mesh.count = list.length;
   const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), col = new THREE.Color();
@@ -575,12 +593,23 @@ function useBridges(L: TownLayout) {
     // The planks carry a little warm light of their own, so the bridges read as the game's long
     // orange spans at night instead of going brown under the moon.
     const deck = instanced(G.box, planks);
-    deck.material = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.85, metalness: 0, flatShading: true, emissive: '#8a3c10', emissiveIntensity: 0.55 });
+    deck.material = isle(new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.85, metalness: 0, flatShading: true, emissive: '#8a3c10', emissiveIntensity: 0.55 }), 'built');
     return { planks: deck, rails: instanced(G.box, rails), piles: instanced(G.cyl6, piles) };
   }, [L]);
 }
 
 /* ---------- Trees, palms, grass, rocks, road lanterns: all instanced ---------- */
+
+// The game's six species (trees.js), as a far camera can show them: each is a top height in metres
+// (least, plus up to this much more) and how far its crown reaches from the trunk, as a share of
+// that height. The game's own trees stand 3.3 to 6.5 m; the page's stood 4.8 to 9.1 m and still
+// read as shrubs from its low, distant camera (Andrew 2026-11-11: "make the buildings and trees
+// taller too"), so they now stand 6 to 14.5 m, the pines tallest and the cherries lowest, in the
+// game's own order, and about as tall against a building's walls as the game's are.
+const TREES = {
+  pine: { h: [9, 5.5], reach: 0.2 }, palm: { h: [7, 3], reach: 0.14 }, willow: { h: [7, 3.5], reach: 0.34 },
+  cherry: { h: [6, 3], reach: 0.38 }, birch: { h: [8.5, 4.5], reach: 0.2 }, oak: { h: [7.5, 4.5], reach: 0.36 },
+} as const;
 
 // Built once per page visit and kept (the stage may unmount and remount the scene as the page
 // scrolls; the meshes are simply added to the new scene).
@@ -589,28 +618,36 @@ const useNature = (L: TownLayout) => (natureCache ??= buildNature(L));
 function buildNature(L: TownLayout) {
   {
     const rnd = seeded(42);
-    const trunks: Inst[] = [], crowns: Inst[] = [], cones: Inst[] = [], fronds: Inst[] = [], tufts: Inst[] = [], rocks: Inst[] = [];
+    const trunks: Inst[] = [], crowns: Inst[] = [], bushes: Inst[] = [], cones: Inst[] = [], fronds: Inst[] = [], tufts: Inst[] = [], rocks: Inst[] = [], blobs: Inst[] = [];
+    // A soft dark patch on the ground where something stands on it (a trunk, a building), so it
+    // sits in the grass instead of floating on it. All of them are one instanced mesh.
+    const blob = (X: number, y: number, Z: number, d: number) => { blobs.push({ p: [X, y + 0.004, Z], s: [d, d, 1], r: [-Math.PI / 2, 0, 0], c: '#060a22' }); };
+    const any = <T,>(list: readonly T[]) => list[Math.floor(rnd() * list.length)];
     // Open grass round every landmark pad, every inner building and the plaza, so they stand clear.
-    const avoid = [...L.zones.map((z, i) => ({ x: z.x, z: z.z, r: i < 8 ? 22 : 15 })), ...EXTRA_HOUSES.map(h => ({ x: h.x, z: h.z, r: 11 }))];
+    const avoid = [...L.zones.map((z, i) => ({ x: z.x, z: z.z, r: i < 8 ? 25 : 17 })), ...EXTRA_HOUSES.map(h => ({ x: h.x, z: h.z, r: 12 }))];
     const clear = (x: number, z: number, pad = 0) => Math.hypot(x, z) > 30 + pad && avoid.every(a => Math.hypot(x - a.x, z - a.z) > a.r + pad);
-    // Night greens: the game's tree colours taken down and toward blue under the moon.
-    const greens = ['#3f6f45', '#4a7d4c', '#335f3e', '#56844f'], blossom = ['#d98aa8', '#c97fa5', '#d9976a', '#d9b65a'], pines = ['#24503c', '#2b5c44', '#204836'];
-    // Sparse, as in the game's overview: open meadow with small groves, mostly along the shores and
-    // the lobe edges, palms nearest the water, round broadleaf crowns (a few in blossom) behind
-    // them and only a few pines; off the roads, the zones and the plaza. Kept below the buildings.
+    // Night greens: the game's tree colours (map.js GREEN, BLOSSOM, PINE; trees.js WILLOW, PALM)
+    // taken down and a little toward blue under the moon, but still the game's hues.
+    const greens = ['#4c8448', '#5a914e', '#3f7443', '#68984f'], blossom = ['#d98aa8', '#c97fa5', '#d9976a', '#d9b65a'], pines = ['#2f6344', '#37704a', '#2a5a40'];
+    const pinks = ['#d98aa8', '#c97fa5', '#e3a0b8'], birches = ['#8fae58', '#a3b85c', '#8fae58', '#d9b65a'], willows = ['#6f9a55', '#7ba55a'];
+    // The game's mix (map.js scatter, trees.js speciesOf): about a third pines; palms only on the
+    // outer beaches; willows by the fresh water; and of the rest, cherries in pink, slender pale
+    // birches and broad oaks. In small groves, mostly along the shores and the lobe edges, off the
+    // roads (a crown never hangs over the asphalt), the zones and the plaza.
     let placed = 0;
-    const palm = (x: number, z: number, lean: number, ang: number) => {
-      const sd = L.sdAt(x, z), X = x * S, Z = z * S, ox = Math.cos(ang) * lean, oz = Math.sin(ang) * lean, h = 0.17 + rnd() * 0.06, y0 = heightAt(sd);
-      for (let i = 0; i < 3; i++) trunks.push({ p: [X + ox * h * (i + 0.5) / 3, y0 + h * (i + 0.5) / 3, Z + oz * h * (i + 0.5) / 3], s: [0.008 - i * 0.0012, h / 3, 0.008 - i * 0.0012], r: [oz, 0, -ox], c: '#a0714a' });
+    const palm = (x: number, z: number, lean: number, ang: number, h: number) => {
+      const sd = L.sdAt(x, z), X = x * S, Z = z * S, ox = Math.cos(ang) * lean, oz = Math.sin(ang) * lean, y0 = heightAt(sd);
+      for (let i = 0; i < 3; i++) trunks.push({ p: [X + ox * h * (i + 0.5) / 3, y0 + h * (i + 0.5) / 3, Z + oz * h * (i + 0.5) / 3], s: [0.0095 - i * 0.0014, h / 3, 0.0095 - i * 0.0014], r: [oz, 0, -ox], c: i % 2 ? '#a0714a' : '#b5855a' });
       const tx = X + ox * h, ty = y0 + h, tz = Z + oz * h;
-      for (let i = 0; i < 5; i++) {
-        const b = (i / 5) * Math.PI * 2 + rnd();
-        fronds.push({ p: [tx + Math.cos(b) * 0.032, ty - 0.008, tz + Math.sin(b) * 0.032], s: [0.014, 0.075, 0.004], r: [Math.sin(b) * 1.3, 0, -Math.cos(b) * 1.3], c: i % 2 ? '#356b3e' : '#447a48' });
+      for (let i = 0; i < 7; i++) {
+        const b = (i / 7) * Math.PI * 2 + rnd();
+        fronds.push({ p: [tx + Math.cos(b) * 0.045, ty - 0.012, tz + Math.sin(b) * 0.045], s: [0.02, 0.105, 0.006], r: [Math.sin(b) * 1.3, 0, -Math.cos(b) * 1.3], c: i % 2 ? '#3f7a44' : '#4c8a4a' });
       }
+      blob(X, y0, Z, h * 0.5);
     };
     // Groves: a slow sine mask picks where trees may clump, the shore pulls them toward the water,
     // and each accepted spot drops a small cluster of two to four.
-    for (let tries = 0; tries < 60000 && placed < 950; tries++) { // denser groves (Andrew 2026-11-04: "there should be trees")
+    for (let tries = 0; tries < 60000 && placed < 700; tries++) { // "there should be trees" (Andrew 2026-11-04); a few fewer now that each is bigger
       const cx = (rnd() * 2 - 1) * 172, cz = (rnd() * 2 - 1) * 172;
       const csd = L.sdAt(cx, cz);
       if (csd > -5) continue;
@@ -618,34 +655,63 @@ function buildNature(L: TownLayout) {
       const forest = Math.sin(cx * 0.045 + 1.3) * Math.sin(cz * 0.05 + 0.4) + 0.4 * Math.sin((cx + cz) * 0.09);
       if (rnd() > 0.18 + 0.75 * shore * (forest > -0.2 ? 1 : 0.4)) continue;
       const n = 2 + Math.floor(rnd() * 3);
-      for (let t = 0; t < n && placed < 950; t++) {
-      const x = cx + (rnd() - 0.5) * 9, z = cz + (rnd() - 0.5) * 9;
-      const sd = L.sdAt(x, z);
-      if (sd > -4 || L.roadDistAt(x, z) < SHOULDER_HALF + 2.5 || !clear(x, z)) continue;
-      placed++;
-      const X = x * S, Z = z * S, h = (0.55 + rnd() * 0.5) * 0.3, kind = rnd(), y0 = heightAt(sd); // a third taller, so they read from the wide camera
-      const nearWater = sd > -11;
-      if (nearWater ? kind < 0.6 : kind < 0.12) { palm(x, z, 0.15, rnd() * 6.3); continue; }
-      trunks.push({ p: [X, y0 + h * 0.25, Z], s: [0.008, h * 0.5, 0.008], c: C.trunk });
-      if (kind > 0.8) {
-        const c = pines[Math.floor(rnd() * 3)];
-        cones.push({ p: [X, y0 + h * 0.5, Z], s: [h * 0.24, h * 0.6, h * 0.24], c });
-        cones.push({ p: [X, y0 + h * 0.85, Z], s: [h * 0.16, h * 0.45, h * 0.16], c });
-      } else {
-        const c = rnd() < 0.22 ? blossom[Math.floor(rnd() * 4)] : greens[Math.floor(rnd() * 4)];
-        crowns.push({ p: [X, y0 + h * 0.7, Z], s: [h * 0.34, h * 0.3, h * 0.34], r: [rnd(), rnd() * 3, 0], c });
-      }
+      for (let t = 0; t < n && placed < 700; t++) {
+        const x = cx + (rnd() - 0.5) * 9, z = cz + (rnd() - 0.5) * 9;
+        const sd = L.sdAt(x, z);
+        if (sd > -4 || !clear(x, z)) continue;
+        const kind = rnd(), wet = rnd(), leafy = rnd(), size = rnd();
+        const beach = sd > -9 && L.coast(Math.atan2(z, x)) - Math.hypot(x, z) < 13;
+        const sp = kind < 0.3 ? 'pine' : beach ? 'palm' : sd > -8 && wet < 0.6 ? 'willow' : leafy < 0.17 ? 'cherry' : leafy < 0.45 ? 'birch' : 'oak';
+        const H = (TREES[sp].h[0] + TREES[sp].h[1] * size) * S, reach = TREES[sp].reach * H;
+        // clear of the road by the crown's own reach (the road grid is 2 m, so a little more)
+        if (L.roadDistAt(x, z) < Math.max(SHOULDER_HALF + 2.5, ROAD_HALF + 1.5 + reach / S)) continue;
+        placed++;
+        if (sp === 'palm') { palm(x, z, 0.15, rnd() * 6.3, H); continue; }
+        const X = x * S, Z = z * S, y0 = heightAt(sd), turn = (): V3 => [rnd() * 0.5, rnd() * 3, 0];
+        blob(X, y0, Z, reach * 2.7);
+        if (sp === 'pine') {
+          // a bare foot of trunk, then three tiers narrowing to a point
+          const c = any(pines);
+          trunks.push({ p: [X, y0 + H * 0.12, Z], s: [0.009, H * 0.24, 0.009], c: '#5e4030' });
+          for (const [r, hh, base] of [[0.2, 0.42, 0.16], [0.155, 0.38, 0.4], [0.105, 0.36, 0.64]]) cones.push({ p: [X, y0 + H * (base + hh / 2), Z], s: [H * r, H * hh, H * r], r: [0, rnd() * 6, 0], c });
+          continue;
+        }
+        // a second, lower mass beside the first: an oak's or a cherry's broad, lumpy crown
+        const lobe = (off: number, y: number, r: number, ry: number, c: string) => {
+          const a = rnd() * 6.3;
+          crowns.push({ p: [X + Math.cos(a) * H * off, y0 + H * y, Z + Math.sin(a) * H * off], s: [H * r, H * ry, H * r], r: turn(), c });
+        };
+        if (sp === 'oak') {
+          const c = leafy > 0.93 ? '#d9976a' : any(greens);
+          trunks.push({ p: [X, y0 + H * 0.25, Z], s: [0.011, H * 0.5, 0.011], c: C.trunk });
+          crowns.push({ p: [X, y0 + H * 0.72, Z], s: [H * 0.26, H * 0.28, H * 0.26], r: turn(), c });
+          lobe(0.17, 0.56, 0.19, 0.17, c === '#d9976a' ? c : any(greens));
+        } else if (sp === 'cherry') {
+          const c = any(pinks);
+          trunks.push({ p: [X, y0 + H * 0.2, Z], s: [0.01, H * 0.4, 0.01], c: '#5a3a34' });
+          crowns.push({ p: [X, y0 + H * 0.71, Z], s: [H * 0.29, H * 0.29, H * 0.29], r: turn(), c });
+          lobe(0.17, 0.57, 0.21, 0.18, any(pinks));
+        } else if (sp === 'birch') {
+          trunks.push({ p: [X, y0 + H * 0.3, Z], s: [0.0065, H * 0.6, 0.0065], c: '#c4bfd0' });
+          crowns.push({ p: [X, y0 + H * 0.68, Z], s: [H * 0.18, H * 0.32, H * 0.18], r: [0, rnd() * 3, 0], c: any(birches) });
+        } else {
+          // a willow: a dome over a wider, lower skirt, so the crown hangs toward the water
+          const c = any(willows);
+          trunks.push({ p: [X, y0 + H * 0.25, Z], s: [0.011, H * 0.5, 0.011], c: '#6a5646' });
+          crowns.push({ p: [X, y0 + H * 0.73, Z], s: [H * 0.27, H * 0.27, H * 0.27], r: turn(), c });
+          crowns.push({ p: [X, y0 + H * 0.52, Z], s: [H * 0.34, H * 0.28, H * 0.34], r: turn(), c });
+        }
       }
     }
     // Bushes: a few low round shrubs along the roadsides, a few in blossom.
-    const bushCols = ['#3f6f45', '#4a7d4c', '#56844f', '#335f3e', '#5d7f4a'];
+    const bushCols = ['#4c8448', '#5a914e', '#68984f', '#3f7443', '#6b8f52'];
     for (let k = 0, n = 0; k < 30000 && n < 420; k++) {
       const x = (rnd() * 2 - 1) * 172, z = (rnd() * 2 - 1) * 172, sd = L.sdAt(x, z), rd = L.roadDistAt(x, z);
       if (sd > -5 || rd < SHOULDER_HALF + 1 || !clear(x, z, -12)) continue;
       if (rd > 12 && rnd() > 0.25) continue; // mostly along the roads
       n++;
       const b = (0.022 + rnd() * 0.02), y0 = heightAt(sd);
-      crowns.push({ p: [x * S, y0 + b * 0.55, z * S], s: [b * 1.2, b * 0.8, b * 1.1], r: [rnd(), rnd() * 3, 0], c: rnd() < 0.15 ? blossom[Math.floor(rnd() * 4)] : bushCols[Math.floor(rnd() * 5)] });
+      bushes.push({ p: [x * S, y0 + b * 0.55, z * S], s: [b * 1.2, b * 0.8, b * 1.1], r: [rnd(), rnd() * 3, 0], c: rnd() < 0.15 ? blossom[Math.floor(rnd() * 4)] : bushCols[Math.floor(rnd() * 5)] });
     }
     // Palms on the outer beaches, leaning out to sea
     for (let k = 0, n = 0; k < 500 && n < 30; k++) {
@@ -653,7 +719,7 @@ function buildNature(L: TownLayout) {
       const x = Math.cos(a) * r0, z = Math.sin(a) * r0, sd = L.sdAt(x, z);
       if (sd < -5 || sd > -1.5 || !clear(x, z) || L.roadDistAt(x, z) < 9) continue;
       n++;
-      palm(x, z, 0.3, a);
+      palm(x, z, 0.3, a, (TREES.palm.h[0] + TREES.palm.h[1] * rnd()) * S);
     }
     // Tall grass clumps along the banks and in the open meadows (art.js): a few thin blades each.
     const tallCols = ['#47704a', '#517b4f', '#5c8656', '#3d6444'];
@@ -685,9 +751,17 @@ function buildNature(L: TownLayout) {
       const s = 0.03 + rnd() * 0.05;
       rocks.push({ p: [x * S, Math.max(heightAt(sd), -0.04), z * S], s: [s * 1.3, s * 0.8, s], r: [rnd() * 2, rnd() * 3, 0], c: rnd() < 0.5 ? '#c9c2b8' : '#b9b2c7' });
     }
+    // The buildings' own patches (the dock stands over the water, so it has none).
+    L.zones.forEach((z, i) => { if (i !== 3) for (const k of [1, 0.66]) blob(z.x * S, GROUND + 0.005, z.z * S, (i < 8 ? 1.2 : 0.85) * k); });
+    EXTRA_HOUSES.forEach(h => blob(h.x * S, GROUND, h.z * S, 0.62));
+    const blobMesh = instanced(new THREE.PlaneGeometry(1, 1), blobs);
+    blobMesh.material = new THREE.MeshBasicMaterial({ map: glowTexture(), color: '#ffffff', transparent: true, opacity: 0.6, depthWrite: false, toneMapped: false });
+    // Foliage is shaded round, with leaf clumps (the 'leaf' material): the crowns on an 80-face
+    // ball, the bushes on the old 20-face one with rounded normals.
     return {
-      trunks: instanced(G.cyl6, trunks), crowns: instanced(G.ico, crowns), cones: instanced(G.cone7, cones),
-      fronds: instanced(G.cone4, fronds), tufts: instanced(G.cone4, tufts), rocks: instanced(G.dodec, rocks),
+      trunks: instanced(G.cyl6, trunks), crowns: instanced(G.ball, crowns, 'leaf'), bushes: instanced(G.blob, bushes, 'leaf'),
+      cones: instanced(G.cone7, cones, 'leaf'), fronds: instanced(G.cone4, fronds, 'leaf'), tufts: instanced(G.cone4, tufts, 'leaf'),
+      rocks: instanced(G.dodec, rocks), blobs: blobMesh,
     };
   }
 }
@@ -706,6 +780,7 @@ function glowTexture() {
 // Lanterns along the roads at night (the game's orange threads): a post, a lit bulb and a small
 // warm pool at its foot, every 10 m, alternating sides. The pools stay small and apart, so the
 // lamps read as separate dots and the asphalt between them stays dark plum, as in the game.
+const LAMP_H = 0.125; // 3.6 m, about the game's street lamps (0.09 before)
 function useLanterns(L: TownLayout) {
   return useMemo(() => {
     const posts: Inst[] = [], bulbs: Inst[] = [], pools: Inst[] = [];
@@ -714,11 +789,19 @@ function useLanterns(L: TownLayout) {
         if (L.onBridge(ri, k)) continue;
         const p = r.pts[k], side = (k / 5) % 2 ? 1 : -1, off = SHOULDER_HALF + 0.6;
         const x = (p.x - p.tz * side * off) * S, z = (p.z + p.tx * side * off) * S;
-        posts.push({ p: [x, GROUND + 0.045, z], s: [0.004, 0.09, 0.004], c: '#3a3350' });
-        bulbs.push({ p: [x, GROUND + 0.095, z], s: [0.02, 0.02, 0.02], c: '#ffd28a' });
+        posts.push({ p: [x, GROUND + LAMP_H / 2, z], s: [0.004, LAMP_H, 0.004], c: '#3a3350' });
+        bulbs.push({ p: [x, GROUND + LAMP_H + 0.005, z], s: [0.02, 0.02, 0.02], c: '#ffd28a' });
         pools.push({ p: [x, GROUND + 0.011, z], s: [0.16, 0.16, 1], r: [-Math.PI / 2, 0, 0], c: '#ff9a3c' });
       }
     });
+    // The lit windows spill onto the ground: one wider, fainter warm pool before each building's
+    // door (its side toward the plaza), so the fronts glow against the cool moonlight.
+    const spill = (x: number, z: number, off: number, size: number) => {
+      const r = Math.hypot(x, z) || 1;
+      pools.push({ p: [x * S - (x / r) * off, GROUND + 0.012, z * S - (z / r) * off], s: [size, size, 1], r: [-Math.PI / 2, 0, 0], c: '#b8641f' });
+    };
+    L.zones.forEach((z, i) => spill(z.x, z.z, i < 8 ? 0.3 : 0.2, i < 8 ? 0.62 : 0.44));
+    EXTRA_HOUSES.forEach(h => spill(h.x, h.z, 0.14, 0.32));
     const poolMat = new THREE.MeshBasicMaterial({ map: glowTexture(), color: '#ffffff', transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
     const poolMesh = instanced(new THREE.PlaneGeometry(1, 1), pools);
     poolMesh.material = poolMat;
@@ -767,7 +850,7 @@ function Land({ L }: { L: TownLayout }) {
     <Part geo={G.disc} color={C.shoulder} p={[0, GROUND + 0.006, 0]} s={[13 * S, 0.01, 13 * S]} />
     <Part geo={G.disc} color={C.brick} p={[0, GROUND + 0.011, 0]} s={[11 * S, 0.01, 11 * S]} />
     {[3.2, 6.4, 9.6].map(r => <mesh key={r} geometry={G.torus} material={mat('#c98f62')} position={[0, GROUND + 0.016, 0]} rotation={[-Math.PI / 2, 0, 0]} scale={[r * S, r * S, 0.02]} />)}
-    <group position={[-9 * S, GROUND + 0.012, -10 * S]} rotation={[0, 0.72, 0]} scale={S}><Garage /></group>
+    <group position={[-9 * S, GROUND + 0.012, -10 * S]} rotation={[0, 0.72, 0]} scale={[S, S * 1.3, S]}><Garage /></group>
     <group position={[4 * S, GROUND + 0.016, -3 * S]} rotation={[0, -0.45, 0]} scale={S}><Blocks /></group>
     <group position={[-10.5 * S, GROUND, 1 * S]} rotation={[0, 1.2, 0]} scale={S}>
       {[-2, 2].map(x => <Part key={x} geo={G.box} color="#6b4a33" p={[x, 1.2, 0]} s={[0.25, 2.4, 0.25]} />)}
@@ -781,15 +864,20 @@ function Nature({ L }: { L: TownLayout }) {
   return <group>
     <primitive object={n.trunks} />
     <primitive object={n.crowns} />
+    <primitive object={n.bushes} />
     <primitive object={n.cones} />
     <primitive object={n.fronds} />
     <primitive object={n.rocks} />
   </group>;
 }
-// The grass tufts: too small to cast a shadow worth its cost, so outside the shadow pass.
+// The grass tufts: too small to cast a shadow worth its cost, so outside the shadow pass, with the
+// soft dark patches under the trees and the buildings.
 function Tufts({ L }: { L: TownLayout }) {
   const n = useNature(L);
-  return <primitive object={n.tufts} />;
+  return <group>
+    <primitive object={n.tufts} />
+    <primitive object={n.blobs} />
+  </group>;
 }
 // The lanterns stay out of the shadow pass: they are light, and thin enough not to need it.
 function Lanterns({ L }: { L: TownLayout }) {
@@ -838,6 +926,11 @@ const SKY = {
 };
 // The moon's direction (world space), set by Framing for each layout; the ocean and the sky share it.
 const moonDir = new THREE.Vector3(-0.2, 0.1, -1).normalize();
+// The island's materials (island-shading.ts) read the same moon, its colour and the same haze.
+isleU.uIsleMoon.value = moonDir;
+isleU.uIsleMoonCol.value.set(SKY.moon);
+isleU.uIsleHaze.value.set(SKY.haze);
+isleU.uIsleGround.value = GROUND;
 
 function ringGeometry() {
   const SEG = 144;
@@ -1227,19 +1320,19 @@ function Landmarks({ L, still, anchors }: { L: TownLayout; still: boolean; ancho
       const z = L.zones[i], dock = i === 3;
       return <Spot key={i} x={z.x} z={z.z}>
         {!dock && <>
-          <Part geo={G.disc} color={C.brick} p={[0, 0.003, 0.08]} s={[0.36, 0.006, 0.36]} />
-          <mesh geometry={rim} material={mat(b.rim, { glow: 1.6 })} position={[0, 0.006, 0.08]} scale={0.6} />
+          <Part geo={G.disc} color={C.brick} p={[0, 0.003, 0.08]} s={[0.42, 0.006, 0.42]} />
+          <mesh geometry={rim} material={mat(b.rim, { glow: 1.6 })} position={[0, 0.006, 0.08]} scale={0.7} />
         </>}
-        <group scale={LANDMARK_SCALE}>{b.el(still)}</group>
-        <object3D ref={o => { anchors.current[i] = o; }} position={[0, (b.h * LANDMARK_SCALE) / 2, 0]} />
+        <group scale={LANDMARK_XYZ}>{b.el(still)}</group>
+        <object3D ref={o => { anchors.current[i] = o; }} position={[0, (b.h * LANDMARK_XYZ[1]) / 2, 0]} />
       </Spot>;
     })}
     {L.zones.slice(8).map(z => <Spot key={z.id} x={z.x} z={z.z}>
-      <Part geo={G.disc} color={C.brick} p={[0, 0.003, 0.12]} s={[0.25, 0.006, 0.25]} />
-      <mesh geometry={rim} material={mat(INNER_RIM[z.id], { glow: 1.6 })} position={[0, 0.006, 0.12]} scale={0.41} />
-      <group scale={S} position={[0, 0, -0.06]}><InnerZone id={z.id} /></group>
+      <Part geo={G.disc} color={C.brick} p={[0, 0.003, 0.12]} s={[0.3, 0.006, 0.3]} />
+      <mesh geometry={rim} material={mat(INNER_RIM[z.id], { glow: 1.6 })} position={[0, 0.006, 0.12]} scale={0.49} />
+      <group scale={TOWN_XYZ} position={[0, 0, -0.06]}><InnerZone id={z.id} /></group>
     </Spot>)}
-    {EXTRA_HOUSES.map(h => <Spot key={h.x} x={h.x} z={h.z}><group scale={S}><House roof={h.roof} /></group></Spot>)}
+    {EXTRA_HOUSES.map(h => <Spot key={h.x} x={h.x} z={h.z}><group scale={TOWN_XYZ}><House roof={h.roof} /></group></Spot>)}
   </group>;
 }
 
@@ -1321,7 +1414,7 @@ function Marks({ anchors, marks }: { anchors: RefObject<(THREE.Object3D | null)[
       v.project(cam);
       const x = Math.round((v.x + 1) / 2 * size.width), y = Math.round((1 - v.y) / 2 * size.height);
       // the building's box, but never under 32 px, so a small building is still easy to hit
-      const k = f / Math.max(depth, 0.1), w = Math.max(32, Math.round(1.2 * LANDMARK_SCALE * k)), h = Math.max(32, Math.round((LANDMARK_SET[i].h + 0.25) * LANDMARK_SCALE * k));
+      const k = f / Math.max(depth, 0.1), w = Math.max(32, Math.round(1.2 * LANDMARK_SCALE * k)), h = Math.max(32, Math.round((LANDMARK_SET[i].h + 0.25) * LANDMARK_XYZ[1] * k));
       const key = `${x},${y},${w},${h}`;
       if (last.current[i] === key) return;
       last.current[i] = key;
@@ -1461,6 +1554,30 @@ function Framing({ focus, still }: { focus: Focus | null; still: boolean }) {
   return null;
 }
 
+// The moonlight on the island: one directional light in the moon's colour, on the moon's own
+// bearing (moonDir, which Framing sets for the layout), so the lit side of every roof, wall and
+// crown is the side toward the moon in the sky and the shadows fall away from it, toward the
+// viewer. The real moon sits a couple of degrees over the horizon, which would leave a flat island
+// dark, so the light keeps the bearing and is lifted to KEY_ELEV. The same 1024 shadow map as
+// before; its box is now fitted to the island as the light sees it (wide and shallow), so it is a
+// little sharper for nothing. Set every frame before the draw, so `still` gets it too.
+function MoonLight() {
+  const ref = useRef<THREE.DirectionalLight>(null);
+  useFrame(() => {
+    const l = ref.current;
+    if (!l) return;
+    const k = Math.cos(KEY_ELEV) / (Math.hypot(moonDir.x, moonDir.z) || 1);
+    keyDir.set(moonDir.x * k, Math.sin(KEY_ELEV), moonDir.z * k);
+    l.position.copy(keyDir).multiplyScalar(16);
+  });
+  return <directionalLight
+    ref={ref} color={SKY.moon} intensity={1.15} position={[-2.6, 9, -13]} castShadow
+    shadow-mapSize={[1024, 1024]} shadow-bias={-0.0004} shadow-normalBias={0.015}
+    shadow-camera-left={-6.8} shadow-camera-right={6.8} shadow-camera-top={4.8} shadow-camera-bottom={-4.8}
+    shadow-camera-near={6} shadow-camera-far={27}
+  />;
+}
+
 // Tells the stage when the first frame is on screen, so it can fade the canvas in.
 function FirstFrame({ onReady }: { onReady: () => void }) {
   const done = useRef(false);
@@ -1468,37 +1585,8 @@ function FirstFrame({ onReady }: { onReady: () => void }) {
   return null;
 }
 
-// A few low-poly clouds (Andrew 2026-11-04: "clouds maybe"): puffs of flat-shaded spheres, moonlit
-// lilac, kept off the town centre: behind the island toward the horizon and over its edges, swaying
-// slowly side to side (still under reduced motion).
-const CLOUDS: { x: number; y: number; z: number; s: number }[] = [
-  { x: -2, y: 2.4, z: -26, s: 1.1 }, { x: 9, y: 7.8, z: -34, s: 1.4 }, { x: 21, y: 3.4, z: -30, s: 0.9 },
-  { x: 13, y: 4.6, z: -16, s: 0.6 }, { x: 1, y: 10.5, z: -44, s: 1.9 },
-];
-function Clouds({ still }: { still: boolean }) {
-  const group = useRef<THREE.Group>(null);
-  const puffs = useMemo(() => {
-    const rnd = seeded(7);
-    return CLOUDS.map(c => Array.from({ length: 5 }, (_, i) => ({
-      p: [c.x + (i - 2) * 0.42 * c.s + (rnd() - 0.5) * 0.2, c.y + (rnd() - 0.3) * 0.18 * c.s, c.z + (rnd() - 0.5) * 0.3] as [number, number, number],
-      r: (0.32 + rnd() * 0.22) * c.s * (i === 2 ? 1.35 : i === 1 || i === 3 ? 1.1 : 0.8),
-    }))).flat();
-  }, []);
-  useFrame(state => {
-    if (still || !group.current) return;
-    group.current.position.x = Math.sin(state.clock.elapsedTime * 0.025) * 2.5; // a slow sway, never a jump
-  });
-  return (
-    <group ref={group}>
-      {puffs.map((q, i) => (
-        <mesh key={i} position={q.p} scale={[q.r * 1.25, q.r * 0.75, q.r]}>
-          <icosahedronGeometry args={[1, 1]} />
-          <meshLambertMaterial color="#8f96cf" emissive="#1e2458" flatShading transparent opacity={0.6} depthWrite={false} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
+// No clouds (Andrew 2026-11-11: the low-poly puffs read as unrealistic beside the water and the
+// moon, "remove the island cloud unless you can make realistic clouds"). Removed, not restyled.
 
 function Town({ still }: { still: boolean }) {
   const L = getLayout();
@@ -1512,7 +1600,6 @@ function Town({ still }: { still: boolean }) {
     <Tufts L={L} />
     <Lanterns L={L} />
     <Fireflies L={L} still={still} />
-    <Clouds still={still} />
   </>;
 }
 
@@ -1533,17 +1620,17 @@ export default function IslandScene({ still, paused, focus, onReady, marks }: {
     >
       <Framing focus={focus} still={still} />
       <FirstFrame onReady={onReady} />
-      {/* Night: a cool moon from the upper left casts the shadows; a soft berry sky fill; a warm
-          rim from behind-right so the edges of the buildings catch the lamps. */}
-      <hemisphereLight args={['#aab6ee', '#2c3a8f', 1.25]} />
-      <ambientLight color="#5b6fd6" intensity={0.3} />
-      <directionalLight
-        color="#e4e9ff" intensity={2.0} position={[-6, 10, 6]} castShadow
-        shadow-mapSize={[1024, 1024]} shadow-bias={-0.0004} shadow-normalBias={0.015}
-        shadow-camera-left={-6.6} shadow-camera-right={6.6} shadow-camera-top={6.6} shadow-camera-bottom={-6.6}
-        shadow-camera-near={1} shadow-camera-far={30}
-      />
-      <directionalLight color={C.peach} intensity={0.55} position={[6, 3, -6]} />
+      {/* Night: the moon lights the island from its own side of the sky and casts the shadows
+          (MoonLight); a soft berry sky fills the sides turned away from it; a faint warm light from
+          the viewer's side stands in for the town's lamps on the fronts. */}
+      {/* Turned down to a night (Andrew 2026-11-11: too bright "with the moon that low ... you should
+          be making the night time view"): the moon was 2.7 and the sky fill 1.05 and 0.3, which lit
+          the town like an overcast afternoon. Now the moon only picks out the sides that face it,
+          the fill is a dim deep blue, and the windows and lamps are what glow. */}
+      <hemisphereLight args={['#6f7fd0', '#141a45', 0.42]} />
+      <ambientLight color="#3a4aa8" intensity={0.16} />
+      <MoonLight />
+      <directionalLight color={C.peach} intensity={0.14} position={[5, 3.5, 9]} />
       <pointLight color={C.peach} intensity={0.5} distance={1.4} decay={1.6} position={[0, GROUND + 0.5, 0]} />
       <Sky />
       {/* seen from the south, as the game's overview is: the lake at top centre, the dock bottom right */}

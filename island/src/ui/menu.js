@@ -92,10 +92,18 @@ const CSS = `
 #mn .btn:active{transform:translateY(2px);box-shadow:0 2px 0 #0000002a}
 #mn .row{display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 16px}
 #mn kbd{font:600 12px/1 Fredoka,system-ui,sans-serif;background:var(--ink);color:var(--paper);border-radius:7px;padding:5px 7px;box-shadow:0 2px 0 #0000003a;display:inline-block;min-width:12px;text-align:center}
-#mn .keys{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
-#mn .key{background:#f7f0e2;border-radius:16px;padding:12px 14px;display:flex;gap:12px;align-items:center}
-#mn .key .k{display:flex;gap:4px;flex-wrap:wrap;min-width:118px}
-#mn .key span{font:500 14px/1.3 Nunito,system-ui,sans-serif;color:var(--ink)}
+/* controls tab: a board of labelled groups. Each group is a two-column grid, key caps then a short
+   label, so the labels line up down the group; the groups flow into as many columns as fit (one
+   on a phone). */
+#mn .board{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(270px,100%),1fr));gap:12px;align-items:start}
+#mn .kgroup{background:#f7f0e2;border-radius:18px;padding:14px 16px 16px;min-width:0}
+#mn .kgroup h4{font:600 11px/1 Fredoka,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);margin:0 0 12px;display:flex;gap:8px;align-items:center}
+#mn .kgroup h4 i{width:10px;height:10px;border-radius:3px;background:var(--c);flex:none}
+#mn .kgroup dl{margin:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:9px 14px;align-items:center}
+#mn .kgroup dt{display:flex;gap:4px;white-space:nowrap}
+#mn .kgroup dd{margin:0;font:500 14px/1.25 Nunito,system-ui,sans-serif;color:var(--ink)}
+#mn .kgroup kbd{white-space:nowrap}
+#mn .kgroup kbd.tch{background:#fffaf0;color:var(--ink);box-shadow:0 2px 0 #0000001f}
 /* resume tab */
 #mn .cv{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px}
 #mn .job{background:#f7f0e2;border-radius:18px;padding:14px 16px;border-left:6px solid var(--c);display:grid;gap:4px;align-content:start}
@@ -329,21 +337,39 @@ export function init(ctx){
   }
 
   /* Controls tab */
-  const K = s => s.split(' ').map(k => `<kbd>${k}</kbd>`).join('');
-  const keyRows = [
-    [K('W A S D'), 'Move: drive, or walk once you are out. Arrow keys work too'],
-    [K('Shift'), 'Boost in a vehicle, run on foot'], [K('Space'), 'Brake in a vehicle, hop on foot'],
-    [K('Q E'), 'Left and right turn signals'],
-    [K('F'), 'Interact: pick up, pets, doors, garage, get in or out, advance dialog. Walking into an open doorway also enters'],
-    [K('C'), 'Talk'], [K('H'), 'Honk. On foot, H whistles the car over'],
-    [K('V'), 'First person view'], [K('P'), 'Camera presets'], [K('G'), 'Road guide on or off'],
-    [K('L'), 'Night'], [K('M'), 'Map'], [K('T'), 'Tour'], [K('N B'), 'Tour next and back'],
-    [K('I') + ' or ' + K('Tab'), 'Bag'], [K('R'), 'Reset to the spawn plaza'], [K('Esc'), 'Leave a room, or close this menu'],
-    ['<kbd>Wheel</kbd>', 'Zoom the camera in and out'],
-    ['<kbd>Touch</kbd>', 'On a phone, the left stick moves and the right stick looks around. Tap things to use them'],
+  // A board, not a list (Andrew 2026-11-11: "organize the board of controls. I don't like the
+  // messy list of options"): labelled groups, each row one set of key caps and a few words.
+  // Keys are joined by commas where a cap has a space in it; T() is a touch control, drawn as a
+  // paper cap, for the phone group.
+  const K = s => s.split(',').map(k => `<kbd>${k}</kbd>`).join('');
+  const T = s => s.split(',').map(k => `<kbd class="tch">${k}</kbd>`).join('');
+  const board = [
+    ['Move', '#5b6fd6', [
+      [K('W,A,S,D'), 'Drive or walk (arrows too)'], [K('Shift'), 'Boost, or run on foot'],
+      [K('Space'), 'Brake, or hop on foot'], [K('R'), 'Back to the spawn plaza']]],
+    ['Look', '#2f9e8f', [
+      [K('V'), 'First person on or off'], [K('P'), 'Camera presets'], [K('O'), 'High overview'],
+      [K('Click'), 'Capture the mouse (first person)'], [K('Drag'), 'Look around'],
+      [K('Wheel'), 'Zoom'], [K('Esc'), 'Free the mouse']]],
+    ['Actions', '#e98a5a', [
+      [K('F'), 'Use: doors, items, pets, car in or out'], [K('H'), 'On foot: call the car to you'],
+      [K('H'), 'Driving: honk'], [K('C'), 'Talk'], [K('Q,E'), 'Turn signals']]],
+    ['World', '#6fae4a', [
+      [K('L'), 'Night on or off'], [K('G'), 'Road guide on or off'], [K('T'), 'Start the tour'],
+      [K('N,B'), 'Tour: next, back']]],
+    ['Menus', '#1f2a44', [
+      [K('M'), 'Map and teleport'], [K('I') + K('Tab'), 'Bag'], [K('J'), 'Explored checklist'],
+      [K('Esc'), 'Leave a room, close a menu']]],
+    ['Wormhole Lab', '#a78bfa', [
+      [K('Click'), 'Capture the mouse to aim'], [K('Left click'), 'Blue portal'],
+      [K('Right click'), 'Orange portal'], [K('Q,E'), 'Blue, orange on keys'], [K('Esc'), 'Free the mouse, then leave']]],
+    ['Phone', '#d6689a', [
+      [T('Left stick'), 'Move'], [T('Right stick'), 'Look around'], [T('Tap'), 'Use what you tap'],
+      [T('Call car'), 'On foot: the car comes to you'], [T('Run') + T('Jump'), 'On foot'],
+      [T('Honk'), 'Driving'], [T('Side buttons'), 'Lab: blue left, orange right']]],
   ];
   panels.keys.innerHTML = `<h3>Controls</h3><p>Drive into things to knock them over. Nothing breaks for real.</p>
-    <div class="keys">${keyRows.map(([k, t]) => `<div class="key"><div class="k">${k}</div><span>${t}</span></div>`).join('')}</div>
+    <div class="board">${board.map(([name, c, rows]) => `<section class="kgroup" style="--c:${c}"><h4><i></i>${name}</h4><dl>${rows.map(([k, t]) => `<dt>${k}</dt><dd>${t}</dd>`).join('')}</dl></section>`).join('')}</div>
     <div class="row" style="margin-top:16px"><button class="btn soft" type="button" data-stuck>I'm stuck: take me to spawn</button></div>`;
   panels.keys.querySelector('[data-stuck]').addEventListener('click', () => go('spawn'));
 

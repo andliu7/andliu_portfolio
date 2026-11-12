@@ -27,12 +27,30 @@ html:not(.is-loaded) .rv-rail { opacity:0; pointer-events:none; }
 /* The sun: gold by day, a paper moon with a crescent bite by night (--night, 0 to 1, written by
    the rail's scroll handler on this one element). */
 .rv-sun { position:absolute; left:50%; width:0; height:0; pointer-events:none; }
-.rv-sun-disc { position:absolute; left:0; top:0; width:26px; height:26px; translate:-50% -50%; box-sizing:border-box; overflow:hidden; border:1.5px solid var(--ink); border-radius:50%;
-  background:color-mix(in srgb,#f4efe6 calc(var(--night,0) * 100%),#ffd98a);
+.rv-sun-disc { position:absolute; left:0; top:0; width:30px; height:30px; translate:-50% -50%; box-sizing:border-box; overflow:hidden; isolation:isolate; border:1.5px solid var(--ink); border-radius:50%;
+  background:var(--card);
   box-shadow:0 0 0 calc((1 - var(--night,0)) * 5px) color-mix(in srgb,#ffd98a 45%,transparent); transition:scale .3s var(--ease-spring); }
-.rv-sun-disc i { position:absolute; inset:-2px; left:38%; top:-22%; border-radius:50%; background:var(--berry-deep); opacity:var(--night,0); }
+/* The disc is a small window of sky (Andrew 2026-11-11, after the sun and moon toggle he pasted):
+   a day sky and a night sky that cross-fade, a sun that sets down an arc to the right and a moon
+   that rises up one from the left, with a little overshoot. review.tsx (Celestial) runs the swap
+   when the scroll crosses dusk, and backwards when it crosses back. The day sky is the page's own
+   morning blue, the night sky its deep night, so the disc matches the ground behind it. */
+.rv-sky { position:absolute; inset:0; z-index:-1; }
+.rv-sky[data-sky="day"] { background:linear-gradient(180deg,#87ceeb,#cfe2f5); }
+.rv-sky[data-sky="night"] { background:linear-gradient(180deg,#0b0d1f,var(--berry-deep)); }
+.rv-star { position:absolute; width:2px; height:2px; border-radius:50%; background:#f4efe6; }
+.rv-orb { position:absolute; inset:0; display:grid; place-items:center; }
+.rv-orb svg { display:block; width:17px; min-width:17px; max-width:none; height:17px; }
+.rv-orb[data-body="sun"] { color:#c9730a; }
+.rv-orb[data-body="sun"] svg { fill:#ffd98a; }
+.rv-orb[data-body="moon"] { color:#f4efe6; }
 .rv-rail-track[data-drag] .rv-sun-disc { scale:1.2; }
-.rv-time { position:absolute; right:22px; top:0; translate:0 -50%; padding:5px 9px; border:1.5px solid var(--ink); border-radius:var(--r-pill); background:var(--card); color:var(--ink); font:600 12px/1 var(--mono); letter-spacing:.02em; white-space:nowrap; font-variant-numeric:tabular-nums; }
+/* The clock is not always on (Andrew 2026-11-11: "don't always show the time, it'll be
+   distracting"): it shows while the pointer is on the rail, on keyboard focus and while the sun
+   is being dragged, and fades out otherwise. */
+.rv-time { position:absolute; right:24px; top:0; translate:0 -50%; padding:5px 9px; border:1.5px solid var(--ink); border-radius:var(--r-pill); background:var(--card); color:var(--ink); font:600 12px/1 var(--mono); letter-spacing:.02em; white-space:nowrap; font-variant-numeric:tabular-nums; opacity:0; transition:opacity .25s var(--ease-ui); }
+.rv-rail:is(:hover,:focus-within) .rv-time, .rv-rail-track[data-drag] .rv-time { opacity:1; }
+html[data-motion="reduced"] .rv-time { transition:none; }
 /* a label and the clock never stack: the clock steps aside while a dot is hovered */
 .rv-rail-track:has(.rv-tick:is(:hover,:focus-visible)) .rv-time { opacity:0; }
 html[data-motion="reduced"] .rv-tick::before, html[data-motion="reduced"] .rv-tick-label, html[data-motion="reduced"] .rv-sun-disc { transition:none; }
@@ -167,9 +185,28 @@ html[data-motion="reduced"] .rv-switch, html[data-motion="reduced"] .rv-switch i
   html.rvf-page .resume .rs-title { font-size:clamp(40px,4.4vw,68px); line-height:1; }
   html.rvf-page .resume .rs-line { font-size:clamp(18px,1.5vw,22px); }
   html.rvf-page .resume .rs-card-cell { place-items:start center; }
-  html.rvf-page .resume .rs-card { width:min(720px,100cqw); }
+  html.rvf-page .resume .rs-card { width:min(640px,100cqw); } /* 720 in round 2; Andrew 2026-11-11: "shrink them slightly" */
   html.rvf-page .resume .rs-card:is(:hover,:focus-visible) { scale:1.03; } /* already large: a nod, not a jump */
-  html.rvf-page .resume .rs-click { --cw:min(720px,100cqw); top:6px; }
+  html.rvf-page .resume .rs-click { --cw:min(640px,100cqw); top:6px; }
+}
+
+/* ---------- 13 The whole résumé, on the left (desktop) ---------------------------------------
+   Andrew 2026-11-11: "full resume shown ... could it look better on the left side? text on the
+   right?" The page is shown whole instead of running off the foot: the section stops being exactly
+   one screen and is as tall as the page needs (640px wide, so about 830px tall), with no pin. The
+   page takes the left column, where the eye lands first, and the title, line and buttons sit
+   beside its middle on the right. The "click here" note is drawn for a card on the right, so it
+   rests here. Written after switch 07 so that with both on, this one decides the layout. */
+@media (min-width:761px) {
+  html.rvf-left section.resume::after { content:none; }
+  html.rvf-left .resume .rs-page { position:static; height:auto; min-height:100svh; overflow:visible; padding-bottom:clamp(40px,6vw,88px); }
+  html.rvf-left .resume .rs-wrap { grid-template-columns:minmax(0,640px) minmax(0,1fr); grid-template-rows:1fr 1fr; grid-template-areas:"card text" "card actions"; height:auto; column-gap:clamp(32px,5vw,88px); }
+  html.rvf-left .resume .rs-card-cell { container-type:inline-size; place-items:start center; padding-block:12px 20px; }
+  html.rvf-left .resume .rs-card { width:min(640px,100cqw); }
+  html.rvf-left .resume .rs-card:is(:hover,:focus-visible) { scale:1.02; }
+  html.rvf-left .resume .rs-title { font-size:clamp(44px,5.4vw,88px); line-height:.95; }
+  html.rvf-left .resume .rs-line { font-size:clamp(18px,1.5vw,22px); }
+  html.rvf-left .resume .rs-click { display:none; }
 }
 
 /* ---------- 08 The letter in the middle (desktop) --------------------------------------------
@@ -187,7 +224,7 @@ html[data-motion="reduced"] .rv-switch, html[data-motion="reduced"] .rv-switch i
   html.rvf-letter .contact .ct-invite { flex:0 0 100%; max-inline-size:none; margin:0; }
   html.rvf-letter .contact :is(.ct-email,.ct-note) { display:none; }
   html.rvf-letter .contact .ct-links { margin:0; }
-  html.rvf-letter .contact .cf { width:min(100%,800px); }
+  html.rvf-letter .contact .cf { width:min(100%,700px); } /* 800 in round 2; Andrew 2026-11-11: "shrink them slightly" */
   @supports (anchor-name:--a) {
     /* An anchor must live inside the positioned element's containing block. The toys' layer was
        that block and the letter is outside it, so the layer steps aside (static) and the toys
@@ -200,17 +237,8 @@ html[data-motion="reduced"] .rv-switch, html[data-motion="reduced"] .rv-switch i
   }
 }
 
-/* ---------- 10 Commits, pocket-size (desktop) ------------------------------------------------
-   The same lazy skyline, small, in the section's top right corner under the sentence it
-   illustrates. Its caption, legend and 2D/3D switch are hidden at this size; it sits under the
-   fan's layer, so a fanned card passes over it, never behind. */
-@media (min-width:1100px) {
-  html.rvf-commits .work .skc { position:absolute; z-index:0; top:calc(clamp(48px,6cqi,96px) + 44px); right:var(--gutter); width:290px; margin:0; gap:6px; }
-  html.rvf-commits .work .skc-head { justify-content:flex-end; }
-  html.rvf-commits .work .skc-title { font:600 12px/1 var(--mono); letter-spacing:.1em; }
-  html.rvf-commits .work :is(.skc-cap,.skyline-bar) { display:none; }
-  html.rvf-commits .work .skc .impact-chart-days { height:168px; }
-}
+/* 10 Commits, pocket-size: retired 2026-11-11. The strip card now lives in the Projects head for
+   real (components/site/work/commit-skyline.tsx). */
 
 /* ---------- 11 Pick, read, see (desktop) -----------------------------------------------------
    The list keeps only names (six short rows, narrower), and the selected feature's line shows
@@ -228,7 +256,7 @@ html[data-motion="reduced"] .rv-switch, html[data-motion="reduced"] .rv-switch i
 }
 
 /* ---------- 12 A quieter rail -----------------------------------------------------------------
-   At rest: the sun and the clock only. The capsule, its line and the dots fade in when the
+   At rest: the sun only (the clock now waits for the pointer too, see .rv-time). The capsule, its line and the dots fade in when the
    pointer nears the right edge (a wider invisible hover zone), on keyboard focus, and while
    dragging. */
 html.rvf-quiet .rv-rail::before { content:''; position:absolute; inset:-28px -16px -28px -48px; }

@@ -27,7 +27,7 @@ const PRESSABLE = [
   'a[href]', 'button', '[role="button"]', '[role="switch"]', '[role="tab"]', '[role="link"]', 'summary', 'label', 'select',
   '.pill', '.square-btn', 'input[type="checkbox"]', 'input[type="radio"]', 'input[type="submit"]', 'input[type="button"]', 'input[type="range"]',
 ].join(', ');
-const TEXT_FIELD = 'input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="range"]), textarea, [contenteditable="true"]';
+const TEXT_FIELD = 'input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="range"]), textarea, [contenteditable="true"], [data-own-cursor]'; // [data-own-cursor]: a surface with a cursor of its own (the signature pad's pen)
 // Reading text: the I-beam shows inside these, and over any element with words of its own.
 // (Reading the computed cursor is no help here: the berry sets cursor:none on everything.)
 const TEXT_BLOCK = ['p', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'figcaption', 'td'].join(', ');

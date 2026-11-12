@@ -1,16 +1,19 @@
 'use client';
-import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactElement } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent, type PointerEvent, type ReactElement } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Check, Mic } from 'lucide-react';
+import { Check, Maximize2, Mic, PenLine, X } from 'lucide-react';
+import { getLenis } from '@/app/smooth';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { cleanDictation } from '@/lib/dictation';
 import { CONTACT, CONTACT_FORM } from '@/lib/site';
 import { ThinkingIndicator } from '@/components/ui/thinking-indicator';
 import { PillFaces } from './pill-faces';
+import { SignaturePad } from './signature-pad';
 import { useDictation } from './use-dictation';
 import { useReducedMotion } from './use-reduced-motion';
 import './contact-form.css';
 
-// The contact form on the contact page. It POSTs { name, contact, about, message, botcheck } to the
+// The contact form on the contact page. It POSTs { name, contact, about, message, signature, botcheck } to the
 // Worker's /contact route (worker/contact.js), which emails Andrew through Resend.
 //
 // The Worker URL is NEXT_PUBLIC_CHAT_URL, set at build time (the same Worker the chat uses).
@@ -19,6 +22,13 @@ import './contact-form.css';
 // Worker, Send opens the visitor's mail app with the message filled in. The hint under the button
 // says so before they press it, so the form never claims a "sent" that did not happen.
 // Setup: worker/CONTACT.md.
+//
+// Shorter (Andrew 2026-11-11): the "A little about you" box is gone; the hint over the message asks
+// for it instead. In its place, "I'm looking for..." is a row of chips to press (any number), sent in
+// the Worker's `about` field as "Looking for: ...", so the Worker needed no new field for it. Under
+// the letter the visitor may sign by hand (signature-pad.tsx); the PNG goes as `signature` and the
+// Worker attaches it. A Worker from before the signature refuses the larger request (413), so that
+// one case is sent again without it and the sent line says the signature did not travel.
 //
 // Only the message is required (Andrew 2026-10-31). The Worker still wants a name for the subject
 // line, so a blank name goes out as CONTACT_FORM.anonName.
@@ -52,31 +62,60 @@ const LETTER = `${GREETING}\n\n\n\n${SIGNOFF}\n`;
 const LETTER_START = GREETING.length + 2; // the empty line between the greeting and the sign-off
 const LIVE_WORDS = 140; // characters of unsettled speech to show, the newest ones
 
-type Field = 'name' | 'contact' | 'about' | 'message';
+type Field = 'name' | 'contact' | 'message';
 type Values = Record<Field, string>;
 type Errors = Partial<Record<Field, string>>;
 type Status = { kind: 'idle' | 'sending' | 'sent' | 'handoff' | 'error'; text: string };
 
-const EMPTY: Values = { name: '', contact: '', about: '', message: LETTER };
-const FIELDS: Field[] = ['name', 'contact', 'about', 'message'];
+// The box starts empty (Andrew 2026-11-11): the letter shows as placeholder text, and Tab in the
+// empty box writes the greeting and the sign-off for real.
+const EMPTY: Values = { name: '', contact: '', message: '' };
+const PLACEHOLDER = `${GREETING}\n\n${CONTACT_FORM.format}\n\n${SIGNOFF}\n${CONTACT_FORM.yourName}`;
+// There is no name box any more (Andrew 2026-11-11): they sign under the sign-off, as in a letter.
+// The Worker still wants a name for the subject line, so it is read from there: the first line
+// written after the last "Best,".
+const signedName = (message: string) => {
+  const at = message.lastIndexOf(SIGNOFF);
+  if (at < 0) return '';
+  const line = message.slice(at + SIGNOFF.length).split('\n').map(l => l.trim()).find(Boolean) ?? '';
+  return line.slice(0, 100);
+};
+// A way to write back is required: an email address or a phone number (7 to 15 digits).
+const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_SHAPE = /^[+(]?\d[\d\s().-]*$/;
+const reachable = (text: string) => {
+  const digits = text.replace(/\D/g, '').length;
+  return EMAIL_SHAPE.test(text) || (PHONE_SHAPE.test(text) && digits >= 7 && digits <= 15);
+};
+const FIELDS: Field[] = ['name', 'contact', 'message'];
+const LOOKING = CONTACT_FORM.looking;
+const OTHER = LOOKING.options[LOOKING.options.length - 1]; // the last answer opens a box to say more
+/** The quiz answers, as the one line the Worker's `about` field carries. */
+const lookingLine = (picked: readonly string[], more: string) =>
+  picked.length ? `${LOOKING.sentAs} ${picked.map(o => (o === OTHER && more.trim() ? `${o} (${more.trim()})` : o)).join(', ')}` : '';
+const LETTERS = 'ABCDEFGHIJ';
 const E = CONTACT_FORM.errors;
+
+const wordCount = (text: string) => text.split(/\s+/).filter(Boolean).length;
+/** What they wrote themselves: the letter without the greeting, the sign-off and the name under it. */
+const ownWords = (message: string) => message.trim().replace(GREETING, '').replace(SIGNOFF, '').replace(signedName(message), '').trim();
 
 function check(v: Values): Errors {
   const errors: Errors = {};
   const message = v.message.trim();
-  const written = message.replace(GREETING, '').replace(SIGNOFF, '').trim();
-  if (v.name.trim().length > 100) errors.name = E.name;
-  if (v.contact.trim().length > 200) errors.contact = E.contact;
-  if (v.about.trim().length > 500) errors.about = E.about;
-  if (written.length < 10) errors.message = E.messageShort;
+  const written = message.replace(GREETING, '').replace(SIGNOFF, '').replace(signedName(message), '').trim();
+  const contact = v.contact.trim();
+  if (contact.length > 200) errors.contact = E.contact;
+  else if (!reachable(contact)) errors.contact = E.contactNeeded;
+  if (written.length < 10) errors.message = E.messageShort(wordCount(written));
   else if (message.length > 5000) errors.message = E.messageLong;
   return errors;
 }
 
 // The no-Worker path: a mailto link carrying the subject and the message, signed with what they
 // typed so a reply has somewhere to go.
-function mailtoFor(v: Values) {
-  const sign = [v.name.trim(), v.contact.trim(), v.about.trim()].filter(Boolean).join('\n');
+function mailtoFor(v: Values, about: string) {
+  const sign = [v.name.trim(), v.contact.trim(), about].filter(Boolean).join('\n');
   const body = `${v.message.trim()}\n\n${sign}`;
   return `mailto:${CONTACT.email}?subject=${encodeURIComponent(CONTACT.mailSubject)}&body=${encodeURIComponent(body)}`;
 }
@@ -142,12 +181,36 @@ export function ContactForm() {
   const [status, setStatus] = useState<Status>({ kind: 'idle', text: '' });
   const [suspended, setSuspended] = useState(false);
   const [step, setStep] = useState(0);
+  // The quiz answers that are ticked, in the order the options are listed, and what they wrote
+  // under the last one ("Something else").
+  const [looking, setLooking] = useState<string[]>([]);
+  const [more, setMore] = useState('');
+  const moreRef = useRef<HTMLInputElement>(null);
+  const toggleLooking = (option: string) => {
+    const on = !looking.includes(option);
+    setLooking(LOOKING.options.filter(o => (o === option ? on : looking.includes(o))));
+    // Ticking "Something else" opens its box and puts the caret in it.
+    if (option === OTHER && on) requestAnimationFrame(() => moreRef.current?.focus());
+  };
+  // The full version, a popup over the page; the small card stands empty while it is open.
+  const [expanded, setExpanded] = useState(false);
+  const [signing, setSigning] = useState(false);
+  const [openOn, setOpenOn] = useState<Field>('message');
+  const [awayH, setAwayH] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const miniRef = useRef<HTMLDivElement>(null);
+  const expandRef = useRef<HTMLButtonElement>(null);
+  const signRef = useRef<HTMLButtonElement>(null);
+  const flipBack = useRef(0);
+  // The drawn signature as a PNG data URL, or null; padKey wipes the pad after a send.
+  const [signature, setSignature] = useState<string | null>(null);
+  const [padKey, setPadKey] = useState(0);
   const botRef = useRef<HTMLInputElement>(null);
   // Set by Write another, read once the fields have animated back in, so focus lands on them.
   const refocus = useRef(false);
   // Pattern: a ref per field, kept in one object, so a failed submit can move focus to the first bad field.
   const messageBox = useRef<HTMLTextAreaElement>(null);
-  const refs = { name: useRef<HTMLInputElement>(null), contact: useRef<HTMLInputElement>(null), about: useRef<HTMLTextAreaElement>(null), message: messageBox };
+  const refs = { name: useRef<HTMLInputElement>(null), contact: useRef<HTMLInputElement>(null), message: messageBox };
 
   // A dictated write that React has not put on screen yet. Speech events can outrun a render, so
   // this is the newest text until then, and it carries the caret, because setting a textarea's
@@ -240,12 +303,44 @@ export function ContactForm() {
     });
   };
 
+  const openFull = (on: Field) => {
+    setAwayH(miniRef.current?.offsetHeight ?? 0);
+    setOpenOn(on);
+    setExpanded(true);
+  };
   const showFieldErrors = (found: Errors) => {
     setErrors(found);
-    setTouched({ name: true, contact: true, about: true, message: true });
+    setTouched({ name: true, contact: true, message: true });
     setStatus({ kind: 'error', text: E.fix });
     const first = FIELDS.find(field => found[field]);
+    // The small card has only the letter: a missing name or contact opens the full version on it.
+    if (first && !expanded && first !== 'message') { openFull(first); return; }
     if (first) refs[first].current?.focus();
+  };
+
+  // Hold the smooth scroller still while a popup is up, so the wheel cannot move the page under it.
+  useEffect(() => {
+    const lenis = getLenis();
+    if (!expanded || !lenis) return;
+    lenis.stop();
+    return () => lenis.start();
+  }, [expanded]);
+
+  // Tab in the empty box takes the suggestion: the greeting and the sign-off become real text, with
+  // the caret between them. Only then; in a box with anything in it Tab moves on as usual.
+  const onLetterKey = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key !== 'Tab' || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey || values.message !== '') return;
+    event.preventDefault();
+    unpainted.current = { text: LETTER, caret: LETTER_START };
+    setValues(prev => ({ ...prev, message: LETTER }));
+  };
+  // The heading's last words flip, a letter to an email, like LIU in the hero: under the pointer,
+  // or for a moment after a tap.
+  const flipTap = (event: PointerEvent<HTMLElement>) => {
+    if (event.pointerType !== 'touch') return;
+    setFlipped(true);
+    window.clearTimeout(flipBack.current);
+    flipBack.current = window.setTimeout(() => setFlipped(false), 1600);
   };
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -258,7 +353,7 @@ export function ContactForm() {
     if (Object.keys(found).length) { showFieldErrors(found); return; }
     if (!ENDPOINT) {
       // Values stay in the form, in case the mail app did not open.
-      window.location.href = mailtoFor(letter);
+      window.location.href = mailtoFor(letter, lookingLine(looking, more));
       setStatus({ kind: 'handoff', text: CONTACT_FORM.handoff });
       return;
     }
@@ -270,21 +365,31 @@ export function ContactForm() {
     setStatus({ kind: 'sending', text: '' });
     try {
       const everyStep = new Promise(done => window.setTimeout(done, STEP_MS * STEPS.length));
-      const [res] = await Promise.all([
-        fetch(`${ENDPOINT.replace(/\/+$/, '')}/contact`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ ...letter, name: letter.name.trim() || CONTACT_FORM.anonName, botcheck: botRef.current?.value ?? '' }),
+      const post = (withSignature: boolean) => fetch(`${ENDPOINT.replace(/\/+$/, '')}/contact`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          ...letter, name: signedName(letter.message) || CONTACT_FORM.anonName, about: lookingLine(looking, more),
+          ...(withSignature && signature ? { signature } : {}), botcheck: botRef.current?.value ?? '',
         }),
-        everyStep,
-      ]);
+      });
+      let [res] = await Promise.all([post(true), everyStep]);
+      // A Worker from before the signature refuses the larger request: send the letter without it.
+      let unsigned = false;
+      if (res.status === 413 && signature) { unsigned = true; res = await post(false); }
       const body = (await res.json().catch(() => null)) as { ok?: boolean; error?: { type?: string; fields?: Record<string, string> } } | null;
       if (res.ok && body?.ok) {
         if (audio) { ding(audio); audio = null; }
         setValues(EMPTY);
         setTouched({});
         setErrors({});
-        setStatus({ kind: 'sent', text: CONTACT_FORM.sent });
+        setLooking([]);
+        setMore('');
+        setExpanded(false);
+        setSigning(false);
+        setSignature(null);
+        setPadKey(key => key + 1);
+        setStatus({ kind: 'sent', text: unsigned ? CONTACT_FORM.sentUnsigned : CONTACT_FORM.sent });
         return;
       }
       if (body?.error?.type === 'suspended') { setSuspended(true); setStatus({ kind: 'idle', text: '' }); return; }
@@ -294,8 +399,7 @@ export function ContactForm() {
       const server: Errors = {};
       if (named.name) server.name = E.name;
       if (named.contact) server.contact = E.contact;
-      if (named.about) server.about = E.about;
-      if (named.message) server.message = letter.message.trim().length > 5000 ? E.messageLong : E.messageShort;
+      if (named.message) server.message = letter.message.trim().length > 5000 ? E.messageLong : E.messageShort(wordCount(ownWords(letter.message)));
       if (res.status === 400 && Object.keys(server).length) { showFieldErrors(server); return; }
       setStatus({ kind: 'error', text: E.failed });
     } catch {
@@ -329,102 +433,253 @@ export function ContactForm() {
     'aria-describedby': hinted ? `cf-${id}-hint cf-${id}-error` : `cf-${id}-error`,
   });
 
-  return (
-    // The form is the letter itself: the site's one card (.ink-card in app/globals.css), in paper.
-    <form className="cf ink-card" data-fill="paper" onSubmit={onSubmit} noValidate aria-labelledby="cf-title" aria-busy={sending} data-suspended={suspended ? '' : undefined}>
-      <Stationery />
-      <div className="cf-head">
-        <h3 className="cf-title" id="cf-title">{CONTACT_FORM.heading}</h3>
-        {/* The live region stays mounted so a screen reader hears the chip when it appears. */}
-        <output>
-          {suspended && <span className="cf-chip"><span className="cf-chip-dot" aria-hidden="true" />{CONTACT_FORM.suspended}</span>}
-        </output>
-      </div>
-      {/* Pattern: AnimatePresence lets the leaving block animate out before React removes it;
-          mode="wait" holds the next one back until it has, so the two never stack. */}
-      <AnimatePresence mode="wait" initial={false}>
-        {status.kind === 'sent' ? (
-          <motion.div
-            key="sent" className="cf-sent"
-            initial={{ opacity: 0, scale: .7 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: .9 }}
-            transition={transition}
-          >
-            {/* The green check draws itself once the card has popped in. */}
-            <span className="cf-sent-badge" aria-hidden="true">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                <motion.path
-                  d="M5 12.5 10 17.5 19.5 7"
-                  stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"
-                  initial={{ pathLength: reduced ? 1 : 0 }} animate={{ pathLength: 1 }}
-                  transition={reduced ? { duration: 0 } : { duration: .38, delay: .12, ease: 'easeOut' }}
-                />
-              </svg>
-            </span>
-            {/* Focus moves here when it mounts (the callback ref), so a keyboard user is not left
-                on a button that no longer exists. */}
-            <p className="display cf-sent-title" tabIndex={-1} ref={el => el?.focus()}>{CONTACT_FORM.sentTitle}</p>
-            <button type="button" className="pill pill-light cf-again" onClick={again}><PillFaces>{CONTACT_FORM.again}</PillFaces></button>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="fields" className="cf-fields"
-            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
-            transition={transition}
-            onAnimationComplete={() => { if (refocus.current) { refocus.current = false; refs.name.current?.focus(); } }}
-          >
-            <div className="cf-pair">
-              {field('name', CONTACT_FORM.name, <input {...common('name')} ref={refs.name} type="text" autoComplete="name" maxLength={100} />)}
-              {field('contact', CONTACT_FORM.contact, <input {...common('contact', true)} ref={refs.contact} type="text" autoComplete="email" maxLength={200} placeholder={CONTACT_FORM.contactPlaceholder} />, CONTACT_FORM.contactHint)}
-            </div>
-            {field('about', CONTACT_FORM.about, <textarea {...common('about')} ref={refs.about} className="cf-about" rows={2} maxLength={500} placeholder={CONTACT_FORM.aboutPlaceholder} />)}
-            {field('message', CONTACT_FORM.message, <textarea {...common('message', true)} ref={refs.message} rows={8} maxLength={5000} aria-required="true" onFocus={onLetterFocus} />, CONTACT_FORM.format)}
-            {dictation.supported && (
-              <div className="cf-dictate">
-                <div className="cf-dictate-row">
-                  {/* Pressing keeps the caret in the letter: without this the box would blur, and
-                      leaving it empty would flag it before a word is said. */}
-                  <button
-                    type="button" className="pill pill-light cf-mic" data-on={listening ? '' : undefined} disabled={locked}
-                    aria-describedby="cf-dictate-privacy"
-                    onMouseDown={event => event.preventDefault()} onClick={dictation.toggle}
-                  >
-                    <PillFaces><Mic size={16} aria-hidden="true" />{dictation.state === 'off' ? SAY.start : SAY.stop}</PillFaces>
-                  </button>
-                  {/* One steady line for screen readers: reading out each word into an open mic
-                      would dictate the screen reader, so the live words below are not announced. */}
-                  <output className="cf-dictate-status" data-on={listening ? '' : undefined} data-note={dictation.note ? '' : undefined}>
-                    {dictation.note ? SAY[dictation.note] : listening ? SAY.listening : ''}
-                  </output>
-                  {live && <p className="cf-dictate-live">{live}</p>}
-                </div>
-                <p className="cf-field-hint" id="cf-dictate-privacy">{SAY.privacy}</p>
-              </div>
-            )}
-            {/* The honeypot: off screen and out of the tab order, so only a bot fills it. */}
-            <div className="cf-bot" aria-hidden="true">
-              <label htmlFor="cf-botcheck">{CONTACT_FORM.botcheck}</label>
-              <input ref={botRef} id="cf-botcheck" name="botcheck" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
-            </div>
-            {/* The hint first, then Send at the end of the row (Andrew 2026-10-20, the form's
-                own wide part), so the hint is read before the button. */}
-            <div className="cf-foot">
-              {!ENDPOINT && <p className="cf-hint">{CONTACT_FORM.viaMail}</p>}
-              {/* One word at a time, so the indicator swaps on our step and never cycles back. */}
-              {sending && <ThinkingIndicator className="cf-progress" words={[STEPS[step]]} />}
-              <button className="pill pill-berry pill-big cf-send" type="submit" disabled={locked}>
-                <PillFaces>{sending ? CONTACT_FORM.sending : CONTACT_FORM.send}</PillFaces>
-              </button>
-            </div>
-          </motion.div>
+  // The letter itself. Empty, it shows the greeting, the suggested format and the sign-off as
+  // placeholder text, and a key cap saying Tab writes them in.
+  const blank = values.message === '';
+  const letterBox = (
+    <div className="cf-field cf-letter" data-invalid={errors.message ? '' : undefined}>
+      <label className="cf-label" htmlFor="cf-message">{CONTACT_FORM.message}</label>
+      <div className="cf-letter-box">
+        <textarea
+          {...common('message', blank)} ref={refs.message} rows={5} maxLength={5000} aria-required="true"
+          placeholder={PLACEHOLDER} onFocus={onLetterFocus} onKeyDown={onLetterKey}
+        />
+        {blank && (
+          <p className="cf-tab" id="cf-message-hint">
+            <span aria-hidden="true"><kbd>Tab</kbd> {CONTACT_FORM.tab}</span>
+            <span className="sr-only">{CONTACT_FORM.tabSpoken}</span>
+          </p>
         )}
-      </AnimatePresence>
-      {/* One live region for every outcome, outside the swap so it is never unmounted mid-message. */}
-      <p className="cf-status" role="status" aria-live="polite" data-kind={status.kind}>
-        {status.kind === 'sent' && <Check size={18} aria-hidden="true" />}
-        {status.text}
-      </p>
-    </form>
+      </div>
+      <p className="cf-error" id="cf-message-error">{errors.message ?? ''}</p>
+    </div>
+  );
+
+  const mic = dictation.supported && (
+    <>
+      {/* Pressing keeps the caret in the letter: without this the box would blur, and leaving it
+          empty would flag it before a word is said. */}
+      <button
+        type="button" className="pill pill-light cf-mic" data-on={listening ? '' : undefined} disabled={locked}
+        aria-describedby="cf-dictate-privacy"
+        onMouseDown={event => event.preventDefault()} onClick={dictation.toggle}
+      >
+        <PillFaces><Mic size={16} aria-hidden="true" />{dictation.state === 'off' ? SAY.start : SAY.stop}</PillFaces>
+      </button>
+      {/* One steady line for screen readers: reading out each word into an open mic would dictate
+          the screen reader, so the live words are not announced. */}
+      <output className="cf-dictate-status" data-on={listening ? '' : undefined} data-note={dictation.note ? '' : undefined}>
+        {dictation.note ? SAY[dictation.note] : listening ? SAY.listening : ''}
+      </output>
+    </>
+  );
+  // Where speech goes. Always in the full version; in the small card it shows while the mic is on,
+  // and is still read to a screen reader before that.
+  const micNote = (always: boolean) => dictation.supported && (
+    <div className="cf-dictate-notes">
+      {live && <p className="cf-dictate-live">{live}</p>}
+      <p className={always || listening ? 'cf-field-hint cf-privacy' : 'sr-only'} id="cf-dictate-privacy">{SAY.privacy}</p>
+    </div>
+  );
+  const honeypot = (
+    // Off screen and out of the tab order, so only a bot fills it.
+    <div className="cf-bot" aria-hidden="true">
+      <label htmlFor="cf-botcheck">{CONTACT_FORM.botcheck}</label>
+      <input ref={botRef} id="cf-botcheck" name="botcheck" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
+    </div>
+  );
+  const send = (
+    <button className="pill pill-berry pill-big cf-send" type="submit" disabled={locked}>
+      <PillFaces>{sending ? CONTACT_FORM.sending : CONTACT_FORM.send}</PillFaces>
+    </button>
+  );
+  const progress = sending && <ThinkingIndicator className="cf-progress" words={[STEPS[step]]} />;
+  const statusLine = (
+    <p className="cf-status" role="status" aria-live="polite" data-kind={status.kind}>
+      {status.kind === 'sent' && <Check size={18} aria-hidden="true" />}
+      {status.text}
+    </p>
+  );
+
+  // The small card: the box, Dictate, Open and Send, and nothing else (Andrew 2026-11-11).
+  const mini = (
+    <div className="cf-mini" ref={miniRef}>
+      {letterBox}
+      {honeypot}
+      <div className="cf-foot">
+        {mic}
+        {progress}
+        <button ref={expandRef} type="button" className="cf-open" aria-label={CONTACT_FORM.expandName} aria-haspopup="dialog" disabled={locked} onClick={() => openFull('message')}>
+          {CONTACT_FORM.expand} <Maximize2 size={14} aria-hidden="true" />
+        </button>
+        {send}
+      </div>
+      {micNote(false)}
+      {!ENDPOINT && <p className="cf-hint">{CONTACT_FORM.viaMail}</p>}
+    </div>
+  );
+
+  // The full version: who they are and how to reach them, the one question, the letter, the
+  // signature. Two columns on a wide screen so all of it fits one screen without scrolling.
+  const full = (
+    <>
+      <div className="cf-cols">
+        <div className="cf-col">
+          {field('contact', CONTACT_FORM.contact, <input {...common('contact', true)} ref={refs.contact} type="text" autoComplete="email" maxLength={200} aria-required="true" placeholder={CONTACT_FORM.contactPlaceholder} />, CONTACT_FORM.contactHint)}
+          {/* One multiple choice question, lettered like a quiz; any number of answers (real
+              checkboxes). The last, "Something else", opens a box to say more. */}
+          <fieldset className="cf-quiz" disabled={locked}>
+            <legend className="cf-label">{LOOKING.label}</legend>
+            <div className="cf-answers">
+              {LOOKING.options.map((option, i) => (
+                <label key={option} className="cf-answer">
+                  <input className="cf-answer-radio" type="checkbox" name="looking" value={option} checked={looking.includes(option)} onChange={() => toggleLooking(option)} />
+                  <span className="cf-answer-key" aria-hidden="true">{LETTERS[i]}</span>
+                  <span className="cf-answer-text">{option}</span>
+                </label>
+              ))}
+            </div>
+            {looking.includes(OTHER) && (
+              <input
+                ref={moreRef} className="cf-more" type="text" value={more} maxLength={120} disabled={locked}
+                aria-label={LOOKING.more} placeholder={LOOKING.more} onChange={event => setMore(event.target.value)}
+              />
+            )}
+          </fieldset>
+        </div>
+        <div className="cf-col cf-col-letter">
+          {letterBox}
+          {micNote(true)}
+        </div>
+      </div>
+      {honeypot}
+      <div className="cf-foot">
+        {mic}
+        {/* Sign it by hand, if they like, in a popup of its own. Only sent through the Worker: a
+            mail app cannot carry it. */}
+        {ENDPOINT && (
+          <button ref={signRef} type="button" className="cf-sign" aria-haspopup="dialog" disabled={locked} onClick={() => setSigning(true)}>
+            {signature
+              // eslint-disable-next-line @next/next/no-img-element -- a data URL drawn a moment ago
+              ? <><img className="cf-sign-ink" src={signature} alt={CONTACT_FORM.sign.preview} />{CONTACT_FORM.sign.change}</>
+              : <><PenLine size={16} aria-hidden="true" />{CONTACT_FORM.sign.add}</>}
+          </button>
+        )}
+        {progress}
+        {!ENDPOINT && <p className="cf-hint">{CONTACT_FORM.viaMail}</p>}
+        {/* In the row, not under it: the popup keeps its height when a line appears. */}
+        {statusLine}
+        {send}
+      </div>
+    </>
+  );
+
+  const title = (
+    <>
+      {/* Read as one plain sentence; the flipping words are for the eye. */}
+      <span className="sr-only">{CONTACT_FORM.heading}</span>
+      <span aria-hidden="true">
+        {CONTACT_FORM.headingLead}{' '}
+        <span className="cf-flip" data-on={flipped ? '' : undefined} onPointerDown={flipTap}>
+          <span className="cf-flip-track">
+            {CONTACT_FORM.headingFlip[0]}
+            <span className="cf-flip-b">{CONTACT_FORM.headingFlip[1]}</span>
+          </span>
+        </span>
+      </span>
+    </>
+  );
+
+  return (
+    <>
+      {/* The form is the letter itself: the site's one card (.ink-card in app/globals.css), in paper. */}
+      <form className="cf ink-card" data-fill="paper" onSubmit={onSubmit} noValidate aria-labelledby="cf-title" aria-busy={sending} data-suspended={suspended ? '' : undefined}>
+        <Stationery />
+        <div className="cf-head">
+          <h3 className="cf-title" id="cf-title">{title}</h3>
+          {/* The live region stays mounted so a screen reader hears the chip when it appears. */}
+          <output>
+            {suspended && <span className="cf-chip"><span className="cf-chip-dot" aria-hidden="true" />{CONTACT_FORM.suspended}</span>}
+          </output>
+        </div>
+        {/* Pattern: AnimatePresence lets the leaving block animate out before React removes it;
+            mode="wait" holds the next one back until it has, so the two never stack. */}
+        <AnimatePresence mode="wait" initial={false}>
+          {status.kind === 'sent' ? (
+            <motion.div
+              key="sent" className="cf-sent"
+              initial={{ opacity: 0, scale: .7 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: .9 }}
+              transition={transition}
+            >
+              {/* The green check draws itself once the card has popped in. */}
+              <span className="cf-sent-badge" aria-hidden="true">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                  <motion.path
+                    d="M5 12.5 10 17.5 19.5 7"
+                    stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"
+                    initial={{ pathLength: reduced ? 1 : 0 }} animate={{ pathLength: 1 }}
+                    transition={reduced ? { duration: 0 } : { duration: .38, delay: .12, ease: 'easeOut' }}
+                  />
+                </svg>
+              </span>
+              {/* Focus moves here when it mounts (the callback ref), so a keyboard user is not left
+                  on a button that no longer exists. */}
+              <p className="display cf-sent-title" tabIndex={-1} ref={el => el?.focus()}>{CONTACT_FORM.sentTitle}</p>
+              <button type="button" className="pill pill-light cf-again" onClick={again}><PillFaces>{CONTACT_FORM.again}</PillFaces></button>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="fields" className="cf-fields"
+              initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
+              transition={transition}
+              onAnimationComplete={() => { if (refocus.current) { refocus.current = false; refs.message.current?.focus(); } }}
+            >
+              {/* While the full version is open the fields live there; the card keeps its height. */}
+              {expanded ? <div className="cf-away" style={{ minBlockSize: awayH }} aria-hidden="true" /> : mini}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        {/* One live region for every outcome, outside the swap so it is never unmounted mid-message. */}
+        {!expanded && statusLine}
+      </form>
+
+      {/* The full version (components/ui/dialog.tsx, Base UI): focus is trapped inside; Esc, an
+          outside press and the close button close it and keep what was typed; focus goes back to Open. */}
+      <Dialog open={expanded} onOpenChange={setExpanded}>
+        <DialogContent className="cf-dialog" showCloseButton={false} initialFocus={refs[openOn]} finalFocus={expandRef}>
+          <form className="cf cf-full" onSubmit={onSubmit} noValidate aria-busy={sending} data-suspended={suspended ? '' : undefined}>
+            <div className="cf-head">
+              <DialogTitle className="cf-title">{CONTACT_FORM.heading.replace(/^Or w/, 'W')}</DialogTitle>
+              <DialogDescription className="sr-only">{CONTACT_FORM.fullNote}</DialogDescription>
+              <output>
+                {suspended && <span className="cf-chip"><span className="cf-chip-dot" aria-hidden="true" />{CONTACT_FORM.suspended}</span>}
+              </output>
+            </div>
+            {full}
+            <DialogClose className="cf-x" aria-label={CONTACT_FORM.collapse}><X size={20} aria-hidden="true" /></DialogClose>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* The signature pad, a popup over the full version. Each stroke is kept as it ends; Done closes. */}
+      <Dialog open={signing} onOpenChange={setSigning}>
+        <DialogContent className="cf-dialog cf-sign-dialog" showCloseButton={false} finalFocus={signRef}>
+          <div className="cf cf-signing">
+            <div className="cf-head">
+              <DialogTitle className="cf-title">{CONTACT_FORM.sign.title}</DialogTitle>
+            </div>
+            <DialogDescription className="cf-field-hint">{CONTACT_FORM.sign.note}</DialogDescription>
+            <SignaturePad onChange={setSignature} disabled={locked} labels={CONTACT_FORM.sign} resetKey={padKey} />
+            <div className="cf-foot">
+              <DialogClose className="pill pill-berry cf-send"><PillFaces>{CONTACT_FORM.sign.done}</PillFaces></DialogClose>
+            </div>
+            <DialogClose className="cf-x" aria-label={CONTACT_FORM.sign.close}><X size={20} aria-hidden="true" /></DialogClose>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
+
 
 export default ContactForm;

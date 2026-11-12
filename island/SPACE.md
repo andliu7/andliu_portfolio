@@ -98,6 +98,7 @@ its `build` throws, or it returns no `THREE.Scene`, whatever it registered is dr
 | C | Talk (the nearest talker, Cosmo in the station) |
 | V | First person on / off (per area; an area can forbid it) |
 | Mouse drag | Swing the camera (first person: look). Wheel zooms |
+| Mouse (areas with `mouseLook:true`, the Wormhole Lab) | In first person a click captures the mouse (Pointer Lock): it then looks, A / D step sideways, and each left or right press calls `area.onClick(0 \| 2)`. Esc frees it. If the lock is refused, drag looks and a click still reaches `onClick` |
 | Esc | Area: back to the station. Station: home to the islet |
 
 No global keys are bound through `input.js`. Area keys go through `kit.onKey(code, fn)` and only

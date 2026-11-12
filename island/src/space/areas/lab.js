@@ -1,5 +1,7 @@
-// Wormhole Lab (builder B): a first-person portal puzzle. Q fires a blue portal, E an orange one,
-// onto white panels only. Walk or fall into one and you come out of the other with velocity and
+// Wormhole Lab (builder B): a first-person portal puzzle. The mouse looks (space/index.js captures
+// it on a click, as Minecraft does) with a + in the middle of the screen; the left button fires a
+// blue portal and the right an orange one (Q and E still do too), onto white panels only. On a
+// phone two round buttons at the screen's left and right edges fire them and a drag looks. Walk or fall into one and you come out of the other with velocity and
 // facing turned from the entry's inward normal to the exit's outward normal. Three chambers teach
 // it: 1 walk through a wall, 2 drop through the floor to reach a high ledge (lab-1), 3 fall a long
 // way and get flung over a glass rail to a button that opens the vault door (lab-2). Progress is
@@ -109,7 +111,7 @@ export function portalMath(THREE){
 // Jump apex is 6.5^2 / (2*14) = 1.51 m, so every step up the puzzle needs is at least 2.1 m.
 export const CHAMBERS = [
   { name:'Lobby', start:[0, 0, 7.5] },
-  { name:'Walk through', tip:'Q fires blue, E fires orange. Portals only stick to white panels. Put one on each white wall and walk in.', start:[0, 0, -1.8] },
+  { name:'Walk through', tip:'Left fires blue, right fires orange. Portals only stick to white panels. Put one on each white wall and walk in.', start:[0, 0, -1.8] },
   { name:'Up to the ledge', tip:'Floors take portals too. Step into a hole in the floor and come out high on the wall.', start:[4.5, 3, -15.6] },
   { name:'Fling', tip:'A long fall is a lot of speed. Walk off the back of the slot holding W, and let the wall throw you over the glass.', start:[-4.5, 7.5, -31.2] },
   { name:'Vault', start:[0, 4, -47] },
@@ -285,11 +287,28 @@ export function createLabCore(THREE, on = {}){
 /* ======================================================================================== */
 const LAB = '#a78bfa', BLUE = '#5b8cff', ORANGE = '#ff9f5a';
 const TONES = { wall:'#4b5470', lintel:'#3f4760', floor:'#9aa3bf', step:'#c3cae0', pool:'#63c7e6', goal:'#ffd166', vault:'#c9b6ff', trim:LAB, glass:'#bfe3ff' };
-const CSS = `#lab-aim{position:fixed;left:50%;top:50%;width:64px;height:40px;transform:translate(-50%,-12px);pointer-events:none;z-index:5}
-#lab-aim i{position:absolute;left:29px;top:9px;width:6px;height:6px;border-radius:50%;background:#fffaf0;box-shadow:0 0 0 2px #1f2a44}
-#lab-aim b{position:absolute;top:24px;width:22px;height:14px;border-radius:7px;font:700 10px/14px Fredoka,system-ui,sans-serif;text-align:center;color:#fffaf0;background:#1f2a44b0;border:2px solid}
-#lab-aim .q{left:6px;border-color:${BLUE}}#lab-aim .e{right:6px;border-color:${ORANGE}}
-#lab-aim .q.on{background:${BLUE}}#lab-aim .e.on{background:${ORANGE}}`;
+// The aim: a + fixed at the exact centre of the screen (the ray kit.aim() fires along), with two
+// pips under it that fill in once the blue (left) and orange (right) portals are placed.
+// The fire buttons: phones only (a coarse pointer, or any finger seen: body.lab-touch), one at
+// each edge, 64 px, just above the sticks and their Run / Jump row so a thumb reaches them.
+const CSS = `#lab-aim{position:fixed;left:50%;top:50%;width:0;height:0;pointer-events:none;z-index:5;filter:drop-shadow(0 0 1px #1f2a44) drop-shadow(0 0 1px #1f2a44)}
+#lab-aim i{position:absolute;left:-11px;top:-11px;width:22px;height:22px;background:#fffaf0;
+  clip-path:polygon(45% 0,55% 0,55% 45%,100% 45%,100% 55%,55% 55%,55% 100%,45% 100%,45% 55%,0 55%,0 45%,45% 45%)}
+#lab-aim b{position:absolute;top:18px;width:10px;height:6px;border-radius:4px;background:#1f2a44b0;border:2px solid}
+#lab-aim .q{right:3px;border-color:${BLUE}}#lab-aim .e{left:3px;border-color:${ORANGE}}
+#lab-aim .q.on{background:${BLUE}}#lab-aim .e.on{background:${ORANGE}}
+.lab-fire{appearance:none;position:fixed;z-index:6;bottom:calc(212px + env(safe-area-inset-bottom,0px));width:64px;height:64px;margin:0;padding:0;border-radius:50%;
+  border:3px solid #fffaf0;color:#fffaf0;box-shadow:0 5px 0 #0000003a;display:none;place-items:center;cursor:pointer;touch-action:none;
+  -webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;transition:transform .06s,box-shadow .06s}
+.lab-fire svg{width:34px;height:34px;pointer-events:none}
+.lab-fire.q{left:calc(12px + env(safe-area-inset-left,0px));background:${BLUE}}
+.lab-fire.e{right:calc(12px + env(safe-area-inset-right,0px));background:${ORANGE}}
+.lab-fire.on svg ellipse{fill:#fffaf0}
+.lab-fire.down{transform:translateY(3px);box-shadow:0 2px 0 #0000003a}
+.lab-fire:focus-visible{outline:3px solid #fffaf0;outline-offset:3px}
+@media (pointer:coarse){.lab-fire{display:grid}}
+body.lab-touch .lab-fire{display:grid}`;
+const RING = '<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="6.5" ry="9.5" fill="none" stroke="currentColor" stroke-width="2.6"/></svg>';
 
 export function build(ctx, kit){
   const { THREE, H } = kit;
@@ -396,6 +415,7 @@ export function build(ctx, kit){
   const ctrl = kit.walker({ gravity:14, jump:6.5, speed:5, run:8.5, airControl:0.5, floorAt:core.floorAt, bounds:L.bounds });
   const rig = kit.rig(camera, ctrl, { fpStart:true, dist:6, height:3 });
   function shoot(which){
+    if(kit.player !== ctrl || ctx.modules?.dialog?.busy?.()) return null;   // only while you are in the lab, and never through the talk box
     const ray = kit.aim().ray;
     const res = core.fire(which, ray.origin, ray.direction, ctrl.fwd);
     if(res.ok){ tone(which ? 460 : 620, 0.14, 'sine', 0.05, which ? 700 : 950); return res; }
@@ -405,6 +425,21 @@ export function build(ctx, kit){
   }
   kit.onKey('KeyQ', e => { if(!e.repeat) shoot(0); });
   kit.onKey('KeyE', e => { if(!e.repeat) shoot(1); });
+  // Phones: a fire button at each edge of the screen, blue on the left and orange on the right,
+  // the same two shots as the mouse buttons. Built once, on the page only while the lab is open.
+  const fireBtns = [['q', 'Blue portal'], ['e', 'Orange portal']].map(([cls, label], which) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'lab-fire ' + cls; b.innerHTML = RING;
+    b.setAttribute('aria-label', label);
+    b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); b.classList.add('down'); shoot(which); });
+    const up = () => b.classList.remove('down');
+    b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); b.addEventListener('pointerleave', up);
+    b.addEventListener('click', e => { if(e.detail === 0) shoot(which); });   // keyboard or switch activation; a finger already fired on pointerdown
+    b.addEventListener('contextmenu', e => e.preventDefault());              // a long press must not open the menu
+    return b;
+  });
+  // A laptop with a touch screen reports a fine pointer: show the buttons once a finger is seen.
+  const sawTouch = e => { if(e.pointerType === 'touch'){ document.body.classList.add('lab-touch'); removeEventListener('pointerdown', sawTouch, true); } };
+  addEventListener('pointerdown', sawTouch, true);
 
   /* ---------- ways out, shards, the button, the terminal ---------- */
   const pad = L.pads[0], spawn = CHAMBERS[0].start;
@@ -424,7 +459,7 @@ export function build(ctx, kit){
   kit.interactable({ x:5.5, y:0, z:1.9, r:2.2, label:'Lab terminal', onUse:() => {
     const best = Math.min(3, kit.flag('lab-chamber') || 0);
     if(best >= 2){ core.goTo(ctrl, rig.view, best); kit.say(`Chamber ${best} of 3: ${CHAMBERS[best].name}`); }
-    else kit.say('Chamber 1 is through the door. Q blue, E orange.');
+    else kit.say('Chamber 1 is through the door. Left is blue, right is orange.');
   } });
 
   let aim = null;
@@ -441,13 +476,17 @@ export function build(ctx, kit){
   return {
     title:'Wormhole Lab', scene, camera, rig,
     spawn:{ x:spawn[0], y:spawn[1], z:spawn[2], yaw:Math.PI },
-    hint:'<kbd>Q</kbd> blue portal · <kbd>E</kbd> orange portal · <kbd>WASD</kbd> walk · <kbd>Space</kbd> jump · drag to look · <kbd>V</kbd> view · <kbd>F</kbd> use · <kbd>Esc</kbd> station',
+    hint:'<kbd>Click</kbd> to aim with the mouse · <kbd>Left click</kbd> blue portal · <kbd>Right click</kbd> orange portal · <kbd>WASD</kbd> walk · <kbd>Space</kbd> jump · <kbd>F</kbd> use · <kbd>Esc</kbd> free the mouse, then station',
+    // space/index.js: capture the mouse on a click while in first person, and send each press of
+    // the left (0) or right (2) button here.
+    mouseLook:true,
+    onClick:button => { shoot(button === 2 ? 1 : 0); },
     onEnter(){
       core.st.chamber = 0; core.clear();
-      if(!aim){ aim = document.createElement('div'); aim.id = 'lab-aim'; aim.innerHTML = '<i></i><b class="q">Q</b><b class="e">E</b>'; }
-      document.body.appendChild(aim);
+      if(!aim){ aim = document.createElement('div'); aim.id = 'lab-aim'; aim.innerHTML = '<i></i><b class="q"></b><b class="e"></b>'; }
+      document.body.append(aim, ...fireBtns);
     },
-    onExit(){ core.clear(); aim?.remove(); },
+    onExit(){ core.clear(); aim?.remove(); for(const b of fireBtns) b.remove(); },
     update(dt, t){
       core.step(ctrl, rig.view, dt);
       for(const p of looks){
@@ -463,6 +502,7 @@ export function build(ctx, kit){
       door.position.set((d.x0 + d.x1)/2, doorY + doorK*3.6, (d.z0 + d.z1)/2);   // slides up into the wall
       fields.material.opacity = 0.12 + Math.sin(t*3)*0.05;
       if(aim){ aim.children[1].classList.toggle('on', !!core.portals[0]); aim.children[2].classList.toggle('on', !!core.portals[1]); aim.style.display = rig.view.fp ? '' : 'none'; }
+      fireBtns.forEach((b, i) => b.classList.toggle('on', !!core.portals[i]));
     },
   };
 }

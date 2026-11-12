@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import { ArrowUp, ArrowUpRight } from 'lucide-react';
 import { CommitSkyline } from '@/components/site/work/commit-skyline';
-import { APPROVALS, IMAGES, MICROCOPY, PHONES, PROJECTS, WORK_HEAD, WORK_STATS, sectionAttrs, type ImageKey } from '@/lib/site';
+import { APPROVALS, IMAGES, MICROCOPY, PHONES, PROJECTS, WORK_CARD, WORK_HEAD, WORK_STATS, sectionAttrs, type ImageKey } from '@/lib/site';
 import impact from '@/lib/impact.json';
 import { ProjectFan, type FanItem } from '@/components/ui/project-fan';
 import { CheckSticker, PROJECT_ART } from '@/components/site/work/art';
@@ -9,6 +9,7 @@ import { BlueberrySticker, FlashcardSticker } from '@/components/site/stickers/s
 import { Shot } from '@/components/site/work/shot';
 import { Pipeline } from '@/components/site/work/pipeline';
 import { Letters, Words } from '@/components/site/work/rise';
+import { ImpactCount } from '@/components/site/work/impact-count';
 import { StackChip } from '@/components/site/stack-logos';
 import './projects.css';
 
@@ -24,6 +25,11 @@ import './projects.css';
 //     own measured numbers (the Impact section, WORK_STATS over lib/impact.json) and its stack as
 //     small logo chips (the stack band, PROJECTS[].tags). The one number that belongs to no single
 //     project, commits across every repo, sits beside the eyebrow.
+//   - 2026-11-11 (Andrew: "I thought the old impact stuff would be on the cards. Write in the
+//     impact onto the cards and add graph animations"): a card whose project has measured series
+//     carries them on its face, a small running-total line and two numbers (WORK_CARD, the .wk-imp
+//     block). The line draws itself and the numbers count up each time the card comes to the
+//     centre. The caption keeps only the numbers its card does not show.
 //   - cut: the text index of project names (it repeated the cards' titles) and the Carousel | Desk
 //     switch (the desk showed the same six projects a second way).
 // Pictures sit in a fixed 16:10 window and are cropped by object-fit, never stretched.
@@ -56,11 +62,64 @@ function valueOf(id: string, point?: string): number | null {
   return s.kind === 'line' && pts.length ? pts[pts.length - 1].y : null;
 }
 
-const statsOf = (id: string) =>
-  (WORK_STATS[id] ?? []).flatMap(st => {
+type StatRef = { series: string; point?: string; label: string };
+const resolve = (refs: readonly StatRef[]) =>
+  refs.flatMap(st => {
     const n = valueOf(st.series, st.point);
     return n === null ? [] : [{ n, label: st.label, key: `${st.series}:${st.point ?? ''}` }];
   });
+
+// The card's own impact block (WORK_CARD): two numbers and one small graph. The graph is the
+// project's running-total series drawn as an inline SVG path, computed here on the server: x is
+// the date (so a quiet week reads as a flat stretch), y runs from 0 to the last total. Null when
+// the JSON lacks the series or it has fewer than two points; nothing is ever estimated.
+const GRAPH = { w: 96, h: 36, pad: 3 };
+function graphOf(id: string): { line: string; area: string; end: [number, number] } | null {
+  const pts = SERIES.get(id)?.points ?? [];
+  if (pts.length < 2) return null;
+  const t = pts.map(p => Date.parse(`${p.x}T00:00:00Z`));
+  const max = Math.max(...pts.map(p => p.y));
+  const span = t[t.length - 1] - t[0];
+  if (t.some(Number.isNaN) || span <= 0 || max <= 0) return null;
+  const { w, h, pad } = GRAPH;
+  const r = (n: number) => Math.round(n * 10) / 10;
+  const xy = pts.map((p, i) => [r(pad + ((t[i] - t[0]) / span) * (w - 2 * pad)), r(h - pad - (p.y / max) * (h - 2 * pad))] as [number, number]);
+  const line = xy.map(([x, y], i) => `${i ? 'L' : 'M'}${x} ${y}`).join('');
+  return { line, area: `${line}L${xy[xy.length - 1][0]} ${h}L${xy[0][0]} ${h}Z`, end: xy[xy.length - 1] };
+}
+
+const cardStatsOf = (id: string) => resolve(WORK_CARD[id]?.stats ?? []);
+// The caption's numbers: the project's measured numbers less the ones its card already shows.
+const statsOf = (id: string) => {
+  const onCard = new Set(cardStatsOf(id).map(st => st.key));
+  return resolve(WORK_STATS[id] ?? []).filter(st => !onCard.has(st.key));
+};
+
+/** The impact block on a card's face: the graph (decoration, the numbers beside it are the text)
+ * and the two numbers. Null for a project with no measured series. The draw-in and the count-up
+ * play while the card is the fan's centre card (projects.css, impact-count.tsx). */
+function Impact({ project }: { project: Project }) {
+  const stats = cardStatsOf(project.id);
+  const graph = graphOf(WORK_CARD[project.id]?.chart ?? '');
+  if (!stats.length || !graph) return null;
+  return (
+    <div className="wk-imp" role="group" aria-label={WORK_HEAD.stats(project.title)}>
+      <svg className="wk-imp-g" viewBox={`0 0 ${GRAPH.w} ${GRAPH.h}`} aria-hidden="true" focusable="false">
+        <path className="wk-imp-area" d={graph.area} />
+        <path className="wk-imp-line" d={graph.line} pathLength={1} />
+        <circle className="wk-imp-dot" cx={graph.end[0]} cy={graph.end[1]} r={2.6} />
+      </svg>
+      <ul className="wk-imp-nums">
+        {stats.map(st => (
+          <li key={st.key}>
+            <b style={{ minWidth: `${fmt(st.n).length}ch` }}><ImpactCount value={st.n} /></b>
+            <span>{st.label}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 // Commits across every repo: all.days is one point per day, so the total is their sum.
 const ALL_DAYS = SERIES.get('all.days')?.points ?? [];
@@ -105,13 +164,14 @@ function PhoneTrio() {
 }
 
 /** A card's face. Picture-led: number, kind, the picture in a small browser window with the
- * project's sticker on its corner, then the title. Text-led (the pipeline): number, kind, a big
+ * project's sticker on its corner, its measured impact where it has any, then the title. Text-led (the pipeline): number, kind, a big
  * title, and the pipeline's steps with their tool logos where the picture would be. */
 function Card({ project }: { project: Project }) {
   const textLed = !imageOf(project) && project.id === 'studio';
   const Sticker = STICKER[project.id];
+  const impactBlock = textLed ? null : Impact({ project });
   return (
-    <div className="wk-fc ink-card" data-ground="paper" data-fill={FILL[project.id]} data-led={textLed ? 'text' : 'picture'}>
+    <div className="wk-fc ink-card" data-ground="paper" data-fill={FILL[project.id]} data-led={textLed ? 'text' : 'picture'} data-impact={impactBlock ? '' : undefined}>
       <div className="wk-fc-top">
         <span className="wk-num" aria-hidden="true">{project.num}</span>
         <span className="wk-fc-kind">{project.kind}{project.year ? ` / ${project.year}` : ''}</span>
@@ -132,6 +192,7 @@ function Card({ project }: { project: Project }) {
           {Sticker && <span className="wk-sticker"><Sticker /></span>}
         </div>
       )}
+      {impactBlock}
       <h3 className="wk-fc-title">
         <a href={`#work-${project.id}`} draggable={false}><Letters text={project.title} /></a>
       </h3>
@@ -165,12 +226,22 @@ function Links({ project }: { project: Project }) {
 function Caption({ project }: { project: Project }) {
   const stats = statsOf(project.id);
   const chips = project.id === 'studio' ? [] : project.tags;
+  const more: readonly string[] = project.lines.slice(1);
   return (
     <div className="wk-cap-in ink-card" data-ground="paper" data-stats={stats.length ? '' : undefined}>
       <span className="wk-cap-num" data-fill={FILL[project.id]} aria-hidden="true">{project.num}</span>
       <div className="wk-cap-text">
         <p className="wk-cap-title">{project.title}</p>
-        <p className="wk-cap-line"><Words text={project.lines[0]} start={0} /></p>
+        <div className="wk-cap-body">
+          <p className="wk-cap-line"><Words text={project.lines[0]} start={0} /></p>
+          {/* The project's other lines, shown once the visitor asks (the More button below, or a
+              click on the centre card; components/ui/project-fan.tsx holds the switch). */}
+          {more.length > 0 && (
+            <div className="wk-more" id={`work-more-${project.id}`}>
+              {more.map(line => <p key={line} className="wk-cap-line">{line}</p>)}
+            </div>
+          )}
+        </div>
         {stats.length > 0 && (
           <ul className="wk-stats" aria-label={WORK_HEAD.stats(project.title)}>
             {stats.map(st => (
@@ -184,6 +255,12 @@ function Caption({ project }: { project: Project }) {
           </ul>
         )}
         <div className="wk-cap-foot">
+          {more.length > 0 && (
+            <button type="button" className="pill pill-light wk-more-btn" data-more aria-expanded="false" aria-controls={`work-more-${project.id}`}>
+              <span className="wk-more-open">{WORK_HEAD.more}</span>
+              <span className="wk-more-close">{WORK_HEAD.less}</span>
+            </button>
+          )}
           <Links project={project} />
           {project.id === 'blueberry' && (
             <div className="row-actions wk-actions">
@@ -222,18 +299,19 @@ export default function Projects() {
             {ALL_STREAK !== null && <> <span><b>{ALL_STREAK}</b> {WORK_HEAD.allRepos.streak}.</span></>}
           </p>
         )}
+        {/* The commits-per-day strip, a small card in the head's top right corner beside the two
+            numbers it draws, with a button that opens it larger (Andrew 2026-11-11). */}
+        {ALL_DAYS.length > 0 && (
+          <CommitSkyline
+            points={ALL_DAYS.map(d => ({ x: String(d.x), y: d.y }))}
+            unit={WORK_HEAD.skyline.unit}
+            title={WORK_HEAD.skyline.title}
+            caption={WORK_HEAD.skyline.caption}
+          />
+        )}
       </div>
 
       <ProjectFan items={FAN_ITEMS} name={WORK_HEAD.fan} prevLabel={WORK_HEAD.prev} nextLabel={WORK_HEAD.next} />
-      {/* The commits-per-day skyline, the chart from the old Impact section (Andrew 2026-11-03). */}
-      {ALL_DAYS.length > 0 && (
-        <CommitSkyline
-          points={ALL_DAYS.map(d => ({ x: String(d.x), y: d.y }))}
-          unit={WORK_HEAD.skyline.unit}
-          title={WORK_HEAD.skyline.title}
-          caption={WORK_HEAD.skyline.caption}
-        />
-      )}
     </section>
   );
 }

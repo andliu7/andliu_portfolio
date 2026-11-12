@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
 import Image from 'next/image';
 import { ArrowUpRight, Play, Undo2 } from 'lucide-react';
 import { HOVER, PHONES, type PhoneShot } from '@/lib/site';
@@ -11,8 +11,18 @@ import { useReducedMotion } from '@/components/site/use-reduced-motion';
 //   - The list is a WAI-ARIA tablist: each feature is a tab, the phone is the one tabpanel.
 //     Arrow keys move between tabs (roving tabindex), Home and End jump; hovering with a mouse,
 //     focusing or tapping a row selects it.
-//   - The phone stacks all six captures and crossfades to the selected one (opacity and a small
-//     rise, phones.css). Under reduced motion it swaps with no movement.
+//   - The phone's screen is a pager (Andrew 2026-11-11: "make the screens click and then it slides
+//     into the next page horizontally"). All six captures are stacked; on any change (the list,
+//     the screen, a swipe, auto-advance) the old one slides out and the new one slides in beside
+//     it (phones.css, data-pos and --ph-dir: 1 pages forward, -1 back). A change mid-slide drops
+//     the running slide at its end and starts the next from rest. Reduced motion: an instant swap.
+//   - The screen itself is a button over the captures: a click, tap, Enter or Space goes to the
+//     next screen (wrapping); a sideways swipe past SWIPE_PX, or Left and Right while it has
+//     focus, pages either way. It names the next screen, and a polite line announces the new one.
+//     Each screen's page on the live site, which a click here used to open, is the link under
+//     the phone.
+//   - Every capture is fetched once the stage is within a screen of the viewport, so both sides
+//     of a slide are already loaded.
 //   - Auto-advance: every ADVANCE_MS while at least half the stage is on screen, and never again
 //     once the visitor hovers, focuses, taps or presses a key in it. Off under reduced motion.
 //   - "Try it live" swaps the screen for Blueberry itself in an iframe, mounted only on press.
@@ -24,6 +34,7 @@ import { useReducedMotion } from '@/components/site/use-reduced-motion';
 const ADVANCE_MS = 5000;
 const LIVE_W = 360;
 const LIVE_TIMEOUT = 15000;
+const SWIPE_PX = 40;
 
 // Flat sticker fills from the project fan's palette (globals.css .ink-card[data-fill]): the two
 // site pages on paper, the game screens alternating apricot and berry-soft.
@@ -35,20 +46,41 @@ const fills = (shots: readonly PhoneShot[]) => {
 type Live = 'off' | 'loading' | 'ready' | 'failed';
 
 export function PhoneStage({ shots, label, children }: { shots: readonly PhoneShot[]; label: string; children: ReactNode }) {
-  const [sel, setSel] = useState(0);
+  // One object, so the screen showing, the one sliding out and the direction change together.
+  const [page, setPage] = useState<{ sel: number; prev: number; dir: 1 | -1 }>({ sel: 0, prev: -1, dir: 1 });
   const [auto, setAuto] = useState(true);
   const [inView, setInView] = useState(false);
+  const [warm, setWarm] = useState(false);
+  const [hinted, setHinted] = useState(false);
+  const [say, setSay] = useState('');
   const [live, setLive] = useState<Live>('off');
   const reduced = useReducedMotion();
   const stageRef = useRef<HTMLDivElement>(null);
   const screenRef = useRef<HTMLDivElement>(null);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
+  const drag = useRef<{ x: number; y: number } | null>(null);
+  const swiped = useRef(false);
   const fill = fills(shots);
+  const { sel, prev, dir } = page;
+  const count = shots.length;
   const shot = shots[sel];
+  const nextShot = shots[(sel + 1) % count];
   const hover = HOVER.phones[shot.title];
 
   const stop = useCallback(() => setAuto(false), []);
-  const pick = (n: number) => { stop(); setSel(n); };
+  // Every change goes through here. Without a direction, a later screen pages forward and an
+  // earlier one back.
+  const go = useCallback((n: number, d?: 1 | -1) => {
+    setPage(p => (n === p.sel ? p : { sel: n, prev: p.sel, dir: d ?? (n > p.sel ? 1 : -1) }));
+  }, []);
+  const pick = (n: number, d?: 1 | -1) => { stop(); go(n, d); };
+  // The screen's own paging (click, swipe, arrow keys): one step either way, wrapping.
+  const step = (d: 1 | -1) => {
+    const n = (sel + d + count) % count;
+    pick(n, d);
+    setHinted(true);
+    setSay(`${PHONES.nowShowing}: ${shots[n].title}`);
+  };
 
   // In view: auto-advance runs only while at least half the stage shows.
   useEffect(() => {
@@ -59,11 +91,30 @@ export function PhoneStage({ shots, label, children }: { shots: readonly PhoneSh
     return () => io.disconnect();
   }, []);
 
+  // Warm: within a screen of the viewport, fetch and decode every capture (about 40KB each), so
+  // a slide never shows an empty screen. The <Image>s also turn eager then (below).
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      setWarm(true);
+      for (const s of shots) {
+        const img = new window.Image();
+        img.src = s.src;
+        img.decode?.().catch(() => {});
+      }
+    }, { rootMargin: '100% 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [shots]);
+
   useEffect(() => {
     if (!auto || !inView || reduced || live !== 'off') return;
-    const t = window.setInterval(() => setSel(n => (n + 1) % shots.length), ADVANCE_MS);
+    const t = window.setInterval(() => setPage(p => ({ sel: (p.sel + 1) % count, prev: p.sel, dir: 1 })), ADVANCE_MS);
     return () => window.clearInterval(t);
-  }, [auto, inView, reduced, live, shots.length]);
+  }, [auto, inView, reduced, live, count]);
 
   // The live page's scale: the screen's width over LIVE_W.
   useEffect(() => {
@@ -86,8 +137,35 @@ export function PhoneStage({ shots, label, children }: { shots: readonly PhoneSh
     if (next === undefined) return;
     e.preventDefault();
     const n = next < 0 ? last : next > last ? 0 : next;
-    pick(n);
+    // An arrow pages the way it points, also across the wrap; Home and End go by position.
+    pick(n, e.key === 'Home' || e.key === 'End' ? undefined : next > sel ? 1 : -1);
     tabs.current[n]?.focus();
+  };
+
+  // The screen: a sideways swipe past SWIPE_PX pages (left for next, right for previous), and
+  // the click that may follow it is swallowed. Vertical moves stay the page's scroll
+  // (touch-action: pan-y in phones.css), which cancels the pointer.
+  const onDown = (e: PointerEvent<HTMLButtonElement>) => {
+    swiped.current = false;
+    drag.current = { x: e.clientX, y: e.clientY };
+  };
+  const onUp = (e: PointerEvent<HTMLButtonElement>) => {
+    const from = drag.current;
+    drag.current = null;
+    if (!from) return;
+    const dx = e.clientX - from.x;
+    if (Math.abs(dx) < SWIPE_PX || Math.abs(dx) <= Math.abs(e.clientY - from.y)) return;
+    swiped.current = true;
+    step(dx < 0 ? 1 : -1);
+  };
+  const onScreenClick = () => {
+    if (swiped.current) { swiped.current = false; return; }
+    step(1);
+  };
+  const onScreenKey = (e: KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    e.preventDefault();
+    step(e.key === 'ArrowRight' ? 1 : -1);
   };
 
   return (
@@ -132,36 +210,47 @@ export function PhoneStage({ shots, label, children }: { shots: readonly PhoneSh
         <div className="ph-shot">
           <div className="ph-phone ink-card" data-fill={fill[sel]}>
             <span className="ph-island" aria-hidden="true" />
-            <div ref={screenRef} className="ph-screen" data-live={live}>
-              {/* The screenshot: opens the selected screen on the live site. */}
-              <a
-                className="ph-screen-link"
-                href={hover.href}
-                target="_blank"
-                rel="noreferrer"
-                data-bubble={live === 'off' ? hover.text : undefined}
-                data-bubble-icon={live === 'off' ? hover.icon : undefined}
-                tabIndex={live === 'off' ? 0 : -1}
+            <div
+              ref={screenRef}
+              className="ph-screen"
+              data-live={live}
+              data-slid={prev >= 0 || undefined}
+              style={{ '--ph-dir': dir } as CSSProperties}
+            >
+              {/* The captures, stacked: data-pos "on" is showing (sliding in after a change),
+                  "out" is the one sliding away, the rest are hidden. */}
+              {shots.map((s, n) => (
+                // unoptimized: the export is static, so the WebP is served as captured (a plain img).
+                <Image
+                  key={s.src}
+                  className="ph-img"
+                  src={s.src}
+                  width={s.w}
+                  height={s.h}
+                  alt={n === sel ? s.alt : ''}
+                  aria-hidden={n === sel ? undefined : true}
+                  data-pos={n === sel ? 'on' : n === prev ? 'out' : 'off'}
+                  loading={n === 0 || warm ? 'eager' : 'lazy'}
+                  draggable={false}
+                  unoptimized
+                />
+              ))}
+              {/* The screen as a button, over the captures: next screen on a click or tap. */}
+              <button
+                type="button"
+                className="ph-screen-btn"
+                aria-label={`${PHONES.nextScreen}: ${nextShot.title}`}
+                data-bubble={live === 'off' ? `${PHONES.nextScreen}: ${nextShot.title}` : undefined}
+                data-bubble-icon={live === 'off' ? 'flip' : undefined}
+                disabled={live !== 'off'}
+                onClick={onScreenClick}
+                onKeyDown={onScreenKey}
+                onPointerDown={onDown}
+                onPointerUp={onUp}
+                onPointerCancel={() => { drag.current = null; }}
                 onFocus={stop}
-                aria-hidden={live === 'off' ? undefined : true}
-              >
-                <span className="sr-only">{hover.text}</span>
-                {shots.map((s, n) => (
-                  // unoptimized: the export is static, so the WebP is served as captured (a plain img).
-                  <Image
-                    key={s.src}
-                    className="ph-img"
-                    src={s.src}
-                    width={s.w}
-                    height={s.h}
-                    alt={n === sel ? s.alt : ''}
-                    aria-hidden={n === sel ? undefined : true}
-                    data-on={n === sel}
-                    loading={n === 0 ? 'eager' : 'lazy'}
-                    unoptimized
-                  />
-                ))}
-              </a>
+              />
+              {live === 'off' && !hinted && <span className="ph-tap" aria-hidden="true">{PHONES.tapHint}</span>}
               {live !== 'off' && (
                 <iframe
                   className="ph-frame"
@@ -206,7 +295,18 @@ export function PhoneStage({ shots, label, children }: { shots: readonly PhoneSh
                 {PHONES.newTab} <ArrowUpRight size={14} aria-hidden="true" />
               </a>
             )}
+            {/* The selected screen on the live site (the screen's own click, before it paged). */}
+            {live === 'off' && (
+              <a className="ph-newtab" href={hover.href} target="_blank" rel="noreferrer" onFocus={stop}>
+                {hover.text} <ArrowUpRight size={14} aria-hidden="true" />
+              </a>
+            )}
           </div>
+          {/* Page dots: which of the six is showing. The list is the control, so these are decoration. */}
+          <div className="ph-dots" aria-hidden="true">
+            {shots.map((s, n) => <span key={s.src} className="ph-pip" data-on={n === sel} />)}
+          </div>
+          <p className="sr-only" aria-live="polite">{say}</p>
         </div>
       </div>
     </div>

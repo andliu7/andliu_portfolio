@@ -121,15 +121,48 @@
   position: relative; overflow: hidden; aspect-ratio: 780 / 1688;
   border: var(--tile-line); border-radius: 11cqi; background: var(--berry-deep);
 }
-.phones .ph-screen-link { position: absolute; inset: 0; display: block; }
-.phones .ph-screen-link:focus-visible { outline: 3px solid var(--ring); outline-offset: -6px; border-radius: inherit; }
-/* Crossfade: every capture is stacked; the selected one fades in and settles up from 3%. */
+/* The pager (Andrew 2026-11-11: "make the screens click and then it slides into the next page
+   horizontally"). Every capture is stacked and hidden; data-pos="on" is the one showing and
+   "out" the one it replaced. After the first change (data-slid) the two move side by side, a
+   screen's width apart: --ph-dir (phones.client.tsx) is 1 paging forward (out to the left, in
+   from the right) and -1 going back. Transform only, clipped by the screen's rounded corners.
+   Keyframes, not transitions, so a change mid-slide restarts cleanly from rest. */
+.phones .ph-screen { --ph-slide: 420ms; }
 .phones .ph-img {
   position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover;
-  opacity: 0; translate: 0 3%;
-  transition: opacity .45s var(--ease-out), translate .6s var(--ease-out);
+  visibility: hidden; user-select: none; -webkit-user-drag: none;
 }
-.phones .ph-img[data-on="true"] { opacity: 1; translate: 0 0; z-index: 1; }
+.phones .ph-img[data-pos="on"] { visibility: visible; }
+.phones .ph-screen[data-slid] .ph-img[data-pos="on"] { animation: ph-in var(--ph-slide) var(--ease-ui) both; }
+.phones .ph-screen[data-slid] .ph-img[data-pos="out"] { visibility: visible; animation: ph-out var(--ph-slide) var(--ease-ui) both; }
+@keyframes ph-in { from { transform: translate3d(calc(100% * var(--ph-dir, 1)), 0, 0); } to { transform: translate3d(0, 0, 0); } }
+@keyframes ph-out { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(calc(-100% * var(--ph-dir, 1)), 0, 0); } }
+
+/* The screen is a button over the captures: next screen on a click or tap, a sideways swipe to
+   page either way. pan-y leaves the page's vertical scroll to the browser. */
+.phones .ph-screen-btn {
+  position: absolute; inset: 0; z-index: 1; display: block; width: 100%; height: 100%;
+  margin: 0; padding: 0; border: 0; border-radius: inherit; background: transparent;
+  cursor: pointer; touch-action: pan-y; -webkit-tap-highlight-color: transparent;
+}
+.phones .ph-screen-btn:disabled { cursor: default; }
+.phones .ph-screen-btn:focus-visible { outline: 3px solid var(--ring); outline-offset: -6px; }
+/* The hint: a small chip low on the screen until the first tap. Ink on card, 17.06:1. */
+.phones .ph-tap {
+  position: absolute; z-index: 1; left: 50%; bottom: 7cqi; translate: -50% 0; pointer-events: none;
+  padding: 7px 12px; border: var(--tile-line); border-radius: var(--r-pill); background: var(--card); color: var(--ink);
+  font: 600 12px/1 var(--mono); white-space: nowrap;
+  animation: ph-nudge 1.6s var(--ease-ui) infinite alternate;
+}
+@keyframes ph-nudge { from { transform: translate3d(-3px, 0, 0); } to { transform: translate3d(3px, 0, 0); } }
+
+/* Page dots under the phone: the one showing is a berry dash. Decoration (aria-hidden). */
+.phones .ph-dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+.phones .ph-pip {
+  width: 18px; height: 6px; border-radius: var(--r-pill); background: var(--ink); opacity: .28;
+  transform: scaleX(.34); transition: transform var(--dur-ui) var(--ease-ui), opacity var(--dur-ui) var(--ease-ui);
+}
+.phones .ph-pip[data-on="true"] { background: var(--berry); opacity: 1; transform: none; }
 
 /* Live: Blueberry laid out at --ph-live-w (360px) and scaled to the screen (--ph-scale from
    phones.client.tsx), hidden until its first load so the screenshot holds the place. */
@@ -171,6 +204,12 @@
 }
 .phones .ph-newtab:focus-visible { outline: 3px solid var(--ring); outline-offset: 2px; border-radius: 6px; }
 
-/* Reduced motion: features swap with no rise or fade, and the loading dot holds still. */
-html[data-motion="reduced"] .phones :is(.ph-img, .ph-frame, .ph-phone, .ph-tab, .ph-tab::before) { transition: none; }
-html[data-motion="reduced"] .phones .ph-dot { animation: none; }
+/* Reduced motion: screens swap at once with no slide (the outgoing capture just hides), and the
+   loading dot and the tap chip hold still. */
+html[data-motion="reduced"] .phones :is(.ph-frame, .ph-phone, .ph-tab, .ph-tab::before, .ph-pip) { transition: none; }
+html[data-motion="reduced"] .phones :is(.ph-dot, .ph-tap, .ph-img) { animation: none !important; }
+html[data-motion="reduced"] .phones .ph-img[data-pos="out"] { visibility: hidden; }
+@media (prefers-reduced-motion: reduce) {
+  .phones :is(.ph-dot, .ph-tap, .ph-img) { animation: none !important; }
+  .phones .ph-img[data-pos="out"] { visibility: hidden; }
+}

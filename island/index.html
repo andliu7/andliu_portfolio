@@ -72,7 +72,7 @@ body{margin:0;background:var(--sky);color:var(--ink);font:15px/1.5 Nunito,system
 /* Start screen: the lit island itself, held on a slow diorama shot of the car (art.js), with the
    title over the sky end and the three choices on a paper dock at the bottom. Until the world is
    ready a warm gradient covers it; body.world-ready fades that away. */
-#start{position:fixed;inset:0;z-index:10;display:grid;grid-template-rows:1fr auto;justify-items:center;padding:calc(28px + env(safe-area-inset-top,0px)) 16px calc(22px + env(safe-area-inset-bottom,0px));pointer-events:none}
+#start{position:fixed;inset:0;z-index:10;display:grid;grid-template-rows:1fr auto 1fr;justify-items:center;padding:calc(28px + env(safe-area-inset-top,0px)) 16px calc(22px + env(safe-area-inset-bottom,0px));pointer-events:none}
 #start::before{content:"";position:absolute;inset:0;background:linear-gradient(#bfe3f0,#f4dcc6);transition:opacity 1.1s ease;z-index:-1}
 #start::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,#2a1f4a55 0%,#2a1f4a00 34%,#2a1f4a00 58%,#2a1f4a66 100%);opacity:0;transition:opacity 1.1s ease}
 body.world-ready #start::before{opacity:0}
@@ -84,11 +84,26 @@ body:has(#start:not([hidden])) .hud{opacity:0;pointer-events:none}
 #start h1 span{color:#ffd98a}
 #start .tag{margin:0;background:#fffaf0e8;color:var(--ink);font:600 clamp(13px,1.6vw,16px)/1.4 Nunito,system-ui,sans-serif;padding:8px 16px;border-radius:999px;box-shadow:0 4px 0 #0000001f;max-width:560px}
 #start .dock{background:#fffaf0f2;border-radius:24px;box-shadow:0 6px 0 #00000026,0 18px 40px #1f2a4433;padding:16px 18px 12px;display:grid;gap:10px;justify-items:center;max-width:min(620px,100%)}
+/* Start: the middle row of three (title above, dock below, equal shares), so it sits at the centre
+   of the screen whatever the title and dock measure. */
+#start .title{grid-row:1}
+#start .dock{grid-row:3;align-self:end}
+#start #go{grid-row:2;align-self:center;font-size:clamp(22px,3.2vw,30px);padding:18px 44px;background:var(--berry);color:var(--paper);box-shadow:0 6px 0 #1f2a44,0 18px 40px #1f2a4455;animation:go-in .5s cubic-bezier(.34,1.56,.64,1) both}
+#start #go[hidden]{display:none}
+#start #go:hover{transform:translateY(-2px)}
+#start #go:active{transform:translateY(4px);box-shadow:0 2px 0 #1f2a44}
+#start #go:focus-visible{outline:4px solid #ffd98a;outline-offset:4px}
+@keyframes go-in{from{opacity:0;transform:scale(.8)}}
+@media (prefers-reduced-motion:reduce){#start #go{animation:none}}
 #start .row{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
 #start .pill{font-size:15px;padding:12px 18px}
 #start .pill.read{background:#ffd98a}
-#start .keys{font:500 12px/1.6 Fredoka,system-ui,sans-serif;color:var(--ink-2);text-align:center}
-#start .keys kbd{font:600 11px/1 Fredoka,system-ui,sans-serif;background:var(--ink);color:var(--paper);border-radius:6px;padding:3px 6px}
+/* The keys on the dock: a small board, four across (two on a narrow window), each cell a key cap
+   and one word, so nothing wraps mid-list. The full board is the menu's Controls tab. */
+#start .keys{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(4,auto);gap:8px 18px;justify-content:center;font:500 13px/1 Fredoka,system-ui,sans-serif;color:var(--ink-2)}
+#start .keys li{display:flex;align-items:center;gap:7px;white-space:nowrap}
+#start .keys kbd{font:600 11px/1 Fredoka,system-ui,sans-serif;background:var(--ink);color:var(--paper);border-radius:6px;padding:4px 6px;min-width:34px;box-sizing:border-box;text-align:center}
+@media (max-width:520px){#start .keys{grid-template-columns:repeat(2,auto)}}
 #start .loading{font:600 15px/1 Fredoka,system-ui,sans-serif;color:var(--ink-2)}
 #start .loading::after{content:'';display:inline-block;width:1.2em;text-align:left;animation:dots 1.2s steps(4) infinite}
 @keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}}
@@ -105,10 +120,17 @@ body:has(#start:not([hidden])) .hud{opacity:0;pointer-events:none}
     <h1>Andrew Liu <span>Island</span></h1>
     <p class="tag">My résumé, as a small island you can drive around. CS and pre-dental at Maryland, co-founder of Blueberry.</p>
   </div>
+  <!-- One Start button, in the middle of the screen (Andrew 2026-11-11: "the game should have the
+       start in the middle, not the start with sound, which is really confusing, at the bottom
+       left"). Hidden while the island builds; main.js shows it. It starts quietly: sound is the
+       HUD's Sound button. -->
+  <button class="pill" id="go" type="button" hidden>Start</button>
   <div class="dock">
-    <!-- A loading screen, not a menu (Andrew 2026-11-04): no "Start with sound", the game starts
-         quietly on its own once the island is built (main.js); sound is the HUD's Sound button. -->
-    <div class="keys"><kbd>WASD</kbd> or arrows to drive · <kbd>Shift</kbd> boost · <kbd>Space</kbd> brake · <kbd>F</kbd> interact · <kbd>H</kbd> honk · <kbd>M</kbd> map · <kbd>R</kbd> reset</div>
+    <!-- No "Start with sound" (Andrew 2026-11-04): the dock only shows the keys and the loading line. -->
+    <ul class="keys" aria-label="Keys">
+      <li><kbd>WASD</kbd>Move</li><li><kbd>Shift</kbd>Boost</li><li><kbd>Space</kbd>Brake</li><li><kbd>F</kbd>Use</li>
+      <li><kbd>H</kbd>Honk, call car</li><li><kbd>V</kbd>View</li><li><kbd>M</kbd>Map</li><li><kbd>R</kbd>Reset</li>
+    </ul>
     <div class="loading" id="loading">Building the island</div>
   </div>
 </div>

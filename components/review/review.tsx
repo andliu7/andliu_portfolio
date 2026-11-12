@@ -1,5 +1,6 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Moon, Sun } from 'lucide-react';
 import { getLenis } from '@/app/smooth';
 import './review.css';
 
@@ -38,12 +39,13 @@ const PROPOSALS: Proposal[] = [
     why: 'Two columns pulled the eye apart. Now one centred column: the quick way as a single row of buttons, then the letter. The plane leaves from the letter and the envelope leans on it.' },
   { id: 'island', round: 2, title: 'Closer to the island', href: '#island', note: 'Island. Lens 1.4x closer',
     why: 'The moon and the sea were winning. The camera moves in so the island fills its side of the screen and the water becomes the frame.' },
-  { id: 'commits', round: 2, title: 'Commits, pocket-size', href: '#work', note: 'Desktop. Top right of Projects',
-    why: 'The skyline was a second feature under the fan. Here it is a small city in the corner, under the sentence it illustrates (727 commits), so the projects stay the subject.' },
   { id: 'bubble', round: 2, title: 'Pick, read, see', href: '#phones', note: 'Desktop. Blueberry on a phone',
     why: 'Six descriptions at once read as a table. The list becomes six short rows, and the one you pick explains itself in a note beside the phone. Nothing shifts under the pointer.' },
   { id: 'quiet', round: 2, title: 'A quieter rail', note: 'Desktop. Point at the right edge',
     why: 'You said the rail feels like part of the page. At rest only the sun and the clock show; the track and its dots appear when the pointer comes near.' },
+  // 2026-11-11, from Andrew's question ("full resume shown ... better on the left side? text on the right?").
+  { id: 'left', round: 2, title: 'The whole résumé, on the left', href: '#resume', note: 'Desktop. Résumé',
+    why: 'The page ran off the foot of the screen. Here all of it shows, on the left where the eye lands first, with the title and the two buttons beside its middle. The section grows taller than one screen to fit it.' },
 ];
 
 const KEY = 'rv:v1';
@@ -164,18 +166,102 @@ function clock(hour: number) {
   return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
 }
 
+// The sun and the moon in the rail's disc (Andrew 2026-11-11: "use this animation but adapt it
+// slightly", with the 21st.dev sun and moon theme toggle pasted). Kept from it: both bodies ride
+// one circle centred below the disc, like a sky dome; the one leaving sets down its side of the
+// arc, easing in and spinning, and the other rises up its own side a moment later and overshoots
+// a little; a day sky and a night sky cross-fade behind them and the stars twinkle; a swap asked
+// for mid-flight plays the running one backwards from where it is. Adapted: it is not a button and
+// changes no theme (the scroll crossing DUSK drives it, both ways), it is quicker (1.1s, was 1.74),
+// the skies are this page's own, and it is plain CSS classes (review.css) instead of Tailwind.
+// Reduced motion: no flight, the bodies simply change places.
+const DUSK = 19.5; // half past seven in the evening, as the timeline's rose turns to twilight
+const SWAP_MS = 1100;
+const ARC = 115; // the arc's radius, in percent of the disc
+const STARS = [{ x: 22, y: 20, t: 2100 }, { x: 68, y: 16, t: 2600 }, { x: 80, y: 46, t: 1900 }, { x: 16, y: 66, t: 2500 }, { x: 56, y: 78, t: 2300 }];
+type Body = { side: -1 | 1; spin: number };
+const MOON: Body = { side: -1, spin: 25 };
+const SUN: Body = { side: 1, spin: 120 };
+const arcAt = (side: number, angle: number) => `translate(${side * ARC * Math.sin(angle)}%, ${ARC * (1 - Math.cos(angle))}%)`;
+const easeOutBack = (t: number) => 1 + 2.4 * (t - 1) ** 3 + 1.4 * (t - 1) ** 2;
+const frames = (body: Body, rising: boolean): Keyframe[] => Array.from({ length: 31 }, (_, i) => {
+  const t = i / 30;
+  const away = rising ? 1 - easeOutBack(t) : t * t * t; // how far down the arc, 0 at the middle of the disc
+  return {
+    offset: t,
+    transform: `${arcAt(body.side, away * Math.PI / 2)} rotate(${body.side * body.spin * away}deg)${rising ? ` scale(${1 - 0.28 * away})` : ''}`,
+    opacity: rising ? Math.min(1, t / 0.3) : t < 0.55 ? 1 : (1 - t) / 0.45,
+  };
+});
+const still = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.dataset.motion === 'reduced';
+
+function Celestial({ night }: { night: boolean }) {
+  const sunRef = useRef<HTMLSpanElement>(null);
+  const moonRef = useRef<HTMLSpanElement>(null);
+  const dayRef = useRef<HTMLSpanElement>(null);
+  const nightRef = useRef<HTMLSpanElement>(null);
+  const flight = useRef<Animation[]>([]);
+  const was = useRef(night);
+
+  useLayoutEffect(() => {
+    if (was.current === night) return;
+    was.current = night;
+    // asked again mid-flight: that is the running swap played backwards from where it is now
+    if (flight.current.length) { flight.current.forEach(a => a.reverse()); return; }
+    const sun = sunRef.current, moon = moonRef.current, day = dayRef.current, dark = nightRef.current;
+    if (!sun || !moon || !day || !dark || still()) return;
+    const sky = { duration: SWAP_MS, easing: 'cubic-bezier(0.65, 0, 0.35, 1)', fill: 'both' as const };
+    const pair = [
+      (night ? sun : moon).animate(frames(night ? SUN : MOON, false), { duration: SWAP_MS * 0.65, fill: 'both' }),
+      (night ? moon : sun).animate(frames(night ? MOON : SUN, true), { duration: SWAP_MS * 0.64, delay: SWAP_MS * 0.36, fill: 'both' }),
+      day.animate([{ opacity: night ? 1 : 0 }, { opacity: night ? 0 : 1 }], sky),
+      dark.animate([{ opacity: night ? 0 : 1 }, { opacity: night ? 1 : 0 }], sky),
+    ];
+    flight.current = pair;
+    Promise.all(pair.map(a => a.finished)).then(() => {
+      if (flight.current !== pair) return;
+      flight.current = [];
+      pair.forEach(a => a.cancel()); // the resting styles below now say the same thing
+    }, () => { /* cancelled on unmount */ });
+  }, [night]);
+
+  // The stars twinkle, each at its own pace; they are only seen while the night sky is up.
+  useEffect(() => {
+    const dark = nightRef.current;
+    if (!dark || still()) return;
+    const twinkles = Array.from(dark.children).map((star, i) =>
+      star.animate([{ opacity: 0.35 }, { opacity: 1 }, { opacity: 0.35 }], { duration: STARS[i]?.t ?? 2400, delay: -i * 530, iterations: Infinity, easing: 'ease-in-out' }));
+    return () => twinkles.forEach(a => a.cancel());
+  }, []);
+  useEffect(() => () => { flight.current.forEach(a => a.cancel()); flight.current = []; }, []);
+
+  const rest = (body: Body, up: boolean) => ({ transform: up ? 'none' : arcAt(body.side, Math.PI / 2), opacity: up ? 1 : 0 });
+  return (
+    <span className="rv-sun-disc">
+      <span className="rv-sky" data-sky="night" ref={nightRef} style={{ opacity: night ? 1 : 0 }}>
+        {STARS.map((s, i) => <span key={i} className="rv-star" style={{ left: `${s.x}%`, top: `${s.y}%` }} />)}
+      </span>
+      <span className="rv-sky" data-sky="day" ref={dayRef} style={{ opacity: night ? 0 : 1 }} />
+      <span className="rv-orb" data-body="moon" ref={moonRef} style={rest(MOON, night)}><Moon fill="currentColor" aria-hidden="true" /></span>
+      <span className="rv-orb" data-body="sun" ref={sunRef} style={rest(SUN, !night)}><Sun aria-hidden="true" /></span>
+    </span>
+  );
+}
+
 function DayRail() {
   const railRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const sunRef = useRef<HTMLDivElement>(null);
   const timeRef = useRef<HTMLSpanElement>(null);
   const [ticks, setTicks] = useState<{ id: string; label: string; at: number }[]>([]);
+  const [night, setNight] = useState(false); // past dusk: the sun has set and the moon is up (Celestial)
 
   useEffect(() => {
     let stops: { y: number; hour: number }[] = [];
     let max = 1;
     let frame = 0;
     let lastText = '';
+    let lastNight = false;
 
     const measure = () => {
       max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
@@ -205,6 +291,8 @@ function DayRail() {
       sun.style.top = `${(y / max) * 100}%`;
       // 0 by day, 1 by night, turning between 6:30 and 8:00 in the evening
       sun.style.setProperty('--night', String(Math.min(1, Math.max(0, (hour - 18.5) / 1.5))));
+      const isNight = hour >= DUSK;
+      if (isNight !== lastNight) { lastNight = isNight; setNight(isNight); }
       const text = clock(hour);
       if (text !== lastText && timeRef.current) { timeRef.current.textContent = text; lastText = text; }
     };
@@ -278,7 +366,7 @@ function DayRail() {
           </a>
         ))}
         <div className="rv-sun" ref={sunRef} aria-hidden="true">
-          <span className="rv-sun-disc"><i /></span>
+          <Celestial night={night} />
           <span className="rv-time" ref={timeRef} />
         </div>
         </div>

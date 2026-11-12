@@ -104,9 +104,10 @@ export function createKit(ctx, rt){
     };
     c.update = (dt, view) => {
       const K = rt.keys, fp = !!view?.fp;
-      if(fp && K.s) c.fwd.applyAxisAngle(c.up, -K.s*2.4*dt);       // first person: A / D turn
+      const turn = fp && !view.strafe;                             // view.strafe: the mouse is looking (pointer lock), so A / D step sideways
+      if(turn && K.s) c.fwd.applyAxisAngle(c.up, -K.s*2.4*dt);     // first person: A / D turn
       if(view) view.basis(c.up, F, R); else { F.copy(c.fwd); R.crossVectors(F, c.up); }
-      mv.copy(F).multiplyScalar(K.f).addScaledVector(R, fp ? 0 : K.s);
+      mv.copy(F).multiplyScalar(K.f).addScaledVector(R, turn ? 0 : K.s);
       const moving = mv.lengthSq() > 1e-6;
       if(moving) mv.normalize().multiplyScalar(K.boost ? c.run : c.walk);
       const k = Math.min(1, dt*(c.grounded ? 12 : c.airControl));  // less grip in the air: floaty jumps
@@ -229,7 +230,7 @@ export function createKit(ctx, rt){
   //      fp:true|false (V allowed, default true), fpStart:false, lag=7 }
   // Drag with the mouse to swing round; the wheel zooms (state.zoom).
   function view(camera, ctrl, o = {}){
-    const v = { camera, ctrl, fp:!!o.fpStart, allowFp:o.fp !== false, dist:o.dist ?? 7, height:o.height ?? 3.4, look:o.look ?? 1.1, lag:o.lag ?? 7,
+    const v = { camera, ctrl, fp:!!o.fpStart, strafe:false, allowFp:o.fp !== false, dist:o.dist ?? 7, height:o.height ?? 3.4, look:o.look ?? 1.1, lag:o.lag ?? 7,
       back:V().fromArray(o.back || [0, 0, 1]).normalize(), elev:1, pitch:0, upS:V().set(0, 1, 0), camPos:V(), ready:false };
     const want = V(), look = V(), eye = V();
     // Movement directions on the ground: forward is away from the camera, right is forward x up.

@@ -160,7 +160,16 @@ function fallbackCamera(){
 
   ctx.hud.loading.textContent = 'Ready';
   loop.start();
-  // Straight in (Andrew 2026-11-04): the start screen is only a loading page, so begin quietly as
-  // soon as the first frames are drawn.
-  requestAnimationFrame(() => requestAnimationFrame(() => { api.ready = true; bus.emit('ready'); ctx.hud.begin(false); }));
+  // Once the first frames are drawn the island is ready: swap the loading line for the one Start
+  // button in the middle of the screen (Andrew 2026-11-11). It starts quietly; sound stays the
+  // HUD's Sound button. Enter or Space on the focused button starts too.
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    api.ready = true; bus.emit('ready');
+    const go = document.getElementById('go');
+    if(!go){ ctx.hud.begin(false); return; }
+    ctx.hud.loading.hidden = true;
+    go.hidden = false;
+    go.addEventListener('click', () => ctx.hud.begin(false), { once:true });
+    go.focus({ preventScroll:true });
+  }));
 })();

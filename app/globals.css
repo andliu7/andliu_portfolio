@@ -729,3 +729,8 @@ html[data-motion="reduced"] :is(.tilt-stage,.tilt-layer) { transform:none !impor
 .ink-card[data-fill="tile-pink"] { background:var(--tile-pink); }
 .ink-card[data-fill="tile-leaf"] { background:var(--tile-leaf); }
 .ink-card[data-fill="tile-apricot"] { background:var(--tile-apricot); }
+
+/* Keep the scrollbar's lane when a popup locks scrolling (2026-11-11). Without it the page grows
+   15px wider under every dialog, everything re-fits at once, and the browser reports a
+   "ResizeObserver loop" error. */
+html { scrollbar-gutter:stable; }

@@ -30,8 +30,13 @@ export const CONTACT_LIMITS = {
   about: 500, // optional: a little about the sender
   messageMin: 10,
   messageMax: 5000,
-  bodyBytes: 16 * 1024,
+  // optional: a drawn signature, a PNG data URL made by the form's pad (components/site/signature-pad.tsx).
+  // The form keeps it small (about 420px wide); this is the ceiling on its base64 text.
+  signatureChars: 60 * 1024,
+  bodyBytes: 96 * 1024, // was 16KB before the signature (2026-11-11)
 };
+
+const SIGNATURE = /^data:image\/png;base64,([A-Za-z0-9+/]+={0,2})$/;
 
 const RESEND = 'https://api.resend.com/emails';
 // Resend's shared test sender. It can only deliver to the Resend account's own address, which is
@@ -71,9 +76,17 @@ export function validateContact(body) {
   if (message.length < CONTACT_LIMITS.messageMin || message.length > CONTACT_LIMITS.messageMax) {
     fields.message = `${CONTACT_LIMITS.messageMin} to ${CONTACT_LIMITS.messageMax} characters`;
   }
+  // The signature is optional. Only a PNG data URL of base64 passes, and only its base64 is kept,
+  // so nothing else can ride into the attachment.
+  let signature = '';
+  if (b.signature !== undefined && b.signature !== null && b.signature !== '') {
+    const match = str(b.signature).length <= CONTACT_LIMITS.signatureChars ? SIGNATURE.exec(str(b.signature)) : null;
+    if (match) signature = match[1];
+    else fields.signature = `a PNG data URL of at most ${CONTACT_LIMITS.signatureChars} characters`;
+  }
   // The honeypot: a field people never see. A bot that fills every input fills this one too.
   if (str(b.botcheck) !== '') fields.botcheck = 'must be empty';
-  return Object.keys(fields).length ? { fields } : { name, contact, about, message };
+  return Object.keys(fields).length ? { fields } : { name, contact, about, message, signature };
 }
 
 const dailyCap = env => Number(env.CONTACT_DAILY_CAP) || DEFAULT_DAILY_CAP;
@@ -209,7 +222,10 @@ export async function handleContact(request, env, { to, fetchImpl = fetch }) {
           `From: ${clean.name}`,
           `Reach them at: ${clean.contact || 'not given'}`,
           ...(clean.about ? [`About them: ${clean.about}`] : []),
+          ...(clean.signature ? ['Signed: see signature.png, attached'] : []),
         ].join('\n'),
+        // The drawn signature, as a file on the email (Resend takes base64 content).
+        ...(clean.signature ? { attachments: [{ filename: 'signature.png', content: clean.signature }] } : {}),
       }),
     });
   } catch {

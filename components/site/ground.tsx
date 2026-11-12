@@ -73,6 +73,82 @@ const STOPS: Stop[] = [
   { at: '#island/', dy: 0, colour: 'color-mix(in srgb, #0b0d1f 60%, #0c0a09)' }, // toward the footer's black
 ];
 
+// The eased ramp (Andrew 2026-11-11: "smoother gradients?"). A CSS gradient runs in straight lines
+// between its stops, in sRGB, so every stop is a corner where the rate of change jumps, and the
+// eye reads each corner as a faint band. Here the stops become a curve instead: each colour is
+// resolved to numbers, moved into Oklab (a space where equal steps look equal), and joined by a
+// monotone cubic (the Fritsch-Carlson rule), which passes through every stop with no corner and
+// never overshoots. So a held colour stays held, each stop keeps its exact colour and place, and
+// every colour in between stays between its two neighbours, which keeps the contrast figures above
+// true. The curve is then sampled into many plain rgb() stops. Null (an unreadable colour) falls
+// back to the straight ramp.
+type Lab = [number, number, number];
+const toLinear = (v: number) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+const toGamma = (v: number) => (v <= 0.0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - 0.055);
+function toLab([r, g, b]: number[]): Lab {
+  const [lr, lg, lb] = [toLinear(r), toLinear(g), toLinear(b)];
+  const l = Math.cbrt(0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb);
+  const m = Math.cbrt(0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb);
+  const s = Math.cbrt(0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb);
+  return [0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s, 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s, 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s];
+}
+function toRgb([L, a, b]: Lab): string {
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  const out = [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s];
+  return `rgb(${out.map(v => (Math.min(1, Math.max(0, toGamma(v))) * 255).toFixed(1)).join(' ')})`;
+}
+/** A CSS colour (hex, var(), color-mix) as sRGB 0..1, read back from the browser. */
+function resolve(probe: HTMLElement, colour: string): number[] | null {
+  probe.style.color = colour;
+  const text = getComputedStyle(probe).color;
+  const nums = (text.match(/-?\d*\.?\d+(?:e-?\d+)?/g) ?? []).slice(0, 3).map(Number);
+  if (nums.length < 3 || nums.some(Number.isNaN)) return null;
+  if (text.startsWith('rgb')) return nums.map(v => v / 255);
+  return text.startsWith('color(srgb') ? nums : null;
+}
+function easedRamp(host: HTMLElement, placed: { y: number; colour: string }[]): string[] | null {
+  const probe = document.createElement('i');
+  host.appendChild(probe);
+  const pts: { y: number; lab: Lab }[] = [];
+  try {
+    for (const p of placed) {
+      const rgb = resolve(probe, p.colour);
+      if (!rgb) return null;
+      const lab = toLab(rgb);
+      if (pts.length && pts[pts.length - 1].y === p.y) pts[pts.length - 1].lab = lab; // two stops on one line: the later wins
+      else pts.push({ y: p.y, lab });
+    }
+  } finally { probe.remove(); }
+  const n = pts.length;
+  if (n < 3) return null;
+  const h = pts.slice(1).map((p, i) => p.y - pts[i].y);
+  // The slope at each stop, per channel: flat at both ends and wherever the channel turns round,
+  // else the weighted harmonic mean of the slopes either side.
+  const slope = [0, 1, 2].map(c => {
+    const d = h.map((hi, i) => (pts[i + 1].lab[c] - pts[i].lab[c]) / hi);
+    return pts.map((_, i) => {
+      if (i === 0 || i === n - 1 || d[i - 1] * d[i] <= 0) return 0;
+      const w1 = 2 * h[i] + h[i - 1], w2 = h[i] + 2 * h[i - 1];
+      return (w1 + w2) / (w1 / d[i - 1] + w2 / d[i]);
+    });
+  });
+  const parts: string[] = [];
+  for (let i = 0; i < n - 1; i++) {
+    const steps = Math.min(12, Math.max(1, Math.round(h[i] / 70))); // a sample about every 70px
+    for (let k = 0; k < steps; k++) {
+      const t = k / steps, t2 = t * t, t3 = t2 * t;
+      const lab = [0, 1, 2].map(c =>
+        (2 * t3 - 3 * t2 + 1) * pts[i].lab[c] + (t3 - 2 * t2 + t) * h[i] * slope[c][i] +
+        (-2 * t3 + 3 * t2) * pts[i + 1].lab[c] + (t3 - t2) * h[i] * slope[c][i + 1]) as Lab;
+      parts.push(`${toRgb(lab)} ${Math.round(pts[i].y + t * h[i])}px`);
+    }
+  }
+  parts.push(`${toRgb(pts[n - 1].lab)} ${pts[n - 1].y}px`);
+  return parts;
+}
+
 // Where the day's ink lines hand over to the night's paper lines (the dusk into violet blend).
 const SWITCH: Stop = { at: '#experience/', dy: -200, colour: '' };
 
@@ -139,14 +215,15 @@ export default function Ground() {
       const height = footer ? full - footer.offsetHeight : full;
 
       let last = 0;
-      const parts: string[] = [];
+      const placed: { y: number; colour: string }[] = [];
       for (const s of STOPS) {
         let y = place(s);
         if (y == null) continue;
         y = Math.max(last, Math.min(height, y)); // stops never run backwards
         last = y;
-        parts.push(`${s.colour} ${Math.round(y)}px`);
+        placed.push({ y: Math.round(y), colour: s.colour });
       }
+      const parts = easedRamp(el, placed) ?? placed.map(p => `${p.colour} ${p.y}px`);
 
       const max = Math.max(0, root.scrollHeight - vh);
       const reduced = reducedQuery.matches || root.dataset.motion === 'reduced';

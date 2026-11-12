@@ -60,6 +60,15 @@ export function ProjectFan({ items, name, prevLabel, nextLabel, className = '' }
   const [active, setActive] = useState(0);
   const [hover, setHover] = useState<number | null>(null);
   const [entered, setEntered] = useState(false);
+  // More information on a click (Andrew 2026-11-11): one switch for the whole fan, so once the
+  // extra lines are open they stay open while the visitor moves between projects. CSS shows them
+  // (.wk-caps[data-open] in app/sections/projects.css); the effect keeps every More button's
+  // aria-expanded true to the switch.
+  const [open, setOpen] = useState(false);
+  const capsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    capsRef.current?.querySelectorAll('[data-more]').forEach(b => b.setAttribute('aria-expanded', String(open)));
+  }, [open]);
   const motion = useRef({
     pos: 0, vel: 0, target: 0, g: 0, hover: -1, moved: false,
     amt: Array.from({ length: n }, () => 0), amtVel: Array.from({ length: n }, () => 0),
@@ -291,6 +300,11 @@ export function ProjectFan({ items, name, prevLabel, nextLabel, className = '' }
     event.preventDefault();
     if (motion.current.moved) { motion.current.moved = false; return; }
     if (i !== active) goTo(i);
+    else setOpen(o => !o); // the centre card: open or close its caption's extra lines
+  };
+  // The caption's More / Less button (plain markup from the server, so the click is caught here).
+  const onCapClick = (event: MouseEvent<HTMLDivElement>) => {
+    if ((event.target as Element).closest('[data-more]')) setOpen(o => !o);
   };
 
   const onPointerOver = (event: PointerEvent<HTMLUListElement>) => {
@@ -373,7 +387,7 @@ export function ProjectFan({ items, name, prevLabel, nextLabel, className = '' }
 
       {/* Every caption is in the page, stacked in one grid cell so the box is as tall as the
           longest and nothing below jumps; only the shown one is visible and reachable (inert). */}
-      <div className="wk-caps">
+      <div ref={capsRef} className="wk-caps" data-open={open ? '' : undefined} onClick={onCapClick}>
         {items.map((item, i) => (
           <div key={item.id} className="wk-cap" data-on={i === shown ? '' : undefined} inert={i !== shown}>
             {item.caption}

@@ -53,7 +53,6 @@ export function FooterCard({ variant }: { variant: 'home' | 'about' }) {
             <p className="ct-email">
               <a className="display ct-mail" href={mailto}>{CONTACT.email}</a>
             </p>
-            <p className="ct-note">{CONTACT.emailNote}</p>
             <ul className="ct-links">
               {links.map(link => {
                 const kind = socialKind(link.href);

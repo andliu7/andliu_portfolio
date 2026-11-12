@@ -92,6 +92,12 @@ export function init(ctx){
   /* ---------- kinematic twin so a walker nudges crates ---------- */
   const twin = new CANNON.Body({ type: CANNON.Body.KINEMATIC, shape: new CANNON.Sphere(R) });
   twin.position.set(0, -100, 0); world.addBody(twin);
+  // Never asleep (Andrew 2026-11-11: "I should be able to interact with the boxes while running").
+  // Cannon puts a body to sleep after a second without speed, and nothing but a hit from an awake
+  // body wakes it again: setting its velocity each frame does not. The twin sat parked under the
+  // island while he drove, fell asleep, and a sleeping twin against a sleeping crate is a pair the
+  // broadphase skips, so on foot he ran straight through every crate and cone.
+  twin.allowSleep = false;
 
   /* ---------- collision ---------- */
   function resolve(list, rad){

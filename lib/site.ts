@@ -254,6 +254,11 @@ export const PHONES = {
   liveFailed: 'It would not load in here.', // (needs sign-off)
   newTab: 'Open in a new tab', // (needs sign-off)
   liveTitle: 'Blueberry, running live', // the iframe's accessible name (needs sign-off)
+  // The screen is a pager (Andrew 2026-11-11: "make the screens click and then it slides into the
+  // next page horizontally"): a tap, click or sideways swipe on the phone's screen pages it.
+  nextScreen: 'Next screen', // [Andrew 2026-11-11] the screen button's name and hover bubble, read as "Next screen: Learn" (needs sign-off)
+  tapHint: 'Tap for the next screen', // the chip on the screen until its first tap (needs sign-off)
+  nowShowing: 'Now showing', // the polite announcement after a tap or swipe, read as "Now showing: Learn" (needs sign-off)
   shots: [
     PHONE_SHOT('game-periodic', 'Game', 'Periodic table', "Blueberry's periodic table on a phone: colour-coded elements by category with carbon selected, showing atomic number 6, mass 12.011 and its electron configuration", 'So nobody has to leave a lesson to look up an element. Tap one and its number, mass and electron configuration are right there.'), // [S] live game tool (needs sign-off)
     PHONE_SHOT('site-learn', 'Site', 'Learn', "Blueberry's Learn page on a phone: a banner showing butadiene and HBr giving 1-bromobut-2-ene, then Up next, Dienes and Diels-Alder, with a Start Unit 1 button", "One place to start. The next unit's notes sit up top with the reaction they cover drawn out, and one button begins them."), // [S] live #/learn (needs sign-off)
@@ -458,6 +463,8 @@ export const WORK_HEAD = {
   skyline: { title: 'Commits, day by day', unit: 'commits', caption: 'Every commit I authored, in every repo, one block per day.' }, // [D] the old Impact chart's own words, back under the fan (Andrew 2026-11-03) (needs sign-off)
   allRepos: { commits: (since: string) => `commits across all my repos since ${since}`, streak: 'days, my longest streak' }, // [D] the numbers come from lib/impact.json all.days and all.streak (needs sign-off)
   bbChapter: 'Read the chapter', // [Andrew 2026-10-20] the Blueberry card's caption link to #blueberry (needs sign-off)
+  more: 'More about it', // [UI] a caption's button that opens the project's other lines; a click on the centre card does the same (Andrew 2026-11-11) (needs sign-off)
+  less: 'Less', // [UI] the same button once open (needs sign-off)
   bbPhones: 'See it on a phone', // [Andrew 2026-10-20] the Blueberry card's caption link to #phones (needs sign-off)
   prev: 'Previous project', // [UI] arrow button name (needs sign-off)
   next: 'Next project', // [UI] arrow button name (needs sign-off)
@@ -486,6 +493,26 @@ export const WORK_STATS: Record<string, readonly { series: string; point?: strin
     { series: 'ff.words', label: 'words' }, // [D]
     { series: 'ff.sections', label: 'sections' }, // [D]
   ],
+};
+
+// The same impact, on the card's own face (Andrew 2026-11-11: "Write in the impact onto the cards
+// and add graph animations"). `chart` is the running-total line drawn small on the card; `stats`
+// are the two numbers beside it, read from the JSON like WORK_STATS. What a card shows is left out
+// of its caption (app/sections/projects.tsx), so no number is said twice. A project with no series
+// in lib/impact.json has no entry and its card gets nothing extra.
+export const WORK_CARD: Record<string, { chart: string; stats: readonly { series: string; point?: string; label: string }[] }> = {
+  blueberry: {
+    chart: 'bb.commits', // [D]
+    stats: [{ series: 'bb.commitsTotal', label: 'commits' }, { series: 'bb.content', point: 'questions', label: 'questions' }], // [D]
+  },
+  brain: {
+    chart: 'brain.memories', // [D]
+    stats: [{ series: 'brain.memories', label: 'memories' }, { series: 'brain.files', label: 'files' }], // [D] (needs sign-off)
+  },
+  guide: {
+    chart: 'ff.commits', // [D]
+    stats: [{ series: 'ff.commitsTotal', label: 'commits' }, { series: 'ff.words', label: 'words' }], // [D]
+  },
 };
 
 export const EXPERIENCE_HEAD = {
@@ -570,13 +597,21 @@ export const IMPACT: readonly {
 
 /** The contribution skyline's controls and spoken lines (components/ui/contribution-skyline.tsx). */
 export const SKYLINE = {
+  open: 'Open', // [UI] the card's button that opens the chart in a popup (Andrew 2026-11-11) (needs sign-off)
+  // The popup's chart (components/ui/contribution-skycity.tsx): it opens flat and stands up into a city.
   view: 'View', // [UI] the 2D / 3D toggle's group name (needs sign-off)
   flat: '2D', // [UI] (needs sign-off)
   city: '3D', // [UI] (needs sign-off)
   less: 'Less', // [UI] legend end (needs sign-off)
   more: 'More', // [UI] legend end (needs sign-off)
+  drag: 'Drag to turn', // [UI] the hint in the popup's bar while the city stands (needs sign-off)
+  close: 'Close the commit chart', // [UI] the popup's close button name (needs sign-off)
   day: (n: number, unit: string, date: string) => `${n} ${unit} on ${date}`, // [D] tooltip and live line
-  label: (total: number, unit: string, first: string, last: string) => `${total} ${unit} from ${first} to ${last}, one block per day. Arrow keys move between days.`, // [D][UI] the chart's accessible name (needs sign-off)
+  week: (date: string, n: number, unit: string) => `Week of ${date}: ${n} ${unit}`, // [D] the header readout while a week is scrubbed, focused or pinned (needs sign-off)
+  total: (n: number, unit: string, weeks: number) => `${n} ${unit} in ${weeks} weeks`, // [D] the header readout at rest: the sum of all.days and its week count (needs sign-off)
+  pinned: (week: string) => `Pinned. ${week}`, // [UI] live line when a week is pinned (needs sign-off)
+  released: 'Pin released', // [UI] live line when the pin is let go (needs sign-off)
+  label: (total: number, unit: string, first: string, last: string) => `${total} ${unit} from ${first} to ${last}, one block per day. Arrow keys move between days, Enter pins a week, Escape releases it.`, // [D][UI] the chart's accessible name (needs sign-off)
 } as const;
 
 // ---------------------------------------------------------------------------------------------
@@ -639,7 +674,7 @@ export const EVENING = {
 export const CONTACT = {
   eyebrow: '04 / Contact me', // renumbered after On a phone (2026-10-20); [UI] Andrew 2026-10-07 ("make it more of a contact me"; was 'Say hi') (needs sign-off)
   headline: "LET'S COMPARE *notes.*", // [P]
-  invite: 'Hiring, building something, or stuck on a mechanism? Email me.', // [UI] Andrew 2026-10-07, the one-line invitation under the headline (needs sign-off)
+  invite: 'Hiring, building something, or need tutoring? Email is the best way to reach me :)', // [Andrew 2026-11-11] his wording; it was "...or stuck on a mechanism? Email me." (2026-10-07), the one-line invitation under the headline (needs sign-off)
   down: 'Résumé below', // [UI] the bobbing cue under the card (Andrew 2026-10-12, needs sign-off)
   emailCta: 'Email me', // [UI] the primary button, a mailto link (needs sign-off)
   // Shown beside the word when the GitHub and LinkedIn pills open on hover (components/site/social-button.tsx)
@@ -663,18 +698,33 @@ export const CONTACT = {
 // (worker/CONTACT.md); without it, Send opens the visitor's mail app with the message filled in.
 // All new [UI] wording: NEEDS ANDREW'S SIGN-OFF. Limits match worker/contact.js.
 export const CONTACT_FORM = {
-  heading: 'Or write me a letter', // [UI] 2026-11-03, the form is a letter card now (needs sign-off)
+  heading: 'Or write me a letter', // [UI] 2026-11-03, the form is a letter card now; the heading's full reading (needs sign-off)
+  headingLead: 'Or write me', // [UI] the part that stays (needs sign-off)
+  headingFlip: ['a letter', 'an email'], // [Andrew 2026-11-11] "a letter" flips to "an email", like LIU in the hero (needs sign-off)
+  expand: 'Open', // [Andrew 2026-11-11] the small card's button that opens the full version (needs sign-off)
+  expandName: 'Open the full letter', // [UI] its accessible name (needs sign-off)
+  collapse: 'Close the full letter', // [UI] the popup's close button name; what was typed stays (needs sign-off)
+  fullNote: 'Everything you type here stays if you close it.', // [UI] the popup's description, read by screen readers (needs sign-off)
+  yourName: '[Your name]', // [Andrew 2026-11-11] the last line of the placeholder letter; what they write there is the name on the email (needs sign-off)
+  tab: 'starts it for you', // [UI] after the Tab key cap, in the empty box (needs sign-off)
+  tabSpoken: 'Press Tab to start with Dear Andrew.', // [UI] the same, for screen readers (needs sign-off)
   name: 'Your name (optional)', // [Andrew 2026-10-20] name is optional now (needs sign-off)
-  contact: 'Best way to reach you (optional)', // [Andrew 2026-10-31] requested, not required (needs sign-off)
-  contactPlaceholder: 'Email, phone or LinkedIn', // [Andrew 2026-10-31] (needs sign-off)
-  contactHint: 'Leave one so I can write back.', // [Andrew 2026-10-31] (needs sign-off)
-  about: 'A little about you (optional)', // [Andrew 2026-10-31] (needs sign-off)
-  aboutPlaceholder: 'What you do, or how you found me', // [Andrew 2026-10-31] (needs sign-off)
+  contact: 'Best way to reach you', // [Andrew 2026-11-11] required now: a phone number or an email (needs sign-off)
+  contactPlaceholder: 'Email or phone', // [Andrew 2026-11-11] (needs sign-off)
+  contactHint: 'So I can write back.', // [Andrew 2026-10-31] (needs sign-off)
+  // "I'm looking for...": one multiple choice question, lettered like a quiz (Andrew 2026-11-11,
+  // replacing the "A little about you" box). The form sends the answer in the Worker's `about` field as "Looking for: A".
+  looking: {
+    label: "I'm looking for (optional, pick any)", // [Andrew 2026-11-11] (needs sign-off)
+    more: 'Tell me more', // [Andrew 2026-11-11] the box that opens under "Something else" (needs sign-off)
+    options: ['To hire you', 'A website', 'A mobile app', 'Frontend design', 'Tutoring', 'Something else'], // "An online store" removed 2026-11-11; the last one opens the "Tell me more" box // [Andrew 2026-11-11] his list: hiring, a project (frontend design, website, mobile app, e-commerce), tutoring, other (needs sign-off)
+    sentAs: 'Looking for:', // [D] how the picks read in the email
+  },
   message: 'Message', // [UI] (needs sign-off)
   // The message box starts as a letter the visitor can change (Andrew 2026-10-31).
   greeting: 'Dear Andrew,', // [Andrew 2026-10-31] (needs sign-off)
   signoff: 'Best,', // [Andrew 2026-10-31] (needs sign-off)
-  format: "Try this: who you are, why you're writing, and what you'd like to happen next.", // [Andrew 2026-10-31] the suggested format (needs sign-off)
+  format: "A little about you, why you're writing, and what you'd like to happen next.", // [Andrew 2026-10-31] the suggested format, now the middle of the box's placeholder (2026-11-11) (needs sign-off)
   // Talking instead of typing. Shown only where the browser has speech recognition (components/site/use-dictation.ts).
   dictation: {
     start: 'Dictate', // [UI] (needs sign-off)
@@ -691,6 +741,23 @@ export const CONTACT_FORM = {
   botcheck: 'Leave this empty', // [UI] the honeypot's label, read by bots only (needs sign-off)
   send: 'Send', // [UI] (needs sign-off)
   sending: 'Sending', // [UI] (needs sign-off)
+  // The signature pad under the letter (components/site/signature-pad.tsx). Optional.
+  sign: {
+    label: 'Sign it (optional)', // [Andrew 2026-11-11] "ask them to optionally sign" (needs sign-off)
+    add: 'Sign here (optional)', // [Andrew 2026-11-11] the button at the foot that opens the pad: "include sign here at the bottom" (needs sign-off)
+    change: 'Signed. Change it', // [UI] the same button once signed (needs sign-off)
+    title: 'Sign your letter', // [UI] the pad popup's title (needs sign-off)
+    note: 'It goes to me with your letter, as a picture.', // [UI] the pad popup's line (needs sign-off)
+    done: 'Done', // [UI] (needs sign-off)
+    close: 'Close the signature pad', // [UI] (needs sign-off)
+    preview: 'Your signature', // [UI] alt text of the small preview (needs sign-off)
+    hint: 'Draw your signature above the line', // [UI] (needs sign-off)
+    area: 'Signature pad, empty. Draw with a mouse, finger or pen.', // [UI] read by screen readers (needs sign-off)
+    signed: 'Signature pad, signed.', // [UI] read by screen readers (needs sign-off)
+    undo: 'Undo', // [UI] (needs sign-off)
+    clear: 'Clear', // [UI] (needs sign-off)
+  },
+  sentUnsigned: 'Sent. It is in my inbox now, but the signature did not come through.', // [UI] only when the mail Worker predates the signature (needs sign-off)
   sent: 'Sent. It is in my inbox now.', // [UI] (needs sign-off)
   // The Worker needs a name for the subject line; a blank one is sent as this.
   anonName: 'A visitor to andliu.dev', // [Andrew 2026-10-20] (needs sign-off)
@@ -702,8 +769,9 @@ export const CONTACT_FORM = {
   errors: {
     name: 'Keep your name under 100 characters.', // [Andrew 2026-10-20] name is optional now (needs sign-off)
     contact: 'Keep this under 200 characters.', // [Andrew 2026-10-31] (needs sign-off)
+    contactNeeded: 'An email or a phone number, so I can write back.', // [Andrew 2026-11-11] required now (needs sign-off)
     about: 'Keep this under 500 characters.', // [Andrew 2026-10-31] (needs sign-off)
-    messageShort:'A few more words, please: 10 characters at least.', // [UI] (needs sign-off)
+    messageShort: (words: number) => `A few more words, please: 10 characters at least. You have ${words} ${words === 1 ? 'word' : 'words'} so far.`, // [UI] with a word count (Andrew 2026-11-11); the greeting, sign-off and name are not counted (needs sign-off)
     messageLong: 'Keep it under 5000 characters.', // [UI] (needs sign-off)
     fix: 'Fix the highlighted fields, then send again.', // [UI] (needs sign-off)
     rate: 'Too many messages from here. Try again later.', // [UI] now also the 4-a-day limit, so not "in a minute" (needs sign-off)

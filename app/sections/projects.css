@@ -36,6 +36,18 @@
 .work .wk-all > span { display: inline-block; }
 @container (max-width: 699px) { .work .wk-all { text-align: left; } }
 .work .wk-all b { font: 700 1.25em/1 var(--display); letter-spacing: -.03em; font-variant-ligatures: none; }
+/* With the commit strip card (components/site/work/commit-skyline.tsx) the head is three columns:
+   the eyebrow top left, the card in the top right corner, and the two numbers set against the
+   card's left edge at its foot, one per line, so the numbers and their drawing read as one group.
+   On a phone it is one column: eyebrow, numbers, then the card at column width. */
+/* z-index 0: the fan's layer (z 1, pointer-events none outside its cards) passes over the card's foot. */
+.work .wk-head:has(.skc) { z-index: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, auto) auto; align-items: start; gap: 12px 28px; margin-bottom: clamp(20px, 3cqi, 36px); }
+.work .wk-head:has(.skc) .wk-all { align-self: end; max-inline-size: 26ch; padding-bottom: 8px; }
+.work .wk-head:has(.skc) .wk-all > span { display: block; }
+@container (max-width: 699px) {
+  .work .wk-head:has(.skc) { grid-template-columns: minmax(0, 1fr); }
+  .work .wk-head:has(.skc) .wk-all { max-inline-size: none; padding-bottom: 0; }
+}
 /* The section's height floor (SECTIONS budget) would otherwise stretch every row, the head too. */
 .work { align-content: start; }
 /* No floor at all (Andrew 2026-10-07: "cut the screen so that the impact is right after the
@@ -129,6 +141,38 @@ html[data-motion="reduced"] .work .wk-phones img { transition: none; }
 .work .wk-sticker { position: absolute; right: -12px; bottom: -16px; width: calc(var(--card-w) * .2); rotate: 9deg; pointer-events: none; }
 .work .wk-sticker svg { width: 100%; height: auto; }
 
+/* ---------- a card's measured impact (Andrew 2026-11-11: "Write in the impact onto the cards and
+   add graph animations"). A strip between the picture and the title: the project's running total
+   as a small ink line (inline SVG, drawn in app/sections/projects.tsx from lib/impact.json) and
+   two numbers in display type with their words in mono. Ink on the card's own fill, so the
+   contrast is the fill's (5.43:1 at worst, see the top of this file); the 10px words match
+   .wk-url. To make room the picture of a card with a strip is 2:1, not 16:10, and its sticker
+   sits higher, clear of the numbers; the card itself is no taller.
+   The line draws itself (stroke-dashoffset over pathLength 1), then the area fades in and the end
+   dot pops, each time the card is the fan's centre card (data-active) once the fan has come up
+   (data-in): the animation is applied by that selector, so it replays whenever the card returns.
+   Side cards, the reduced-motion row and JavaScript off show the finished graph. The numbers
+   count up in step (components/site/work/impact-count.tsx). ---------- */
+.work .wk-imp { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; min-width: 0; }
+.work .wk-imp-g { flex: 1 1 0; min-width: 0; max-width: 112px; height: auto; aspect-ratio: 96 / 36; overflow: visible; }
+.work .wk-imp-line { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 0; }
+.work .wk-imp-area { fill: var(--ink); opacity: .14; }
+.work .wk-imp-dot { fill: var(--card); stroke: var(--ink); stroke-width: 1.5; transform-box: fill-box; transform-origin: 50% 50%; }
+.work .wk-imp-nums { flex: 0 0 auto; display: flex; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.work .wk-imp-nums li { display: grid; gap: 3px; }
+.work .wk-imp-nums b { font: 700 calc(var(--card-w) * .07)/1 var(--display); letter-spacing: 0; font-variant-numeric: tabular-nums; font-variant-ligatures: none; }
+.work .wk-imp-nums span { font: 600 10px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; font-variant-ligatures: none; }
+.work .wk-fc[data-impact] .wk-media > :is(img, svg, video), .work .wk-fc[data-impact] .wk-phones { aspect-ratio: 2 / 1; }
+.work .wk-fc[data-impact] .wk-sticker { bottom: -4px; }
+@keyframes wk-imp-draw { from { stroke-dashoffset: 1; } }
+@keyframes wk-imp-fade { from { opacity: 0; } }
+@keyframes wk-imp-pop { from { transform: scale(0); } }
+.work .wk-fan[data-mode="fan"][data-in] .wk-fan-card[data-active] .wk-imp-line { animation: wk-imp-draw 1.1s var(--ease-ui) .1s both; }
+.work .wk-fan[data-mode="fan"][data-in] .wk-fan-card[data-active] .wk-imp-area { animation: wk-imp-fade .5s ease-out .8s both; }
+.work .wk-fan[data-mode="fan"][data-in] .wk-fan-card[data-active] .wk-imp-dot { animation: wk-imp-pop .5s var(--ease-elastic) 1s both; }
+html[data-motion="reduced"] .work .wk-imp * { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .work .wk-imp * { animation: none !important; } }
+
 /* Text-led (the animation pipeline): the title comes first and the steps fill the card, tile,
    name and line per step, running down. The spec line is the caption's second line. */
 .work .wk-fc[data-led="text"] .wk-fc-title { order: 1; margin-top: 4px; }
@@ -196,6 +240,20 @@ html[data-motion="reduced"] .work .wk-phones img { transition: none; }
 .work .wk-cap-title { margin: 0; font: 700 clamp(22px, 2cqi, 28px)/1 var(--display); letter-spacing: -.03em; text-transform: uppercase; font-variant-ligatures: none; }
 .work .wk-cap-line { max-inline-size: 62ch; margin: 0; font: 400 clamp(17px, 1.25cqi, 18px)/1.5 var(--body); color: var(--ink); }
 .work .wk-cap-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+/* More information on a click (Andrew 2026-11-11). The first line and the project's other lines
+   share the "line" area; the others stay folded until the fan's switch is on (.wk-caps[data-open],
+   set by components/ui/project-fan.tsx from the More button or a click on the centre card), then
+   rise in on the same spring as the rest of the caption. The centre card shows a pointer, since
+   a click on it now does something. */
+.work .wk-cap-body { grid-area: line; display: grid; gap: 8px; min-width: 0; }
+.work .wk-cap-body .wk-cap-line { grid-area: auto; }
+.work .wk-more { display: none; gap: 8px; }
+.work .wk-caps[data-open] .wk-more { display: grid; }
+.work .wk-caps[data-open] .wk-cap[data-on] .wk-more { animation: wk-up .5s var(--ease-elastic) both; }
+.work .wk-more-btn { cursor: pointer; }
+.work .wk-more-close, .work .wk-caps[data-open] .wk-more-open { display: none; }
+.work .wk-caps[data-open] .wk-more-close { display: inline; }
+.work .wk-fan[data-mode="fan"] .wk-fan-card[data-active] { cursor: pointer; }
 .work .wk-note { display: inline-block; margin: 0; padding: 6px 14px; border: var(--tile-line); border-radius: 18px; background: var(--paper); font: 400 16px/1.35 var(--body); rotate: -1.5deg; }
 .work .wk-actions { margin-top: 0; }
 /* The project's measured numbers (WORK_STATS over lib/impact.json; the Impact section folded in):

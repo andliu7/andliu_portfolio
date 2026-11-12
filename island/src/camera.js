@@ -10,6 +10,7 @@
 //    drone (src/player/drone.js) uses it with setTarget(drone) and snap(0.45), which starts the view
 //    close and lets it pull out to full height. Presets blend, never cut.
 //  - V toggles first person (see firstPerson): the walker's eyes, or a cockpit seat in the car.
+//    The game starts in it (see the 'started' listener); V goes back to the presets.
 //    Both ways blend over 0.4 s. Rooms keep their own camera; the mode is back on return.
 //  - Drag (mouse left or right button, one finger) orbits around the player, wheel (core) and
 //    pinch (here) zoom through state.zoom. With holdView on (the default) the camera then HOLDS
@@ -302,6 +303,11 @@ export function init(ctx){
   bus.on('interior:enter', () => { hideHead(false); exitLock(); blend.t = 1; });
   bus.on('interior:exit', ({ door }) => { if(fp.on){ fp.yaw = door ? door.heading : (state.player.heading || 0); fp.pitch = 0; fp.snap = true; } });
   bus.on('game:start', exitLock);
+  // The game opens in first person (Andrew 2026-11-11: "make the initial view of the game first
+  // person"): the driver's seat at the start, the walker's eyes once he hops out. V still goes back
+  // to the presets and P still cycles them. This listener is added before main.js's deep-link
+  // teleport, whose 'teleport' event then faces the view the right way.
+  bus.on('started', () => { try { setFirstPerson(true); } catch(e){ console.warn('[camera] could not start in first person', e); } });
 
   // ---------- exit shot: a composed view of the walker, the building front and the car ----------
   // Leaving a room drops the walker just outside the door, facing away from it. A plain chase
