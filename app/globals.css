@@ -305,8 +305,9 @@ section[data-texture] { isolation:isolate; }
 .site-header[data-hidden]:not([data-menu-open]):not(:focus-within) > * { translate:0 -300%; }
 /* The band: once the page has scrolled, a paper strip with a 1px ink rule sits behind the pills,
    so a heading scrolling under them never shows through between them. It leaves and returns
-   with the pills. */
-.site-header::before { content:''; position:absolute; z-index:-1; left:calc(-1 * var(--gutter)); right:calc(-1 * var(--gutter)); top:-16px; bottom:-12px; background:color-mix(in srgb,var(--ground,var(--paper)) 92%,transparent); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); border-bottom:1px solid color-mix(in srgb,var(--on,var(--ink)) 18%,transparent); opacity:0; pointer-events:none; transition:opacity var(--dur-ui) var(--ease-ui),translate var(--dur-roll) var(--ease-elastic); }
+   with the pills. It stays paper on every section (Andrew 2026-11-11: "can we make that stay
+   white?"); it used to take each section's ground colour. */
+.site-header::before { content:''; position:absolute; z-index:-1; left:calc(-1 * var(--gutter)); right:calc(-1 * var(--gutter)); top:-16px; bottom:-12px; background:color-mix(in srgb,var(--paper) 92%,transparent); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); border-bottom:1px solid color-mix(in srgb,var(--ink) 18%,transparent); opacity:0; pointer-events:none; transition:opacity var(--dur-ui) var(--ease-ui),translate var(--dur-roll) var(--ease-elastic); }
 .site-header[data-band]::before { opacity:1; }
 .site-header[data-hidden]:not([data-menu-open]):not(:focus-within)::before { translate:0 -110%; }
 .site-header[data-menu-open]::before { opacity:0; }

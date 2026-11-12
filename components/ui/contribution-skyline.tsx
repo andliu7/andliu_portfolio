@@ -32,7 +32,7 @@ type Labels = {
 type Props = { points: Day[]; unit: string; reduced: boolean; labels: Labels; title?: string; headroom?: number };
 
 const FOOT = 14; // px under the grid for the month names
-const REACH = 1.25; // the wave's width, in weeks (the bell's sigma)
+const REACH = 1.05; // the bump's width, in cells (the bell's sigma), across weeks and down days
 const RISE = 16; // how fast a week rises toward the pointer, per second
 const FALL = 5; // how fast it settles back behind it, per second
 const TAP_PX = 6; // a press that moves less than this is a tap (it pins), more is a scrub
@@ -47,7 +47,7 @@ const hexRgb = (hex: string) => {
 };
 const shade = (rgb: number[], k: number) => `rgb(${rgb.map(v => Math.round(v * k)).join(',')})`;
 
-type Engine = { kick: () => void; at: (x: number, y: number) => { pos: number; week: number; day: number | null } };
+type Engine = { kick: () => void; at: (x: number, y: number) => { pos: number; row: number; week: number; day: number | null } };
 
 export default function ContributionSkyline({ points, unit, reduced, labels, title, headroom: HEADROOM = 22 }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
@@ -59,6 +59,7 @@ export default function ContributionSkyline({ points, unit, reduced, labels, tit
   const [said, setSaid] = useState('');
   // Refs the draw loop reads, so the engine effect is set up once and never torn down on a hover.
   const ptr = useRef<number | null>(null); // the pointer's place along the strip, in weeks
+  const ptrDay = useRef(3.5); // and down it, in days
   const activeRef = useRef<number | null>(null);
   const pinnedRef = useRef<number | null>(null);
   const reducedRef = useRef(reduced);
@@ -107,7 +108,10 @@ export default function ContributionSkyline({ points, unit, reduced, labels, tit
     const muted = tok('--muted');
     const font = `500 10px ${css.fontFamily}`;
     const { cells, weeks, months } = grid;
-    const lift = new Array<number>(weeks).fill(0); // each week's rise this frame, 0 to 1
+    // Each day's rise this frame, 0 to 1. Per day, not per week (Andrew 2026-11-11: "don't make the
+    // entire commit shift with my hover, just make them rise"): the grid stays where it is and only
+    // the days round the pointer stand up. A pinned week still stands whole.
+    const lift = new Array<number>(cells.length).fill(0);
     let w = 0;
     let h = 0;
     let gx = 0; // the grid's left edge
@@ -127,13 +131,17 @@ export default function ContributionSkyline({ points, unit, reduced, labels, tit
       ctx.closePath();
     };
 
-    /** The week the wave is centred on: the pointer, else the day the keys are on. */
-    const centre = () => ptr.current ?? (activeRef.current !== null ? Math.floor(activeRef.current / 7) + 0.5 : null);
-    const goal = (wk: number) => {
+    /** Where the bump is centred, in weeks and days: the pointer, else the day the keys are on. */
+    const centre = () => {
+      if (ptr.current !== null) return { w: ptr.current, d: ptrDay.current };
+      const a = activeRef.current;
+      return a === null ? null : { w: Math.floor(a / 7) + 0.5, d: (a % 7) + 0.5 };
+    };
+    const goal = (i: number, c: { w: number; d: number } | null) => {
       if (reducedRef.current) return 0;
-      const c = centre();
-      const wave = c === null ? 0 : Math.exp(-(((wk + 0.5 - c) / REACH) ** 2));
-      return pinnedRef.current === wk ? 1 : wave;
+      const cell = cells[i];
+      if (pinnedRef.current === cell.week) return 1;
+      return c === null ? 0 : Math.exp(-(((cell.week + 0.5 - c.w) / REACH) ** 2 + ((cell.day + 0.5 - c.d) / REACH) ** 2));
     };
 
     const draw = () => {
@@ -149,7 +157,7 @@ export default function ContributionSkyline({ points, unit, reduced, labels, tit
       // Flat highlight (reduced motion, where nothing rises): the week is outlined instead.
       if (reducedRef.current) {
         const c = centre();
-        for (const [wk, width] of [[pinnedRef.current, 2], [c === null ? null : Math.min(weeks - 1, Math.floor(c)), 1.5]] as const) {
+        for (const [wk, width] of [[pinnedRef.current, 2], [c === null ? null : Math.min(weeks - 1, Math.floor(c.w)), 1.5]] as const) {
           if (wk === null) continue;
           rr(gx + wk * pitch - 1, gy - 3, pitch + 2, row * 7 + 6, 5);
           ctx.strokeStyle = ink;
@@ -166,7 +174,7 @@ export default function ContributionSkyline({ points, unit, reduced, labels, tit
           if (!cell) continue;
           const x = gx + wk * pitch + gap / 2;
           const y = gy + d * row + gap / 2;
-          const z = lift[wk] * cell.h * HEADROOM;
+          const z = lift[i] * cell.h * HEADROOM;
           const rgb = ramp[cell.level];
           if (z > 0.4) {
             // The front face: from the raised top's lower edge down to the ground.
@@ -203,7 +211,7 @@ export default function ContributionSkyline({ points, unit, reduced, labels, tit
       const a = activeRef.current;
       if (el && a !== null && cells[a]) {
         const cell = cells[a];
-        const top = gy + cell.day * row - lift[cell.week] * cell.h * HEADROOM;
+        const top = gy + cell.day * row - lift[a] * cell.h * HEADROOM;
         const above = top - el.offsetHeight - 6;
         const ty = above >= 0 ? above : gy + (cell.day + 1) * row + 6;
         const half = el.offsetWidth / 2;
@@ -216,12 +224,13 @@ export default function ContributionSkyline({ points, unit, reduced, labels, tit
       const dt = Math.min(64, last ? now - last : 16);
       last = now;
       let moving = false;
-      for (let wk = 0; wk < weeks; wk++) {
-        const g = goal(wk);
-        const l = lift[wk];
+      const c = centre();
+      for (let i = 0; i < cells.length; i++) {
+        const g = goal(i, c);
+        const l = lift[i];
         const next = l + (g - l) * (1 - Math.exp((-(g > l ? RISE : FALL) * dt) / 1000));
-        lift[wk] = Math.abs(g - next) < 0.004 ? g : next;
-        if (lift[wk] !== g) moving = true;
+        lift[i] = Math.abs(g - next) < 0.004 ? g : next;
+        if (lift[i] !== g) moving = true;
       }
       draw();
       // Draw only while moving: the loop stops itself once every week has settled.
@@ -240,7 +249,7 @@ export default function ContributionSkyline({ points, unit, reduced, labels, tit
       const wk = Math.min(weeks - 1, Math.floor(pos));
       const d = Math.floor((py - HEADROOM) / row);
       const i = wk * 7 + d;
-      return { pos, week: wk, day: d >= 0 && d < 7 && i < cells.length ? i : null };
+      return { pos, row: (py - HEADROOM) / row, week: wk, day: d >= 0 && d < 7 && i < cells.length ? i : null };
     };
 
     const resize = () => {
@@ -298,6 +307,7 @@ export default function ContributionSkyline({ points, unit, reduced, labels, tit
     const spot = engine.current?.at(event.clientX - r.left, event.clientY - r.top);
     if (!spot) return null;
     ptr.current = spot.pos;
+    ptrDay.current = spot.row;
     setWeek(spot.week);
     setActive(spot.day);
     engine.current?.kick();

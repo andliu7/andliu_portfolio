@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent, type PointerEvent, type ReactElement } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Check, Maximize2, Mic, PenLine, X } from 'lucide-react';
+import { Check, Maximize2, Mic, PenLine, Send, X } from 'lucide-react';
 import { getLenis } from '@/app/smooth';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { cleanDictation } from '@/lib/dictation';
@@ -83,10 +83,14 @@ const signedName = (message: string) => {
 // A way to write back is required: an email address or a phone number (7 to 15 digits).
 const EMAIL_SHAPE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_SHAPE = /^[+(]?\d[\d\s().-]*$/;
-const reachable = (text: string) => {
-  const digits = text.replace(/\D/g, '').length;
-  return EMAIL_SHAPE.test(text) || (PHONE_SHAPE.test(text) && digits >= 7 && digits <= 15);
+/** What the text is shaped like: an email address, a phone number, or neither yet. */
+const reachKind = (text: string): 'email' | 'phone' | null => {
+  const t = text.trim();
+  if (EMAIL_SHAPE.test(t)) return 'email';
+  const digits = t.replace(/\D/g, '').length;
+  return PHONE_SHAPE.test(t) && digits >= 7 && digits <= 15 ? 'phone' : null;
 };
+const reachable = (text: string) => reachKind(text) !== null;
 const FIELDS: Field[] = ['name', 'contact', 'message'];
 const LOOKING = CONTACT_FORM.looking;
 const OTHER = LOOKING.options[LOOKING.options.length - 1]; // the last answer opens a box to say more
@@ -313,8 +317,6 @@ export function ContactForm() {
     setTouched({ name: true, contact: true, message: true });
     setStatus({ kind: 'error', text: E.fix });
     const first = FIELDS.find(field => found[field]);
-    // The small card has only the letter: a missing name or contact opens the full version on it.
-    if (first && !expanded && first !== 'message') { openFull(first); return; }
     if (first) refs[first].current?.focus();
   };
 
@@ -436,6 +438,7 @@ export function ContactForm() {
   // The letter itself. Empty, it shows the greeting, the suggested format and the sign-off as
   // placeholder text, and a key cap saying Tab writes them in.
   const blank = values.message === '';
+  const words = wordCount(ownWords(values.message));
   const letterBox = (
     <div className="cf-field cf-letter" data-invalid={errors.message ? '' : undefined}>
       <label className="cf-label" htmlFor="cf-message">{CONTACT_FORM.message}</label>
@@ -444,6 +447,14 @@ export function ContactForm() {
           {...common('message', blank)} ref={refs.message} rows={5} maxLength={5000} aria-required="true"
           placeholder={PLACEHOLDER} onFocus={onLetterFocus} onKeyDown={onLetterKey}
         />
+        {/* The word count, in the box's bottom right corner: red, yellow from 10 words, green from
+            20 (Andrew 2026-11-11). It counts their own words, not the greeting, sign-off or name. */}
+        {!blank && (
+          <p className="cf-count" data-level={words >= 20 ? 'good' : words >= 10 ? 'some' : 'few'}>
+            <span aria-hidden="true">{words}</span>
+            <span className="sr-only">{CONTACT_FORM.words(words)}</span>
+          </p>
+        )}
         {blank && (
           <p className="cf-tab" id="cf-message-hint">
             <span aria-hidden="true"><kbd>Tab</kbd> {CONTACT_FORM.tab}</span>
@@ -488,10 +499,32 @@ export function ContactForm() {
       <input ref={botRef} id="cf-botcheck" name="botcheck" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
     </div>
   );
+  // Send carries a paper plane; on a press that passes the checks it flies off (.cf-fly, a copy
+  // laid over the button's own, which hides while the letter is on its way).
   const send = (
-    <button className="pill pill-berry pill-big cf-send" type="submit" disabled={locked}>
-      <PillFaces>{sending ? CONTACT_FORM.sending : CONTACT_FORM.send}</PillFaces>
-    </button>
+    <span className="cf-send-wrap" data-flying={sending ? '' : undefined}>
+      <button className="pill pill-berry pill-big cf-send" type="submit" disabled={locked}>
+        <PillFaces>{sending ? CONTACT_FORM.sending : CONTACT_FORM.send} <Send className="cf-plane" size={18} aria-hidden="true" /></PillFaces>
+      </button>
+      {sending && <Send className="cf-fly" size={18} aria-hidden="true" />}
+    </span>
+  );
+  // How to reach them, checked as they type: the chip says what the text looks like so far.
+  const kind = reachKind(values.contact);
+  const reach = (
+    <div className="cf-field cf-reach" data-invalid={errors.contact ? '' : undefined}>
+      <label className="cf-label" htmlFor="cf-contact">{CONTACT_FORM.contact}</label>
+      <div className="cf-reach-box">
+        <input {...common('contact')} ref={refs.contact} type="text" inputMode="email" autoComplete="email" maxLength={200} aria-required="true" placeholder={CONTACT_FORM.contactPlaceholder} />
+        {values.contact.trim() !== '' && (
+          <output className="cf-verify" data-ok={kind ? '' : undefined}>
+            {kind && <Check size={14} aria-hidden="true" />}
+            {kind ? CONTACT_FORM.verify[kind] : CONTACT_FORM.verify.neither}
+          </output>
+        )}
+      </div>
+      <p className="cf-error" id="cf-contact-error">{errors.contact ?? ''}</p>
+    </div>
   );
   const progress = sending && <ThinkingIndicator className="cf-progress" words={[STEPS[step]]} />;
   const statusLine = (
@@ -505,13 +538,11 @@ export function ContactForm() {
   const mini = (
     <div className="cf-mini" ref={miniRef}>
       {letterBox}
+      {reach}
       {honeypot}
       <div className="cf-foot">
         {mic}
         {progress}
-        <button ref={expandRef} type="button" className="cf-open" aria-label={CONTACT_FORM.expandName} aria-haspopup="dialog" disabled={locked} onClick={() => openFull('message')}>
-          {CONTACT_FORM.expand} <Maximize2 size={14} aria-hidden="true" />
-        </button>
         {send}
       </div>
       {micNote(false)}
@@ -525,7 +556,7 @@ export function ContactForm() {
     <>
       <div className="cf-cols">
         <div className="cf-col">
-          {field('contact', CONTACT_FORM.contact, <input {...common('contact', true)} ref={refs.contact} type="text" autoComplete="email" maxLength={200} aria-required="true" placeholder={CONTACT_FORM.contactPlaceholder} />, CONTACT_FORM.contactHint)}
+          {reach}
           {/* One multiple choice question, lettered like a quiz; any number of answers (real
               checkboxes). The last, "Something else", opens a box to say more. */}
           <fieldset className="cf-quiz" disabled={locked}>
@@ -597,6 +628,12 @@ export function ContactForm() {
         <Stationery />
         <div className="cf-head">
           <h3 className="cf-title" id="cf-title">{title}</h3>
+          {/* Open, in the card's top right corner (Andrew 2026-11-11); the stamp sits beside it. */}
+          {status.kind !== 'sent' && !expanded && (
+            <button ref={expandRef} type="button" className="cf-open" aria-label={CONTACT_FORM.expandName} aria-haspopup="dialog" disabled={locked} onClick={() => openFull('message')}>
+              {CONTACT_FORM.expand} <Maximize2 size={14} aria-hidden="true" />
+            </button>
+          )}
           {/* The live region stays mounted so a screen reader hears the chip when it appears. */}
           <output>
             {suspended && <span className="cf-chip"><span className="cf-chip-dot" aria-hidden="true" />{CONTACT_FORM.suspended}</span>}

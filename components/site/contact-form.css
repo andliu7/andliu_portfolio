@@ -240,3 +240,54 @@ body:has(.cf-dialog) [data-slot="dialog-overlay"] { z-index:70; }
 .cf-dialog { z-index:71; }
 .cf-full .cf-foot .cf-status { flex:1 1 20ch; min-inline-size:0; font-size:15px; }
 .cf-full .cf-foot .cf-status:empty { margin:0; flex:0 0 0; }
+
+/* ---------- 2026-11-11, later: reach box in the small card, its checker, the plane on Send ---------- */
+/* The checker sits inside the box's right end: a leaf chip with a check once the text is shaped
+   like an email address or a phone number, a quiet line until then. Ink on --tile-leaf, and the
+   check mark, so the state is not colour alone. */
+.cf-reach-box { position:relative; display:grid; }
+.cf .cf-reach-box input { padding-inline-end:150px; }
+.cf-verify { position:absolute; inset-inline-end:10px; inset-block-start:50%; translate:0 -50%; display:inline-flex; align-items:center; gap:4px; pointer-events:none;
+  font:600 12px/1 var(--mono); letter-spacing:.04em; text-transform:uppercase; color:var(--muted); }
+.cf-verify[data-ok] { padding:5px 9px; border:1.5px solid var(--ink); border-radius:var(--r-pill); background:var(--tile-leaf); color:var(--ink); }
+.cf-mini .cf-reach > .cf-label { position:absolute; inline-size:1px; block-size:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.cf-mini .cf-reach input { font-size:16px; padding-block:9px; }
+/* One line shorter than the placeholder letter, now that the reach box shares the card. */
+.cf-mini textarea { min-block-size:calc(1.5em * 6 + 28px); }
+
+/* The plane: it rides on Send, and on a send a copy lifts off up and to the right while the
+   button's own hides. Reduced motion: it just goes. */
+.cf-send-wrap { position:relative; display:inline-flex; margin-inline-start:auto; }
+.cf-send-wrap .cf-send { margin-inline-start:0; }
+.cf-mini .cf-send-wrap { margin-inline-start:0; }
+.cf-plane { transition:translate var(--dur-ui) var(--ease-ui), rotate var(--dur-ui) var(--ease-ui); }
+.cf-send-wrap[data-flying] .cf-plane { opacity:0; }
+.cf-fly { position:absolute; inset-inline-end:26px; inset-block-start:50%; margin-block-start:-9px; color:var(--berry-deep); pointer-events:none; animation:cf-fly 1.1s cubic-bezier(.3,0,.2,1) both; }
+@keyframes cf-fly {
+  0% { translate:0 0; rotate:0deg; scale:1; opacity:1; color:#fff; }
+  18% { translate:-10px 6px; rotate:-14deg; scale:1.1; opacity:1; color:#fff; }
+  100% { translate:320px -240px; rotate:8deg; scale:2.2; opacity:0; }
+}
+@media (hover:hover) and (pointer:fine) { .cf-send:not(:disabled):hover .cf-plane { translate:3px -3px; rotate:-8deg; } }
+html[data-motion="reduced"] .cf-fly { display:none; }
+html[data-motion="reduced"] .cf-plane { transition:none; }
+@media (prefers-reduced-motion:reduce) { .cf-fly { display:none; } }
+
+/* Open, in the small card's top right corner; the stamp moves in beside it. */
+form.cf > .cf-head .cf-open { position:absolute; inset-block-start:clamp(14px, 2cqi, 22px); inset-inline-end:clamp(14px, 2cqi, 24px); margin:0; z-index:1; }
+form.cf > .cf-stamp { right:calc(clamp(12px, 2cqi, 24px) + 92px); top:clamp(16px, 2.4cqi, 26px); inline-size:clamp(96px, 15cqi, 132px); }
+form.cf > .cf-head { padding-inline-end:clamp(200px, 30cqi, 250px); }
+@container (max-width:560px) {
+  form.cf > .cf-stamp { display:none; }
+  form.cf > .cf-head { padding-inline-end:96px; }
+}
+
+/* The word count: a small number in the box's bottom right corner. Red under 10 words, yellow from
+   10, green from 20. The number itself changes too, so the state is not colour alone. White on
+   #b3261e 6.5:1; ink on #f4c84a 11.6:1; ink on --tile-leaf. */
+.cf-count { position:absolute; inset-inline-end:10px; inset-block-end:9px; min-inline-size:28px; margin:0; padding:3px 8px; border:1.5px solid var(--ink); border-radius:var(--r-pill); pointer-events:none;
+  font:700 12px/1.3 var(--mono); font-variant-numeric:tabular-nums; text-align:center; transition:background-color var(--dur-ui) var(--ease-ui), color var(--dur-ui) var(--ease-ui); }
+.cf-count[data-level="few"] { background:#b3261e; color:#fff; }
+.cf-count[data-level="some"] { background:#f4c84a; color:var(--ink); }
+.cf-count[data-level="good"] { background:var(--tile-leaf); color:var(--ink); }
+html[data-motion="reduced"] .cf-count { transition:none; }

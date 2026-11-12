@@ -133,10 +133,13 @@ export function SignaturePad({ onChange, disabled = false, labels, resetKey = 0 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    // clientWidth, not getBoundingClientRect: the pad opens inside a popup that scales in, and a
+    // rect measured mid-scale is smaller than the pad really is, which left the ink off to one side
+    // of the pointer (Andrew 2026-11-11). clientWidth is the laid-out size, whatever the transform.
     const fit = () => {
-      const box = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
-      canvas.width = Math.round(box.width * dpr);
-      canvas.height = Math.round(box.height * dpr);
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.round(canvas.clientWidth * dpr);
+      canvas.height = Math.round(canvas.clientHeight * dpr);
       paint();
     };
     fit();
@@ -151,8 +154,10 @@ export function SignaturePad({ onChange, disabled = false, labels, resetKey = 0 
   useEffect(() => { setStrokes([]); }, [resetKey]);
 
   const point = (e: PointerEvent<HTMLCanvasElement>): Pt => {
-    const box = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - box.left, y = e.clientY - box.top, now = performance.now(), prev = last.current;
+    // From screen to canvas units: the same if nothing is scaled, and still right if something is.
+    const el = e.currentTarget, box = el.getBoundingClientRect();
+    const x = (e.clientX - box.left) * (el.clientWidth / (box.width || 1)), y = (e.clientY - box.top) * (el.clientHeight / (box.height || 1));
+    const now = performance.now(), prev = last.current;
     // A pen reports pressure. A mouse reports 0.5 for every point, so speed stands in for it, eased
     // toward its target so one jittery sample does not put a blob in the middle of a line.
     let p = 0.65;

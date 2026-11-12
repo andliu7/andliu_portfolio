@@ -706,12 +706,15 @@ export const CONTACT_FORM = {
   collapse: 'Close the full letter', // [UI] the popup's close button name; what was typed stays (needs sign-off)
   fullNote: 'Everything you type here stays if you close it.', // [UI] the popup's description, read by screen readers (needs sign-off)
   yourName: '[Your name]', // [Andrew 2026-11-11] the last line of the placeholder letter; what they write there is the name on the email (needs sign-off)
+  words: (n: number) => `${n} ${n === 1 ? 'word' : 'words'}`, // [UI] the count in the box's corner, for screen readers (needs sign-off)
   tab: 'starts it for you', // [UI] after the Tab key cap, in the empty box (needs sign-off)
   tabSpoken: 'Press Tab to start with Dear Andrew.', // [UI] the same, for screen readers (needs sign-off)
   name: 'Your name (optional)', // [Andrew 2026-10-20] name is optional now (needs sign-off)
   contact: 'Best way to reach you', // [Andrew 2026-11-11] required now: a phone number or an email (needs sign-off)
   contactPlaceholder: 'Email or phone', // [Andrew 2026-11-11] (needs sign-off)
   contactHint: 'So I can write back.', // [Andrew 2026-10-31] (needs sign-off)
+  // The checker beside the box, as they type (Andrew 2026-11-11: "an auto checker to verify").
+  verify: { email: 'Email', phone: 'Phone', neither: 'Not an email or phone yet' }, // [UI] (needs sign-off)
   // "I'm looking for...": one multiple choice question, lettered like a quiz (Andrew 2026-11-11,
   // replacing the "A little about you" box). The form sends the answer in the Worker's `about` field as "Looking for: A".
   looking: {
