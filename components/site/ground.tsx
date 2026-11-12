@@ -80,12 +80,15 @@ const STOPS: Stop[] = [
   // in-between colours spaced evenly down contact's empty sky (skyGap: the distance from the
   // section's top to its first line), each about the same small step darker and bluer than the
   // last, so no one stretch does the changing. contact.css gives that sky more room for it.
-  { at: '#contact', dy: () => skyGap() * 0.2, colour: '#ba849a' },
-  { at: '#contact', dy: () => skyGap() * 0.45, colour: '#a37a9d' },
-  { at: '#contact', dy: () => skyGap() * 0.72, colour: '#8a6c9e' },
-  { at: '#contact .eyebrow|#contact', dy: -6, colour: '#6f5c9b' },
-  { at: '#contact .eyebrow/|#contact', dy: 110, colour: '#5d5199' },
-  { at: '#contact .ct-invite|#contact', dy: -12, colour: '#4d4a94' }, // twilight by the first small line under the headline
+  // Moved higher (Andrew 2026-11-11, later still: "move it higher, so that the light text is not in
+  // the orange"): the same steps now finish 70% of the way down the empty sky, so the sky is already
+  // violet above contact's first line and twilight by the time the light type starts.
+  { at: '#contact', dy: () => skyGap() * 0.04, colour: '#ba849a' },
+  { at: '#contact', dy: () => skyGap() * 0.22, colour: '#a37a9d' },
+  { at: '#contact', dy: () => skyGap() * 0.4, colour: '#8a6c9e' },
+  { at: '#contact', dy: () => skyGap() * 0.56, colour: '#6f5c9b' },
+  { at: '#contact', dy: () => skyGap() * 0.72, colour: '#5d5199' },
+  { at: '#contact .eyebrow|#contact', dy: -24, colour: '#4d4a94' }, // twilight just above the first line (paper 7.4:1)
   { at: '#contact/', dy: -500, colour: 'var(--berry)' },
   { at: '#resume', dy: 360, colour: 'var(--berry-deep)' }, // night
   { at: '#resume/', dy: -100, colour: 'color-mix(in srgb, var(--berry-deep) 45%, var(--ink))' },
