@@ -17,8 +17,8 @@ npm run build
 
 ## Content
 
-- `app/page.tsx`: introduction, five projects, education, experience, and contact links. Between sections sit four transparent vistas where the 3D world shows through.
-- `components/world/`: the four-rooms world. `World.tsx` decides live 3D or the plan drawing (phones, reduced motion, no WebGL get the drawing). `WorldCanvas.tsx` holds the one Canvas and the Rapier physics world. `rooms/` has one file per room, built from primitives in `parts.tsx`. `Prop.tsx` is anything you can point at or knock over. `ScrollCamera.tsx` parks the camera at each vista. `sound.ts` is a synthesised sound kit, off until the visitor turns it on. `Smooth.tsx` is Lenis smooth scrolling.
+- `app/page.tsx`: the page, one day scrolled: the hero, Where to?, Blueberry on a phone, projects, the timeline, contact, the résumé and the island.
+- `app/sections/`: one file per section. `components/site/island3d/` is the 3D island in the finale; `island/` is the standalone island game, copied to `public/island` at build time.
 - `app/globals.css`: typography, colors, layouts, and responsive styles.
 - `app/motion.tsx`: scroll-linked transforms with reduced-motion support.
 - `public/andrew-liu-resume.pdf`: Andrew's supplied résumé.

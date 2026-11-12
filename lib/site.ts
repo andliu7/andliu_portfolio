@@ -674,7 +674,7 @@ export const CONTACT = {
   headline: "LET'S COMPARE *notes.*", // [P]
   invite: 'Hiring, building something, or need tutoring? Email is the best way to reach me :)', // [Andrew 2026-11-11] his wording; it was "...or stuck on a mechanism? Email me." (2026-10-07), the one-line invitation under the headline (needs sign-off)
   down: 'Résumé below', // [UI] the bobbing cue under the card (Andrew 2026-10-12, needs sign-off)
-  emailCta: 'Email me', // [UI] the primary button, a mailto link (needs sign-off)
+  emailCta: 'Email me', // [UI] the primary button; opens the letter's full version since 2026-11-11 (it was a mailto link) (needs sign-off)
   // Shown beside the word when the GitHub and LinkedIn pills open on hover (components/site/social-button.tsx)
   handles: { github: '@andliu7', linkedin: 'Andrew Liu' }, // [UI] from GITHUB's address and his name (needs sign-off)
   links: [
@@ -776,7 +776,7 @@ export const CONTACT_FORM = {
     messageLong: 'Keep it under 5000 characters.', // [UI] (needs sign-off)
     fix: 'Fix the highlighted fields, then send again.', // [UI] (needs sign-off)
     rate: 'Too many messages from here. Try again later.', // [UI] now also the 4-a-day limit, so not "in a minute" (needs sign-off)
-    failed: 'That did not send. Tap Email me or copy my address instead.', // [Andrew 2026-10-20] the address is just above the form (needs sign-off)
+    failed: 'That did not send. Press Copy email and write to me from your own mail instead.', // [UI] 2026-11-12: Email me opens this same letter now, so it is no way out; was 'Tap Email me or copy my address instead.' (needs sign-off)
   },
 } as const;
 

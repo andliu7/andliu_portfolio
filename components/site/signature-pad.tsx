@@ -4,7 +4,7 @@ import { Eraser, Undo2 } from 'lucide-react';
 import './signature-pad.css';
 
 // A place to sign the letter by hand (Andrew 2026-11-11: "ask them to optionally sign", with the
-// 21st.dev SignaturePad pasted). Kept from it: the ink. A signature drawn as a plain line has one
+// a SignaturePad component pasted as the reference). Kept from it: the ink. A signature drawn as a plain line has one
 // weight everywhere and blunt ends, so it reads as a graph. Here each stroke is a filled outline
 // whose width follows the pen's pressure, or, for a mouse or a finger, the speed of the hand (fast
 // is light, slow is heavy), and the first and last few millimetres taper to a point.

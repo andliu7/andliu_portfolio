@@ -31,8 +31,10 @@ import './contact-form.css';
 // Worker attaches it. A Worker from before the signature refuses the larger request (413), so that
 // one case is sent again without it and the sent line says the signature did not travel.
 //
-// Only the message is required (Andrew 2026-10-31). The Worker still wants a name for the subject
-// line, so a blank name goes out as CONTACT_FORM.anonName.
+// The message and a way to reach them are required (Andrew 2026-11-11; until then only the
+// message was). The contact rule is checked here only: the Worker still accepts a letter without
+// one. The Worker wants a name for the subject line, so an unsigned letter goes out as
+// CONTACT_FORM.anonName.
 //
 // The message box starts as a letter, "Dear Andrew," and "Best,", all of it editable. A letter
 // left as it starts is not a message: check() measures what is written between the two.

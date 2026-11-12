@@ -159,10 +159,8 @@ if (siteText.split('\n').filter(line => line.startsWith('export const BLUEBERRY_
 }
 if (siteText.includes('The garden')) fail('garden', 'lib/site.ts', lineOf(siteText, siteText.indexOf('The garden')), '"The garden" (gardening is not a hobby)');
 
-const portal = join(root, 'components/ui/glyph-portal.tsx');
-if (!existsSync(portal) || !/Glyph Portal © 2026 Christian Katzmann\. MIT\./.test(read(portal)) || !read(portal).includes('Keep this notice with copies.')) {
-  fail('mit', 'components/ui/glyph-portal.tsx', 1, 'the MIT notice is missing or changed');
-}
+// The Glyph Portal MIT-notice check went with the file: components/ui/glyph-portal.tsx was unused and
+// was deleted on 2026-11-12, so there is no copy left to carry the notice.
 
 // ---------------------------------------------------------------------------------------------
 // images and portraits: lib/site.ts has no imports, so it transpiles and loads on its own
