@@ -39,7 +39,8 @@ export const metadata: Metadata = {
 //  - html.js: JavaScript is on, so the hidden start states of reveals may apply.
 //  - html[data-motion="reduced"]: from the stored Motion switch, else from the OS setting. Every
 //    reduced-motion rule on the site reads this attribute, so the switch and the OS are one thing.
-//  - html[data-mascot="off"]: the visitor turned the following berry off in the menu.
+//  - html[data-mascot="off"]: the berry cursor is off. Off by default (Andrew 2026-11-12); it comes
+//    on only for a visitor who switched it on in the menu (stored 'on').
 //  - html[data-loader="skip"]: the URL has a hash, or the loader already played in this tab.
 //    Storage reads are in try/catch; a throw means "not seen", so the loader shows.
 //  - is-loaded after 9s regardless, in case nothing else ever sets it. It must come after the
@@ -53,7 +54,7 @@ var m=null;try{m=localStorage.getItem('${PREFS.motion}')}catch(e){}
 var r=m==='reduced'||(m!=='full'&&window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
 if(r)d.setAttribute('data-motion','reduced');
 var k=null;try{k=localStorage.getItem('${PREFS.mascot}')}catch(e){}
-if(k==='off')d.setAttribute('data-mascot','off');
+if(k!=='on')d.setAttribute('data-mascot','off');
 var s=false;try{s=!!sessionStorage.getItem('${PREFS.seen}')}catch(e){}
 if(location.hash||s)d.setAttribute('data-loader','skip');
 setTimeout(function(){d.classList.add('is-loaded')},9000);
