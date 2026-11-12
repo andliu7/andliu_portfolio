@@ -36,8 +36,15 @@ html:not(.is-loaded) .rv-rail { opacity:0; pointer-events:none; }
    when the scroll crosses dusk, and backwards when it crosses back. The day sky is the page's own
    morning blue, the night sky its deep night, so the disc matches the ground behind it. */
 .rv-sky { position:absolute; inset:0; z-index:-1; }
-.rv-sky[data-sky="day"] { background:linear-gradient(180deg,#87ceeb,#cfe2f5); }
-.rv-sky[data-sky="night"] { background:linear-gradient(180deg,#0b0d1f,var(--berry-deep)); }
+/* The disc's sky is the page's own (Andrew 2026-11-12: "sun to moon should follow the background
+   color"): the two sky layers are clear, and the disc blurs what is behind it, so it always shows
+   the colour of the sky it is passing over (blue, gold, rose, violet, night) with the rail's line
+   smudged out. They were fixed gradients, day blue and night navy. The night layer still carries
+   the stars, and the sun still sets for the moon at dusk, in Along the way (DUSK in review.tsx). */
+.rv-sky[data-sky] { background:transparent; }
+.rv-rail .rv-sun-disc { background:transparent; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+/* The pale moon crosses rose sky on its way to night: a thin ink edge keeps it readable there. */
+.rv-orb[data-body="moon"] svg { filter:drop-shadow(0 0 1px var(--ink)) drop-shadow(0 0 1px var(--ink)); }
 .rv-star { position:absolute; width:2px; height:2px; border-radius:50%; background:#f4efe6; }
 .rv-orb { position:absolute; inset:0; display:grid; place-items:center; }
 .rv-orb svg { display:block; width:17px; min-width:17px; max-width:none; height:17px; }
