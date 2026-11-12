@@ -4,152 +4,27 @@ import { Moon, Sun } from 'lucide-react';
 import { getLenis } from '@/app/smooth';
 import './review.css';
 
-// The design review layer (2026-11-09). It began as a dev-only panel of switches.
-//
-// LOCKED (Andrew 2026-11-11: "I approve all of those changes"): every proposal is now on for
-// everyone, in builds too. app/layout.tsx puts every flag class on <html> itself (RV_FLAGS in flags.ts), so the
-// approved layouts are there from the first paint, and mounts this component for the parts that
-// need script (the day rail, the thumb bar, the timeline's spotlight, the resume's landing). The
-// panel, the switches and localStorage are not used while LOCKED is true. Set it to false to get
-// the panel back on the dev server and try a new proposal.
-// Still to do, some quiet day: move each proposal's CSS from review.css into its section's own
-// file and delete this folder. Nothing depends on that; it is tidying.
-//
-// Each proposal is a switch. A switch that is on puts the flag class rvf-<id> on <html> (rvf, not rv: the rail and thumb bar own .rv-rail and .rv-thumb), and every
-// proposal's CSS in review.css is gated on its class, so "off" is exactly the site as committed.
-// Nothing in app/sections or components/site is edited: an approved proposal gets moved into the
-// section's own files afterwards, and this folder is deleted.
-//
-// Pattern: "feature flags as root classes". React state holds which switches are on, one effect
-// mirrors that onto <html>, and CSS does the rest. Only three proposals need script (the rail's
-// position, the timeline's spotlight, the résumé's landing), and each is its own small hook that
-// does nothing while its switch is off.
-
-type Proposal = { id: string; round: 1 | 2; title: string; why: string; href?: string; note?: string };
-
-const PROPOSALS: Proposal[] = [
-  { id: 'rail', round: 1, title: 'The day rail', href: '#phones', note: 'Desktop, right edge',
-    why: 'The page is one day, scrolled, but nothing says so. A sun travels down a rail and turns into the moon, with a clock. Dots jump to a section; drag the sun to scrub.' },
-  { id: 'hours', round: 1, title: 'Rows wear their hour', href: '#contents', note: 'Hover a row in Where to?',
-    why: 'Each row takes the sky colour of the place it leads to and shows the time you will arrive, so the contents previews the trip instead of only listing it.' },
-  { id: 'hero', round: 1, title: 'The name opens like doors', href: '#top', note: 'Scroll slowly out of the hero',
-    why: 'Leaving the hero is a plain scroll today. Here ANDREW and LIU part, you step forward and the stickers drift out: the first scroll rewards itself.' },
-  { id: 'spot', round: 1, title: 'One job in the light', href: '#experience', note: 'Scroll through Along the way',
-    why: 'Three cards compete while one is being read. The card under the middle of the screen stands full size; its neighbours step back and its people hop.' },
-  { id: 'land', round: 1, title: 'The résumé lands', href: '#resume', note: 'Arrive at Résumé',
-    why: 'The page is the thing recruiters came for, and it is just there. Now it drops onto the desk on a spring, then "click here!" writes itself.' },
-  { id: 'thumb', round: 1, title: 'Thumb bar on phones', href: '#contents', note: 'Narrow the window under 760px',
-    why: 'On a phone the header has no Résumé button. A floating three-tab pill keeps Work, Résumé and Say hi under the thumb, and steps aside where it would cover something.' },
-  // Round 2 (2026-11-10), from Andrew's notes on round 1.
-  { id: 'page', round: 2, title: 'The page is the hero', href: '#resume', note: 'Desktop. Résumé',
-    why: 'RÉSUMÉ shouted louder than the résumé. The title drops to a label, the page grows by about 40% and sits on the two-thirds line, big enough to read, running off the foot of the screen.' },
-  { id: 'letter', round: 2, title: 'The letter in the middle', href: '#contact', note: 'Desktop. Contact',
-    why: 'Two columns pulled the eye apart. Now one centred column: the quick way as a single row of buttons, then the letter. The plane leaves from the letter and the envelope leans on it.' },
-  { id: 'island', round: 2, title: 'Closer to the island', href: '#island', note: 'Island. Lens 1.4x closer',
-    why: 'The moon and the sea were winning. The camera moves in so the island fills its side of the screen and the water becomes the frame.' },
-  { id: 'bubble', round: 2, title: 'Pick, read, see', href: '#phones', note: 'Desktop. Blueberry on a phone',
-    why: 'Six descriptions at once read as a table. The list becomes six short rows, and the one you pick explains itself in a note beside the phone. Nothing shifts under the pointer.' },
-  { id: 'quiet', round: 2, title: 'A quieter rail', note: 'Desktop. Point at the right edge',
-    why: 'You said the rail feels like part of the page. At rest only the sun and the clock show; the track and its dots appear when the pointer comes near.' },
-  // 2026-11-11, from Andrew's question ("full resume shown ... better on the left side? text on the right?").
-  { id: 'left', round: 2, title: 'The whole résumé, on the left', href: '#resume', note: 'Desktop. Résumé',
-    why: 'The page ran off the foot of the screen. Here all of it shows, on the left where the eye lands first, with the title and the two buttons beside its middle. The section grows taller than one screen to fit it.' },
-];
-
-const LOCKED = true;
-const KEY = 'rv:v1';
-type Saved = { on: Record<string, boolean>; after: boolean; open: boolean };
-const DEFAULTS: Saved = { on: Object.fromEntries(PROPOSALS.map(p => [p.id, true])), after: true, open: true };
-
-function load(): Saved {
-  if (LOCKED) return { ...DEFAULTS, open: false };
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return DEFAULTS;
-    const saved = JSON.parse(raw) as Partial<Saved>;
-    return { on: { ...DEFAULTS.on, ...saved.on }, after: saved.after ?? true, open: saved.open ?? true };
-  } catch { return DEFAULTS; }
-}
+// What is left of the design review layer (2026-11-09). It was a dev-only panel of twelve
+// switches; Andrew approved all twelve on 2026-11-11, so the panel, the switches and their storage
+// are gone and every proposal is simply on. app/layout.tsx puts each proposal's flag class
+// (rvf-<id>, listed in flags.ts) on <html>, review.css holds the layouts gated on those classes,
+// and this component mounts the parts that need script: the day rail, the phone thumb bar, the
+// timeline's spotlight and the resume's landing.
+// Still to do, some quiet day: move each proposal's CSS into its section's own file.
 
 export default function Review() {
-  // null until mounted: the server cannot read localStorage, so the first client render must
-  // match the server's (nothing), and the saved choices arrive one tick later.
-  const [state, setState] = useState<Saved | null>(null);
-  const [copied, setCopied] = useState(false);
+  // Nothing on the server and on the first client render (the rail measures the page), then on.
+  const [on, setOn] = useState(false);
   useEffect(() => {
-    const frame = requestAnimationFrame(() => setState(load()));
+    const frame = requestAnimationFrame(() => {
+      setOn(true);
+      window.dispatchEvent(new Event('rv:flags')); // the island scene frames itself on this (island-scene.tsx Framing)
+    });
     return () => cancelAnimationFrame(frame);
   }, []);
-
-  const live = (id: string) => !!state && state.after && !!state.on[id];
-
-  // Mirror the switches onto <html>, and remember them.
-  useEffect(() => {
-    if (!state) return;
-    const root = document.documentElement;
-    PROPOSALS.forEach(p => root.classList.toggle(`rvf-${p.id}`, state.after && !!state.on[p.id]));
-    window.dispatchEvent(new Event('rv:flags')); // the island scene re-frames on this (island-scene.tsx Framing)
-    if (LOCKED) return; // the classes are the page's own now: nothing to remember, nothing to take back
-    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* private window: fine */ }
-    return () => PROPOSALS.forEach(p => root.classList.remove(`rvf-${p.id}`));
-  }, [state]);
-
-  useSpotlight(live('spot'));
-  useLanding(live('land'));
-
-  if (!state) return null;
-  const approved = PROPOSALS.filter(p => state.on[p.id]);
-  const copy = async () => {
-    const text = `Approved: ${approved.map(p => p.title).join('; ') || 'none'}. Rejected: ${PROPOSALS.filter(p => !state.on[p.id]).map(p => p.title).join('; ') || 'none'}.`;
-    try { await navigator.clipboard.writeText(text); setCopied(true); window.setTimeout(() => setCopied(false), 1600); } catch { /* clipboard blocked */ }
-  };
-
-  return (
-    <>
-      {live('rail') && <DayRail />}
-      {live('thumb') && <ThumbBar />}
-      {!LOCKED && <aside className="rv-panel" data-open={state.open ? '' : undefined} aria-label="Design review">
-        <button type="button" className="rv-fold" aria-expanded={state.open} onClick={() => setState({ ...state, open: !state.open })}>
-          <span className="rv-dot" aria-hidden="true" />
-          Design review
-          <span className="rv-count">{state.after ? `${approved.length} of ${PROPOSALS.length} on` : 'before'}</span>
-        </button>
-        {state.open && (
-          <div className="rv-body" data-lenis-prevent="">
-            <div className="rv-ab">
-              <button type="button" aria-pressed={!state.after} onClick={() => setState({ ...state, after: false })}>Before</button>
-              <button type="button" aria-pressed={state.after} onClick={() => setState({ ...state, after: true })}>After</button>
-            </div>
-            {([1, 2] as const).map(round => (
-              <section key={round} className="rv-round">
-                <h3 className="rv-round-title">{round === 1 ? 'Round 1, approved' : 'Round 2, new'}</h3>
-                <ol className="rv-list">
-                  {PROPOSALS.filter(p => p.round === round).map(p => (
-                    <li key={p.id} data-on={state.on[p.id] ? '' : undefined}>
-                      <div className="rv-row">
-                        <span className="rv-num" aria-hidden="true">{String(PROPOSALS.indexOf(p) + 1).padStart(2, '0')}</span>
-                        <span className="rv-title">{p.title}</span>
-                        <button
-                          type="button" role="switch" className="rv-switch" aria-checked={!!state.on[p.id]} aria-label={`${p.title}: keep`}
-                          onClick={() => setState({ ...state, on: { ...state.on, [p.id]: !state.on[p.id] } })}
-                        ><i /></button>
-                      </div>
-                      <p className="rv-why">{p.why}</p>
-                      <p className="rv-meta">
-                        {p.href && <a href={p.href}>Show me</a>}
-                        {p.note && <span>{p.note}</span>}
-                      </p>
-                    </li>
-                  ))}
-                </ol>
-              </section>
-            ))}
-            <button type="button" className="rv-copy" onClick={copy}>{copied ? 'Copied. Paste it to Claude.' : 'Copy my choices'}</button>
-          </div>
-        )}
-      </aside>}
-    </>
-  );
+  useSpotlight(on);
+  useLanding(on);
+  return on ? <><DayRail /><ThumbBar /></> : null;
 }
 
 // ---------------------------------------------------------------------------------------------

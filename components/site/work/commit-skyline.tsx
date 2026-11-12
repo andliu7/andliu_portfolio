@@ -45,7 +45,7 @@ export function CommitSkyline({ points, unit, title, caption }: Props) {
     <figure className="skc ink-card" data-ground="paper" onClick={event => { if (event.currentTarget.contains(event.target as Node)) setOpen(true); }}>
       <NearViewport placeholder={placeholder} margin="100%">
         <Suspense fallback={placeholder}>
-          <Skyline points={points} unit={unit} reduced={reduced} labels={SKYLINE} title={title} pinnable={false} />
+          <Skyline points={points} unit={unit} reduced={reduced} labels={SKYLINE} title={title} />
         </Suspense>
       </NearViewport>
       <figcaption className="sr-only">{caption}</figcaption>

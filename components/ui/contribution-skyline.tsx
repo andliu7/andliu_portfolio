@@ -25,17 +25,14 @@ type Labels = {
   label: (total: number, unit: string, first: string, last: string) => string;
   week: (date: string, n: number, unit: string) => string;
   total: (n: number, unit: string, weeks: number) => string;
-  pinned: (week: string) => string;
-  released: string;
 };
-// headroom: px above the grid for the bars to rise into. The popup's larger strip passes more.
-type Props = { points: Day[]; unit: string; reduced: boolean; labels: Labels; title?: string; headroom?: number; pinnable?: boolean };
+type Props = { points: Day[]; unit: string; reduced: boolean; labels: Labels; title?: string };
 
+const HEADROOM = 22; // px above the grid for the top row's bars to rise into
 const FOOT = 14; // px under the grid for the month names
 const REACH = 1.05; // the bump's width, in cells (the bell's sigma), across weeks and down days
 const RISE = 16; // how fast a week rises toward the pointer, per second
 const FALL = 5; // how fast it settles back behind it, per second
-const TAP_PX = 6; // a press that moves less than this is a tap (it pins), more is a scrub
 const utc = (x: string) => new Date(`${x}T00:00:00Z`);
 const fmtDate = (x: string) => utc(x).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
 const fmtShort = (x: string) => utc(x).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
@@ -49,19 +46,17 @@ const shade = (rgb: number[], k: number) => `rgb(${rgb.map(v => Math.round(v * k
 
 type Engine = { kick: () => void; at: (x: number, y: number) => { pos: number; row: number; week: number; day: number | null } };
 
-export default function ContributionSkyline({ points, unit, reduced, labels, title, headroom: HEADROOM = 22, pinnable = true }: Props) {
+export default function ContributionSkyline({ points, unit, reduced, labels, title }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const tip = useRef<HTMLDivElement>(null);
   const [week, setWeek] = useState<number | null>(null); // the week under the pointer
   const [active, setActive] = useState<number | null>(null); // the day under the pointer or the keys
-  const [pinned, setPinned] = useState<number | null>(null);
   const [said, setSaid] = useState('');
   // Refs the draw loop reads, so the engine effect is set up once and never torn down on a hover.
   const ptr = useRef<number | null>(null); // the pointer's place along the strip, in weeks
   const ptrDay = useRef(3.5); // and down it, in days
   const activeRef = useRef<number | null>(null);
-  const pinnedRef = useRef<number | null>(null);
   const reducedRef = useRef(reduced);
   const down = useRef<{ x: number; y: number } | null>(null);
   const engine = useRef<Engine | null>(null);
@@ -110,7 +105,7 @@ export default function ContributionSkyline({ points, unit, reduced, labels, tit
     const { cells, weeks, months } = grid;
     // Each day's rise this frame, 0 to 1. Per day, not per week (Andrew 2026-11-11: "don't make the
     // entire commit shift with my hover, just make them rise"): the grid stays where it is and only
-    // the days round the pointer stand up. A pinned week still stands whole.
+    // the days round the pointer stand up. 
     const lift = new Array<number>(cells.length).fill(0);
     let w = 0;
     let h = 0;
@@ -140,7 +135,6 @@ export default function ContributionSkyline({ points, unit, reduced, labels, tit
     const goal = (i: number, c: { w: number; d: number } | null) => {
       if (reducedRef.current) return 0;
       const cell = cells[i];
-      if (pinnedRef.current === cell.week) return 1;
       return c === null ? 0 : Math.exp(-(((cell.week + 0.5 - c.w) / REACH) ** 2 + ((cell.day + 0.5 - c.d) / REACH) ** 2));
     };
 
@@ -157,7 +151,7 @@ export default function ContributionSkyline({ points, unit, reduced, labels, tit
       // Flat highlight (reduced motion, where nothing rises): the week is outlined instead.
       if (reducedRef.current) {
         const c = centre();
-        for (const [wk, width] of [[pinnedRef.current, 2], [c === null ? null : Math.min(weeks - 1, Math.floor(c.w)), 1.5]] as const) {
+        for (const [wk, width] of [[c === null ? null : Math.min(weeks - 1, Math.floor(c.w)), 1.5]] as const) {
           if (wk === null) continue;
           rr(gx + wk * pitch - 1, gy - 3, pitch + 2, row * 7 + 6, 5);
           ctx.strokeStyle = ink;
@@ -192,13 +186,7 @@ export default function ContributionSkyline({ points, unit, reduced, labels, tit
         }
       }
 
-      // The pin: a short ink foot under the pinned week, so a pinned week reads apart from a hover.
       const base = gy + row * 7;
-      if (pinnedRef.current !== null) {
-        rr(gx + pinnedRef.current * pitch + gap / 2, base, cw, 2, 1);
-        ctx.fillStyle = ink;
-        ctx.fill();
-      }
       ctx.font = font;
       ctx.fillStyle = muted;
       ctx.textBaseline = 'top';
@@ -277,23 +265,16 @@ export default function ContributionSkyline({ points, unit, reduced, labels, tit
 
     engine.current = { kick, at };
     return () => { cancelAnimationFrame(frame); cancelAnimationFrame(fit); ro.disconnect(); engine.current = null; };
-  }, [grid, HEADROOM]);
+  }, [grid]);
 
   // State to refs, then wake the loop (or redraw once, under reduced motion).
   useEffect(() => {
     activeRef.current = active;
-    pinnedRef.current = pinned;
     reducedRef.current = reduced;
     engine.current?.kick();
-  }, [active, pinned, reduced]);
+  }, [active, reduced]);
 
   const weekText = (wk: number) => labels.week(fmtShort(points[wk * 7].x), grid.totals[wk], unit);
-
-  const togglePin = (wk: number) => {
-    const next = pinnedRef.current === wk ? null : wk;
-    setPinned(next);
-    setSaid(next === null ? labels.released : labels.pinned(weekText(next)));
-  };
 
   const clearScrub = () => {
     ptr.current = null;
@@ -320,30 +301,13 @@ export default function ContributionSkyline({ points, unit, reduced, labels, tit
   };
 
   const onUp = (event: PointerEvent<HTMLCanvasElement>) => {
-    const from = down.current;
     down.current = null;
     const spot = scrub(event);
-    // pinnable false (the corner card): a press belongs to the card, which opens its popup.
-    if (pinnable && from && spot && Math.hypot(event.clientX - from.x, event.clientY - from.y) < TAP_PX) togglePin(spot.week);
-    // A finger has no hover: lifting it ends the scrub (a pinned week stays up).
+    // A finger has no hover: lifting it ends the scrub.
     if (event.pointerType !== 'mouse') clearScrub();
   };
 
   const onKey = (event: KeyboardEvent<HTMLCanvasElement>) => {
-    if (event.key === 'Escape') {
-      if (pinnedRef.current !== null) { event.preventDefault(); setPinned(null); setSaid(labels.released); }
-      return;
-    }
-    if (event.key === 'Enter' || event.key === ' ') {
-      if (!pinnable) return;
-      event.preventDefault();
-      const on = active ?? points.length - 1;
-      ptr.current = null;
-      setWeek(null);
-      setActive(on);
-      togglePin(Math.floor(on / 7));
-      return;
-    }
     const move = { ArrowLeft: -7, ArrowRight: 7, ArrowUp: -1, ArrowDown: 1 }[event.key];
     if (move === undefined) return;
     event.preventDefault();
@@ -359,13 +323,13 @@ export default function ContributionSkyline({ points, unit, reduced, labels, tit
   const first = points[0]?.x ?? '';
   const lastDay = points[points.length - 1]?.x ?? '';
   // The readout follows the pointer's week, else the keys' week, else the pin, else the total.
-  const readWeek = week ?? (active !== null ? Math.floor(active / 7) : pinned);
+  const readWeek = week ?? (active !== null ? Math.floor(active / 7) : null);
 
   return (
     <div className="skyline">
       <div className="skyline-head">
         {title && <h3 className="skyline-title">{title}</h3>}
-        <p className="skyline-read" aria-hidden="true" data-pinned={readWeek !== null && readWeek === pinned ? '' : undefined}>
+        <p className="skyline-read" aria-hidden="true">
           {readWeek !== null ? weekText(readWeek) : labels.total(grid.total, unit, grid.weeks)}
         </p>
       </div>

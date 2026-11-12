@@ -14,8 +14,6 @@
 .skyline-head { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; min-height:20px; }
 .skyline-title { margin:0; font:700 13px/20px var(--display); letter-spacing:.02em; text-transform:uppercase; font-variant-ligatures:none; color:var(--ink); }
 .skyline-read { margin:0 0 0 auto; font:500 13px/20px var(--display); font-variant-numeric:tabular-nums; color:var(--ink-2); white-space:nowrap; }
-/* A pinned week's readout carries a berry dot, the same mark as the ink foot under its column. */
-.skyline-read[data-pinned]::before { content:""; display:inline-block; width:8px; height:8px; margin-right:6px; border-radius:50%; background:var(--berry); box-shadow:0 0 0 1.5px var(--ink); }
 
 .skyline-stage { position:relative; height:120px; }
 .skyline-canvas { position:absolute; inset:0; display:block; font-family:var(--display); cursor:ew-resize; touch-action:pan-y; border-radius:8px; }

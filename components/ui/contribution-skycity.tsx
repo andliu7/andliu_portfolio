@@ -33,10 +33,8 @@ type Labels = {
   label: (total: number, unit: string, first: string, last: string) => string;
   drag?: string;
 };
-// compact: the same drawing as a small still print (the corner sticker in the work section): it
-// stands in 3D from the first frame, with no labels, tooltip, controls or pointer handling, and
-// only sways while on screen. orbit: a horizontal drag turns the standing city (the dialog).
-type Props = { points: Day[]; unit: string; reduced: boolean; labels: Labels; compact?: boolean; orbit?: boolean };
+// orbit: a horizontal drag turns the standing city (the dialog).
+type Props = { points: Day[]; unit: string; reduced: boolean; labels: Labels; orbit?: boolean };
 
 const MORPH_MS = 1300;
 const SWAY_DEG = 4; // the sway's reach either side of the corner view
@@ -87,18 +85,18 @@ function inPoly(poly: number[], px: number, py: number) {
   return inside;
 }
 
-export default function ContributionSkyline({ points, unit, reduced, labels, compact = false, orbit = false }: Props) {
+export default function ContributionSkyline({ points, unit, reduced, labels, orbit = false }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const tip = useRef<HTMLDivElement>(null);
-  const [mode, setMode] = useState<'2d' | '3d'>(compact ? '3d' : '2d');
+  const [mode, setMode] = useState<'2d' | '3d'>('2d');
   const [grabbing, setGrabbing] = useState(false);
   const [active, setActive] = useState<number | null>(null);
   const [said, setSaid] = useState('');
   // Refs the draw loop reads. The engine effect below reads these instead of props or state,
   // so it is set up once and never torn down when the mode or the active day changes.
-  const target = useRef(compact ? 1 : 0);
-  const progress = useRef(compact ? 1 : 0);
+  const target = useRef(0);
+  const progress = useRef(0);
   const turn = useRef(0); // degrees the visitor has dragged the city round, eased toward turnGoal
   const turnGoal = useRef(0);
   const drag = useRef<{ id: number; x: number; y: number; from: number; on: boolean } | null>(null);
@@ -181,7 +179,7 @@ export default function ContributionSkyline({ points, unit, reduced, labels, com
         return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) };
       };
       const { minX, maxX, minY, maxY } = extent(c);
-      const pad = compact ? { l: 2, r: 2, t: 2, b: 2 } : { l: lerp(40, 8, e), r: 8, t: lerp(22, 8, e), b: lerp(6, 26, e) };
+      const pad = { l: lerp(40, 8, e), r: 8, t: lerp(22, 8, e), b: lerp(6, 26, e) };
       // The drawing fills the stage: the cell size comes from the stage, whichever side binds.
       const fit = (x: ReturnType<typeof extent>) => Math.min((w - pad.l - pad.r) / (x.maxX - x.minX), (h - pad.t - pad.b) / (x.maxY - x.minY));
       // With orbit the scale is the smallest across the whole reach of a drag, sampled, for the same reason.
@@ -251,7 +249,6 @@ export default function ContributionSkyline({ points, unit, reduced, labels, com
 
       // Labels fade, never pop: months on top and weekdays on the left while flat, months along
       // the front edge once it stands up.
-      if (compact) return; // the small print carries no month or weekday names and no tooltip
       ctx.font = font;
       ctx.fillStyle = muted;
       if (e < 1) {
@@ -343,7 +340,7 @@ export default function ContributionSkyline({ points, unit, reduced, labels, com
 
     engine.current = { kick, draw, hit };
     return () => { cancelAnimationFrame(frame); ro.disconnect(); engine.current = null; };
-  }, [grid, compact, orbit]);
+  }, [grid, orbit]);
 
   // Mode to morph target. Reduced motion jumps straight to the end state.
   useEffect(() => {
@@ -358,13 +355,6 @@ export default function ContributionSkyline({ points, unit, reduced, labels, com
   useEffect(() => {
     const box = wrap.current;
     if (!box) return;
-    if (compact) {
-      // The small print never replays: it only sways while it is on screen, and not at all when still.
-      if (reduced) { swayOn.current = false; return; }
-      const seen = new IntersectionObserver(([entry]) => { swayOn.current = entry.isIntersecting; engine.current?.kick(); }, { threshold: 0.5 });
-      seen.observe(box);
-      return () => seen.disconnect();
-    }
     if (reduced) {
       // The end state, still: 3D and no sway (the mode effect above jumps instead of morphing).
       swayOn.current = false;
@@ -388,7 +378,7 @@ export default function ContributionSkyline({ points, unit, reduced, labels, com
     }, { threshold: 0.5 });
     io.observe(box);
     return () => io.disconnect();
-  }, [reduced, compact]);
+  }, [reduced]);
 
   // A press on the toggle is the visitor's choice: it ends the auto play and the sway eases out.
   const choose = (next: '2d' | '3d') => {
@@ -463,16 +453,6 @@ export default function ContributionSkyline({ points, unit, reduced, labels, com
   const shown = active !== null ? points[active] : null;
   const first = points[0]?.x ?? '';
   const lastDay = points[points.length - 1]?.x ?? '';
-
-  if (compact) {
-    return (
-      <div className="skycity skycity-compact">
-        <div className="skycity-stage" ref={wrap}>
-          <canvas ref={canvas} className="skycity-canvas" aria-hidden="true" />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="impact-chart impact-chart-days skycity" data-orbit={orbit && mode === '3d' ? (grabbing ? 'grabbing' : 'grab') : undefined}>

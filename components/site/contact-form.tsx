@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent, type PointerEvent, type ReactElement } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ChangeEvent, type FormEvent, type KeyboardEvent, type PointerEvent } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Check, Maximize2, Mic, PenLine, Send, X } from 'lucide-react';
 import { getLenis } from '@/app/smooth';
@@ -474,14 +474,6 @@ export function ContactForm() {
     setStatus({ kind: 'idle', text: '' });
   };
 
-  const field = (id: Field, label: string, input: ReactElement, hint?: string) => (
-    <div className="cf-field" data-invalid={errors[id] ? '' : undefined}>
-      <label className="cf-label" htmlFor={`cf-${id}`}>{label}</label>
-      {hint && <p className="cf-field-hint" id={`cf-${id}-hint`}>{hint}</p>}
-      {input}
-      <p className="cf-error" id={`cf-${id}-error`}>{errors[id] ?? ''}</p>
-    </div>
-  );
   const common = (id: Field, hinted = false) => ({
     id: `cf-${id}`,
     name: id,

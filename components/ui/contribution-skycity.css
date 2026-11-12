@@ -51,11 +51,6 @@
 .skycity-hint { margin:0; font:600 12px/1 var(--mono); letter-spacing:.04em; text-transform:uppercase; color:var(--ink-2); transition:opacity var(--dur-ui) var(--ease-ui); }
 .skycity-hint[data-on="false"] { opacity:0; }
 
-/* Compact (the corner sticker): the drawing alone, filling its box, taking no pointer. */
-.skycity-compact { display:block; height:100%; }
-.skycity-compact .skycity-stage { height:100%; }
-.skycity-compact .skycity-canvas { pointer-events:none; border-radius:0; }
-
 /* Reduced motion: the thumb jumps, nothing presses (the canvas skips its morph in JS). */
 html[data-motion="reduced"] :is(.skycity-thumb, .skycity-toggle button, .skycity-hint) { transition:none; }
 html[data-motion="reduced"] .skycity-toggle button:active { transform:none; }

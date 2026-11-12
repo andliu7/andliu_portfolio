@@ -609,9 +609,7 @@ export const SKYLINE = {
   day: (n: number, unit: string, date: string) => `${n} ${unit} on ${date}`, // [D] tooltip and live line
   week: (date: string, n: number, unit: string) => `Week of ${date}: ${n} ${unit}`, // [D] the header readout while a week is scrubbed, focused or pinned (needs sign-off)
   total: (n: number, unit: string, weeks: number) => `${n} ${unit} in ${weeks} weeks`, // [D] the header readout at rest: the sum of all.days and its week count (needs sign-off)
-  pinned: (week: string) => `Pinned. ${week}`, // [UI] live line when a week is pinned (needs sign-off)
-  released: 'Pin released', // [UI] live line when the pin is let go (needs sign-off)
-  label: (total: number, unit: string, first: string, last: string) => `${total} ${unit} from ${first} to ${last}, one block per day. Arrow keys move between days, Enter pins a week, Escape releases it.`, // [D][UI] the chart's accessible name (needs sign-off)
+  label: (total: number, unit: string, first: string, last: string) => `${total} ${unit} from ${first} to ${last}, one block per day. Arrow keys move between days.`, // [D][UI] the chart's accessible name (needs sign-off)
 } as const;
 
 // ---------------------------------------------------------------------------------------------
