@@ -259,7 +259,7 @@ body:has(.cf-dialog) [data-slot="dialog-overlay"] { z-index:70; }
    button's own hides. Reduced motion: it just goes. */
 .cf-send-wrap { position:relative; display:inline-flex; margin-inline-start:auto; }
 .cf-send-wrap .cf-send { margin-inline-start:0; }
-.cf-mini .cf-send-wrap { margin-inline-start:0; }
+/* Send stays at the row's right end, in the small card too (Andrew 2026-11-11). */
 .cf-plane { transition:translate var(--dur-ui) var(--ease-ui), rotate var(--dur-ui) var(--ease-ui); }
 .cf-send-wrap[data-flying] .cf-plane { opacity:0; }
 .cf-fly { position:absolute; inset-inline-end:26px; inset-block-start:50%; margin-block-start:-9px; color:var(--berry-deep); pointer-events:none; animation:cf-fly 1.1s cubic-bezier(.3,0,.2,1) both; }
